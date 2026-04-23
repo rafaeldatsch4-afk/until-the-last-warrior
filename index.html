@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#f85b1a" />
+    <link rel="apple-touch-icon" href="/icon.svg">
+    <title>Until the Last Warrior</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap');
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #0f172a;
+        font-family: 'Roboto', sans-serif;
+      }
+      canvas {
+        display: block;
+        margin: 0 auto;
+      }
+      /* Retro font for game UI if needed outside canvas */
+      .font-retro {
+        font-family: 'Press Start 2P', cursive;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "phaser": "https://aistudiocdn.com/phaser@^3.90.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
