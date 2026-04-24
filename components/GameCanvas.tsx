@@ -39,7 +39,7 @@ const GameCanvas: React.FC = () => {
     <div 
       ref={containerRef} 
       id="game-container" 
-      className="w-full h-full bg-[#071026] flex items-center justify-center"
+      className="w-full h-full bg-[#071026] overflow-hidden flex items-center justify-center [&>canvas]:![image-rendering:pixelated]"
     />
   );
 };

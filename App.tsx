@@ -1,11 +1,48 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import GameCanvas from './components/GameCanvas';
 
 const App: React.FC = () => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(e => console.log(e));
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(e => console.log(e));
+      }
+    }
+  };
+
   return (
-    <div className="h-[100dvh] w-full flex flex-col bg-black text-white overflow-hidden">
+    <div className="h-[100dvh] w-full flex flex-col bg-black text-white overflow-hidden relative">
       <main className="flex-1 flex items-center justify-center w-full p-0 relative overflow-hidden">
+        {/* Fullscreen Toggle Button */}
+        <button
+          onClick={toggleFullscreen}
+          className="absolute top-4 right-4 z-40 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur transition-all outline-none hidden landscape:block md:block"
+          title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
+        >
+          {isFullscreen ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+          )}
+        </button>
+
         {/* Rotate Device Overlay */}
         <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 text-center landscape:hidden md:hidden">
           <div className="w-32 h-32 mb-8 animate-bounce">

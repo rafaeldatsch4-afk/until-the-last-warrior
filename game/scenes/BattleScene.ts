@@ -49,6 +49,8 @@ export default class BattleScene extends Phaser.Scene {
   private p1ActionActive: boolean = false;
   private p2ActionActive: boolean = false;
 
+  private p1Shadow!: Phaser.GameObjects.Ellipse;
+  private p2Shadow!: Phaser.GameObjects.Ellipse;
   private p1Aura!: Phaser.GameObjects.Shape;
   private p2Aura!: Phaser.GameObjects.Shape;
   private p1Shield!: Phaser.GameObjects.Arc;
@@ -176,6 +178,20 @@ export default class BattleScene extends Phaser.Scene {
   update(time: number, delta: number) {
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
 
+    if (this.p1Shadow && this.player) {
+      this.p1Shadow.setX(this.player.x);
+      // Optional: fade slightly if they go high above the start pos
+      const yDist = Math.max(0, this.p1StartPos.y - this.player.y);
+      this.p1Shadow.setAlpha(Math.max(0.1, 0.5 - (yDist / 200)));
+      this.p1Shadow.setScale(Math.max(0.2, 1 - (yDist / 200)));
+    }
+    if (this.p2Shadow && this.enemy) {
+      this.p2Shadow.setX(this.enemy.x);
+      const yDist = Math.max(0, this.p2StartPos.y - this.enemy.y);
+      this.p2Shadow.setAlpha(Math.max(0.1, 0.5 - (yDist / 200)));
+      this.p2Shadow.setScale(Math.max(0.2, 1 - (yDist / 200)));
+    }
+
     if (this.gameState.gameMode === "training") {
       this.modifyKi(true, 100);
       this.modifyKi(false, 100);
@@ -201,7 +217,7 @@ export default class BattleScene extends Phaser.Scene {
 
         // Attack
         if (
-          Phaser.Input.Keyboard.JustDown(this.keys.p1_attack) ||
+          this.keys.p1_attack.isDown ||
           this.mobileP1Attack
         ) {
           this.performAttack(true, "melee");
@@ -209,7 +225,7 @@ export default class BattleScene extends Phaser.Scene {
         }
         // Ki Blast
         else if (
-          Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast) ||
+          this.keys.p1_kiblast.isDown ||
           this.mobileP1KiBlast
         ) {
           this.performAttack(true, "ki");
@@ -242,7 +258,7 @@ export default class BattleScene extends Phaser.Scene {
           this.p1SpecialHoldTime = 0;
           this.clearChargeIndicator(true);
           this.mobileP1SpecialJustUp = false; // Reset flag
-        } else if (this.mobileP1SpecialJustUp) {
+        } else if (this.mobileP1SpecialJustUp || this.p1SpecialHoldTime > 0) {
             // Just clear the flag if hold time was 0 and nothing triggered
             if (this.p1SpecialHoldTime > 0) {
                this.performSpecial(true, this.p1SpecialHoldTime >= this.SUPER_THRESHOLD_MS);
@@ -277,9 +293,9 @@ export default class BattleScene extends Phaser.Scene {
           this.enemyDefending = false;
           this.stopContinuousCharge(false);
 
-          if (Phaser.Input.Keyboard.JustDown(this.keys.p2_attack))
+          if (this.keys.p2_attack.isDown)
             this.performAttack(false, "melee");
-          else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_kiblast))
+          else if (this.keys.p2_kiblast.isDown)
             this.performAttack(false, "ki");
           else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_transform))
             this.performTransform(false);
@@ -288,9 +304,17 @@ export default class BattleScene extends Phaser.Scene {
             this.p2SpecialHoldTime += delta;
             this.updateChargeIndicator(false, this.p2SpecialHoldTime);
           } else if (
-            this.p2SpecialHoldTime > 0 ||
-            Phaser.Input.Keyboard.JustUp(this.keys.p2_special)
+            (this.p2SpecialHoldTime > 0 && Phaser.Input.Keyboard.JustUp(this.keys.p2_special)) ||
+            (Phaser.Input.Keyboard.JustUp(this.keys.p2_special) && this.p2SpecialHoldTime === 0)
           ) {
+            this.performSpecial(
+              false,
+              this.p2SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
+            );
+            this.p2SpecialHoldTime = 0;
+            this.clearChargeIndicator(false);
+          } else if (this.p2SpecialHoldTime > 0) {
+            // Failsafe in case JustUp was missed but key is no longer down
             this.performSpecial(
               false,
               this.p2SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
@@ -410,7 +434,7 @@ export default class BattleScene extends Phaser.Scene {
     this.player.play(`${this.playerData.key}_idle`, true);
 
     // Shadows (offset +180 relative to sprite center Y to land at Y=460)
-    this.add
+    this.p1Shadow = this.add
       .ellipse(
         this.p1StartPos.x,
         this.p1StartPos.y + 180,
@@ -449,7 +473,7 @@ export default class BattleScene extends Phaser.Scene {
       .setFlipX(true)
       .setDepth(1);
     this.enemy.play(`${this.enemyData.key}_idle`, true);
-    this.add
+    this.p2Shadow = this.add
       .ellipse(
         this.p2StartPos.x,
         this.p2StartPos.y + 180,
@@ -492,10 +516,10 @@ export default class BattleScene extends Phaser.Scene {
       p1_special: Phaser.Input.Keyboard.KeyCodes.D,
       p1_transform: Phaser.Input.Keyboard.KeyCodes.A,
       p2_attack: Phaser.Input.Keyboard.KeyCodes.UP,
-      p2_kiblast: Phaser.Input.Keyboard.KeyCodes.BACKSPACE,
+      p2_kiblast: Phaser.Input.Keyboard.KeyCodes.SHIFT,
       p2_defend: Phaser.Input.Keyboard.KeyCodes.DOWN,
-      p2_special: Phaser.Input.Keyboard.KeyCodes.RIGHT,
-      p2_transform: Phaser.Input.Keyboard.KeyCodes.LEFT,
+      p2_special: Phaser.Input.Keyboard.KeyCodes.LEFT,
+      p2_transform: Phaser.Input.Keyboard.KeyCodes.RIGHT,
       pause: Phaser.Input.Keyboard.KeyCodes.ESC,
     });
 

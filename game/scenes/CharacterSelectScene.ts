@@ -42,8 +42,20 @@ export default class CharacterSelectScene extends Phaser.Scene {
         this.state.gameMode = 'single';
     }
 
+    // Default P2 character if not set
+    if (this.state.gameMode === 'local_pvp' && this.state.p2CharacterId === undefined) {
+        const unlockedChars = this.state.characters.filter(c => c.unlocked);
+        const different = unlockedChars.find(c => c.id !== this.state.p1CharacterId);
+        this.state.p2CharacterId = different ? different.id : unlockedChars[0].id;
+    }
+
     const { width, height } = this.cameras.main;
     this.selectionStep = 0;
+
+    // Keyboard handlers for confirm
+    this.input.keyboard?.on('keydown-ENTER', () => this.handleConfirm());
+    this.input.keyboard?.on('keydown-TAB', (e: KeyboardEvent) => { e.preventDefault(); this.handleConfirm(); });
+
 
     // Background
     const bg = this.add.graphics();
@@ -137,45 +149,71 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     hitArea.on('pointerover', () => bg.setFillStyle(0x2ecc71))
       .on('pointerout', () => bg.setFillStyle(0x27ae60))
-      .on('pointerdown', () => {
-          if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
-          
-          if (this.state.gameMode === 'tournament') {
-              this.state.tournamentPlayerCharId = this.state.p1CharacterId;
-              
-              // Generate Bracket
-              const chars = this.state.characters;
-              const participants = [this.state.p1CharacterId];
-              const available = chars.filter(c => c.id !== this.state.p1CharacterId);
-              Phaser.Utils.Array.Shuffle(available);
-              for(let i=0; i<7; i++) {
-                  participants.push(available[i].id);
+      .on('pointerdown', () => this.handleConfirm());
+  }
+
+  handleConfirm() {
+      if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
+      
+      if (this.state.gameMode === 'local_pvp') {
+          if (this.selectionStep === 0) {
+              this.selectionStep = 1;
+              if (this.state.p2CharacterId === undefined || this.state.p2CharacterId === this.state.p1CharacterId) {
+                  const unlockedChars = this.state.characters.filter(c => c.unlocked);
+                  const different = unlockedChars.find(c => c.id !== this.state.p1CharacterId);
+                  this.state.p2CharacterId = different ? different.id : unlockedChars[0].id;
               }
-              Phaser.Utils.Array.Shuffle(participants);
-              
-              this.state.tournamentRounds = [
-                  { matches: [ {p1: participants[0], p2: participants[1], winner: null}, {p1: participants[2], p2: participants[3], winner: null}, {p1: participants[4], p2: participants[5], winner: null}, {p1: participants[6], p2: participants[7], winner: null} ] },
-                  { matches: [ {p1: null, p2: null, winner: null}, {p1: null, p2: null, winner: null} ] },
-                  { matches: [ {p1: null, p2: null, winner: null} ] }
-              ];
-              this.state.tournamentCurrentRoundIndex = 0;
-              this.registry.set('gameState', this.state);
-              this.scene.start('TournamentScene');
+              this.updateUI();
+              return;
           } else {
               this.scene.start('BattleScene');
+              return;
           }
-      });
+      }
+      
+      if (this.state.gameMode === 'tournament') {
+          this.state.tournamentPlayerCharId = this.state.p1CharacterId;
+          
+          // Generate Bracket
+          const chars = this.state.characters;
+          const participants = [this.state.p1CharacterId];
+          const available = chars.filter(c => c.id !== this.state.p1CharacterId);
+          Phaser.Utils.Array.Shuffle(available);
+          for(let i=0; i<7; i++) {
+              participants.push(available[i].id);
+          }
+          Phaser.Utils.Array.Shuffle(participants);
+          
+          this.state.tournamentRounds = [
+              { matches: [ {p1: participants[0], p2: participants[1], winner: null}, {p1: participants[2], p2: participants[3], winner: null}, {p1: participants[4], p2: participants[5], winner: null}, {p1: participants[6], p2: participants[7], winner: null} ] },
+              { matches: [ {p1: null, p2: null, winner: null}, {p1: null, p2: null, winner: null} ] },
+              { matches: [ {p1: null, p2: null, winner: null} ] }
+          ];
+          this.state.tournamentCurrentRoundIndex = 0;
+          this.registry.set('gameState', this.state);
+          this.scene.start('TournamentScene');
+      } else {
+          this.scene.start('BattleScene');
+      }
   }
 
   updateUI() {
       this.headerText.setText(this.getSelectionText());
       this.createCharacterSelector();
       
-      // Mostrar botão de lutar se a seleção estiver completa ou for single player/arcade/tournament
-      if (this.state.gameMode !== 'local_pvp' || this.selectionStep === 1) {
+      const txt = this.fightBtn.list[3] as Phaser.GameObjects.Text;
+      
+      if (this.state.gameMode !== 'local_pvp') {
+          txt.setText('LUTAR!');
           this.fightBtn.setVisible(true);
       } else {
-          this.fightBtn.setVisible(false); 
+          if (this.selectionStep === 0) {
+             txt.setText('CONFIRMAR P1');
+             this.fightBtn.setVisible(true);
+          } else if (this.selectionStep === 1) {
+             txt.setText('CONFIRMAR P2');
+             this.fightBtn.setVisible(true);
+          }
       }
   }
 
@@ -258,14 +296,17 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
           card.add([shadow, bg, innerBg, sprite, nameBg, nameTxt]);
 
+          let p1BadgeX = 0, p2BadgeX = 0;
+          if (isP1 && isP2) { p1BadgeX = -20; p2BadgeX = 20; }
+          
           if (isP1) {
-              const p1Badge = this.add.rectangle(0, -cardSize/2 - 12, 40, 24, 0x3498db).setStrokeStyle(2, 0xffffff);
-              const p1Txt = this.add.text(0, -cardSize/2 - 12, 'P1', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+              const p1Badge = this.add.rectangle(p1BadgeX, -cardSize/2 - 12, 40, 24, 0x3498db).setStrokeStyle(2, 0xffffff);
+              const p1Txt = this.add.text(p1BadgeX, -cardSize/2 - 12, 'P1', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
               card.add([p1Badge, p1Txt]);
           }
           if (isP2) {
-              const p2Badge = this.add.rectangle(0, -cardSize/2 - 12, 40, 24, 0xe74c3c).setStrokeStyle(2, 0xffffff);
-              const p2Txt = this.add.text(0, -cardSize/2 - 12, 'P2', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+              const p2Badge = this.add.rectangle(p2BadgeX, -cardSize/2 - 12, 40, 24, 0xe74c3c).setStrokeStyle(2, 0xffffff);
+              const p2Txt = this.add.text(p2BadgeX, -cardSize/2 - 12, 'P2', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
               card.add([p2Badge, p2Txt]);
           }
 
@@ -307,10 +348,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
     } else {
         if (this.selectionStep === 0) {
             this.state.p1CharacterId = id;
-            this.selectionStep = 1;
         } else {
             this.state.p2CharacterId = id;
-            this.selectionStep = 0; 
         }
     }
     this.updateUI();
