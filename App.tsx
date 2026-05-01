@@ -4,13 +4,28 @@ import GameCanvas from './components/GameCanvas';
 
 const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
     const onFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
     document.addEventListener('fullscreenchange', onFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+
+    // Listen for PWA installation prompt
+    const handleBeforeInstallPrompt = (e: any) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
 
   const toggleFullscreen = () => {
@@ -23,25 +38,51 @@ const App: React.FC = () => {
     }
   };
 
+  const handleInstallPWA = async () => {
+    if (deferredPrompt) {
+      // Show the install prompt
+      deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      setDeferredPrompt(null);
+    }
+  };
+
   return (
     <div className="h-[100dvh] w-full flex flex-col bg-black text-white overflow-hidden relative">
       <main className="flex-1 flex items-center justify-center w-full p-0 relative overflow-hidden">
-        {/* Fullscreen Toggle Button */}
-        <button
-          onClick={toggleFullscreen}
-          className="absolute top-4 right-4 z-40 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur transition-all outline-none hidden landscape:block md:block"
-          title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
-        >
-          {isFullscreen ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-            </svg>
+        {/* Buttons Container */}
+        <div className="absolute top-4 right-4 z-40 flex flex-col sm:flex-row gap-2">
+          {deferredPrompt && (
+            <button
+              onClick={handleInstallPWA}
+              className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-4 py-2 rounded-full shadow-lg transition-all animate-pulse outline-none"
+              title="Instalar Jogo Offline"
+            >
+              Instalar Jogo
+            </button>
           )}
-        </button>
+          <button
+            onClick={toggleFullscreen}
+            className="bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur transition-all outline-none hidden landscape:block md:block"
+            title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
+          >
+            {isFullscreen ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+              </svg>
+            )}
+          </button>
+        </div>
 
         {/* Rotate Device Overlay */}
         <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 text-center landscape:hidden md:hidden">
@@ -67,7 +108,7 @@ const App: React.FC = () => {
           </button>
         </div>
 
-        <div className="relative overflow-hidden bg-[#071026] flex items-center justify-center w-full h-full">
+        <div className="relative overflow-hidden bg-black flex items-center justify-center w-full h-full">
           <GameCanvas />
         </div>
       </main>

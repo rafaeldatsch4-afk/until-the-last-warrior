@@ -16,30 +16,12 @@ export default defineConfig(({ mode }) => {
         VitePWA({
           registerType: 'autoUpdate',
           injectRegister: 'script',
-          includeAssets: ['icon.svg'],
-          manifest: {
-            name: 'Until The Last Warrior',
-            short_name: 'Last Warrior',
-            description: 'A DBZ style fighting game',
-            theme_color: '#f85b1a',
-            background_color: '#0f172a',
-            display: 'fullscreen',
-            orientation: 'landscape',
-            icons: [
-              {
-                src: 'icon.svg',
-                sizes: '192x192',
-                type: 'image/svg+xml',
-                purpose: 'any maskable'
-              },
-              {
-                src: 'icon.svg',
-                sizes: '512x512',
-                type: 'image/svg+xml',
-                purpose: 'any maskable'
-              }
-            ]
-          }
+          includeAssets: ['**/*'],
+          workbox: {
+            globPatterns: ['**/*.{js,css,html,ico,png,svg,json,mp3,ogg,wav}'],
+            maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, // 50MB to fit game assets
+          },
+          manifest: false
         })
       ],
       define: {

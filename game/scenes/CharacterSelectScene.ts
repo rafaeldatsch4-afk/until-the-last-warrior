@@ -240,7 +240,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
           const y = (row * (cardSize + gapY));
 
           const isP1 = this.state.p1CharacterId === char.id;
-          const isP2 = this.state.p2CharacterId === char.id && this.state.gameMode === 'local_pvp';
+          const isP2 = this.state.p2CharacterId === char.id && this.state.gameMode === 'local_pvp' && this.selectionStep === 1;
           const isSelected = isP1 || isP2;
 
           const card = this.add.container(x, y);

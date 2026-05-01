@@ -513,6 +513,7 @@ export default class PreloadScene extends Phaser.Scene {
           // Legs
           box(10, 23, 4, 6, GI_ORANGE);
           box(18, 23, 4, 6, GI_ORANGE);
+          box(14, 23, 4, 2, GI_ORANGE); // Crotch connection gap
           // Gi folds on legs
           box(10, 23, 1, 6, GI_SHADOW);
           box(21, 23, 1, 6, GI_SHADOW);
@@ -565,17 +566,17 @@ export default class PreloadScene extends Phaser.Scene {
 
           // Arms (Wristbands)
           if (isCharge) {
-              // Genki Dama charge: both arms raised straight up
+              // Genki Dama charge: both arms raised straight up, spaced out to not overlap head
               // Right arm
-              box(18, 4, 3, 10, SKIN_TONE); 
-              box(18, 14, 3, 3, GI_ORANGE); // shoulder
-              box(18, 4, 3, 3, GI_BLUE); // wristband
-              box(18, 2, 3, 3, SKIN_TONE); // fist
+              box(20, 4, 3, 10, SKIN_TONE); 
+              box(20, 14, 3, 3, GI_ORANGE); // shoulder
+              box(20, 4, 3, 3, GI_BLUE); // wristband
+              box(20, 2, 3, 3, SKIN_TONE); // fist
               // Left arm
-              box(11, 4, 3, 10, SKIN_TONE); 
-              box(11, 14, 3, 3, GI_ORANGE); // shoulder
-              box(11, 4, 3, 3, GI_BLUE); // wristband
-              box(11, 2, 3, 3, SKIN_TONE); // fist
+              box(9, 4, 3, 10, SKIN_TONE); 
+              box(9, 14, 3, 3, GI_ORANGE); // shoulder
+              box(9, 4, 3, 3, GI_BLUE); // wristband
+              box(9, 2, 3, 3, SKIN_TONE); // fist
           } else if (isAttack) {
             // Right arm punch straight out (muscular)
             box(21, 13, 5, 4, SKIN_TONE); // bicep
@@ -629,9 +630,9 @@ export default class PreloadScene extends Phaser.Scene {
 
           // Face
           headDot(13, 9, WHITE);
-          headDot(18, 9, WHITE);
+          headDot(17, 9, WHITE);
           headDot(14, 9, eyeColor);
-          headDot(17, 9, eyeColor);
+          headDot(18, 9, eyeColor);
           headDot(13, 8, eyebrowColor);
           headDot(14, 8, eyebrowColor);
           headDot(17, 8, eyebrowColor);
@@ -803,12 +804,13 @@ export default class PreloadScene extends Phaser.Scene {
 
           // Torso (Suit underneath)
           box(12, 19, 8, 4, SUIT_BLUE);
+          box(14, 23, 4, 2, SUIT_BLUE); // Crotch connection gap
           
           // Bodysuit ribbing on abdomen
           box(12, 20, 8, 1, SUIT_SHADOW);
           box(12, 22, 8, 1, SUIT_SHADOW);
-          box(12, 19, 1, 4, 0x0a142c);
-          box(19, 19, 1, 4, 0x0a142c); // Side shadow
+          box(12, 19, 1, 5, 0x0a142c);
+          box(19, 19, 1, 5, 0x0a142c); // Side shadow
 
           // Armor (Segmented Chest Plate)
           // Main armor block
@@ -835,20 +837,20 @@ export default class PreloadScene extends Phaser.Scene {
 
           // Shoulders (Iconic pointy pads)
           // Left Pad (overlapping arm and chest)
-          box(6, 12, 6, 2, GOLD); // Base gold trim
-          box(5, 13, 7, 2, ARMOR_WHITE); // White pad overlapping
+          box(7, 12, 5, 2, GOLD); // Base gold trim
+          box(6, 13, 6, 2, ARMOR_WHITE); // White pad overlapping
           dot(6, 11, GOLD); // Peak point gold
           dot(5, 12, ARMOR_WHITE); // Peak point white
-          box(6, 14, 6, 1, ARMOR_SHADOW); // Underside shadow
-          box(6, 13, 1, 1, 0xffffff); // Glint
+          box(8, 14, 4, 1, ARMOR_SHADOW); // Underside shadow
+          box(7, 13, 1, 1, 0xffffff); // Glint
           
           // Right Pad
-          box(20, 12, 6, 2, GOLD);
-          box(20, 13, 7, 2, ARMOR_WHITE);
+          box(20, 12, 5, 2, GOLD);
+          box(20, 13, 6, 2, ARMOR_WHITE);
           dot(25, 11, GOLD); 
           dot(26, 12, ARMOR_WHITE); 
-          box(20, 14, 6, 1, ARMOR_SHADOW);
-          box(25, 13, 1, 1, 0xffffff);
+          box(20, 14, 4, 1, ARMOR_SHADOW);
+          box(24, 13, 1, 1, 0xffffff);
 
           // --- ARMS ---
           if (isAttack) {
@@ -856,7 +858,7 @@ export default class PreloadScene extends Phaser.Scene {
             box(21, 14, 6, 1, SUIT_SHADOW); // Ribbing
             box(27, 14, 6, 3, SUIT_BLUE); // Forearm
             // Glove
-            box(31, 14, 5, 4, ARMOR_WHITE); 
+            box(31, 13, 5, 5, ARMOR_WHITE); 
             box(31, 14, 2, 2, ARMOR_SHADOW); // Knuckles
             box(34, 13, 3, 4, ARMOR_WHITE); // Extended fist
             alphaBox(36, 13, 4, 4, ARMOR_WHITE, 0.5); // Blur
@@ -875,15 +877,17 @@ export default class PreloadScene extends Phaser.Scene {
             box(22, 17, 1, 2, SUIT_LIGHT); // Bicep curve
 
             // Gloves (White, flared top)
-            box(7, 20, 5, 4, ARMOR_WHITE);
-            box(20, 20, 5, 4, ARMOR_WHITE);
-            box(8, 20, 3, 4, ARMOR_SHADOW); // Cylinder shadow
-            box(21, 20, 3, 4, ARMOR_SHADOW);
-            // Glove folds
-            box(7, 21, 4, 1, ARMOR_SHADOW);
-            box(21, 21, 4, 1, ARMOR_SHADOW);
-            box(7, 23, 4, 1, ARMOR_DARK);
-            box(21, 23, 4, 1, ARMOR_DARK); 
+            box(7, 19, 5, 2, ARMOR_WHITE);
+            box(20, 19, 5, 2, ARMOR_WHITE);
+            box(8, 19, 3, 2, ARMOR_SHADOW); 
+            box(21, 19, 3, 2, ARMOR_SHADOW);
+            
+            // Hands (smaller actual fist size)
+            box(8, 21, 3, 3, ARMOR_WHITE);
+            box(21, 21, 3, 3, ARMOR_WHITE);
+            // Hand shading/detail
+            box(8, 22, 3, 1, ARMOR_SHADOW);
+            box(21, 22, 3, 1, ARMOR_SHADOW);
           }
 
           // --- HEAD & FACE ---
@@ -901,7 +905,7 @@ export default class PreloadScene extends Phaser.Scene {
           headBox(12, 8, 3, 1, WHITE);
           headBox(17, 8, 3, 1, WHITE);
           headDot(14, 8, EYE);
-          headDot(17, 8, EYE);
+          headDot(18, 8, EYE); // Fix: pupil was at 19 and got overwritten by slant
           
           // Sharp, angled eyebrows
           headBox(12, 7, 3, 1, BROW);
@@ -933,45 +937,40 @@ export default class PreloadScene extends Phaser.Scene {
           headBox(10, 5, 1, 3, HAIR);
           headBox(21, 5, 1, 3, HAIR);
 
-          // Main Hair Volume
-          headBox(10, 1, 12, 4, HAIR);
-          headBox(9, -2, 14, 3, HAIR);
-          headBox(10, -6, 12, 4, HAIR);
-          headBox(11, -9, 10, 3, HAIR);
-          headBox(13, -12, 6, 3, HAIR);
-          headBox(14, -15, 4, 3, HAIR); 
+          // Main Hair Volume (shorter, spikier)
+          headBox(10, 2, 12, 4, HAIR); // base volume at top of head // y=2,3,4,5
+          headBox(9, 0, 14, 2, HAIR); // widest part // y=0,1
+          headBox(10, -3, 12, 3, HAIR); // y=-1, -2, -3
+          headBox(11, -6, 10, 3, HAIR);
+          headBox(13, -9, 6, 3, HAIR);
           
-          // Tallest tip
-          headBox(15, -17, 2, 2, HAIR);
+          // Tips
+          headBox(14, -11, 4, 2, HAIR);
+          headBox(15, -13, 2, 2, HAIR); // Tallest tip
 
-          // Side flame flares
-          headBox(8, 0, 2, 2, HAIR);
-          headBox(7, -3, 2, 2, HAIR);
-          headBox(8, -5, 2, 3, HAIR);
-          headBox(9, -8, 2, 3, HAIR);
-          headBox(10, -11, 2, 3, HAIR);
-          
-          headBox(22, 0, 2, 2, HAIR);
-          headBox(23, -3, 2, 2, HAIR);
-          headBox(22, -5, 2, 3, HAIR);
-          headBox(21, -8, 2, 3, HAIR);
-          headBox(20, -11, 2, 3, HAIR);
+          // Spikes sticking out the sides
+          headBox(8, 0, 1, 2, HAIR);
+          headBox(23, 0, 1, 2, HAIR);
+          headBox(9, -2, 1, 2, HAIR);
+          headBox(22, -2, 1, 2, HAIR);
+          headBox(10, -5, 1, 2, HAIR);
+          headBox(21, -5, 1, 2, HAIR);
 
           // Hair Texture & Shading (Striated upwards lines)
           const hairShadowC = HAIR === BLACK ? 0x222222 : isUI ? 0x732d91 : 0xd4a000;
           
           // Vertical shadow streaks
-          headBox(11, -11, 1, 12, hairShadowC);
-          headBox(20, -11, 1, 12, hairShadowC);
-          headBox(14, -15, 1, 15, hairShadowC);
-          headBox(17, -15, 1, 15, hairShadowC);
+          headBox(11, -7, 1, 9, hairShadowC);
+          headBox(20, -7, 1, 9, hairShadowC);
+          headBox(14, -11, 1, 13, hairShadowC);
+          headBox(17, -11, 1, 13, hairShadowC);
 
           if (isTransformed) {
             // Super Saiyan Bright Highlights
             const hairLight = isUI ? 0xd2b4de : 0xffffff;
-            headBox(13, -14, 1, 14, hairLight);
-            headBox(16, -14, 1, 14, hairLight);
-            headBox(15, -16, 1, 6, hairLight); // Center flash
+            headBox(13, -10, 1, 12, hairLight);
+            headBox(16, -10, 1, 12, hairLight);
+            headBox(15, -12, 1, 6, hairLight); // Center flash
           }
           break;
         }
@@ -1133,13 +1132,13 @@ export default class PreloadScene extends Phaser.Scene {
           if (isTransformed) {
             headDot(12, 9, WHITE);
             headDot(13, 9, eyeColor);
-            headDot(18, 9, eyeColor);
-            headDot(19, 9, WHITE);
+            headDot(18, 9, WHITE);
+            headDot(19, 9, eyeColor);
           } else {
             headDot(13, 9, WHITE);
             headDot(14, 9, eyeColor);
-            headDot(17, 9, eyeColor);
-            headDot(18, 9, WHITE);
+            headDot(17, 9, WHITE);
+            headDot(18, 9, eyeColor);
           }
 
           // Mouth
@@ -4191,6 +4190,131 @@ export default class PreloadScene extends Phaser.Scene {
           // Right
           headBox(17, 8 + bob, 3, 4, EYE_RIM);
           headBox(17, 9 + bob, 2, 2, EYE_GLOW);
+
+          break;
+        }
+
+        case "saitama": {
+          const isSerious = form > 0;
+          const SUIT_YELLOW = 0xffd700; // More golden yellow
+          const SUIT_SHADOW = 0xb8860b; // Darker gold for shadows
+          const GLOVE_RED = 0x8b0000; // Deep red
+          const GLOVE_LIGHT = 0xcc0000;
+          const CAPE_WHITE = 0xfafafa;
+          const CAPE_SHADOW = 0xd3d3d3;
+          const BELT_BLACK = 0x222222;
+          const BELT_BUCKLE = 0xffd700;
+          const SKIN_TONE = 0xffdbac;
+          const SKIN_SHADOW = 0xe0ac7d;
+          const ZIPPER_SILVER = 0xcccccc;
+
+          // Cape (Behind body - larger and more dynamic)
+          if (!isAttack) {
+            const capeDrift = Math.sin(f * 0.4 + this.time.now * 0.005) * 3;
+            // Main cape block
+            box(9 + capeDrift, 14, 14, 12, CAPE_WHITE);
+            // Cape shading
+            box(9 + capeDrift, 14, 1, 12, CAPE_SHADOW);
+            box(22 + capeDrift, 14, 1, 12, CAPE_SHADOW);
+            // Flared bottom
+            box(7 + capeDrift, 24, 18, 5, CAPE_WHITE);
+            box(7 + capeDrift, 24, 1, 5, CAPE_SHADOW);
+            box(24 + capeDrift, 24, 1, 5, CAPE_SHADOW);
+          }
+
+          // Legs
+          box(11, 23, 4, 7, SUIT_YELLOW);
+          box(17, 23, 4, 7, SUIT_YELLOW);
+          box(14, 23, 4, 2, SUIT_YELLOW); // Crotch
+          // Leg Shading
+          box(11, 23, 1, 7, SUIT_SHADOW);
+          box(20, 23, 1, 7, SUIT_SHADOW);
+
+          // Boots (Classic red)
+          box(10, 30, 5, 2, GLOVE_RED);
+          box(17, 30, 5, 2, GLOVE_RED);
+          dot(10, 29, GLOVE_RED);
+          dot(21, 29, GLOVE_RED);
+
+          // Torso
+          box(11, 14, 10, 9, SUIT_YELLOW);
+          // Torso Shading (Muscles)
+          box(11, 14, 1, 9, SUIT_SHADOW);
+          box(20, 14, 1, 9, SUIT_SHADOW);
+          box(14, 17, 1, 4, SUIT_SHADOW); // Abs line
+          box(17, 17, 1, 4, SUIT_SHADOW);
+
+          // Neck / Zipper
+          box(15, 14, 2, 2, ZIPPER_SILVER);
+          dot(15, 16, 0x000000); // Zipper pull
+
+          // Cape buttons (at neck) - Red discs
+          dot(12, 15, GLOVE_RED);
+          dot(19, 15, GLOVE_RED);
+
+          // Belt
+          box(11, 22, 10, 2, BELT_BLACK);
+          box(14, 22, 4, 2, BELT_BUCKLE);
+          dot(15, 22, 0xffffff); // Buckle shine
+
+          // Arms
+          if (isAttack) {
+            // Serious Punch!
+            box(21, 14, 8, 4, SUIT_YELLOW);
+            box(21, 14, 8, 1, SUIT_SHADOW);
+            // Arm muscles
+            box(23, 13, 4, 1, SUIT_YELLOW);
+            
+            box(29, 13, 6, 6, GLOVE_RED); // Massive red fist
+            box(29, 13, 6, 1, GLOVE_LIGHT); // Fist shine
+            // Trail effects
+            alphaBox(35, 13, 8, 6, GLOVE_LIGHT, 0.4);
+            alphaBox(43, 14, 10, 4, 0xffffff, 0.2);
+          } else {
+            // Guard/Idle arms
+            box(8, 14, 3, 5, SUIT_YELLOW);
+            box(21, 14, 3, 5, SUIT_YELLOW);
+            box(8, 14, 1, 5, SUIT_SHADOW);
+            box(23, 14, 1, 5, SUIT_SHADOW);
+
+            // Gloves
+            box(7, 19, 4, 5, GLOVE_RED);
+            box(21, 19, 4, 5, GLOVE_RED);
+            box(7, 19, 4, 1, GLOVE_LIGHT);
+            box(21, 19, 4, 1, GLOVE_LIGHT);
+          }
+
+          // Head (Remastered Baldness)
+          headBox(12, 6, 8, 8, SKIN_TONE);
+          headBox(13, 13, 6, 1, SKIN_SHADOW); // Jawline
+          
+          // Face Details
+          if (isSerious) {
+            // Serious Look (Dashed/Shaded eyes)
+            headBox(13, 9, 2, 1, 0xffffff);
+            headBox(17, 9, 2, 1, 0xffffff);
+            headDot(14, 9, 0x000000);
+            headDot(18, 9, 0x000000);
+            // Intense brows
+            headBox(13, 8, 2, 1, 0x000000);
+            headBox(17, 8, 2, 1, 0x000000);
+            // Mouth (Serious line)
+            headBox(15, 12, 2, 1, 0x000000);
+            // Cheek lines for intensity
+            headDot(13, 11, SKIN_SHADOW);
+            headDot(19, 11, SKIN_SHADOW);
+          } else {
+            // Goofy/Default Look
+            headDot(14, 9, 0x000000);
+            headDot(18, 9, 0x000000);
+            // Small mouth
+            headBox(15, 12, 2, 1, 0x000000);
+          }
+
+          // Head shine (The iconic bald głow)
+          headDot(14, 7, 0xffffff);
+          headDot(15, 7, 0xffffff);
+          headDot(13, 8, 0xffffff);
 
           break;
         }

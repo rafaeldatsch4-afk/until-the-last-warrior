@@ -48,6 +48,17 @@ export default class BattleScene extends Phaser.Scene {
   // Action Flags to prevent spamming
   private p1ActionActive: boolean = false;
   private p2ActionActive: boolean = false;
+  private p2BufferedAttack: boolean = false;
+  private p2BufferedKiBlast: boolean = false;
+  private p2BufferedTransform: boolean = false;
+
+  private p1AttackBuffer: number = 0;
+  private p1KiBlastBuffer: number = 0;
+  private p1TransformBuffer: number = 0;
+  private p2AttackBuffer: number = 0;
+  private p2KiBlastBuffer: number = 0;
+  private p2TransformBuffer: number = 0;
+  private readonly BUFFER_MS = 250;
 
   private p1Shadow!: Phaser.GameObjects.Ellipse;
   private p2Shadow!: Phaser.GameObjects.Ellipse;
@@ -93,6 +104,15 @@ export default class BattleScene extends Phaser.Scene {
     this.isBattleOver = false;
     this.p1ActionActive = false;
     this.p2ActionActive = false;
+    this.p2BufferedAttack = false;
+    this.p2BufferedKiBlast = false;
+    this.p2BufferedTransform = false;
+    this.p1AttackBuffer = 0;
+    this.p1KiBlastBuffer = 0;
+    this.p1TransformBuffer = 0;
+    this.p2AttackBuffer = 0;
+    this.p2KiBlastBuffer = 0;
+    this.p2TransformBuffer = 0;
     this.p1SpecialHoldTime = 0;
     this.p2SpecialHoldTime = 0;
 
@@ -178,6 +198,42 @@ export default class BattleScene extends Phaser.Scene {
   update(time: number, delta: number) {
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
 
+    // Buffer keyboard inputs with a timer
+    if (Phaser.Input.Keyboard.JustDown(this.keys.p1_attack)) { this.mobileP1Attack = true; this.p1AttackBuffer = this.BUFFER_MS; }
+    if (Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast)) { this.mobileP1KiBlast = true; this.p1KiBlastBuffer = this.BUFFER_MS; }
+    if (Phaser.Input.Keyboard.JustDown(this.keys.p1_transform)) { this.mobileP1Transform = true; this.p1TransformBuffer = this.BUFFER_MS; }
+
+    if (Phaser.Input.Keyboard.JustDown(this.keys.p2_attack)) { this.p2BufferedAttack = true; this.p2AttackBuffer = this.BUFFER_MS; }
+    if (Phaser.Input.Keyboard.JustDown(this.keys.p2_kiblast)) { this.p2BufferedKiBlast = true; this.p2KiBlastBuffer = this.BUFFER_MS; }
+    if (Phaser.Input.Keyboard.JustDown(this.keys.p2_transform)) { this.p2BufferedTransform = true; this.p2TransformBuffer = this.BUFFER_MS; }
+
+    // Decay the buffers
+    if (this.p1AttackBuffer > 0) {
+      this.p1AttackBuffer -= delta;
+      if (this.p1AttackBuffer <= 0) this.mobileP1Attack = false;
+    }
+    if (this.p1KiBlastBuffer > 0) {
+      this.p1KiBlastBuffer -= delta;
+      if (this.p1KiBlastBuffer <= 0) this.mobileP1KiBlast = false;
+    }
+    if (this.p1TransformBuffer > 0) {
+      this.p1TransformBuffer -= delta;
+      if (this.p1TransformBuffer <= 0) this.mobileP1Transform = false;
+    }
+
+    if (this.p2AttackBuffer > 0) {
+      this.p2AttackBuffer -= delta;
+      if (this.p2AttackBuffer <= 0) this.p2BufferedAttack = false;
+    }
+    if (this.p2KiBlastBuffer > 0) {
+      this.p2KiBlastBuffer -= delta;
+      if (this.p2KiBlastBuffer <= 0) this.p2BufferedKiBlast = false;
+    }
+    if (this.p2TransformBuffer > 0) {
+      this.p2TransformBuffer -= delta;
+      if (this.p2TransformBuffer <= 0) this.p2BufferedTransform = false;
+    }
+
     if (this.p1Shadow && this.player) {
       this.p1Shadow.setX(this.player.x);
       // Optional: fade slightly if they go high above the start pos
@@ -241,39 +297,38 @@ export default class BattleScene extends Phaser.Scene {
         }
 
         // Special
-        if (this.keys.p1_special.isDown || this.mobileP1Special) {
-          this.p1SpecialHoldTime += delta;
-          this.updateChargeIndicator(true, this.p1SpecialHoldTime);
-        } else if (
-          (this.p1SpecialHoldTime > 0 && this.mobileP1SpecialJustUp) ||
-          (this.p1SpecialHoldTime > 0 && Phaser.Input.Keyboard.JustUp(this.keys.p1_special)) ||
-          // Ensure a minimum tap time isn't required if they just tap it
-          (Phaser.Input.Keyboard.JustUp(this.keys.p1_special) && this.p1SpecialHoldTime === 0)
-        ) {
-          // Fire the special
-          this.performSpecial(
-            true,
-            this.p1SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
-          );
-          this.p1SpecialHoldTime = 0;
-          this.clearChargeIndicator(true);
-          this.mobileP1SpecialJustUp = false; // Reset flag
-        } else if (this.mobileP1SpecialJustUp || this.p1SpecialHoldTime > 0) {
-            // Just clear the flag if hold time was 0 and nothing triggered
-            if (this.p1SpecialHoldTime > 0) {
-               this.performSpecial(true, this.p1SpecialHoldTime >= this.SUPER_THRESHOLD_MS);
-            }
+        if (!this.p1ActionActive) {
+          if (this.keys.p1_special.isDown || this.mobileP1Special) {
+            this.p1SpecialHoldTime += delta;
+            this.updateChargeIndicator(true, this.p1SpecialHoldTime);
+          } else if (
+            (this.p1SpecialHoldTime > 0 && this.mobileP1SpecialJustUp) ||
+            (this.p1SpecialHoldTime > 0 && Phaser.Input.Keyboard.JustUp(this.keys.p1_special)) ||
+            // Ensure a minimum tap time isn't required if they just tap it
+            (Phaser.Input.Keyboard.JustUp(this.keys.p1_special) && this.p1SpecialHoldTime === 0)
+          ) {
+            // Fire the special
+            this.performSpecial(
+              true,
+              this.p1SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
+            );
             this.p1SpecialHoldTime = 0;
             this.clearChargeIndicator(true);
-            this.mobileP1SpecialJustUp = false;
+            this.mobileP1SpecialJustUp = false; // Reset flag
+          } else if (this.mobileP1SpecialJustUp || this.p1SpecialHoldTime > 0) {
+              // Just clear the flag if hold time was 0 and nothing triggered
+              if (this.p1SpecialHoldTime > 0) {
+                 this.performSpecial(true, this.p1SpecialHoldTime >= this.SUPER_THRESHOLD_MS);
+              }
+              this.p1SpecialHoldTime = 0;
+              this.clearChargeIndicator(true);
+              this.mobileP1SpecialJustUp = false;
+          }
         }
       }
     }
 
-    // Reset mobile "JustDown" flags so they don't buffer indefinitely
-    this.mobileP1Attack = false;
-    this.mobileP1KiBlast = false;
-    this.mobileP1Transform = false;
+    // Reset mobile special flag
     this.mobileP1SpecialJustUp = false;
 
     // --- PLAYER 2 CONTROLS (Local PvP) ---
@@ -293,34 +348,40 @@ export default class BattleScene extends Phaser.Scene {
           this.enemyDefending = false;
           this.stopContinuousCharge(false);
 
-          if (this.keys.p2_attack.isDown)
+          if (this.keys.p2_attack.isDown || this.p2BufferedAttack) {
             this.performAttack(false, "melee");
-          else if (this.keys.p2_kiblast.isDown)
+            this.p2BufferedAttack = false;
+          } else if (this.keys.p2_kiblast.isDown || this.p2BufferedKiBlast) {
             this.performAttack(false, "ki");
-          else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_transform))
+            this.p2BufferedKiBlast = false;
+          } else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_transform) || this.p2BufferedTransform) {
             this.performTransform(false);
+            this.p2BufferedTransform = false;
+          }
 
-          if (this.keys.p2_special.isDown) {
-            this.p2SpecialHoldTime += delta;
-            this.updateChargeIndicator(false, this.p2SpecialHoldTime);
-          } else if (
-            (this.p2SpecialHoldTime > 0 && Phaser.Input.Keyboard.JustUp(this.keys.p2_special)) ||
-            (Phaser.Input.Keyboard.JustUp(this.keys.p2_special) && this.p2SpecialHoldTime === 0)
-          ) {
-            this.performSpecial(
-              false,
-              this.p2SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
-            );
-            this.p2SpecialHoldTime = 0;
-            this.clearChargeIndicator(false);
-          } else if (this.p2SpecialHoldTime > 0) {
-            // Failsafe in case JustUp was missed but key is no longer down
-            this.performSpecial(
-              false,
-              this.p2SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
-            );
-            this.p2SpecialHoldTime = 0;
-            this.clearChargeIndicator(false);
+          if (!this.p2ActionActive) {
+            if (this.keys.p2_special.isDown) {
+              this.p2SpecialHoldTime += delta;
+              this.updateChargeIndicator(false, this.p2SpecialHoldTime);
+            } else if (
+              (this.p2SpecialHoldTime > 0 && Phaser.Input.Keyboard.JustUp(this.keys.p2_special)) ||
+              (Phaser.Input.Keyboard.JustUp(this.keys.p2_special) && this.p2SpecialHoldTime === 0)
+            ) {
+              this.performSpecial(
+                false,
+                this.p2SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
+              );
+              this.p2SpecialHoldTime = 0;
+              this.clearChargeIndicator(false);
+            } else if (this.p2SpecialHoldTime > 0) {
+              // Failsafe in case JustUp was missed but key is no longer down
+              this.performSpecial(
+                false,
+                this.p2SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
+              );
+              this.p2SpecialHoldTime = 0;
+              this.clearChargeIndicator(false);
+            }
           }
         }
       }
@@ -516,7 +577,7 @@ export default class BattleScene extends Phaser.Scene {
       p1_special: Phaser.Input.Keyboard.KeyCodes.D,
       p1_transform: Phaser.Input.Keyboard.KeyCodes.A,
       p2_attack: Phaser.Input.Keyboard.KeyCodes.UP,
-      p2_kiblast: Phaser.Input.Keyboard.KeyCodes.SHIFT,
+      p2_kiblast: Phaser.Input.Keyboard.KeyCodes.ENTER,
       p2_defend: Phaser.Input.Keyboard.KeyCodes.DOWN,
       p2_special: Phaser.Input.Keyboard.KeyCodes.LEFT,
       p2_transform: Phaser.Input.Keyboard.KeyCodes.RIGHT,
@@ -673,14 +734,17 @@ export default class BattleScene extends Phaser.Scene {
     );
     createBtn(100, 350, "TRN", 0x9b59b6, () => {
       this.mobileP1Transform = true;
+      this.p1TransformBuffer = this.BUFFER_MS;
     });
 
     // Right side (Attacks)
     createBtn(860, 450, "ATK", 0xe74c3c, () => {
       this.mobileP1Attack = true;
+      this.p1AttackBuffer = this.BUFFER_MS;
     });
     createBtn(780, 450, "KI", 0x00ffff, () => {
       this.mobileP1KiBlast = true;
+      this.p1KiBlastBuffer = this.BUFFER_MS;
     });
     createBtn(
       860,
@@ -928,6 +992,14 @@ export default class BattleScene extends Phaser.Scene {
         return true;
       case "leonardo":
         this.performLeonardoAttack(
+          isPlayer,
+          attackType,
+          comboCount,
+          isComboFinisher,
+        );
+        return true;
+      case "saitama":
+        this.performSaitamaAttack(
           isPlayer,
           attackType,
           comboCount,
@@ -2820,6 +2892,107 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  performSaitamaAttack(
+    isPlayer: boolean,
+    attackType: "melee" | "ki",
+    comboCount: number,
+    isComboFinisher: boolean,
+  ) {
+    const attacker = isPlayer ? this.player : this.enemy;
+    const target = isPlayer ? this.enemy : this.player;
+    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const transLevel = isPlayer
+      ? this.playerTransformLevel
+      : this.enemyTransformLevel;
+
+    if (attackType === "melee") {
+      // Saitama Melee: Fast strikes that create shockwaves
+      attacker.play(this.getAnimKey("saitama", transLevel, "attack"));
+      this.tweens.add({
+        targets: attacker,
+        x: target.x + (isPlayer ? -45 : 45),
+        duration: 80,
+        ease: "Power2",
+        onComplete: () => {
+          if (!this.scene.isActive()) return;
+          if (this.cache.audio.exists("sfx_attack"))
+            this.sound.play("sfx_attack", { volume: 1.5 });
+
+          this.createImpactEffect(target.x, target.y - 20, 0xffffff);
+          this.cameras.main.shake(100, 0.01);
+
+          // Impact shockwave
+          const wave = this.add.circle(target.x, target.y - 20, 10, 0xffffff, 0.5).setDepth(6);
+          this.tweens.add({
+            targets: wave,
+            scale: 5,
+            alpha: 0,
+            duration: 200,
+            onComplete: () => wave.destroy(),
+          });
+
+          this.takeDamage(
+            !isPlayer,
+            Math.floor(
+              (isComboFinisher ? 30 : 15) *
+                this.getDamageMultiplier(transLevel),
+            ),
+          );
+
+          this.time.delayedCall(150, () => {
+            if (!this.scene.isActive()) return;
+            this.tweens.add({
+              targets: attacker,
+              x: startX,
+              duration: 120,
+              onComplete: () => {
+                attacker.play(this.getAnimKey("saitama", transLevel, "idle"));
+                this.setActionState(isPlayer, false);
+              },
+            });
+          });
+        },
+      });
+    } else {
+      // Saitama Ki: He doesn't have "ki", so he just does a "Normal Punch" that creates a wind pressure blast
+      attacker.play(this.getAnimKey("saitama", transLevel, "attack"));
+      this.time.delayedCall(100, () => {
+        if (!this.scene.isActive()) return;
+        if (this.cache.audio.exists("sfx_beam"))
+          this.sound.play("sfx_beam", { volume: 0.6 });
+
+        const hand = this.getHandPosition(isPlayer);
+        const blast = this.add.circle(hand.x, hand.y, 20, 0xffffff, 0.2).setDepth(5);
+        this.tweens.add({
+          targets: blast,
+          x: target.x,
+          scale: 3,
+          alpha: 0,
+          duration: 200,
+          onComplete: () => {
+            blast.destroy();
+            if (!this.scene.isActive()) return;
+            this.createImpactEffect(target.x, target.y - 10, 0xffffff);
+            this.takeDamage(
+              !isPlayer,
+              Math.floor(
+                (isComboFinisher ? 20 : 12) *
+                  this.getDamageMultiplier(transLevel),
+              ),
+            );
+          },
+        });
+
+        this.time.delayedCall(250, () => {
+          if (!this.scene.isActive()) return;
+          attacker.play(this.getAnimKey("saitama", transLevel, "idle"));
+          this.setActionState(isPlayer, false);
+        });
+      });
+    }
+  }
+
   performFrierenAttack(
     isPlayer: boolean,
     attackType: "melee" | "ki",
@@ -3559,6 +3732,10 @@ export default class BattleScene extends Phaser.Scene {
       auraColor = 0x00ffff; // Bright Blue
       ringColor = 0xffffff; // White
       transformText = "LIMITLESS!";
+    } else if (data.key === "saitama") {
+      auraColor = 0xffffff; // White/Neutral for Saitama
+      ringColor = 0xff0000; // Red for the intensity
+      transformText = "SERIOUS MODE!";
     }
 
     const animKeyTransform = this.getAnimKey(
@@ -4096,6 +4273,10 @@ export default class BattleScene extends Phaser.Scene {
             case "madara":
               if (isSuper) this.specialTengaiShinsei(isPlayer);
               else this.specialMajesticDestroyerFlame(isPlayer);
+              break;
+            case "saitama":
+              if (isSuper) this.specialSupremeHeadbutt(isPlayer);
+              else this.specialSeriousPunch(isPlayer);
               break;
             default:
               this.specialBeam(
@@ -4713,6 +4894,188 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // 4. KATANA SLASH (DIMENSIONAL CUT REMASTER)
+  private specialSupremeHeadbutt(isP: boolean) {
+    const attacker = isP ? this.player : this.enemy;
+    const target = isP ? this.enemy : this.player;
+    const startX = isP ? this.p1StartPos.x : this.p2StartPos.x;
+    const startY = isP ? this.p1StartPos.y : this.p2StartPos.y;
+    const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
+    const dmg = Math.floor(130 * this.getDamageMultiplier(transLevel));
+
+    this.log("SUPREME HEADBUTT!");
+    
+    // Preparation: Wind gathering effect
+    for(let i=0; i<10; i++) {
+       const p = this.add.circle(attacker.x + Phaser.Math.Between(-50, 50), attacker.y + Phaser.Math.Between(-50, 50), 2, 0xffffff, 0.8).setDepth(15);
+       this.tweens.add({
+         targets: p,
+         x: attacker.x,
+         y: attacker.y - 45,
+         alpha: 0,
+         duration: 500,
+         onComplete: () => p.destroy()
+       });
+    }
+
+    this.tweens.add({
+      targets: attacker,
+      x: attacker.x + (isP ? -60 : 60),
+      duration: 500,
+      ease: "Cubic.easeOut",
+      onComplete: () => {
+        if (!this.scene.isActive()) return;
+
+        // Head glint
+        const glow = this.add.circle(attacker.x, attacker.y - 45, 10, 0xffffff, 1).setDepth(20);
+        this.tweens.add({ targets: glow, scale: 5, alpha: 0, duration: 200 });
+
+        if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack", { volume: 2.5 });
+        this.cameras.main.shake(100, 0.03);
+
+        // DASH! (Almost instantaneous)
+        this.tweens.add({
+          targets: attacker,
+          x: target.x + (isP ? 30 : -30),
+          duration: 80,
+          ease: "Linear",
+          onComplete: () => {
+            if (!this.scene.isActive()) return;
+
+            glow.destroy();
+            this.createScreenFlash(0xffffff, 400, 0.9);
+            this.cameras.main.shake(600, 0.06);
+
+            // Relativistic impact - White screen for a frame
+            const flash = this.add.rectangle(480, 270, 960, 540, 0xffffff).setDepth(100).setAlpha(0);
+            this.tweens.add({ targets: flash, alpha: 1, duration: 20, yoyo: true });
+
+            this.createImpactEffect(target.x, target.y - 20, 0xffffff, "beam");
+            this.takeDamage(!isP, dmg);
+
+            // PHYSICS-BASED KNOCKBACK (Intense)
+            this.tweens.add({
+              targets: target,
+              x: target.x + (isP ? 400 : -400),
+              y: target.y - 100,
+              angle: isP ? 20 : -20,
+              duration: 500,
+              ease: "Expo.easeOut",
+              onComplete: () => {
+                if (!this.scene.isActive()) return;
+                this.tweens.add({
+                  targets: target,
+                  y: startY,
+                  angle: 0,
+                  duration: 400,
+                  ease: "Bounce.easeOut"
+                });
+              }
+            });
+
+            // Afterimage return
+            this.time.delayedCall(400, () => {
+              if (!this.scene.isActive()) return;
+              this.tweens.add({
+                targets: attacker,
+                x: startX,
+                duration: 150,
+                onComplete: () => this.onSpecialComplete(isP)
+              });
+            });
+          }
+        });
+      }
+    });
+  }
+
+  private specialSeriousPunch(isP: boolean) {
+    const attacker = isP ? this.player : this.enemy;
+    const target = isP ? this.enemy : this.player;
+    const startX = isP ? this.p1StartPos.x : this.p2StartPos.x;
+    const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
+    const dmg = Math.floor(110 * this.getDamageMultiplier(transLevel));
+
+    this.log("SERIOUS PUNCH!");
+    
+    // Slow dramatic walk
+    attacker.play(this.getAnimKey("saitama", transLevel, "idle"));
+    this.tweens.add({
+      targets: attacker,
+      x: target.x + (isP ? -120 : 120),
+      duration: 1200,
+      ease: "Power1.easeInOut",
+      onComplete: () => {
+        if (!this.scene.isActive()) return;
+        
+        // Everything goes quiet for a second...
+        this.time.delayedCall(300, () => {
+          if (!this.scene.isActive()) return;
+
+          attacker.play(this.getAnimKey("saitama", transLevel, "attack"));
+          
+          this.time.delayedCall(100, () => {
+            if (!this.scene.isActive()) return;
+            
+            if (this.cache.audio.exists("sfx_explosion")) this.sound.play("sfx_explosion", { volume: 3.0 });
+            this.createScreenFlash(0xffffff, 800, 1);
+            this.cameras.main.shake(1000, 0.1);
+
+            // ATMOSPHERIC SPLIT (Iconic)
+            const splitLine = this.add.rectangle(480, target.y - 20, 960, 10, 0xffffff).setDepth(30).setAlpha(1);
+            this.tweens.add({
+               targets: splitLine,
+               scaleY: 200,
+               alpha: 0,
+               duration: 800,
+               onComplete: () => splitLine.destroy()
+            });
+
+            // Particles flying away from impact
+            for(let i=0; i<30; i++) {
+               const p = this.add.rectangle(target.x, target.y - 20, 4, 4, 0xffffff).setDepth(20);
+               this.tweens.add({
+                  targets: p,
+                  x: p.x + (isP ? 600 : -600) + Phaser.Math.Between(-100, 100),
+                  y: p.y + Phaser.Math.Between(-300, 300),
+                  alpha: 0,
+                  duration: 1000,
+                  onComplete: () => p.destroy()
+               });
+            }
+
+            this.takeDamage(!isP, dmg);
+            this.createImpactEffect(target.x, target.y - 20, 0xffffff, "beam");
+
+            // Horizontal knockback that flies off screen briefly
+            this.tweens.add({
+              targets: target,
+              x: target.x + (isP ? 500 : -500),
+              alpha: 0,
+              duration: 300,
+              ease: "Expo.easeOut",
+              onComplete: () => {
+                 this.time.delayedCall(200, () => {
+                    target.setX(isP ? 900 : 60);
+                    this.tweens.add({ targets: target, x: isP ? this.p2StartPos.x : this.p1StartPos.x, alpha: 1, duration: 400 });
+                 });
+              }
+            });
+
+            this.time.delayedCall(600, () => {
+               if (!this.scene.isActive()) return;
+               this.tweens.add({
+                 targets: attacker,
+                 x: startX,
+                 duration: 300,
+                 onComplete: () => this.onSpecialComplete(isP)
+               });
+            });
+          });
+        });
+      }
+    });
+  }
+
   private specialSlash(isP: boolean, isS: boolean) {
     const target = isP ? this.enemy : this.player;
     const transLevel = isP

@@ -301,5 +301,20 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     specialName: "WEB SHOOTER",
     superName: "MAXIMUM SPIDER",
     specialColor: 0xffffff
+  },
+  {
+    id: 21,
+    key: "saitama",
+    name: "Saitama",
+    price: 3000,
+    unlocked: true,
+    maxHp: 350,
+    transformAvailable: true, // Serious Mode
+    sprite: "",
+    frameWidth: 64,
+    frameHeight: 64,
+    specialName: "SERIOUS PUNCH",
+    superName: "SUPREME HEADBUTT",
+    specialColor: 0xffcc00
   }
 ];
