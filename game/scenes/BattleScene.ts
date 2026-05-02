@@ -102,6 +102,7 @@ export default class BattleScene extends Phaser.Scene {
   create() {
     this.gameState = this.registry.get("gameState") as GameState;
     this.isBattleOver = false;
+    this.input.addPointer(3); // Support up to 4 touches (1 default + 3 added)
     this.p1ActionActive = false;
     this.p2ActionActive = false;
     this.p2BufferedAttack = false;
@@ -273,7 +274,7 @@ export default class BattleScene extends Phaser.Scene {
 
         // Attack
         if (
-          this.keys.p1_attack.isDown ||
+          Phaser.Input.Keyboard.JustDown(this.keys.p1_attack) ||
           this.mobileP1Attack
         ) {
           this.performAttack(true, "melee");
@@ -281,7 +282,7 @@ export default class BattleScene extends Phaser.Scene {
         }
         // Ki Blast
         else if (
-          this.keys.p1_kiblast.isDown ||
+          Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast) ||
           this.mobileP1KiBlast
         ) {
           this.performAttack(true, "ki");
@@ -348,10 +349,10 @@ export default class BattleScene extends Phaser.Scene {
           this.enemyDefending = false;
           this.stopContinuousCharge(false);
 
-          if (this.keys.p2_attack.isDown || this.p2BufferedAttack) {
+          if (Phaser.Input.Keyboard.JustDown(this.keys.p2_attack) || this.p2BufferedAttack) {
             this.performAttack(false, "melee");
             this.p2BufferedAttack = false;
-          } else if (this.keys.p2_kiblast.isDown || this.p2BufferedKiBlast) {
+          } else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_kiblast) || this.p2BufferedKiBlast) {
             this.performAttack(false, "ki");
             this.p2BufferedKiBlast = false;
           } else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_transform) || this.p2BufferedTransform) {
@@ -577,7 +578,7 @@ export default class BattleScene extends Phaser.Scene {
       p1_special: Phaser.Input.Keyboard.KeyCodes.D,
       p1_transform: Phaser.Input.Keyboard.KeyCodes.A,
       p2_attack: Phaser.Input.Keyboard.KeyCodes.UP,
-      p2_kiblast: Phaser.Input.Keyboard.KeyCodes.ENTER,
+      p2_kiblast: Phaser.Input.Keyboard.KeyCodes.SHIFT,
       p2_defend: Phaser.Input.Keyboard.KeyCodes.DOWN,
       p2_special: Phaser.Input.Keyboard.KeyCodes.LEFT,
       p2_transform: Phaser.Input.Keyboard.KeyCodes.RIGHT,
@@ -594,49 +595,54 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   createUI() {
-    this.add.rectangle(150, 50, 250, 20, 0x333333).setDepth(10);
-    this.add.rectangle(150, 75, 250, 10, 0x333333).setDepth(10);
-    this.add.rectangle(810, 50, 250, 20, 0x333333).setDepth(10);
-    this.add.rectangle(810, 75, 250, 10, 0x333333).setDepth(10);
+    this.uiContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(10);
+    
+    this.uiContainer.add(this.add.rectangle(150, 50, 250, 20, 0x333333));
+    this.uiContainer.add(this.add.rectangle(150, 75, 250, 10, 0x333333));
+    this.uiContainer.add(this.add.rectangle(810, 50, 250, 20, 0x333333));
+    this.uiContainer.add(this.add.rectangle(810, 75, 250, 10, 0x333333));
 
     this.p1HpBar = this.add
       .rectangle(25, 50, 250, 20, 0x2ecc71)
-      .setOrigin(0, 0.5)
-      .setDepth(11);
+      .setOrigin(0, 0.5);
+    this.uiContainer.add(this.p1HpBar);
+
     this.p1KiBar = this.add
       .rectangle(25, 75, 0, 10, 0x3498db)
-      .setOrigin(0, 0.5)
-      .setDepth(11);
+      .setOrigin(0, 0.5);
+    this.uiContainer.add(this.p1KiBar);
+
     this.p2HpBar = this.add
       .rectangle(685, 50, 250, 20, 0xe74c3c)
-      .setOrigin(0, 0.5)
-      .setDepth(11);
+      .setOrigin(0, 0.5);
+    this.uiContainer.add(this.p2HpBar);
+
     this.p2KiBar = this.add
       .rectangle(685, 75, 0, 10, 0xf1c40f)
-      .setOrigin(0, 0.5)
-      .setDepth(11);
+      .setOrigin(0, 0.5);
+    this.uiContainer.add(this.p2KiBar);
 
-    this.add
+    this.uiContainer.add(this.add
       .text(25, 25, this.playerData.name, {
         fontSize: "20px",
         fontStyle: "bold",
-      })
-      .setDepth(12);
-    this.add
+      }));
+      
+    this.uiContainer.add(this.add
       .text(935, 25, this.enemyData.name, {
         fontSize: "20px",
         fontStyle: "bold",
       })
-      .setOrigin(1, 0)
-      .setDepth(12);
+      .setOrigin(1, 0));
+      
     this.logText = this.add
       .text(480, 100, "", {
         fontSize: "24px",
         color: "#fff",
         fontStyle: "bold",
       })
-      .setOrigin(0.5)
-      .setDepth(12);
+      .setOrigin(0.5);
+    this.uiContainer.add(this.logText);
 
     if (this.gameState.gameMode === "arcade") {
       this.add
@@ -688,10 +694,12 @@ export default class BattleScene extends Phaser.Scene {
       const btn = this.add
         .circle(x, y, size, color, alpha)
         .setInteractive()
+        .setScrollFactor(0)
         .setDepth(100);
       const txt = this.add
         .text(x, y, text, { fontSize: "18px", fontStyle: "bold" })
         .setOrigin(0.5)
+        .setScrollFactor(0)
         .setDepth(101);
       this.mobileControls.push(btn, txt);
 
@@ -719,10 +727,25 @@ export default class BattleScene extends Phaser.Scene {
       });
     };
 
-    // Left side (Movement/Defense)
+    // Left side (Movement/Defense/Ki)
+    // Left side can just be a big KI button, as the user didn't mention KI in the cross.
+    createBtn(100, 420, "KI", 0x00ffff, () => {
+      this.mobileP1KiBlast = true;
+      this.p1KiBlastBuffer = this.BUFFER_MS;
+    });
+
+    // Right side (Attacks in a cross formation)
+    // Center of the cross around (800, 420)
+    // Top (UP): ATK (Attack)
+    createBtn(800, 340, "ATK", 0xe74c3c, () => {
+      this.mobileP1Attack = true;
+      this.p1AttackBuffer = this.BUFFER_MS;
+    });
+
+    // Right (RIGHT): DEF (Defend & Charge)
     createBtn(
-      100,
-      450,
+      880,
+      420,
       "DEF",
       0x3498db,
       () => {
@@ -732,23 +755,11 @@ export default class BattleScene extends Phaser.Scene {
         this.mobileP1Defend = false;
       },
     );
-    createBtn(100, 350, "TRN", 0x9b59b6, () => {
-      this.mobileP1Transform = true;
-      this.p1TransformBuffer = this.BUFFER_MS;
-    });
 
-    // Right side (Attacks)
-    createBtn(860, 450, "ATK", 0xe74c3c, () => {
-      this.mobileP1Attack = true;
-      this.p1AttackBuffer = this.BUFFER_MS;
-    });
-    createBtn(780, 450, "KI", 0x00ffff, () => {
-      this.mobileP1KiBlast = true;
-      this.p1KiBlastBuffer = this.BUFFER_MS;
-    });
+    // Bottom (DOWN): SPC (Special)
     createBtn(
-      860,
-      350,
+      800,
+      500,
       "SPC",
       0xf1c40f,
       () => {
@@ -756,20 +767,26 @@ export default class BattleScene extends Phaser.Scene {
       },
       () => {
         this.mobileP1Special = false;
-        // Only trigger special just up if hold time is actually populated > 0 
-        // to prevent slip-offs from instantly firing
         this.mobileP1SpecialJustUp = true;
       },
     );
+
+    // Left (LEFT): TRN (Transform)
+    createBtn(720, 420, "TRN", 0x9b59b6, () => {
+      this.mobileP1Transform = true;
+      this.p1TransformBuffer = this.BUFFER_MS;
+    });
 
     // Pause Button (Top Center)
     const pauseBtn = this.add
       .circle(480, 40, 30, 0x333333, 0.6)
       .setInteractive()
+      .setScrollFactor(0)
       .setDepth(100);
     const pauseTxt = this.add
       .text(480, 40, "||", { fontSize: "24px", fontStyle: "bold" })
       .setOrigin(0.5)
+      .setScrollFactor(0)
       .setDepth(101);
     this.mobileControls.push(pauseBtn, pauseTxt);
 
@@ -2909,33 +2926,47 @@ export default class BattleScene extends Phaser.Scene {
     if (attackType === "melee") {
       // Saitama Melee: Fast strikes that create shockwaves
       attacker.play(this.getAnimKey("saitama", transLevel, "attack"));
+      
+      // Dash effect
+      const dashGlow = this.add.rectangle(attacker.x - (isPlayer ? -20 : 20), attacker.y + 100, 80, 10, 0xffffff, 0.5).setDepth(2);
+      this.tweens.add({ targets: dashGlow, scaleX: 3, alpha: 0, duration: 200, onComplete: () => dashGlow.destroy() });
+
       this.tweens.add({
         targets: attacker,
         x: target.x + (isPlayer ? -45 : 45),
-        duration: 80,
-        ease: "Power2",
+        duration: 50, // SUPER FAST
+        ease: "Expo.easeOut",
         onComplete: () => {
           if (!this.scene.isActive()) return;
           if (this.cache.audio.exists("sfx_attack"))
-            this.sound.play("sfx_attack", { volume: 1.5 });
+            this.sound.play("sfx_attack", { volume: 2.0 });
 
           this.createImpactEffect(target.x, target.y + 120, 0xffffff);
-          this.cameras.main.shake(100, 0.01);
+          this.cameras.main.shake(150, 0.02);
 
-          // Impact shockwave
-          const wave = this.add.circle(target.x, target.y + 120, 10, 0xffffff, 0.5).setDepth(6);
+          // Intense Impact shockwave
+          const wave = this.add.circle(target.x, target.y + 120, 15, 0xffffff, 0.7).setDepth(6);
           this.tweens.add({
             targets: wave,
-            scale: 5,
+            scale: isComboFinisher ? 12 : 8,
             alpha: 0,
-            duration: 200,
+            duration: 250,
+            ease: "Quad.easeOut",
             onComplete: () => wave.destroy(),
           });
+          
+          if (isComboFinisher) {
+             const wave2 = this.add.circle(target.x, target.y + 120, 5, 0xffffff, 1).setDepth(6);
+             this.tweens.add({
+               targets: wave2, scale: 20, alpha: 0, duration: 400, onComplete: () => wave2.destroy()
+             });
+             this.cameras.main.shake(250, 0.04);
+          }
 
           this.takeDamage(
             !isPlayer,
             Math.floor(
-              (isComboFinisher ? 30 : 15) *
+              (isComboFinisher ? 35 : 18) *
                 this.getDamageMultiplier(transLevel),
             ),
           );
@@ -2945,7 +2976,8 @@ export default class BattleScene extends Phaser.Scene {
             this.tweens.add({
               targets: attacker,
               x: startX,
-              duration: 120,
+              duration: 100,
+              ease: "Expo.easeOut",
               onComplete: () => {
                 attacker.play(this.getAnimKey("saitama", transLevel, "idle"));
                 this.setActionState(isPlayer, false);
@@ -2957,34 +2989,72 @@ export default class BattleScene extends Phaser.Scene {
     } else {
       // Saitama Ki: He doesn't have "ki", so he just does a "Normal Punch" that creates a wind pressure blast
       attacker.play(this.getAnimKey("saitama", transLevel, "attack"));
-      this.time.delayedCall(100, () => {
+
+      // Small dash forward
+      this.tweens.add({ targets: attacker, x: attacker.x + (isPlayer ? 20 : -20), duration: 50, yoyo: true });
+      
+      this.time.delayedCall(50, () => {
         if (!this.scene.isActive()) return;
         if (this.cache.audio.exists("sfx_beam"))
-          this.sound.play("sfx_beam", { volume: 0.6 });
+          this.sound.play("sfx_beam", { volume: 1.0, rate: 0.8 }); // deeper sound for air pressure
 
         const hand = this.getHandPosition(isPlayer);
-        const blast = this.add.circle(hand.x, hand.y, 20, 0xffffff, 0.2).setDepth(5);
-        this.tweens.add({
-          targets: blast,
-          x: target.x,
-          scale: 3,
-          alpha: 0,
-          duration: 200,
-          onComplete: () => {
-            blast.destroy();
-            if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y + 120, 0xffffff);
-            this.takeDamage(
-              !isPlayer,
-              Math.floor(
-                (isComboFinisher ? 20 : 12) *
-                  this.getDamageMultiplier(transLevel),
-              ),
-            );
-          },
-        });
+        
+        const blastsCount = isComboFinisher ? 5 : 1;
+        
+        // Huge screen flash for the punch force
+        this.createScreenFlash(0xffffff, 200, 0.5);
+        this.cameras.main.shake(150, 0.02);
 
-        this.time.delayedCall(250, () => {
+        for (let i = 0; i < blastsCount; i++) {
+           this.time.delayedCall(i * 80, () => {
+              if (!this.scene.isActive()) return;
+
+              if (i > 0 && this.cache.audio.exists("sfx_attack")) {
+                 this.sound.play("sfx_attack", { volume: 1.0, rate: 1.5 });
+              }
+              
+              // Wind pressure (Giant expanding ellipse)
+              const waveY = hand.y + Phaser.Math.Between(-20, 20);
+              const blast = this.add.ellipse(hand.x, waveY, 40, 60, 0xffffff, 0.7).setDepth(5);
+              const core = this.add.ellipse(hand.x, waveY, 20, 30, 0xffffff, 1).setDepth(6);
+              
+              // Wind lines
+              const lines: Phaser.GameObjects.Rectangle[] = [];
+              for(let j=0; j<3; j++) {
+                  const line = this.add.rectangle(hand.x, waveY + Phaser.Math.Between(-30, 30), Phaser.Math.Between(40, 80), Phaser.Math.Between(2, 6), 0xffffff, 0.5).setDepth(5);
+                  lines.push(line);
+              }
+
+              this.tweens.add({
+                targets: [blast, core, ...lines],
+                x: target.x + (isPlayer ? 200 : -200),
+                scale: i === blastsCount - 1 ? 6 : 3, // Last one is HUGE
+                alpha: 0,
+                duration: 200,
+                ease: "Power2",
+                onComplete: () => {
+                  blast.destroy();
+                  core.destroy();
+                  lines.forEach(l => l.destroy());
+                  if (!this.scene.isActive()) return;
+                  
+                  this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+                  this.cameras.main.shake(100, 0.03);
+                  
+                  this.takeDamage(
+                    !isPlayer,
+                    Math.floor(
+                      (isComboFinisher ? 15 : 20) *
+                        this.getDamageMultiplier(transLevel),
+                    ),
+                  );
+                },
+              });
+           });
+        }
+
+        this.time.delayedCall(200 + (blastsCount * 80), () => {
           if (!this.scene.isActive()) return;
           attacker.play(this.getAnimKey("saitama", transLevel, "idle"));
           this.setActionState(isPlayer, false);
@@ -4901,18 +4971,20 @@ export default class BattleScene extends Phaser.Scene {
     const startY = isP ? this.p1StartPos.y : this.p2StartPos.y;
     const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
     const dmg = Math.floor(130 * this.getDamageMultiplier(transLevel));
+    const targetStartX = isP ? this.p2StartPos.x : this.p1StartPos.x;
 
     this.log("SUPREME HEADBUTT!");
     
     // Preparation: Wind gathering effect
-    for(let i=0; i<10; i++) {
-       const p = this.add.circle(attacker.x + Phaser.Math.Between(-50, 50), attacker.y + Phaser.Math.Between(-50, 50), 2, 0xffffff, 0.8).setDepth(15);
+    for(let i=0; i<15; i++) {
+       const p = this.add.circle(attacker.x + Phaser.Math.Between(-60, 60), attacker.y + Phaser.Math.Between(-60, 60), Phaser.Math.Between(2, 4), 0xffffff, 0.8).setDepth(15);
        this.tweens.add({
          targets: p,
          x: attacker.x,
          y: attacker.y - 45,
          alpha: 0,
-         duration: 500,
+         scale: 0.2,
+         duration: 600,
          onComplete: () => p.destroy()
        });
     }
@@ -4926,28 +4998,28 @@ export default class BattleScene extends Phaser.Scene {
         if (!this.scene.isActive()) return;
 
         // Head glint
-        const glow = this.add.circle(attacker.x, attacker.y - 45, 10, 0xffffff, 1).setDepth(20);
-        this.tweens.add({ targets: glow, scale: 5, alpha: 0, duration: 200 });
+        const glow = this.add.circle(attacker.x, attacker.y - 45, 12, 0xffffff, 1).setDepth(20);
+        this.tweens.add({ targets: glow, scale: 6, alpha: 0, duration: 200 });
 
         if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack", { volume: 2.5 });
-        this.cameras.main.shake(100, 0.03);
+        this.cameras.main.shake(150, 0.04);
 
         // DASH! (Almost instantaneous)
         this.tweens.add({
           targets: attacker,
           x: target.x + (isP ? 30 : -30),
-          duration: 80,
+          duration: 60,
           ease: "Linear",
           onComplete: () => {
             if (!this.scene.isActive()) return;
 
             glow.destroy();
-            this.createScreenFlash(0xffffff, 400, 0.9);
-            this.cameras.main.shake(600, 0.06);
+            this.createScreenFlash(0xffffff, 500, 1);
+            this.cameras.main.shake(800, 0.08);
 
             // Relativistic impact - White screen for a frame
             const flash = this.add.rectangle(480, 270, 960, 540, 0xffffff).setDepth(100).setAlpha(0);
-            this.tweens.add({ targets: flash, alpha: 1, duration: 20, yoyo: true });
+            this.tweens.add({ targets: flash, alpha: 1, duration: 30, yoyo: true });
 
             this.createImpactEffect(target.x, target.y + 120, 0xffffff, "beam");
             this.takeDamage(!isP, dmg);
@@ -4961,9 +5033,10 @@ export default class BattleScene extends Phaser.Scene {
               duration: 500,
               ease: "Expo.easeOut",
               onComplete: () => {
-                if (!this.scene.isActive()) return;
+                if (!this.scene.isActive() || !target.active) return;
                 this.tweens.add({
                   targets: target,
+                  x: targetStartX,
                   y: startY,
                   angle: 0,
                   duration: 400,
@@ -4973,12 +5046,13 @@ export default class BattleScene extends Phaser.Scene {
             });
 
             // Afterimage return
-            this.time.delayedCall(400, () => {
+            this.time.delayedCall(500, () => {
               if (!this.scene.isActive()) return;
               this.tweens.add({
                 targets: attacker,
                 x: startX,
-                duration: 150,
+                duration: 200,
+                ease: "Power2",
                 onComplete: () => this.onSpecialComplete(isP)
               });
             });
@@ -4994,11 +5068,30 @@ export default class BattleScene extends Phaser.Scene {
     const startX = isP ? this.p1StartPos.x : this.p2StartPos.x;
     const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
     const dmg = Math.floor(110 * this.getDamageMultiplier(transLevel));
+    const targetStartX = isP ? this.p2StartPos.x : this.p1StartPos.x;
 
     this.log("SERIOUS PUNCH!");
     
     // Slow dramatic walk
     attacker.play(this.getAnimKey("saitama", transLevel, "idle"));
+    
+    // Manga-style speed lines in the background
+    const speedLines = this.add.graphics();
+    const cx = 480;
+    const cy = 270;
+    speedLines.lineStyle(2, 0xffffff, 0.4);
+    for(let i=0; i<60; i++) {
+        const angle = Phaser.Math.Between(0, 360) * Math.PI / 180;
+        const r1 = Phaser.Math.Between(150, 400);
+        const r2 = 600;
+        speedLines.beginPath();
+        speedLines.moveTo(cx + Math.cos(angle)*r1, cy + Math.sin(angle)*r1);
+        speedLines.lineTo(cx + Math.cos(angle)*r2, cy + Math.sin(angle)*r2);
+        speedLines.strokePath();
+    }
+    speedLines.setDepth(0);
+    this.tweens.add({ targets: speedLines, angle: 10, duration: 1200, alpha: 0.8 });
+
     this.tweens.add({
       targets: attacker,
       x: target.x + (isP ? -120 : 120),
@@ -5027,18 +5120,22 @@ export default class BattleScene extends Phaser.Scene {
                scaleY: 200,
                alpha: 0,
                duration: 800,
-               onComplete: () => splitLine.destroy()
+               onComplete: () => {
+                 splitLine.destroy();
+                 speedLines.destroy();
+               }
             });
 
             // Particles flying away from impact
-            for(let i=0; i<30; i++) {
-               const p = this.add.rectangle(target.x, target.y + 120, 4, 4, 0xffffff).setDepth(20);
+            for(let i=0; i<40; i++) {
+               const p = this.add.rectangle(target.x, target.y + 120, Phaser.Math.Between(4, 10), Phaser.Math.Between(4, 10), Math.random() > 0.5 ? 0xffffff : 0xffaa00).setDepth(20);
                this.tweens.add({
                   targets: p,
-                  x: p.x + (isP ? 600 : -600) + Phaser.Math.Between(-100, 100),
-                  y: p.y + Phaser.Math.Between(-300, 300),
+                  x: p.x + (isP ? 600 : -600) + Phaser.Math.Between(-150, 150),
+                  y: p.y + Phaser.Math.Between(-400, 400),
+                  angle: Phaser.Math.Between(0, 360),
                   alpha: 0,
-                  duration: 1000,
+                  duration: 1200,
                   onComplete: () => p.destroy()
                });
             }
@@ -5046,22 +5143,31 @@ export default class BattleScene extends Phaser.Scene {
             this.takeDamage(!isP, dmg);
             this.createImpactEffect(target.x, target.y + 120, 0xffffff, "beam");
 
-            // Horizontal knockback that flies off screen briefly
+            // Horizontal knockback that flies off screen briefly, then bounces back
             this.tweens.add({
               targets: target,
-              x: target.x + (isP ? 500 : -500),
+              x: target.x + (isP ? 600 : -600),
+              angle: isP ? 45 : -45,
               alpha: 0,
               duration: 300,
               ease: "Expo.easeOut",
               onComplete: () => {
                  this.time.delayedCall(200, () => {
+                    if (!this.scene.isActive() || !target.active) return;
                     target.setX(isP ? 900 : 60);
-                    this.tweens.add({ targets: target, x: isP ? this.p2StartPos.x : this.p1StartPos.x, alpha: 1, duration: 400 });
+                    this.tweens.add({ 
+                      targets: target, 
+                      x: targetStartX, 
+                      angle: 0,
+                      alpha: 1, 
+                      duration: 400,
+                      ease: "Bounce.easeOut"
+                    });
                  });
               }
             });
 
-            this.time.delayedCall(600, () => {
+            this.time.delayedCall(800, () => {
                if (!this.scene.isActive()) return;
                this.tweens.add({
                  targets: attacker,
@@ -10157,23 +10263,7 @@ export default class BattleScene extends Phaser.Scene {
       if (this.cache.audio.exists("sfx_block")) this.sound.play("sfx_block");
     } else {
       if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
-
-      // Hit pause (time freeze) for impact
-      this.tweens.timeScale = 0;
-      if (this.player.anims && this.player.anims.isPlaying)
-        this.player.anims.pause();
-      if (this.enemy.anims && this.enemy.anims.isPlaying)
-        this.enemy.anims.pause();
-
-      this.time.delayedCall(60, () => {
-        if (this.scene && this.scene.isActive()) {
-          this.tweens.timeScale = 1;
-          if (this.player.anims && !this.player.anims.isPlaying)
-            this.player.anims.resume();
-          if (this.enemy.anims && !this.enemy.anims.isPlaying)
-            this.enemy.anims.resume();
-        }
-      }); // 60ms freeze
+      // Removed global hitstop to fix "travado" stutter bug
     }
 
     if (isP) this.playerHp = Math.max(0, this.playerHp - dmg);
@@ -10252,32 +10342,7 @@ export default class BattleScene extends Phaser.Scene {
     const p1p = this.playerHp / this.playerData.maxHp;
     const p2p = this.enemyHp / this.enemyData.maxHp;
 
-    if (this.tweens) {
-      this.tweens.add({
-        targets: this.p1HpBar,
-        width: 250 * p1p,
-        duration: 200,
-        ease: "Power2",
-      });
-      this.tweens.add({
-        targets: this.p2HpBar,
-        width: 250 * p2p,
-        duration: 200,
-        ease: "Power2",
-      });
-      this.tweens.add({
-        targets: this.p1KiBar,
-        width: 2.5 * this.playerKi,
-        duration: 200,
-        ease: "Power2",
-      });
-      this.tweens.add({
-        targets: this.p2KiBar,
-        width: 2.5 * this.enemyKi,
-        duration: 200,
-        ease: "Power2",
-      });
-    } else {
+    if (this.p1HpBar && this.p1HpBar.active) {
       this.p1HpBar.width = 250 * p1p;
       this.p2HpBar.width = 250 * p2p;
       this.p1KiBar.width = 2.5 * this.playerKi;
@@ -10287,6 +10352,7 @@ export default class BattleScene extends Phaser.Scene {
 
   log(m: string) {
     if (!this.logText.active) return;
+    this.tweens.killTweensOf(this.logText);
     this.logText.setText(m).setAlpha(1);
     this.tweens.add({
       targets: this.logText,

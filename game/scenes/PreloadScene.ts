@@ -4267,17 +4267,21 @@ export default class PreloadScene extends Phaser.Scene {
 
           // Arms
           if (isAttack) {
-            // Serious Punch!
-            box(21, 14, 8, 4, SUIT_YELLOW);
-            box(21, 14, 8, 1, SUIT_SHADOW);
-            // Arm muscles
-            box(23, 13, 4, 1, SUIT_YELLOW);
+            // Left arm (pulled back for momentum)
+            box(9, 14, 3, 4, SUIT_YELLOW);
+            box(8, 18, 4, 4, GLOVE_RED);
             
-            box(29, 13, 6, 6, GLOVE_RED); // Massive red fist
-            box(29, 13, 6, 1, GLOVE_LIGHT); // Fist shine
-            // Trail effects
-            alphaBox(35, 13, 8, 6, GLOVE_LIGHT, 0.4);
-            alphaBox(43, 14, 10, 4, 0xffffff, 0.2);
+            // Right arm (Serious Punch/Attack stretching forward)
+            box(21, 14, 10, 4, SUIT_YELLOW); // Extends further
+            box(21, 16, 10, 2, SUIT_SHADOW); // Under-arm shadow
+            
+            // Massive red fist
+            box(31, 13, 7, 6, GLOVE_RED); 
+            box(31, 13, 7, 1, GLOVE_LIGHT); // Fist shine
+            
+            // Wind pressure/impact trail coming off the fist
+            alphaBox(38, 13, 8, 6, 0xffffff, 0.6);
+            alphaBox(46, 14, 6, 4, 0xffffff, 0.3);
           } else {
             // Guard/Idle arms
             box(8, 14, 3, 5, SUIT_YELLOW);
