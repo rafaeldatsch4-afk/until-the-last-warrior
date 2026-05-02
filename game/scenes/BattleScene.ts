@@ -1052,13 +1052,13 @@ export default class BattleScene extends Phaser.Scene {
     if (attackType === "melee") {
       // Goku Melee: Teleport strike
       attacker.setAlpha(0);
-      this.createImpactEffect(attacker.x, attacker.y, 0xffffff); // Teleport poof
+      this.createImpactEffect(attacker.x, attacker.y + 120, 0xffffff); // Teleport poof
 
       this.time.delayedCall(100, () => {
         if (!this.scene.isActive()) return;
         attacker.setAlpha(1);
         attacker.x = target.x + (isPlayer ? -40 : 40);
-        attacker.y = target.y - (isComboFinisher ? 50 : 0); // Attack from above on finisher
+        attacker.y = target.y + 120 - (isComboFinisher ? 50 : 0); // Attack from above on finisher
         attacker.play(this.getAnimKey("goku", transLevel, "attack"));
 
         if (this.cache.audio.exists("sfx_attack"))
@@ -1070,7 +1070,7 @@ export default class BattleScene extends Phaser.Scene {
           ),
         );
         this.modifyKi(isPlayer, 5);
-        this.createImpactEffect(target.x, target.y - 20, 0xffa500);
+        this.createImpactEffect(target.x, target.y + 120, 0xffa500);
         this.cameras.main.shake(
           isComboFinisher ? 200 : 100,
           isComboFinisher ? 0.02 : 0.01,
@@ -1086,7 +1086,7 @@ export default class BattleScene extends Phaser.Scene {
         this.time.delayedCall(200, () => {
           if (!this.scene.isActive()) return;
           attacker.setAlpha(0);
-          this.createImpactEffect(attacker.x, attacker.y, 0xffffff);
+          this.createImpactEffect(attacker.x, attacker.y + 120, 0xffffff);
           this.time.delayedCall(100, () => {
             if (!this.scene.isActive()) return;
             attacker.setAlpha(1);
@@ -1119,7 +1119,7 @@ export default class BattleScene extends Phaser.Scene {
               if (!this.scene.isActive()) return;
               this.createImpactEffect(
                 target.x,
-                target.y - 20 + (Math.random() * 20 - 10),
+                target.y + 120 + (Math.random() * 20 - 10),
                 0x00ffff,
               );
               this.takeDamage(
@@ -1167,7 +1167,7 @@ export default class BattleScene extends Phaser.Scene {
               if (!this.scene.isActive()) return;
               if (this.cache.audio.exists("sfx_attack"))
                 this.sound.play("sfx_attack", { volume: 1.0 });
-              this.createImpactEffect(target.x, target.y - 20, 0xffffff);
+              this.createImpactEffect(target.x, target.y + 120, 0xffffff);
               this.takeDamage(
                 !isPlayer,
                 Math.floor(5 * this.getDamageMultiplier(transLevel)),
@@ -1211,7 +1211,7 @@ export default class BattleScene extends Phaser.Scene {
               if (!this.scene.isActive()) return;
               this.createImpactEffect(
                 target.x,
-                target.y - 20 + (Math.random() * 30 - 15),
+                target.y + 120 + (Math.random() * 30 - 15),
                 0xffff00,
               );
               this.takeDamage(
@@ -1262,7 +1262,7 @@ export default class BattleScene extends Phaser.Scene {
 
           const hitColor = transLevel === 1 ? 0xff4500 : 0xcccccc; // Susanoo sword or kunai
           const hitLine = this.add
-            .rectangle(target.x, target.y - 20, 50, 4, hitColor)
+            .rectangle(target.x, target.y + 120, 50, 4, hitColor)
             .setRotation(isPlayer ? 0.8 : -0.8)
             .setDepth(6);
           this.tweens.add({
@@ -1273,7 +1273,7 @@ export default class BattleScene extends Phaser.Scene {
             onComplete: () => hitLine.destroy(),
           });
 
-          this.createImpactEffect(target.x, target.y - 20, hitColor);
+          this.createImpactEffect(target.x, target.y + 120, hitColor);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -1332,7 +1332,7 @@ export default class BattleScene extends Phaser.Scene {
 
             if (this.cache.audio.exists("sfx_explosion"))
               this.sound.play("sfx_explosion", { volume: 0.8 });
-            this.createImpactEffect(target.x, target.y - 15, fireballColor);
+            this.createImpactEffect(target.x, target.y + 120, fireballColor);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -1343,7 +1343,7 @@ export default class BattleScene extends Phaser.Scene {
 
             // Fire explosion effect
             const explosion = this.add
-              .circle(target.x, target.y - 15, 10, 0xff0000)
+              .circle(target.x, target.y + 120, 10, 0xff0000)
               .setDepth(6);
             this.tweens.add({
               targets: explosion,
@@ -1403,7 +1403,7 @@ export default class BattleScene extends Phaser.Scene {
               const hitCircle = this.add
                 .circle(
                   target.x + (Math.random() * 20 - 10),
-                  target.y - 20 + offsetY,
+                  target.y + 120 + offsetY,
                   15,
                   hitColor,
                 )
@@ -1418,7 +1418,7 @@ export default class BattleScene extends Phaser.Scene {
               });
               this.createImpactEffect(
                 target.x,
-                target.y - 20 + offsetY,
+                target.y + 120 + offsetY,
                 hitColor,
               );
             });
@@ -1480,7 +1480,7 @@ export default class BattleScene extends Phaser.Scene {
         onComplete: () => {
           if (!this.scene.isActive()) return;
           projectile.destroy();
-          this.createImpactEffect(target.x, target.y - 20, projectileColor);
+          this.createImpactEffect(target.x, target.y + 120, projectileColor);
           if (this.cache.audio.exists("sfx_hit"))
             this.sound.play("sfx_hit", { volume: 0.8 });
           this.takeDamage(
@@ -1532,7 +1532,7 @@ export default class BattleScene extends Phaser.Scene {
           // Visual effect for the staff hit
           const hitColor = transLevel === 1 ? 0x000000 : 0xffaa00;
           const hitLine = this.add
-            .rectangle(target.x, target.y - 20, 60, 6, hitColor)
+            .rectangle(target.x, target.y + 120, 60, 6, hitColor)
             .setRotation(isPlayer ? 0.5 : -0.5)
             .setDepth(6);
           this.tweens.add({
@@ -1543,7 +1543,7 @@ export default class BattleScene extends Phaser.Scene {
             onComplete: () => hitLine.destroy(),
           });
 
-          this.createImpactEffect(target.x, target.y - 20, hitColor);
+          this.createImpactEffect(target.x, target.y + 120, hitColor);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -1592,7 +1592,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => {
             orb.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y - 20, orbColor);
+            this.createImpactEffect(target.x, target.y + 120, orbColor);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -1640,7 +1640,7 @@ export default class BattleScene extends Phaser.Scene {
                 const hits = isComboFinisher ? 3 : 1;
                 for (let i = 0; i < hits; i++) {
                     this.time.delayedCall(i * 100, () => {
-                        this.createImpactEffect(target.x, target.y - 10, 0xffffff);
+                        this.createImpactEffect(target.x, target.y + 120, 0xffffff);
                         this.takeDamage(!isPlayer, Math.floor((isComboFinisher ? 8 : 12) * this.getDamageMultiplier(transLevel)));
                         target.x += isPlayer ? 5 : -5;
                         this.cameras.main.shake(100, 0.01);
@@ -1681,7 +1681,7 @@ export default class BattleScene extends Phaser.Scene {
                 onComplete: () => {
                     webBall.destroy();
                     if (!this.scene.isActive()) return;
-                    this.createImpactEffect(target.x, target.y - 20, webColor);
+                    this.createImpactEffect(target.x, target.y + 120, webColor);
                     this.takeDamage(!isPlayer, Math.floor((isComboFinisher ? 15 : 10) * this.getDamageMultiplier(transLevel)));
                     
                     if (isComboFinisher) {
@@ -1726,7 +1726,7 @@ export default class BattleScene extends Phaser.Scene {
       const clone = this.add
         .sprite(
           target.x + (isPlayer ? 40 : -40),
-          target.y,
+          target.y + 120,
           attacker.texture.key,
           attacker.frame.name,
         )
@@ -1735,7 +1735,7 @@ export default class BattleScene extends Phaser.Scene {
         .setAlpha(0)
         .setTint(0xaaaaaa);
 
-      this.createImpactEffect(clone.x, clone.y, 0xffffff); // Poof
+      this.createImpactEffect(clone.x, clone.y + 120, 0xffffff); // Poof
       clone.setAlpha(1);
 
       this.tweens.add({
@@ -1746,7 +1746,7 @@ export default class BattleScene extends Phaser.Scene {
           if (!this.scene.isActive()) return;
           if (this.cache.audio.exists("sfx_attack"))
             this.sound.play("sfx_attack", { volume: 1.2 });
-          this.createImpactEffect(target.x, target.y - 20, 0xffffff);
+          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -1757,7 +1757,7 @@ export default class BattleScene extends Phaser.Scene {
 
           this.time.delayedCall(200, () => {
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(clone.x, clone.y, 0xffffff);
+            this.createImpactEffect(clone.x, clone.y + 120, 0xffffff);
             clone.destroy();
 
             this.tweens.add({
@@ -1796,7 +1796,7 @@ export default class BattleScene extends Phaser.Scene {
           if (!this.scene.isActive()) return;
           if (this.cache.audio.exists("sfx_attack"))
             this.sound.play("sfx_attack", { volume: 1.5 });
-          this.createImpactEffect(target.x, target.y - 20, 0x00ffff);
+          this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
           rasengan.destroy();
 
           this.takeDamage(
@@ -1860,7 +1860,7 @@ export default class BattleScene extends Phaser.Scene {
           const slash = this.add.graphics().setDepth(10);
           slash.lineStyle(4, 0xffffff, 1);
           const ox = target.x + (Math.random() * 40 - 20);
-          const oy = target.y - 20 + (Math.random() * 40 - 20);
+          const oy = target.y + 120 + (Math.random() * 40 - 20);
           slash.lineBetween(ox - 20, oy - 20, ox + 20, oy + 20);
 
           this.tweens.add({
@@ -1912,7 +1912,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => {
             arrow.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y - 20, 0xff4500);
+            this.createImpactEffect(target.x, target.y + 120, 0xff4500);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -1960,7 +1960,7 @@ export default class BattleScene extends Phaser.Scene {
           if (!this.scene.isActive()) return;
           if (this.cache.audio.exists("sfx_attack"))
             this.sound.play("sfx_attack", { volume: 1.0 });
-          this.createImpactEffect(target.x, target.y + 10, 0xffffff);
+          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -2027,7 +2027,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => {
             batarang.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y - 10, 0x333333);
+            this.createImpactEffect(target.x, target.y + 120, 0x333333);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -2070,9 +2070,9 @@ export default class BattleScene extends Phaser.Scene {
       dashLine.lineStyle(2, 0x00ffff, 0.8);
       dashLine.lineBetween(
         attacker.x,
-        attacker.y,
+        attacker.y + 120,
         target.x + (isPlayer ? 40 : -40),
-        target.y,
+        target.y + 120,
       );
       this.tweens.add({
         targets: dashLine,
@@ -2089,7 +2089,7 @@ export default class BattleScene extends Phaser.Scene {
           if (!this.scene.isActive()) return;
           if (this.cache.audio.exists("sfx_attack"))
             this.sound.play("sfx_attack", { volume: 1.2 });
-          this.createImpactEffect(target.x, target.y - 20, 0x00ffff);
+          this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -2105,7 +2105,7 @@ export default class BattleScene extends Phaser.Scene {
             target.x - 20,
             target.y - 40,
             target.x + 20,
-            target.y,
+            target.y + 120,
           );
           this.tweens.add({
             targets: slash,
@@ -2161,7 +2161,7 @@ export default class BattleScene extends Phaser.Scene {
               if (!this.scene.isActive()) return;
               this.createImpactEffect(
                 target.x,
-                target.y - 10 + (i * 10 - 10),
+                target.y + 120 + (i * 10 - 10),
                 0xaaaaaa,
               );
               this.takeDamage(
@@ -2229,7 +2229,7 @@ export default class BattleScene extends Phaser.Scene {
             onComplete: () => arc.destroy(),
           });
 
-          this.createImpactEffect(target.x, target.y - 10, 0xffffff);
+          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -2274,7 +2274,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => {
             pancake.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y - 10, 0xd2b48c);
+            this.createImpactEffect(target.x, target.y + 120, 0xd2b48c);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -2321,7 +2321,7 @@ export default class BattleScene extends Phaser.Scene {
 
           if (this.cache.audio.exists("sfx_attack"))
             this.sound.play("sfx_attack", { volume: 1.5 });
-          this.createImpactEffect(target.x, target.y - 20, 0xffaa00);
+          this.createImpactEffect(target.x, target.y + 120, 0xffaa00);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -2365,7 +2365,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => {
             blast.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y - 15, 0x00ffff);
+            this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -2402,7 +2402,7 @@ export default class BattleScene extends Phaser.Scene {
     if (attackType === "melee") {
       // Cell Melee: Teleport above and stomp
       attacker.setAlpha(0);
-      this.createImpactEffect(attacker.x, attacker.y, 0x00ff00);
+      this.createImpactEffect(attacker.x, attacker.y + 120, 0x00ff00);
 
       this.time.delayedCall(100, () => {
         if (!this.scene.isActive()) return;
@@ -2413,14 +2413,14 @@ export default class BattleScene extends Phaser.Scene {
 
         this.tweens.add({
           targets: attacker,
-          y: target.y,
+          y: target.y + 120,
           duration: 100,
           ease: "Expo.easeIn",
           onComplete: () => {
             if (!this.scene.isActive()) return;
             if (this.cache.audio.exists("sfx_attack"))
               this.sound.play("sfx_attack", { volume: 1.2 });
-            this.createImpactEffect(target.x, target.y, 0x00ff00);
+            this.createImpactEffect(target.x, target.y + 120, 0x00ff00);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -2433,7 +2433,7 @@ export default class BattleScene extends Phaser.Scene {
             this.time.delayedCall(200, () => {
               if (!this.scene.isActive()) return;
               attacker.setAlpha(0);
-              this.createImpactEffect(attacker.x, attacker.y, 0x00ff00);
+              this.createImpactEffect(attacker.x, attacker.y + 120, 0x00ff00);
               this.time.delayedCall(100, () => {
                 if (!this.scene.isActive()) return;
                 attacker.setAlpha(1);
@@ -2472,7 +2472,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => beam.destroy(),
         });
 
-        this.createImpactEffect(target.x, target.y - 20, 0xffff00);
+        this.createImpactEffect(target.x, target.y + 120, 0xffff00);
         this.takeDamage(
           !isPlayer,
           Math.floor(
@@ -2521,7 +2521,7 @@ export default class BattleScene extends Phaser.Scene {
           if (!this.scene.isActive()) return;
           if (this.cache.audio.exists("sfx_attack"))
             this.sound.play("sfx_attack", { volume: 1.0 });
-          this.createImpactEffect(target.x, target.y - 10, 0xffffff);
+          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -2583,7 +2583,7 @@ export default class BattleScene extends Phaser.Scene {
           },
         });
 
-        this.createImpactEffect(target.x, target.y - 22, 0xff0000);
+        this.createImpactEffect(target.x, target.y + 120, 0xff0000);
         this.takeDamage(
           !isPlayer,
           Math.floor(
@@ -2629,7 +2629,7 @@ export default class BattleScene extends Phaser.Scene {
             this.sound.play("sfx_attack", { volume: 1.2 });
           this.createImpactEffect(
             target.x,
-            target.y,
+            target.y + 120,
             transLevel > 0 ? 0x3b82f6 : 0xb91c1c,
           );
           this.takeDamage(
@@ -2667,7 +2667,7 @@ export default class BattleScene extends Phaser.Scene {
         const kiColor = transLevel > 0 ? 0x3b82f6 : 0xff4500;
         const hand = this.getHandPosition(isPlayer);
         const blast = this.add
-          .circle(hand.x, attacker.y, 15, kiColor)
+          .circle(hand.x, hand.y, 15, kiColor)
           .setDepth(5);
         const core = this.add.circle(blast.x, blast.y, 8, 0xffffff).setDepth(6);
 
@@ -2679,7 +2679,7 @@ export default class BattleScene extends Phaser.Scene {
             blast.destroy();
             core.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y, kiColor);
+            this.createImpactEffect(target.x, target.y + 120, kiColor);
             this.takeDamage(
               !isPlayer,
               Math.floor(12 * this.getDamageMultiplier(transLevel)),
@@ -2720,7 +2720,7 @@ export default class BattleScene extends Phaser.Scene {
 
           if (this.cache.audio.exists("sfx_attack"))
             this.sound.play("sfx_attack", { volume: 1.2 });
-          this.createImpactEffect(target.x, target.y - 20, 0xffffff);
+          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -2765,7 +2765,7 @@ export default class BattleScene extends Phaser.Scene {
             blast.destroy();
             core.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y - 20, 0xffff00);
+            this.createImpactEffect(target.x, target.y + 120, 0xffff00);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -2816,7 +2816,7 @@ export default class BattleScene extends Phaser.Scene {
             target.x - 20,
             target.y - 30,
             target.x + 20,
-            target.y + 10,
+            target.y + 120,
           );
           this.tweens.add({
             targets: slash,
@@ -2825,7 +2825,7 @@ export default class BattleScene extends Phaser.Scene {
             onComplete: () => slash.destroy(),
           });
 
-          this.createImpactEffect(target.x, target.y, 0x00ff00);
+          this.createImpactEffect(target.x, target.y + 120, 0x00ff00);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -2872,7 +2872,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => {
             shuriken.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y - 10, 0x00ff00);
+            this.createImpactEffect(target.x, target.y + 120, 0x00ff00);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -2919,11 +2919,11 @@ export default class BattleScene extends Phaser.Scene {
           if (this.cache.audio.exists("sfx_attack"))
             this.sound.play("sfx_attack", { volume: 1.5 });
 
-          this.createImpactEffect(target.x, target.y - 20, 0xffffff);
+          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
           this.cameras.main.shake(100, 0.01);
 
           // Impact shockwave
-          const wave = this.add.circle(target.x, target.y - 20, 10, 0xffffff, 0.5).setDepth(6);
+          const wave = this.add.circle(target.x, target.y + 120, 10, 0xffffff, 0.5).setDepth(6);
           this.tweens.add({
             targets: wave,
             scale: 5,
@@ -2973,7 +2973,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => {
             blast.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y - 10, 0xffffff);
+            this.createImpactEffect(target.x, target.y + 120, 0xffffff);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -3017,7 +3017,7 @@ export default class BattleScene extends Phaser.Scene {
           if (!this.scene.isActive()) return;
           if (this.cache.audio.exists("sfx_attack"))
             this.sound.play("sfx_attack", { volume: 1.0 });
-          this.createImpactEffect(target.x, target.y - 10, 0xffffff);
+          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -3064,7 +3064,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => beam.destroy(),
         });
 
-        this.createImpactEffect(target.x, target.y - 15, 0xffffff);
+        this.createImpactEffect(target.x, target.y + 120, 0xffffff);
         this.takeDamage(
           !isPlayer,
           Math.floor(
@@ -3108,17 +3108,17 @@ export default class BattleScene extends Phaser.Scene {
             this.sound.play("sfx_attack", { volume: 1.5 });
 
           const hammer = this.add
-            .rectangle(target.x, target.y - 20, 20, 10, 0xff0000)
+            .rectangle(target.x, target.y + 120, 20, 10, 0xff0000)
             .setDepth(6);
           this.tweens.add({
             targets: hammer,
             alpha: 0,
-            y: target.y,
+            y: target.y + 120,
             duration: 150,
             onComplete: () => hammer.destroy(),
           });
 
-          this.createImpactEffect(target.x, target.y - 10, 0xffff00);
+          this.createImpactEffect(target.x, target.y + 120, 0xffff00);
           this.takeDamage(
             !isPlayer,
             Math.floor(
@@ -3167,7 +3167,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => {
             heart.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y - 10, 0xffff00);
+            this.createImpactEffect(target.x, target.y + 120, 0xffff00);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -3203,7 +3203,7 @@ export default class BattleScene extends Phaser.Scene {
 
     if (attackType === "melee") {
       attacker.setAlpha(0);
-      this.createImpactEffect(attacker.x, attacker.y, 0x00ffff);
+      this.createImpactEffect(attacker.x, attacker.y + 120, 0x00ffff);
 
       this.time.delayedCall(100, () => {
         if (!this.scene.isActive()) return;
@@ -3213,7 +3213,7 @@ export default class BattleScene extends Phaser.Scene {
 
         if (this.cache.audio.exists("sfx_attack"))
           this.sound.play("sfx_attack", { volume: 1.2 });
-        this.createImpactEffect(target.x, target.y - 20, 0x00ffff);
+        this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
         this.takeDamage(
           !isPlayer,
           Math.floor(
@@ -3224,7 +3224,7 @@ export default class BattleScene extends Phaser.Scene {
         this.time.delayedCall(200, () => {
           if (!this.scene.isActive()) return;
           attacker.setAlpha(0);
-          this.createImpactEffect(attacker.x, attacker.y, 0x00ffff);
+          this.createImpactEffect(attacker.x, attacker.y + 120, 0x00ffff);
 
           this.time.delayedCall(100, () => {
             if (!this.scene.isActive()) return;
@@ -3253,7 +3253,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => {
             orb.destroy();
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y - 15, orbColor);
+            this.createImpactEffect(target.x, target.y + 120, orbColor);
             this.takeDamage(
               !isPlayer,
               Math.floor(
@@ -3398,7 +3398,7 @@ export default class BattleScene extends Phaser.Scene {
                 });
               }
 
-              this.createImpactEffect(target.x, target.y - 20, 0xffffff);
+              this.createImpactEffect(target.x, target.y + 120, 0xffffff);
 
               // Target hit flash
               this.tweens.add({
@@ -3573,7 +3573,7 @@ export default class BattleScene extends Phaser.Scene {
                       // Visual Impact
                       this.createImpactEffect(
                         target.x,
-                        target.y - 20,
+                        target.y + 120,
                         blastColor,
                         "beam",
                       );
@@ -4320,7 +4320,7 @@ export default class BattleScene extends Phaser.Scene {
     const sprite = isPlayer ? this.player : this.enemy;
     // Default for all characters
     const xOffset = isPlayer ? 45 : -45; 
-    const yOffset = 84; 
+    const yOffset = 120; // Lowered from 84 so it aligns with hands visually rather than mouth
     return { x: sprite.x + xOffset, y: sprite.y + yOffset };
   }
 
@@ -4949,7 +4949,7 @@ export default class BattleScene extends Phaser.Scene {
             const flash = this.add.rectangle(480, 270, 960, 540, 0xffffff).setDepth(100).setAlpha(0);
             this.tweens.add({ targets: flash, alpha: 1, duration: 20, yoyo: true });
 
-            this.createImpactEffect(target.x, target.y - 20, 0xffffff, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0xffffff, "beam");
             this.takeDamage(!isP, dmg);
 
             // PHYSICS-BASED KNOCKBACK (Intense)
@@ -5021,7 +5021,7 @@ export default class BattleScene extends Phaser.Scene {
             this.cameras.main.shake(1000, 0.1);
 
             // ATMOSPHERIC SPLIT (Iconic)
-            const splitLine = this.add.rectangle(480, target.y - 20, 960, 10, 0xffffff).setDepth(30).setAlpha(1);
+            const splitLine = this.add.rectangle(480, target.y + 120, 960, 10, 0xffffff).setDepth(30).setAlpha(1);
             this.tweens.add({
                targets: splitLine,
                scaleY: 200,
@@ -5032,7 +5032,7 @@ export default class BattleScene extends Phaser.Scene {
 
             // Particles flying away from impact
             for(let i=0; i<30; i++) {
-               const p = this.add.rectangle(target.x, target.y - 20, 4, 4, 0xffffff).setDepth(20);
+               const p = this.add.rectangle(target.x, target.y + 120, 4, 4, 0xffffff).setDepth(20);
                this.tweens.add({
                   targets: p,
                   x: p.x + (isP ? 600 : -600) + Phaser.Math.Between(-100, 100),
@@ -5044,7 +5044,7 @@ export default class BattleScene extends Phaser.Scene {
             }
 
             this.takeDamage(!isP, dmg);
-            this.createImpactEffect(target.x, target.y - 20, 0xffffff, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0xffffff, "beam");
 
             // Horizontal knockback that flies off screen briefly
             this.tweens.add({
@@ -5160,11 +5160,11 @@ export default class BattleScene extends Phaser.Scene {
 
         // Distortion line at impact
         const cutLineGlow = this.add
-          .rectangle(target.x, target.y, 30, 300, 0x3498db)
+          .rectangle(target.x, target.y + 120, 30, 300, 0x3498db)
           .setRotation(0.5)
           .setBlendMode(Phaser.BlendModes.ADD);
         const cutLine = this.add
-          .rectangle(target.x, target.y, 10, 300, 0xffffff)
+          .rectangle(target.x, target.y + 120, 10, 300, 0xffffff)
           .setRotation(0.5)
           .setBlendMode(Phaser.BlendModes.ADD);
         this.tweens.add({
@@ -5182,7 +5182,7 @@ export default class BattleScene extends Phaser.Scene {
         // Shockwave rings
         for (let i = 0; i < 2; i++) {
           const ring = this.add
-            .circle(target.x, target.y, 20, 0x3498db)
+            .circle(target.x, target.y + 120, 20, 0x3498db)
             .setStrokeStyle(6, 0x3498db)
             .setDepth(20)
             .setAlpha(0)
@@ -5199,7 +5199,7 @@ export default class BattleScene extends Phaser.Scene {
         }
 
         this.createImpactEffect(target.x, hand.y, 0x3498db, "beam");
-        this.createImpactEffect(target.x, target.y, 0xffffff, "melee");
+        this.createImpactEffect(target.x, target.y + 120, 0xffffff, "melee");
         this.takeDamage(!isP, dmg);
         slash.destroy();
         slashGlow.destroy();
@@ -5296,13 +5296,13 @@ export default class BattleScene extends Phaser.Scene {
         core.scaleX = isP ? 1 : -1;
 
         this.createImpactEffect(target.x, hand.y, 0x000000, "beam");
-        this.createImpactEffect(target.x, target.y, 0xffffff, "beam");
+        this.createImpactEffect(target.x, target.y + 120, 0xffffff, "beam");
         this.takeDamage(!isP, dmg); // Buffed dmg
 
         // Massive Shockwave rings
         for (let i = 0; i < 3; i++) {
           const ring = this.add
-            .circle(target.x, target.y, 40, 0xffffff)
+            .circle(target.x, target.y + 120, 40, 0xffffff)
             .setStrokeStyle(8, 0xffffff)
             .setDepth(20)
             .setAlpha(0)
@@ -5659,9 +5659,9 @@ export default class BattleScene extends Phaser.Scene {
       slashGlow.lineStyle(12, dashColor, 0.6);
       slashGlow.lineBetween(
         target.x - 100,
-        target.y + 50 - 100,
+        target.y + 120 - 100,
         target.x + 100,
-        target.y + 50 + 100,
+        target.y + 120 + 100,
       );
 
       const slash = this.add
@@ -5671,9 +5671,9 @@ export default class BattleScene extends Phaser.Scene {
       slash.lineStyle(4, 0xffffff);
       slash.lineBetween(
         target.x - 100,
-        target.y + 50 - 100,
+        target.y + 120 - 100,
         target.x + 100,
-        target.y + 50 + 100,
+        target.y + 120 + 100,
       );
 
       this.tweens.add({
@@ -5689,7 +5689,7 @@ export default class BattleScene extends Phaser.Scene {
       // Shockwave rings
       for (let i = 0; i < 3; i++) {
         const ring = this.add
-          .circle(target.x, target.y, 20, dashColor)
+          .circle(target.x, target.y + 120, 20, dashColor)
           .setStrokeStyle(6, dashColor)
           .setDepth(20)
           .setAlpha(0)
@@ -5705,7 +5705,7 @@ export default class BattleScene extends Phaser.Scene {
         });
       }
 
-      this.createImpactEffect(target.x, target.y + 50, dashColor, "beam");
+      this.createImpactEffect(target.x, target.y + 120, dashColor, "beam");
       this.takeDamage(!isP, dmg);
 
       // Return to start
@@ -5746,7 +5746,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => {
              if (!this.scene.isActive()) return;
              // Hit! the opponent is pulled towards spiderman
-             this.createImpactEffect(target.x, target.y - 10, webColor);
+             this.createImpactEffect(target.x, target.y + 120, webColor);
              
              this.tweens.add({
                  targets: [target, webLine],
@@ -5761,7 +5761,7 @@ export default class BattleScene extends Phaser.Scene {
                      this.cameras.main.shake(200, 0.03);
                      if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack", { volume: 1.5 });
                      
-                     this.createImpactEffect(target.x, target.y - 20, 0xff0000);
+                     this.createImpactEffect(target.x, target.y + 120, 0xff0000);
                      this.takeDamage(!isPlayer, Math.floor(40 * this.getDamageMultiplier(transLevel)));
                      
                      // Send them flying back
@@ -5827,7 +5827,7 @@ export default class BattleScene extends Phaser.Scene {
           
           // Random attack vector
           const fromX = target.x + (Math.random() * 400 - 200);
-          const fromY = target.y + (Math.random() * 300 - 200);
+          const fromY = target.y + 120 + (Math.random() * 300 - 200);
           
           attacker.x = fromX;
           attacker.y = fromY;
@@ -5838,7 +5838,7 @@ export default class BattleScene extends Phaser.Scene {
           slash.lineStyle(6, beamColor, 0.8);
           slash.beginPath();
           slash.moveTo(fromX, fromY);
-          slash.lineTo(target.x, target.y);
+          slash.lineTo(target.x, target.y + 120);
           slash.strokePath();
           slash.setDepth(4);
           
@@ -5852,13 +5852,13 @@ export default class BattleScene extends Phaser.Scene {
           this.tweens.add({
               targets: attacker,
               x: target.x,
-              y: target.y,
+              y: target.y + 120,
               alpha: 1,
               duration: 80,
               onComplete: () => {
                   if (!this.scene.isActive()) return;
                   if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack", { volume: 0.8 });
-                  this.createImpactEffect(target.x + (Math.random()*40-20), target.y + (Math.random()*40-20), 0xffffff);
+                  this.createImpactEffect(target.x + (Math.random()*40-20), target.y + 120 + (Math.random()*40-20), 0xffffff);
                   this.takeDamage(!isPlayer, Math.floor((isIron ? 15 : 20) * this.getDamageMultiplier(transLevel)));
                   this.cameras.main.shake(50, 0.02);
                   performStrike();
@@ -5941,7 +5941,7 @@ export default class BattleScene extends Phaser.Scene {
         this.tweens.add({
           targets: [bomb, bombGlow],
           x: target.x,
-          y: target.y,
+          y: target.y + 120,
           duration: 700,
           ease: "Cubic.easeIn",
           onComplete: () => {
@@ -5956,18 +5956,18 @@ export default class BattleScene extends Phaser.Scene {
               .setAlpha(0.7)
               .setDepth(1);
             const explosion = this.add
-              .circle(target.x, target.y, 300, 0x00ffff)
+              .circle(target.x, target.y + 120, 300, 0x00ffff)
               .setDepth(20)
               .setBlendMode(Phaser.BlendModes.ADD);
             const core = this.add
-              .circle(target.x, target.y, 200, 0xffffff)
+              .circle(target.x, target.y + 120, 200, 0xffffff)
               .setDepth(21)
               .setBlendMode(Phaser.BlendModes.ADD);
 
             // Shockwave rings
             for (let i = 0; i < 6; i++) {
               const ring = this.add
-                .circle(target.x, target.y, 60, 0x00ffff)
+                .circle(target.x, target.y + 120, 60, 0x00ffff)
                 .setStrokeStyle(12, 0x00ffff)
                 .setDepth(22)
                 .setAlpha(0)
@@ -5986,7 +5986,7 @@ export default class BattleScene extends Phaser.Scene {
             // Extra debris particles
             for (let i = 0; i < 20; i++) {
               const p = this.add
-                .rectangle(target.x, target.y, 10, 10, 0x00ffff)
+                .rectangle(target.x, target.y + 120, 10, 10, 0x00ffff)
                 .setDepth(23)
                 .setBlendMode(Phaser.BlendModes.ADD);
               const angle = Math.random() * Math.PI * 2;
@@ -5994,7 +5994,7 @@ export default class BattleScene extends Phaser.Scene {
               this.tweens.add({
                 targets: p,
                 x: target.x + Math.cos(angle) * dist,
-                y: target.y + Math.sin(angle) * dist,
+                y: target.y + 120 + Math.sin(angle) * dist,
                 alpha: 0,
                 scale: 0,
                 duration: 800,
@@ -6020,7 +6020,7 @@ export default class BattleScene extends Phaser.Scene {
               onComplete: () => crater.destroy(),
             });
 
-            this.createImpactEffect(target.x, target.y, 0x00ffff, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0x00ffff, "beam");
             this.takeDamage(!isP, dmg);
             bomb.destroy();
             bombGlow.destroy();
@@ -6158,13 +6158,13 @@ export default class BattleScene extends Phaser.Scene {
           },
           onComplete: () => {
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y, 0xffff00, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0xffff00, "beam");
             this.takeDamage(!isP, dmg);
 
             // Massive Shockwave rings
             for (let i = 0; i < 6; i++) {
               const ring = this.add
-                .circle(target.x, target.y, 40, 0xffff00)
+                .circle(target.x, target.y + 120, 40, 0xffff00)
                 .setStrokeStyle(12, 0xffff00)
                 .setDepth(20)
                 .setAlpha(0)
@@ -6300,13 +6300,13 @@ export default class BattleScene extends Phaser.Scene {
           ease: "Power2",
           onComplete: () => {
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y, 0x00ffff, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0x00ffff, "beam");
             this.takeDamage(!isP, dmg);
 
             // Massive Shockwave rings
             for (let i = 0; i < 6; i++) {
               const ring = this.add
-                .circle(target.x, target.y, 40, 0x00ffff)
+                .circle(target.x, target.y + 120, 40, 0x00ffff)
                 .setStrokeStyle(10, 0x00ffff)
                 .setDepth(20)
                 .setAlpha(0)
@@ -6410,7 +6410,7 @@ export default class BattleScene extends Phaser.Scene {
         this.tweens.add({
           targets: [o.orb, o.orbGlow],
           x: target.x + Phaser.Math.Between(-30, 30),
-          y: target.y + Phaser.Math.Between(-30, 30),
+          y: target.y + 120 + Phaser.Math.Between(-30, 30),
           duration: 350,
           delay: i * 30,
           ease: "Back.easeIn",
@@ -6440,7 +6440,7 @@ export default class BattleScene extends Phaser.Scene {
               // Shockwave rings
               for (let j = 0; j < 5; j++) {
                 const ring = this.add
-                  .circle(target.x, target.y, 40, 0xffff00)
+                  .circle(target.x, target.y + 120, 40, 0xffff00)
                   .setStrokeStyle(10, 0xffff00)
                   .setDepth(20)
                   .setAlpha(0)
@@ -6456,7 +6456,7 @@ export default class BattleScene extends Phaser.Scene {
                 });
               }
 
-              this.createImpactEffect(target.x, target.y, 0xffff00, "beam");
+              this.createImpactEffect(target.x, target.y + 120, 0xffff00, "beam");
               this.takeDamage(!isP, dmg);
               this.onSpecialComplete(isP);
             }
@@ -6570,13 +6570,13 @@ export default class BattleScene extends Phaser.Scene {
           },
           onComplete: () => {
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y, 0x00ff00, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0x00ff00, "beam");
             this.takeDamage(!isP, dmg);
 
             // Massive Shockwave rings
             for (let i = 0; i < 6; i++) {
               const ring = this.add
-                .circle(target.x, target.y, 40, 0x00ff00)
+                .circle(target.x, target.y + 120, 40, 0x00ff00)
                 .setStrokeStyle(12, 0x00ff00)
                 .setDepth(20)
                 .setAlpha(0)
@@ -6649,7 +6649,7 @@ export default class BattleScene extends Phaser.Scene {
             const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
             const len = 120;
             const cx = target.x + Phaser.Math.Between(-40, 40);
-            const cy = target.y + Phaser.Math.Between(-40, 40);
+            const cy = target.y + 120 + Phaser.Math.Between(-40, 40);
 
             const slashGlow = this.add
               .rectangle(cx, cy, len * 2, 12, 0x3498db)
@@ -6723,7 +6723,7 @@ export default class BattleScene extends Phaser.Scene {
           // Shockwave rings
           for (let i = 0; i < 4; i++) {
             const ring = this.add
-              .circle(target.x, target.y, 40, 0x3498db)
+              .circle(target.x, target.y + 120, 40, 0x3498db)
               .setStrokeStyle(10, 0x3498db)
               .setDepth(20)
               .setAlpha(0)
@@ -6765,14 +6765,14 @@ export default class BattleScene extends Phaser.Scene {
     if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
 
     // Create black hole on target
-    const hole = this.add.circle(target.x, target.y, 5, 0x000000).setDepth(15);
+    const hole = this.add.circle(target.x, target.y + 120, 5, 0x000000).setDepth(15);
     const ring = this.add
-      .circle(target.x, target.y, 10, 0x9b59b6)
+      .circle(target.x, target.y + 120, 10, 0x9b59b6)
       .setDepth(14)
       .setStrokeStyle(6, 0x9b59b6)
       .setBlendMode(Phaser.BlendModes.ADD);
     const aura = this.add
-      .circle(target.x, target.y, 15, 0x9b59b6)
+      .circle(target.x, target.y + 120, 15, 0x9b59b6)
       .setDepth(13)
       .setAlpha(0.5)
       .setBlendMode(Phaser.BlendModes.ADD);
@@ -6783,7 +6783,7 @@ export default class BattleScene extends Phaser.Scene {
     const suckParticles = this.add
       .particles(0, 0, "particle", {
         x: target.x,
-        y: target.y,
+        y: target.y + 120,
         speed: { min: -300, max: -100 }, // Negative speed pulls them in
         scale: { start: 1.5, end: 0 },
         blendMode: "ADD",
@@ -6832,18 +6832,18 @@ export default class BattleScene extends Phaser.Scene {
             this.cameras.main.shake(1000, 0.1);
 
             const explosion = this.add
-              .circle(target.x, target.y, 10, 0x9b59b6)
+              .circle(target.x, target.y + 120, 10, 0x9b59b6)
               .setDepth(20)
               .setBlendMode(Phaser.BlendModes.ADD);
             const explosionCore = this.add
-              .circle(target.x, target.y, 5, 0xffffff)
+              .circle(target.x, target.y + 120, 5, 0xffffff)
               .setDepth(21)
               .setBlendMode(Phaser.BlendModes.ADD);
 
             // Shockwave rings
             for (let i = 0; i < 6; i++) {
               const shockRing = this.add
-                .circle(target.x, target.y, 40, 0x9b59b6)
+                .circle(target.x, target.y + 120, 40, 0x9b59b6)
                 .setStrokeStyle(12, 0x9b59b6)
                 .setDepth(22)
                 .setAlpha(0)
@@ -6870,7 +6870,7 @@ export default class BattleScene extends Phaser.Scene {
               },
             });
 
-            this.createImpactEffect(target.x, target.y, 0x9b59b6, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0x9b59b6, "beam");
             this.takeDamage(!isP, dmg);
 
             this.tweens.add({
@@ -6992,13 +6992,13 @@ export default class BattleScene extends Phaser.Scene {
           },
           onComplete: () => {
             if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y, 0x00eaff, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0x00eaff, "beam");
             this.takeDamage(!isP, dmg);
 
             // Massive Shockwave rings
             for (let i = 0; i < 6; i++) {
               const ring = this.add
-                .circle(target.x, target.y, 40, 0x00eaff)
+                .circle(target.x, target.y + 120, 40, 0x00eaff)
                 .setStrokeStyle(12, 0x00eaff)
                 .setDepth(20)
                 .setAlpha(0)
@@ -7155,7 +7155,7 @@ export default class BattleScene extends Phaser.Scene {
               .setDepth(19);
             this.time.delayedCall(800, () => dust.destroy());
 
-            this.createImpactEffect(target.x, target.y, 0xd35400, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0xd35400, "beam");
             this.takeDamage(!isP, dmg);
 
             this.tweens.add({
@@ -7260,7 +7260,7 @@ export default class BattleScene extends Phaser.Scene {
         });
         this.createImpactEffect(
           target.x + Phaser.Math.Between(-60, 60),
-          target.y - 20 + Phaser.Math.Between(-60, 60),
+          target.y + 120 + Phaser.Math.Between(-60, 60),
           dashColor,
         );
 
@@ -7278,25 +7278,25 @@ export default class BattleScene extends Phaser.Scene {
 
       // Final massive slash
       const slashGlow = this.add
-        .rectangle(target.x, target.y, 700, 80, dashColor)
+        .rectangle(target.x, target.y + 120, 700, 80, dashColor)
         .setDepth(14)
         .setBlendMode(Phaser.BlendModes.ADD)
         .setAlpha(0.8)
         .setRotation(Math.PI / 4);
       const slash = this.add
-        .rectangle(target.x, target.y, 700, 30, dashColor)
+        .rectangle(target.x, target.y + 120, 700, 30, dashColor)
         .setDepth(15)
         .setBlendMode(Phaser.BlendModes.ADD)
         .setRotation(Math.PI / 4);
       const slashCore = this.add
-        .rectangle(target.x, target.y, 700, 15, 0xffffff)
+        .rectangle(target.x, target.y + 120, 700, 15, 0xffffff)
         .setDepth(16)
         .setRotation(Math.PI / 4);
 
       // Shockwave rings
       for (let i = 0; i < 6; i++) {
         const ring = this.add
-          .circle(target.x, target.y, 50, dashColor)
+          .circle(target.x, target.y + 120, 50, dashColor)
           .setStrokeStyle(12, dashColor)
           .setDepth(20)
           .setAlpha(0)
@@ -7323,7 +7323,7 @@ export default class BattleScene extends Phaser.Scene {
         },
       });
 
-      this.createImpactEffect(target.x, target.y, dashColor, "beam");
+      this.createImpactEffect(target.x, target.y + 120, dashColor, "beam");
       this.takeDamage(!isP, dmg);
 
       this.tweens.add({
@@ -7384,7 +7384,7 @@ export default class BattleScene extends Phaser.Scene {
             // Shockwave rings
             for (let i = 0; i < 2; i++) {
               const ring = this.add
-                .circle(target.x, target.y - 20, 20, 0xff0000)
+                .circle(target.x, target.y + 120, 20, 0xff0000)
                 .setStrokeStyle(6, 0xff0000)
                 .setDepth(20)
                 .setAlpha(0)
@@ -7403,12 +7403,12 @@ export default class BattleScene extends Phaser.Scene {
             // Stars effect
             for (let i = 0; i < 5; i++) {
               const star = this.add
-                .circle(target.x, target.y - 20, 5, 0xffff00)
+                .circle(target.x, target.y + 120, 5, 0xffff00)
                 .setDepth(16);
               this.tweens.add({
                 targets: star,
                 x: target.x + Phaser.Math.Between(-100, 100),
-                y: target.y - 20 + Phaser.Math.Between(-100, 100),
+                y: target.y + 120 + Phaser.Math.Between(-100, 100),
                 alpha: 0,
                 scale: 2,
                 rotation: Math.PI * 4,
@@ -7418,14 +7418,14 @@ export default class BattleScene extends Phaser.Scene {
               });
             }
 
-            this.createImpactEffect(target.x, target.y - 20, 0xff0000, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0xff0000, "beam");
             if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
             this.takeDamage(!isP, dmg);
 
             this.tweens.add({
               targets: mallet,
               alpha: 0,
-              y: target.y + 50,
+              y: target.y + 120,
               duration: 200,
               onComplete: () => {
                 mallet.destroy();
@@ -7475,7 +7475,7 @@ export default class BattleScene extends Phaser.Scene {
         const startX = target.x + Phaser.Math.Between(-300, 300);
         const startY = -150;
         const targetX = target.x + Phaser.Math.Between(-80, 80);
-        const targetY = target.y + Phaser.Math.Between(-30, 60);
+        const targetY = target.y + 120 + Phaser.Math.Between(-30, 60);
 
         rock.setPosition(startX, startY);
         trail.startFollow(rock);
@@ -7519,7 +7519,7 @@ export default class BattleScene extends Phaser.Scene {
               // Massive final shockwave
               for (let j = 0; j < 5; j++) {
                 const ring = this.add
-                  .circle(target.x, target.y, 50, 0xffaa00)
+                  .circle(target.x, target.y + 120, 50, 0xffaa00)
                   .setStrokeStyle(10, 0xffaa00)
                   .setDepth(20)
                   .setAlpha(0)
@@ -7649,18 +7649,18 @@ export default class BattleScene extends Phaser.Scene {
 
             // Explosion effect
             const explosion = this.add
-              .circle(target.x, target.y, 10, color)
+              .circle(target.x, target.y + 120, 10, color)
               .setDepth(20)
               .setBlendMode(Phaser.BlendModes.ADD);
             const explosionCore = this.add
-              .circle(target.x, target.y, 5, 0xffffff)
+              .circle(target.x, target.y + 120, 5, 0xffffff)
               .setDepth(21)
               .setBlendMode(Phaser.BlendModes.ADD);
 
             // Shockwave rings
             for (let i = 0; i < 6; i++) {
               const ring = this.add
-                .circle(target.x, target.y, 40, color)
+                .circle(target.x, target.y + 120, 40, color)
                 .setStrokeStyle(12, color)
                 .setDepth(22)
                 .setAlpha(0)
@@ -7687,7 +7687,7 @@ export default class BattleScene extends Phaser.Scene {
               },
             });
 
-            this.createImpactEffect(target.x, target.y, color, "beam");
+            this.createImpactEffect(target.x, target.y + 120, color, "beam");
             this.takeDamage(!isP, dmg);
 
             rasengan.destroy();
@@ -7806,7 +7806,7 @@ export default class BattleScene extends Phaser.Scene {
         this.tweens.add({
           targets: shuriken,
           x: target.x,
-          y: target.y,
+          y: target.y + 120,
           rotation: Math.PI * 30, // Keep spinning
           duration: 250,
           ease: "Power2",
@@ -7822,11 +7822,11 @@ export default class BattleScene extends Phaser.Scene {
               this.sound.play("sfx_explosion");
 
             const explosion = this.add
-              .circle(target.x, target.y, 10, color)
+              .circle(target.x, target.y + 120, 10, color)
               .setDepth(20)
               .setBlendMode(Phaser.BlendModes.ADD);
             const explosionCore = this.add
-              .circle(target.x, target.y, 5, 0xffffff)
+              .circle(target.x, target.y + 120, 5, 0xffffff)
               .setDepth(21)
               .setBlendMode(Phaser.BlendModes.ADD);
 
@@ -7835,7 +7835,7 @@ export default class BattleScene extends Phaser.Scene {
               const slash = this.add
                 .rectangle(
                   target.x + Phaser.Math.Between(-100, 100),
-                  target.y + Phaser.Math.Between(-100, 100),
+                  target.y + 120 + Phaser.Math.Between(-100, 100),
                   120,
                   4,
                   0xffffff,
@@ -7856,7 +7856,7 @@ export default class BattleScene extends Phaser.Scene {
             // Shockwave rings
             for (let i = 0; i < 6; i++) {
               const ring = this.add
-                .circle(target.x, target.y, 40, color)
+                .circle(target.x, target.y + 120, 40, color)
                 .setStrokeStyle(12, color)
                 .setDepth(23)
                 .setAlpha(0)
@@ -7883,7 +7883,7 @@ export default class BattleScene extends Phaser.Scene {
               },
             });
 
-            this.createImpactEffect(target.x, target.y, color, "beam");
+            this.createImpactEffect(target.x, target.y + 120, color, "beam");
             this.takeDamage(!isP, dmg);
             shuriken.destroy();
             this.time.delayedCall(400, () => wind.destroy());
@@ -7950,7 +7950,7 @@ export default class BattleScene extends Phaser.Scene {
         this.tweens.add({
           targets: [batarang, batarangGlow],
           x: target.x,
-          y: target.y + Phaser.Math.Between(-40, 40),
+          y: target.y + 120 + Phaser.Math.Between(-40, 40),
           duration: 300,
           ease: "Power1",
           onComplete: () => {
@@ -8044,7 +8044,7 @@ export default class BattleScene extends Phaser.Scene {
           this.time.delayedCall(i * 80, () => {
             if (!this.scene.isActive()) return;
             const cx = target.x + Phaser.Math.Between(-40, 40);
-            const cy = target.y + Phaser.Math.Between(-40, 40);
+            const cy = target.y + 120 + Phaser.Math.Between(-40, 40);
 
             // Slash effect
             const slash = this.add
@@ -8083,7 +8083,7 @@ export default class BattleScene extends Phaser.Scene {
           // Shockwave rings
           for (let i = 0; i < 5; i++) {
             const ring = this.add
-              .circle(target.x, target.y, 40, 0xf1c40f)
+              .circle(target.x, target.y + 120, 40, 0xf1c40f)
               .setStrokeStyle(12, 0xf1c40f)
               .setDepth(20)
               .setAlpha(0)
@@ -8099,7 +8099,7 @@ export default class BattleScene extends Phaser.Scene {
             });
           }
 
-          this.createImpactEffect(target.x, target.y, 0xf1c40f, "beam");
+          this.createImpactEffect(target.x, target.y + 120, 0xf1c40f, "beam");
           this.takeDamage(!isP, dmg);
 
           // Fade out darkness and return
@@ -8138,14 +8138,14 @@ export default class BattleScene extends Phaser.Scene {
     slashGlow1.lineStyle(20, 0xff0000, 0.6);
     slashGlow1.beginPath();
     slashGlow1.moveTo(target.x - 60, target.y - 60);
-    slashGlow1.lineTo(target.x + 60, target.y + 60);
+    slashGlow1.lineTo(target.x + 60, target.y + 120);
     slashGlow1.strokePath();
 
     const slash1 = this.add.graphics().setDepth(15);
     slash1.lineStyle(6, 0xffffff, 1);
     slash1.beginPath();
     slash1.moveTo(target.x - 60, target.y - 60);
-    slash1.lineTo(target.x + 60, target.y + 60);
+    slash1.lineTo(target.x + 60, target.y + 120);
     slash1.strokePath();
 
     const slashGlow2 = this.add
@@ -8155,14 +8155,14 @@ export default class BattleScene extends Phaser.Scene {
     slashGlow2.lineStyle(20, 0xff0000, 0.6);
     slashGlow2.beginPath();
     slashGlow2.moveTo(target.x + 60, target.y - 60);
-    slashGlow2.lineTo(target.x - 60, target.y + 60);
+    slashGlow2.lineTo(target.x - 60, target.y + 120);
     slashGlow2.strokePath();
 
     const slash2 = this.add.graphics().setDepth(15);
     slash2.lineStyle(6, 0xffffff, 1);
     slash2.beginPath();
     slash2.moveTo(target.x + 60, target.y - 60);
-    slash2.lineTo(target.x - 60, target.y + 60);
+    slash2.lineTo(target.x - 60, target.y + 120);
     slash2.strokePath();
 
     this.cameras.main.shake(200, 0.02);
@@ -8182,7 +8182,7 @@ export default class BattleScene extends Phaser.Scene {
         // Shockwave ring
         for (let i = 0; i < 4; i++) {
           const ring = this.add
-            .circle(target.x, target.y, 40, 0xff0000)
+            .circle(target.x, target.y + 120, 40, 0xff0000)
             .setStrokeStyle(10, 0xff0000)
             .setDepth(20)
             .setAlpha(0)
@@ -8200,7 +8200,7 @@ export default class BattleScene extends Phaser.Scene {
 
         // Small explosion
         const exp = this.add
-          .circle(target.x, target.y, 30, 0xff0000)
+          .circle(target.x, target.y + 120, 30, 0xff0000)
           .setDepth(16)
           .setBlendMode(Phaser.BlendModes.ADD);
         this.tweens.add({
@@ -8211,7 +8211,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => exp.destroy(),
         });
 
-        this.createImpactEffect(target.x, target.y, 0xff0000, "beam");
+        this.createImpactEffect(target.x, target.y + 120, 0xff0000, "beam");
         this.takeDamage(!isP, dmg);
         this.onSpecialComplete(isP);
       },
@@ -8317,7 +8317,7 @@ export default class BattleScene extends Phaser.Scene {
           this.time.delayedCall(i * 60, () => {
             if (!this.scene.isActive()) return;
             const cx = target.x + Phaser.Math.Between(-60, 60);
-            const cy = target.y + Phaser.Math.Between(-80, 80);
+            const cy = target.y + 120 + Phaser.Math.Between(-80, 80);
             const angle = Phaser.Math.Between(0, 360) * (Math.PI / 180);
             const length = Phaser.Math.Between(80, 200);
 
@@ -8389,11 +8389,11 @@ export default class BattleScene extends Phaser.Scene {
             this.sound.play("sfx_explosion");
 
           const finalSlash = this.add
-            .rectangle(target.x, target.y, 400, 20, 0xff0000)
+            .rectangle(target.x, target.y + 120, 400, 20, 0xff0000)
             .setDepth(16)
             .setRotation(Math.PI / 4);
           const finalSlashCore = this.add
-            .rectangle(target.x, target.y, 400, 8, 0xffffff)
+            .rectangle(target.x, target.y + 120, 400, 8, 0xffffff)
             .setDepth(17)
             .setRotation(Math.PI / 4);
           this.tweens.add({
@@ -8407,13 +8407,13 @@ export default class BattleScene extends Phaser.Scene {
             },
           });
 
-          this.createImpactEffect(target.x, target.y, 0xff0000, "beam");
+          this.createImpactEffect(target.x, target.y + 120, 0xff0000, "beam");
           this.takeDamage(!isP, dmg);
 
           // Shockwave rings
           for (let i = 0; i < 6; i++) {
             const ring = this.add
-              .circle(target.x, target.y, 50, 0xff0000)
+              .circle(target.x, target.y + 120, 50, 0xff0000)
               .setStrokeStyle(12, 0xff0000)
               .setDepth(20)
               .setAlpha(0)
@@ -8516,7 +8516,7 @@ export default class BattleScene extends Phaser.Scene {
         this.tweens.add({
           targets: [blue, blueGlow, blueCore],
           x: target.x,
-          y: target.y - 20,
+          y: target.y + 120,
           duration: 250,
           ease: "Power2",
         });
@@ -8545,7 +8545,7 @@ export default class BattleScene extends Phaser.Scene {
 
             // Purple explosion
             const exp = this.add
-              .circle(target.x, target.y, 20, 0x8a2be2)
+              .circle(target.x, target.y + 120, 20, 0x8a2be2)
               .setDepth(16)
               .setBlendMode(Phaser.BlendModes.ADD);
             this.tweens.add({
@@ -8556,13 +8556,13 @@ export default class BattleScene extends Phaser.Scene {
               onComplete: () => exp.destroy(),
             });
 
-            this.createImpactEffect(target.x, target.y, 0x8a2be2, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0x8a2be2, "beam");
             this.takeDamage(!isP, dmg);
 
             // Shockwave rings
             for (let i = 0; i < 4; i++) {
               const ring = this.add
-                .circle(target.x, target.y, 40, 0x8a2be2)
+                .circle(target.x, target.y + 120, 40, 0x8a2be2)
                 .setStrokeStyle(10, 0x8a2be2)
                 .setDepth(20)
                 .setAlpha(0)
@@ -8751,13 +8751,13 @@ export default class BattleScene extends Phaser.Scene {
                 Math.abs(purple.x - target.x) < 120
               ) {
                 attacker.setData("hollowPurpleTriggered", true);
-                this.createImpactEffect(target.x, target.y, 0x8a2be2, "beam");
+                this.createImpactEffect(target.x, target.y + 120, 0x8a2be2, "beam");
                 this.cameras.main.shake(300, 0.15);
 
                 // Spatial distortion rings
                 for (let i = 0; i < 4; i++) {
                   const ring = this.add
-                    .circle(target.x, target.y, 30, 0x8a2be2)
+                    .circle(target.x, target.y + 120, 30, 0x8a2be2)
                     .setStrokeStyle(10, 0x8a2be2)
                     .setDepth(20)
                     .setAlpha(0.8)
@@ -8789,22 +8789,22 @@ export default class BattleScene extends Phaser.Scene {
 
               // Massive Purple Void
               const voidGlow = this.add
-                .circle(target.x, target.y, 300, 0x8a2be2)
+                .circle(target.x, target.y + 120, 300, 0x8a2be2)
                 .setDepth(20)
                 .setAlpha(0.6)
                 .setBlendMode(Phaser.BlendModes.ADD);
               const purpleVoid = this.add
-                .circle(target.x, target.y, 200, 0x4b0082)
+                .circle(target.x, target.y + 120, 200, 0x4b0082)
                 .setDepth(21);
               const voidCore = this.add
-                .circle(target.x, target.y, 100, 0xffffff)
+                .circle(target.x, target.y + 120, 100, 0xffffff)
                 .setDepth(22)
                 .setBlendMode(Phaser.BlendModes.ADD);
 
               // Shockwave rings
               for (let i = 0; i < 8; i++) {
                 const ring = this.add
-                  .circle(target.x, target.y, 50, 0x8a2be2)
+                  .circle(target.x, target.y + 120, 50, 0x8a2be2)
                   .setStrokeStyle(15, 0x8a2be2)
                   .setDepth(23)
                   .setAlpha(0)
@@ -8832,7 +8832,7 @@ export default class BattleScene extends Phaser.Scene {
                 },
               });
 
-              this.createImpactEffect(target.x, target.y, 0x8a2be2, "beam");
+              this.createImpactEffect(target.x, target.y + 120, 0x8a2be2, "beam");
               this.takeDamage(!isP, dmg);
 
               this.tweens.add({
@@ -8890,12 +8890,12 @@ export default class BattleScene extends Phaser.Scene {
 
     // Black fire on target
     const fireGlow = this.add
-      .circle(target.x, target.y - 10, 60, 0x8b0000)
+      .circle(target.x, target.y + 120, 60, 0x8b0000)
       .setDepth(14)
       .setAlpha(0.6)
       .setBlendMode(Phaser.BlendModes.ADD);
     const fire = this.add
-      .circle(target.x, target.y - 10, 30, 0x000000)
+      .circle(target.x, target.y + 120, 30, 0x000000)
       .setDepth(15)
       .setAlpha(0.9);
 
@@ -8935,12 +8935,12 @@ export default class BattleScene extends Phaser.Scene {
         this.sound.play("sfx_explosion");
 
       this.createScreenFlash(0x8b0000, 500, 1);
-      this.createImpactEffect(target.x, target.y - 10, 0x000000, "beam");
+      this.createImpactEffect(target.x, target.y + 120, 0x000000, "beam");
 
       // Shockwave rings
       for (let i = 0; i < 5; i++) {
         const ring = this.add
-          .circle(target.x, target.y - 10, 40, 0x8b0000)
+          .circle(target.x, target.y + 120, 40, 0x8b0000)
           .setStrokeStyle(12, 0x8b0000)
           .setDepth(20)
           .setAlpha(0)
@@ -9063,7 +9063,7 @@ export default class BattleScene extends Phaser.Scene {
                 if (!this.scene.isActive()) return;
                 this.createImpactEffect(
                   target.x + Phaser.Math.Between(-40, 40),
-                  target.y - 10 + Phaser.Math.Between(-40, 40),
+                  target.y + 120 + Phaser.Math.Between(-40, 40),
                   0x000000,
                   "melee",
                 );
@@ -9079,7 +9079,7 @@ export default class BattleScene extends Phaser.Scene {
               // Shockwave rings
               for (let i = 0; i < 6; i++) {
                 const ring = this.add
-                  .circle(target.x, target.y - 10, 50, 0x8b0000)
+                  .circle(target.x, target.y + 120, 50, 0x8b0000)
                   .setStrokeStyle(12, 0x8b0000)
                   .setDepth(20)
                   .setAlpha(0)
@@ -9117,7 +9117,7 @@ export default class BattleScene extends Phaser.Scene {
 
     // Swirl effect around attacker
     const swirlGlow = this.add
-      .circle(attacker.x, attacker.y, 60, 0x000000)
+      .circle(attacker.x, attacker.y + 120, 60, 0x000000)
       .setDepth(14)
       .setAlpha(0.6);
     const swirl = this.add.graphics().setDepth(15);
@@ -9125,7 +9125,7 @@ export default class BattleScene extends Phaser.Scene {
     swirl.strokeCircle(attacker.x, attacker.y, 40);
 
     const swirlCore = this.add
-      .circle(attacker.x, attacker.y, 15, 0x000000)
+      .circle(attacker.x, attacker.y + 120, 15, 0x000000)
       .setDepth(16);
 
     // Distortion spiral
@@ -9169,7 +9169,7 @@ export default class BattleScene extends Phaser.Scene {
 
           // Swirl reappear
           const swirlGlow2 = this.add
-            .circle(attacker.x, attacker.y, 10, 0x000000)
+            .circle(attacker.x, attacker.y + 120, 10, 0x000000)
             .setDepth(14)
             .setAlpha(0.6);
           const swirl2 = this.add.graphics().setDepth(15);
@@ -9177,7 +9177,7 @@ export default class BattleScene extends Phaser.Scene {
           swirl2.strokeCircle(attacker.x, attacker.y, 5);
 
           const swirlCore2 = this.add
-            .circle(attacker.x, attacker.y, 5, 0x000000)
+            .circle(attacker.x, attacker.y + 120, 5, 0x000000)
             .setDepth(16);
 
           const spiral2 = this.add
@@ -9220,7 +9220,7 @@ export default class BattleScene extends Phaser.Scene {
 
             // Distortion impact
             const impactSwirl = this.add
-              .circle(target.x, target.y, 10, 0x000000)
+              .circle(target.x, target.y + 120, 10, 0x000000)
               .setDepth(20);
             this.tweens.add({
               targets: impactSwirl,
@@ -9230,14 +9230,14 @@ export default class BattleScene extends Phaser.Scene {
               onComplete: () => impactSwirl.destroy(),
             });
 
-            this.createImpactEffect(target.x, target.y, 0x000000, "melee");
+            this.createImpactEffect(target.x, target.y + 120, 0x000000, "melee");
             this.takeDamage(!isP, dmg);
             this.cameras.main.shake(200, 0.03);
 
             // Shockwave rings
             for (let i = 0; i < 5; i++) {
               const ring = this.add
-                .circle(target.x, target.y, 40, 0x000000)
+                .circle(target.x, target.y + 120, 40, 0x000000)
                 .setStrokeStyle(10, 0x000000)
                 .setDepth(20)
                 .setAlpha(0)
@@ -9255,7 +9255,7 @@ export default class BattleScene extends Phaser.Scene {
 
             // Slash effect
             const slash = this.add
-              .rectangle(target.x, target.y, 100, 5, 0xffffff)
+              .rectangle(target.x, target.y + 120, 100, 5, 0xffffff)
               .setDepth(20)
               .setRotation(Math.PI / 4);
             this.tweens.add({
@@ -9298,7 +9298,7 @@ export default class BattleScene extends Phaser.Scene {
 
     // Stand aura
     const aura = this.add
-      .circle(attacker.x, attacker.y, 60, 0x8a2be2)
+      .circle(attacker.x, attacker.y + 120, 60, 0x8a2be2)
       .setDepth(8)
       .setAlpha(0)
       .setBlendMode(Phaser.BlendModes.ADD);
@@ -9331,11 +9331,11 @@ export default class BattleScene extends Phaser.Scene {
       duration: 150,
       ease: "Power2",
       onComplete: () => {
-        this.createImpactEffect(target.x, target.y - 20, 0x8a2be2, "beam");
+        this.createImpactEffect(target.x, target.y + 120, 0x8a2be2, "beam");
 
         // Piercing effect
         const pierce = this.add
-          .circle(target.x, target.y - 20, 30, 0xffffff)
+          .circle(target.x, target.y + 120, 30, 0xffffff)
           .setDepth(20)
           .setBlendMode(Phaser.BlendModes.ADD);
         this.tweens.add({
@@ -9349,7 +9349,7 @@ export default class BattleScene extends Phaser.Scene {
         // Shockwave rings
         for (let i = 0; i < 4; i++) {
           const ring = this.add
-            .circle(target.x, target.y - 20, 40, 0x8a2be2)
+            .circle(target.x, target.y + 120, 40, 0x8a2be2)
             .setStrokeStyle(10, 0x8a2be2)
             .setDepth(20)
             .setAlpha(0)
@@ -9400,7 +9400,7 @@ export default class BattleScene extends Phaser.Scene {
 
     // Stand aura
     const aura = this.add
-      .circle(attacker.x, attacker.y, 60, 0x8a2be2)
+      .circle(attacker.x, attacker.y + 120, 60, 0x8a2be2)
       .setDepth(8)
       .setAlpha(0)
       .setBlendMode(Phaser.BlendModes.ADD);
@@ -9429,7 +9429,7 @@ export default class BattleScene extends Phaser.Scene {
             if (!this.scene.isActive()) return;
 
             const hitX = target.x + (Math.random() * 80 - 40);
-            const hitY = target.y - 20 + (Math.random() * 80 - 40);
+            const hitY = target.y + 120 + (Math.random() * 80 - 40);
 
             // Fist graphic
             const hand = this.getHandPosition(isP);
@@ -9495,7 +9495,7 @@ export default class BattleScene extends Phaser.Scene {
                 this.createScreenFlash(0xffd700, 600, 1);
                 this.createImpactEffect(
                   target.x,
-                  target.y - 20,
+                  target.y + 120,
                   0xffd700,
                   "beam",
                 );
@@ -9505,12 +9505,12 @@ export default class BattleScene extends Phaser.Scene {
 
                 // Huge impact circle
                 const finalHitGlow = this.add
-                  .circle(target.x, target.y - 20, 150, 0xffd700)
+                  .circle(target.x, target.y + 120, 150, 0xffd700)
                   .setDepth(19)
                   .setAlpha(0.6)
                   .setBlendMode(Phaser.BlendModes.ADD);
                 const finalHit = this.add
-                  .circle(target.x, target.y - 20, 100, 0xffd700)
+                  .circle(target.x, target.y + 120, 100, 0xffd700)
                   .setDepth(20)
                   .setAlpha(0.8);
                 this.tweens.add({
@@ -9527,7 +9527,7 @@ export default class BattleScene extends Phaser.Scene {
                 // Shockwave rings
                 for (let i = 0; i < 5; i++) {
                   const ring = this.add
-                    .circle(target.x, target.y - 20, 50, 0xffd700)
+                    .circle(target.x, target.y + 120, 50, 0xffd700)
                     .setStrokeStyle(12, 0xffd700)
                     .setDepth(21)
                     .setAlpha(0)
@@ -9677,7 +9677,7 @@ export default class BattleScene extends Phaser.Scene {
         this.takeDamage(!isP, dmg);
 
         this.createScreenFlash(0xff4500, 500, 1);
-        this.createImpactEffect(target.x, target.y, 0xff4500, "beam");
+        this.createImpactEffect(target.x, target.y + 120, 0xff4500, "beam");
         this.cameras.main.shake(1000, 0.1);
         if (this.cache.audio.exists("sfx_explosion"))
           this.sound.play("sfx_explosion");
@@ -9685,7 +9685,7 @@ export default class BattleScene extends Phaser.Scene {
         // Shockwave rings
         for (let i = 0; i < 5; i++) {
           const ring = this.add
-            .circle(target.x, target.y, 50, 0xff4500)
+            .circle(target.x, target.y + 120, 50, 0xff4500)
             .setStrokeStyle(12, 0xff4500)
             .setDepth(20)
             .setAlpha(0)
@@ -9787,7 +9787,7 @@ export default class BattleScene extends Phaser.Scene {
 
       this.tweens.add({
         targets: [meteor, meteorGlow],
-        y: target.y,
+        y: target.y + 120,
         duration: 1000,
         ease: "Cubic.easeIn",
         onComplete: () => {
@@ -9801,21 +9801,21 @@ export default class BattleScene extends Phaser.Scene {
             this.sound.play("sfx_explosion", { volume: 2.5 });
 
           const explosionGlow = this.add
-            .circle(target.x, target.y, 400, 0xff4500)
+            .circle(target.x, target.y + 120, 400, 0xff4500)
             .setDepth(20)
             .setAlpha(0.6)
             .setBlendMode(Phaser.BlendModes.ADD);
           const explosion = this.add
-            .circle(target.x, target.y, 300, 0xff4500)
+            .circle(target.x, target.y + 120, 300, 0xff4500)
             .setDepth(21);
           const core = this.add
-            .circle(target.x, target.y, 200, 0xffffff)
+            .circle(target.x, target.y + 120, 200, 0xffffff)
             .setDepth(22);
 
           // Shockwave rings
           for (let i = 0; i < 8; i++) {
             const shockwave = this.add
-              .circle(target.x, target.y, 50, 0xffffff)
+              .circle(target.x, target.y + 120, 50, 0xffffff)
               .setStrokeStyle(20, 0xffffff)
               .setDepth(23)
               .setAlpha(0.8)
@@ -9836,7 +9836,7 @@ export default class BattleScene extends Phaser.Scene {
             const debris = this.add
               .rectangle(
                 target.x,
-                target.y,
+                target.y + 120,
                 Phaser.Math.Between(15, 40),
                 Phaser.Math.Between(15, 40),
                 0x8b4513,
@@ -9847,7 +9847,7 @@ export default class BattleScene extends Phaser.Scene {
             this.tweens.add({
               targets: debris,
               x: target.x + Math.cos(angle) * dist,
-              y: target.y + Math.sin(angle) * dist,
+              y: target.y + 120 + Math.sin(angle) * dist,
               rotation: Phaser.Math.Between(10, 30),
               alpha: 0,
               duration: 1000,
@@ -9871,7 +9871,7 @@ export default class BattleScene extends Phaser.Scene {
             },
           });
 
-          this.createImpactEffect(target.x, target.y, 0xff4500, "beam");
+          this.createImpactEffect(target.x, target.y + 120, 0xff4500, "beam");
           this.takeDamage(!isP, dmg);
 
           this.tweens.add({
@@ -9992,13 +9992,13 @@ export default class BattleScene extends Phaser.Scene {
             this.createScreenFlash(0xcc0000, 600, 1);
             this.cameras.main.shake(1500, 0.15);
 
-            this.createImpactEffect(target.x, target.y, 0xcc0000, "beam");
+            this.createImpactEffect(target.x, target.y + 120, 0xcc0000, "beam");
             this.takeDamage(!isP, dmg);
 
             // Massive Shockwave rings
             for (let i = 0; i < 8; i++) {
               const ring = this.add
-                .circle(target.x, target.y, 50, 0xcc0000)
+                .circle(target.x, target.y + 120, 50, 0xcc0000)
                 .setStrokeStyle(15, 0xcc0000)
                 .setDepth(20)
                 .setAlpha(0)
@@ -10153,7 +10153,7 @@ export default class BattleScene extends Phaser.Scene {
     if (def) {
       dmg = Math.floor(dmg * 0.3);
       // Block effect
-      this.createImpactEffect(target.x, target.y, 0x3498db, "block"); // Blue shield spark
+      this.createImpactEffect(target.x, target.y + 120, 0x3498db, "block"); // Blue shield spark
       if (this.cache.audio.exists("sfx_block")) this.sound.play("sfx_block");
     } else {
       if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
@@ -10190,16 +10190,20 @@ export default class BattleScene extends Phaser.Scene {
         if (target.active) target.setTint(0xff0000); // Then red
       });
 
+      const isTargetActing = isP ? this.p1ActionActive : this.p2ActionActive;
       // Knockback / Shake effect
-      const originalX = target.x;
+      const originalX = isTargetActing ? target.x : (isP ? this.p1StartPos.x : this.p2StartPos.x);
       // Push back further if not defending
       const knockbackDist = def ? 10 : 30;
       const knockbackDir = isP ? -knockbackDist : knockbackDist;
       const rotDir = isP ? -0.1 : 0.1;
 
-      const isTargetActing = isP ? this.p1ActionActive : this.p2ActionActive;
-
       if (!isTargetActing) {
+        // Kill previous knockback tweens on the target to prevent weird stacking
+        this.tweens.killTweensOf(target, 'x');
+        this.tweens.killTweensOf(target, 'rotation');
+        target.x = originalX; // Snap back before knocking back again to prevent drift
+
         this.tweens.add({
           targets: target,
           x: originalX + knockbackDir,
@@ -10247,10 +10251,38 @@ export default class BattleScene extends Phaser.Scene {
   updateUI() {
     const p1p = this.playerHp / this.playerData.maxHp;
     const p2p = this.enemyHp / this.enemyData.maxHp;
-    this.p1HpBar.width = 250 * p1p;
-    this.p2HpBar.width = 250 * p2p;
-    this.p1KiBar.width = 2.5 * this.playerKi;
-    this.p2KiBar.width = 2.5 * this.enemyKi;
+
+    if (this.tweens) {
+      this.tweens.add({
+        targets: this.p1HpBar,
+        width: 250 * p1p,
+        duration: 200,
+        ease: "Power2",
+      });
+      this.tweens.add({
+        targets: this.p2HpBar,
+        width: 250 * p2p,
+        duration: 200,
+        ease: "Power2",
+      });
+      this.tweens.add({
+        targets: this.p1KiBar,
+        width: 2.5 * this.playerKi,
+        duration: 200,
+        ease: "Power2",
+      });
+      this.tweens.add({
+        targets: this.p2KiBar,
+        width: 2.5 * this.enemyKi,
+        duration: 200,
+        ease: "Power2",
+      });
+    } else {
+      this.p1HpBar.width = 250 * p1p;
+      this.p2HpBar.width = 250 * p2p;
+      this.p1KiBar.width = 2.5 * this.playerKi;
+      this.p2KiBar.width = 2.5 * this.enemyKi;
+    }
   }
 
   log(m: string) {

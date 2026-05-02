@@ -39,13 +39,21 @@ export default class PreloadScene extends Phaser.Scene {
     progressBox.fillRect(width / 2 - 160, height / 2 - 25, 320, 50);
 
     const loadingText = this.add
-      .text(width / 2, height / 2 - 60, "Drawing Warriors...", {
+      .text(width / 2, height / 2 - 60, "Desenhando Guerreiros...", {
         fontFamily: "Arial",
         fontSize: "20px",
         color: "#e2e8f0",
         fontStyle: "bold",
       })
       .setOrigin(0.5, 0.5);
+
+    this.tweens.add({
+      targets: loadingText,
+      alpha: 0.3,
+      duration: 500,
+      yoyo: true,
+      repeat: -1
+    });
 
     this.load.on("progress", (value: number) => {
       progressBar.clear();

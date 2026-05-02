@@ -44,5 +44,8 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     width: 960,
     height: 540,
     expandParent: true
+  },
+  input: {
+    activePointers: 5
   }
 };
