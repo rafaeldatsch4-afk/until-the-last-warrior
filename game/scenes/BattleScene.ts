@@ -198,6 +198,52 @@ export default class BattleScene extends Phaser.Scene {
 
   update(time: number, delta: number) {
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
+    
+    // Auto-heal character positions (prevent getting stuck outside bounds)
+    const bounds = { minX: 50, maxX: 910, minY: 100, maxY: 440 };
+
+    if (this.player && this.player.active) {
+        // Clamp position during normal play
+        if (!this.p1ActionActive) {
+            this.player.x = Phaser.Math.Clamp(this.player.x, bounds.minX, bounds.maxX);
+            this.player.y = Phaser.Math.Clamp(this.player.y, bounds.minY, bounds.maxY);
+        }
+
+        if (!this.p1ActionActive && !this.tweens.isTweening(this.player)) {
+            if (Math.abs(this.player.x - this.p1StartPos.x) > 1 || Math.abs(this.player.y - this.p1StartPos.y) > 1) {
+                this.player.x = Phaser.Math.Linear(this.player.x, this.p1StartPos.x, 0.15);
+                this.player.y = Phaser.Math.Linear(this.player.y, this.p1StartPos.y, 0.15);
+            }
+        }
+        
+        // Forced safety return if REALLY far out for too long
+        if (this.player.x < -200 || this.player.x > 1160) {
+            if (!this.tweens.isTweening(this.player)) {
+               this.player.setX(this.p1StartPos.x);
+               this.player.setY(this.p1StartPos.y);
+            }
+        }
+    }
+    if (this.enemy && this.enemy.active) {
+        if (!this.p2ActionActive) {
+            this.enemy.x = Phaser.Math.Clamp(this.enemy.x, bounds.minX, bounds.maxX);
+            this.enemy.y = Phaser.Math.Clamp(this.enemy.y, bounds.minY, bounds.maxY);
+        }
+
+        if (!this.p2ActionActive && !this.tweens.isTweening(this.enemy)) {
+            if (Math.abs(this.enemy.x - this.p2StartPos.x) > 1 || Math.abs(this.enemy.y - this.p2StartPos.y) > 1) {
+                this.enemy.x = Phaser.Math.Linear(this.enemy.x, this.p2StartPos.x, 0.15);
+                this.enemy.y = Phaser.Math.Linear(this.enemy.y, this.p2StartPos.y, 0.15);
+            }
+        }
+
+        if (this.enemy.x < -200 || this.enemy.x > 1160) {
+            if (!this.tweens.isTweening(this.enemy)) {
+               this.enemy.setX(this.p2StartPos.x);
+               this.enemy.setY(this.p2StartPos.y);
+            }
+        }
+    }
 
     // Buffer keyboard inputs with a timer
     if (Phaser.Input.Keyboard.JustDown(this.keys.p1_attack)) { this.mobileP1Attack = true; this.p1AttackBuffer = this.BUFFER_MS; }
@@ -677,7 +723,10 @@ export default class BattleScene extends Phaser.Scene {
 
   createMobileControls() {
     // Always show on mobile devices or touch screens
-    const isTouch = this.sys.game.device.input.touch || window.innerWidth < 800;
+    const isTouch = this.sys.game.device.input.touch || 
+                    this.sys.game.device.os.android || 
+                    this.sys.game.device.os.iOS || 
+                    window.innerWidth < 1024;
     if (!isTouch) return;
 
     const size = 50; // Increased significantly for better touch target
@@ -709,6 +758,14 @@ export default class BattleScene extends Phaser.Scene {
         isPressed = true;
         btn.setAlpha(0.8);
         onDown();
+      });
+
+      btn.on("pointerover", (pointer: Phaser.Input.Pointer) => {
+        if (pointer.isDown) {
+          isPressed = true;
+          btn.setAlpha(0.8);
+          onDown();
+        }
       });
 
       const release = () => {
@@ -1017,6 +1074,14 @@ export default class BattleScene extends Phaser.Scene {
         return true;
       case "saitama":
         this.performSaitamaAttack(
+          isPlayer,
+          attackType,
+          comboCount,
+          isComboFinisher,
+        );
+        return true;
+      case "static":
+        this.performStaticAttack(
           isPlayer,
           attackType,
           comboCount,
@@ -1718,6 +1783,106 @@ export default class BattleScene extends Phaser.Scene {
                 this.setActionState(isPlayer, false);
             });
         });
+    }
+  }
+
+  performStaticAttack(
+    isPlayer: boolean,
+    attackType: "melee" | "ki",
+    comboCount: number,
+    isComboFinisher: boolean,
+  ) {
+    const attacker = isPlayer ? this.player : this.enemy;
+    const target = isPlayer ? this.enemy : this.player;
+    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+    const transLevel = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
+
+    if (attackType === "melee") {
+      attacker.play(this.getAnimKey("static", transLevel, "attack"));
+      
+      this.tweens.add({
+        targets: attacker,
+        x: target.x + (isPlayer ? -40 : 40),
+        duration: 100,
+        onComplete: () => {
+          if (!this.scene.isActive()) return;
+          if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack", { volume: 1.0 });
+
+          const hits = isComboFinisher ? 3 : 1;
+          for (let i = 0; i < hits; i++) {
+            this.time.delayedCall(i * 100, () => {
+              this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
+              this.takeDamage(!isPlayer, Math.floor((isComboFinisher ? 15 : 10) * this.getDamageMultiplier(transLevel)));
+              
+              // Zap visual
+              const zap = this.add.graphics();
+              zap.lineStyle(2, 0x00ffff, 1);
+              zap.beginPath();
+              zap.moveTo(attacker.x, attacker.y + 100);
+              zap.lineTo(target.x + (Math.random() * 20 - 10), target.y + 120 + (Math.random() * 20 - 10));
+              zap.strokePath();
+              this.time.delayedCall(50, () => zap.destroy());
+            });
+          }
+
+          this.time.delayedCall(hits * 100 + 100, () => {
+            if (!this.scene.isActive()) return;
+            this.tweens.add({
+              targets: attacker,
+              x: startX,
+              duration: 150,
+              onComplete: () => {
+                attacker.play(this.getAnimKey("static", transLevel, "idle"));
+                this.setActionState(isPlayer, false);
+              }
+            });
+          });
+        }
+      });
+    } else {
+      // Ki Blast: Electric Bolt
+      attacker.play(this.getAnimKey("static", transLevel, "attack"));
+      this.time.delayedCall(50, () => {
+        if (!this.scene.isActive()) return;
+        if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam", { volume: 0.4, rate: 1.5 });
+        
+        const hand = this.getHandPosition(isPlayer);
+        const bolt = this.add.graphics().setDepth(5);
+        bolt.lineStyle(3, 0x00ffff, 1);
+        
+        this.tweens.addCounter({
+          from: 0,
+          to: 1,
+          duration: 200,
+          onUpdate: (tween) => {
+            const v = tween.getValue();
+            bolt.clear();
+            bolt.lineStyle(3, 0x00ffff, 1);
+            bolt.beginPath();
+            let curX = hand.x;
+            let curY = hand.y;
+            const targetX = hand.x + (target.x - hand.x) * v;
+            const targetY = hand.y + (target.y + 100 - hand.y) * v;
+            
+            bolt.moveTo(curX, curY);
+            for (let i = 1; i <= 4; i++) {
+                const px = hand.x + (targetX - hand.x) * (i/4);
+                const py = hand.y + (targetY - hand.y) * (i/4);
+                bolt.lineTo(px + (Math.random() * 10 - 5), py + (Math.random() * 10 - 5));
+            }
+            bolt.strokePath();
+          },
+          onComplete: () => {
+            bolt.destroy();
+            if (!this.scene.isActive()) return;
+            this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
+            this.takeDamage(!isPlayer, Math.floor((isComboFinisher ? 18 : 8) * this.getDamageMultiplier(transLevel)));
+            
+            attacker.play(this.getAnimKey("static", transLevel, "idle"));
+            this.setActionState(isPlayer, false);
+          }
+        });
+      });
     }
   }
 
@@ -4348,6 +4513,10 @@ export default class BattleScene extends Phaser.Scene {
               if (isSuper) this.specialSupremeHeadbutt(isPlayer);
               else this.specialSeriousPunch(isPlayer);
               break;
+            case "static":
+              if (isSuper) this.specialStaticBurst(isPlayer);
+              else this.specialElectricDisc(isPlayer);
+              break;
             default:
               this.specialBeam(
                 isPlayer,
@@ -5179,6 +5348,98 @@ export default class BattleScene extends Phaser.Scene {
           });
         });
       }
+    });
+  }
+
+  private specialElectricDisc(isP: boolean) {
+    const attacker = isP ? this.player : this.enemy;
+    const target = isP ? this.enemy : this.player;
+    const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
+    const dmg = Math.floor(40 * this.getDamageMultiplier(transLevel));
+
+    this.log("ELECTRIC DISC!");
+    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam", { volume: 0.8, rate: 0.7 });
+
+    const hand = this.getHandPosition(isP);
+    const disc = this.add.ellipse(hand.x, hand.y, 40, 10, 0x00ffff).setDepth(5);
+    const discGlow = this.add.ellipse(hand.x, hand.y, 50, 15, 0x00ffff, 0.5).setDepth(4);
+
+    this.tweens.add({
+      targets: [disc, discGlow],
+      x: target.x,
+      y: target.y + 120,
+      angle: 360,
+      duration: 400,
+      ease: "Quad.easeIn",
+      onComplete: () => {
+        disc.destroy();
+        discGlow.destroy();
+        if (!this.scene.isActive()) return;
+        
+        this.cameras.main.shake(150, 0.02);
+        this.createImpactEffect(target.x, target.y + 120, 0x00ffff, "beam");
+        this.takeDamage(!isP, dmg);
+        
+        // Zaps
+        for(let i=0; i<8; i++) {
+           const zap = this.add.graphics().lineStyle(2, 0x00ffff, 1);
+           zap.beginPath();
+           zap.moveTo(target.x, target.y + 120);
+           zap.lineTo(target.x + Phaser.Math.Between(-80, 80), target.y + 120 + Phaser.Math.Between(-80, 80));
+           zap.strokePath();
+           this.time.delayedCall(100, () => zap.destroy());
+        }
+        
+        this.onSpecialComplete(isP);
+      }
+    });
+  }
+
+  private specialStaticBurst(isP: boolean) {
+    const attacker = isP ? this.player : this.enemy;
+    const target = isP ? this.enemy : this.player;
+    const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
+    const dmg = Math.floor(85 * this.getDamageMultiplier(transLevel));
+
+    this.log("STATIC BURST!!!");
+    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam", { volume: 1.2, rate: 0.5 });
+    
+    // Zoom in
+    this.cameras.main.zoomTo(1.2, 500, "Cubic.easeInOut", true);
+
+    // Charge effect
+    const charge = this.add.circle(attacker.x, attacker.y + 100, 10, 0x00ffff, 1).setDepth(5);
+    this.tweens.add({
+        targets: charge,
+        scale: 6,
+        alpha: 0.2,
+        duration: 600,
+        yoyo: true,
+        repeat: 1
+    });
+
+    this.time.delayedCall(1200, () => {
+        if (!this.scene.isActive()) return;
+        charge.destroy();
+        
+        this.createScreenFlash(0x00ffff, 400, 0.6);
+        this.cameras.main.shake(500, 0.05);
+
+        // Huge electric beams from sky
+        for(let i=0; i<5; i++) {
+            const rx = target.x + (i - 2) * 40;
+            const beam = this.add.rectangle(rx, target.y - 300, 10, 600, 0x00ffff).setOrigin(0.5, 0).setDepth(10).setAlpha(0.8);
+            this.tweens.add({ targets: beam, width: 40, alpha: 0, duration: 300, onComplete: () => beam.destroy() });
+        }
+
+        this.createImpactEffect(target.x, target.y + 120, 0xffffff, "beam");
+        this.takeDamage(!isP, dmg);
+
+        this.time.delayedCall(500, () => {
+            if (!this.scene.isActive()) return;
+            this.cameras.main.zoomTo(1, 500, "Cubic.easeInOut", true);
+            this.onSpecialComplete(isP);
+        });
     });
   }
 

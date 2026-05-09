@@ -834,10 +834,14 @@ export default class PreloadScene extends Phaser.Scene {
           box(13, 16, 6, 1, ARMOR_SHADOW); // Underside of pecs
           box(15, 14, 2, 2, ARMOR_DARK); // Center division
           
-          // Abdomen armor segments (horizontal plates)
-          box(13, 17, 6, 1, ARMOR_DARK); 
-          box(13, 18, 6, 1, ARMOR_SHADOW); 
-          box(13, 19, 6, 1, ARMOR_DARK);
+          // Abdomen armor segments (vertical ribbed plates)
+          for(let rx = 13; rx <= 18; rx += 1) {
+             if (rx % 2 !== 0) {
+               box(rx, 17, 1, 3, ARMOR_DARK);
+             } else {
+               box(rx, 17, 1, 3, ARMOR_SHADOW);
+             }
+          }
           
           // Armor bright highlights
           box(13, 14, 2, 1, 0xffffff);
@@ -912,74 +916,93 @@ export default class PreloadScene extends Phaser.Scene {
           // Eyes & Angry Brow (Heavy furrow)
           headBox(12, 8, 3, 1, WHITE);
           headBox(17, 8, 3, 1, WHITE);
-          headDot(14, 8, EYE);
-          headDot(18, 8, EYE); // Fix: pupil was at 19 and got overwritten by slant
           
-          // Sharp, angled eyebrows
+          // Sharp, angled eyebrows for a deeper aggressive slant
           headBox(12, 7, 3, 1, BROW);
-          headBox(17, 7, 3, 1, BROW); 
-          headDot(15, 8, BROW); // Deep furrow
-          headDot(16, 8, BROW); 
+          headBox(17, 7, 3, 1, BROW);
+          headDot(14, 8, BROW); // Deep furrow
+          headDot(17, 8, BROW);
+          headBox(15, 8, 2, 1, SKIN_SHADOW); // bridge crease
+          
+          // Pupils focused and intense
+          headDot(13, 8, EYE);
+          headDot(18, 8, EYE);
+          
           // Angle cutoff to make them slant aggressively
           headDot(12, 8, SKIN);
           headDot(19, 8, SKIN);
-          headDot(14, 7, SKIN);
-          headDot(17, 7, SKIN);
 
-          // Expressions
+          // Expressions (Fierce and Angry)
           if (isAttack) {
-            headBox(15, 11, 2, 1, 0x440000); // Shouting
+            headBox(14, 11, 4, 3, 0x440000); // Shouting wide open
+            headBox(14, 11, 4, 1, WHITE); // Upper teeth
+            headBox(15, 13, 2, 1, 0xff7777); // Tongue
           } else if (isDefend) {
-            headBox(15, 11, 2, 1, WHITE); // Grit teeth
+            headBox(14, 11, 4, 2, WHITE); // Grit teeth
+            headBox(13, 11, 1, 2, SKIN_SHADOW);
+            headBox(18, 11, 1, 2, SKIN_SHADOW); // Tension lines
           } else {
-            headDot(15, 11, 0x222222); // Smirk (Vegeta's signature)
+            // Angry scowl (not just a smirk)
+            headBox(14, 11, 4, 1, SKIN_SHADOW); // Scowl line
+            headDot(15, 11, 0x222222); 
+            headDot(16, 11, 0x222222); 
+            headDot(13, 12, SKIN_SHADOW); // Downward turned corners
+            headDot(18, 12, SKIN_SHADOW);
           }
 
           // --- HAIR (Iconic Flame & Widow's Peak) ---
           // Deep Widow's Peak
-          headBox(14, 5, 4, 3, SKIN); 
-          headDot(15, 4, SKIN); // Point
-          headDot(16, 4, SKIN); 
+          headBox(13, 5, 6, 3, SKIN); 
+          headBox(14, 4, 4, 1, SKIN); 
+          headDot(15, 3, SKIN); // Point
+          headDot(16, 3, SKIN); 
           
           // Sideburns
           headBox(10, 5, 1, 3, HAIR);
           headBox(21, 5, 1, 3, HAIR);
 
-          // Main Hair Volume (shorter, spikier)
-          headBox(10, 2, 12, 4, HAIR); // base volume at top of head // y=2,3,4,5
-          headBox(9, 0, 14, 2, HAIR); // widest part // y=0,1
-          headBox(10, -3, 12, 3, HAIR); // y=-1, -2, -3
-          headBox(11, -6, 10, 3, HAIR);
-          headBox(13, -9, 6, 3, HAIR);
+          // Flame-like spiky volume (very tall and sharp)
+          headBox(9, -2, 14, 7, HAIR); // base volume at top of head
+          headBox(10, -6, 12, 4, HAIR);
+          headBox(11, -9, 10, 3, HAIR);
+          headBox(13, -12, 6, 3, HAIR);
           
-          // Tips
-          headBox(14, -11, 4, 2, HAIR);
-          headBox(15, -13, 2, 2, HAIR); // Tallest tip
+          // Individual tall spikes (tips of the flames)
+          headBox(14, -16, 2, 4, HAIR);
+          headBox(16, -14, 2, 2, HAIR);
+          headBox(11, -13, 2, 4, HAIR);
+          headBox(19, -12, 2, 3, HAIR);
+          
+          // Side flares / flame-like barbs
+          headBox(8, -5, 2, 4, HAIR);
+          headBox(7, -8, 2, 3, HAIR);
+          headBox(6, -4, 1, 2, HAIR); // extra jagged
+          
+          headBox(22, -5, 2, 4, HAIR);
+          headBox(23, -8, 2, 3, HAIR);
+          headBox(25, -4, 1, 2, HAIR);
 
-          // Spikes sticking out the sides
-          headBox(8, 0, 1, 2, HAIR);
-          headBox(23, 0, 1, 2, HAIR);
-          headBox(9, -2, 1, 2, HAIR);
-          headBox(22, -2, 1, 2, HAIR);
-          headBox(10, -5, 1, 2, HAIR);
-          headBox(21, -5, 1, 2, HAIR);
+          headBox(10, -10, 2, 2, HAIR);
+          headBox(20, -9, 2, 2, HAIR);
 
-          // Hair Texture & Shading (Striated upwards lines)
+          // Hair Texture & Shading (Striated upwards flame lines)
           const hairShadowC = HAIR === BLACK ? 0x222222 : isUI ? 0x732d91 : 0xd4a000;
+          const hairLight = isTransformed ? (isUI ? 0xd2b4de : 0xffffff) : (isUI ? 0xaf6ec9 : 0x4a4a4a);
           
-          // Vertical shadow streaks
-          headBox(11, -7, 1, 9, hairShadowC);
+          // Flame contouring
+          headBox(11, -8, 1, 10, hairShadowC);
           headBox(20, -7, 1, 9, hairShadowC);
-          headBox(14, -11, 1, 13, hairShadowC);
-          headBox(17, -11, 1, 13, hairShadowC);
+          headBox(14, -14, 1, 16, hairShadowC);
+          headBox(17, -12, 1, 14, hairShadowC);
+          headBox(9, -6, 1, 8, hairShadowC);
+          headBox(22, -6, 1, 8, hairShadowC);
 
-          if (isTransformed) {
-            // Super Saiyan Bright Highlights
-            const hairLight = isUI ? 0xd2b4de : 0xffffff;
-            headBox(13, -10, 1, 12, hairLight);
-            headBox(16, -10, 1, 12, hairLight);
-            headBox(15, -12, 1, 6, hairLight); // Center flash
-          }
+          // Bright highlights for flame-like energy
+          headBox(13, -11, 1, 10, hairLight);
+          headBox(16, -12, 1, 11, hairLight);
+          headBox(15, -15, 1, 6, hairLight); // Core spike flash
+          headBox(18, -10, 1, 6, hairLight); 
+          headBox(12, -8, 1, 5, hairLight);
           break;
         }
         case "piccolo": {
@@ -4327,6 +4350,263 @@ export default class PreloadScene extends Phaser.Scene {
           headDot(14, 7, 0xffffff);
           headDot(15, 7, 0xffffff);
           headDot(13, 8, 0xffffff);
+
+          break;
+        }
+
+        case "static": {
+          const isTransformed = form > 0;
+          const COAT_BLUE = isTransformed ? 0x222222 : 0x1f3c88;
+          const COAT_DARK = isTransformed ? 0x111111 : 0x0f1e44;
+          const COAT_LIGHT = isTransformed ? 0x3a3a3a : 0x3d64d9;
+          const YELLOW = isTransformed ? 0xffffff : 0xffd900; 
+          const YELLOW_DARK = isTransformed ? 0xcccccc : 0xb59a00;
+          const WHITE = 0xffffff;
+          const SHIRT_DARK = 0x111111; 
+          const SHIRT_SHINE = 0x333333;
+          const PANTS = 0x2c3e50;
+          const PANTS_DARK = 0x1a252f;
+          const PANTS_LIGHT = 0x34495e;
+          const GLOVE = 0xf0f0f0;
+          const GLOVE_DARK = 0xbababa;
+          const ELECTRIC = isTransformed ? 0xffffff : 0x00ffff;
+          const SKIN = 0x6e4a2e;
+          const SKIN_SHADOW = 0x4a321f;
+          const HAIR = 0x151515;
+          const HAIR_SHINE = 0x242424;
+          const MASK_BLUE = isTransformed ? 0x000000 : 0x3498db;
+
+          // --- Static Saucer (Disc Base) ---
+          if (!isAttack && !isDefend) {
+            const discBounce = Math.sin(f * 0.5) * 2;
+            
+            // Electric Aura Base & Ground Sparks
+            alphaBox(4, 30 + discBounce, 24, 6, ELECTRIC, 0.2);
+            if (f % 3 === 0) {
+                alphaBox(6, 31 + discBounce, 20, 2, WHITE, 0.5);
+                dot(Math.floor(Math.random()*24+4), 33 + discBounce, ELECTRIC);
+                dot(Math.floor(Math.random()*24+4), 34 + discBounce, ELECTRIC);
+            }
+            
+            // Disc structural layers
+            box(10, 31 + discBounce, 12, 1, 0xbdc3c7); // top rim
+            box(8, 32 + discBounce, 16, 1, 0x95a5a6);  // wide center
+            box(9, 33 + discBounce, 14, 1, 0x7f8c8d);  // underbelly
+            box(11, 34 + discBounce, 10, 1, 0x2c3e50); // core shadow
+            
+            // Glowing energy rings on the disc
+            if (f % 4 < 2 || isTransformed) {
+               box(11, 31 + discBounce, 10, 1, ELECTRIC);
+               box(13, 31 + discBounce, 6, 1, WHITE); // Core bright spot
+            }
+          }
+
+          // --- LEGS (Baggy Cargo Pants) ---
+          box(11, 23, 5, 7, PANTS);
+          box(16, 23, 5, 7, PANTS);
+          
+          // Pants folds & shading
+          box(11, 25, 5, 1, PANTS_DARK);
+          box(16, 27, 5, 1, PANTS_DARK);
+          box(15, 23, 2, 6, PANTS_DARK); // inner leg shadow
+          box(11, 23, 10, 2, PANTS_DARK); // Crotch depth
+          box(12, 24, 2, 4, PANTS_LIGHT); // Thigh highlights
+          box(17, 24, 2, 4, PANTS_LIGHT); // Thigh highlights
+
+          // Shoes/Boots
+          box(10, 30, 5, 2, SHIRT_DARK);
+          box(17, 30, 5, 2, SHIRT_DARK);
+          box(11, 30, 2, 2, SHIRT_SHINE);
+          box(18, 30, 2, 2, SHIRT_SHINE);
+          box(10, 32, 5, 1, YELLOW); // sole edge
+          box(17, 32, 5, 1, YELLOW);
+
+          // --- TORSO (Shirt & Trench Coat) ---
+          // Black shirt base
+          box(12, 14, 8, 8, SHIRT_DARK);
+          box(13, 14, 2, 8, SHIRT_SHINE); // rib highlight
+          
+          // Huge, Sharp Lightning Bolt Symbol on Chest
+          box(15, 15, 3, 1, YELLOW); 
+          box(14, 16, 3, 1, YELLOW);
+          box(15, 17, 3, 1, YELLOW); 
+          box(14, 18, 3, 1, YELLOW);
+          box(16, 19, 1, 2, YELLOW); 
+          // Core bright white streak inside lightning
+          box(15, 16, 1, 1, WHITE);
+          box(16, 17, 1, 1, WHITE);
+          box(15, 18, 1, 1, WHITE);
+          box(16, 19, 1, 1, WHITE);
+          
+          // Utility Belt
+          box(11, 22, 10, 1, YELLOW_DARK);
+          box(15, 21, 2, 3, 0x8898a6); // Buckle
+          dot(15, 22, 0xffffff); // Buckle shine
+          
+          // Trench Coat (Overlapping, huge, dynamic sweeping tails)
+          if (isAttack) {
+             // Coat aggressively whipping backward
+             box(0, 16, 10, 8, COAT_DARK); 
+             box(-2, 19, 8, 10, COAT_BLUE); 
+             box(-2, 28, 8, 2, YELLOW); // heavy trim whipping up
+             box(-3, 19, 1, 10, COAT_LIGHT); // wind highlight
+          } else {
+             // Dynamic wind flapping, massive billowing tails hanging low
+             const coatSway = Math.round(Math.sin(f * 0.3) * 4);
+             
+             // Left sweeping tail (bigger and lower)
+             box(4 - coatSway, 23, 8, 9, COAT_DARK); // Back shadow
+             box(3 - coatSway, 24, 8, 8, COAT_BLUE); // Main coat body
+             box(2 - coatSway, 25, 2, 7, COAT_LIGHT); // Volume highlight
+             box(3 - coatSway, 31, 8, 2, YELLOW); // Thick yellow trim at bottom
+             
+             // Right sweeping tail
+             box(20 + coatSway, 23, 8, 9, COAT_DARK);
+             box(21 + coatSway, 24, 8, 8, COAT_BLUE);
+             box(28 + coatSway, 25, 2, 7, COAT_LIGHT);
+             box(21 + coatSway, 31, 8, 2, YELLOW);
+          }
+
+          // Coat Front Panels & Shoulders
+          box(9, 13, 3, 10, COAT_BLUE);
+          box(20, 13, 3, 10, COAT_BLUE);
+          box(8, 13, 1, 10, COAT_LIGHT); // shoulder to lapel highlights
+          box(22, 13, 1, 10, COAT_LIGHT);
+          
+          // High collar
+          box(10, 11, 2, 3, COAT_DARK);
+          box(20, 11, 2, 3, COAT_DARK);
+
+          // Yellow borders around coat opening
+          box(12, 13, 1, 10, YELLOW);
+          box(19, 13, 1, 10, YELLOW);
+
+          // --- ARMS ---
+          if (isAttack) {
+             // Brutal Electric Punch Extended
+             box(22, 13, 7, 5, COAT_BLUE); // Thicker sleeve
+             box(22, 13, 7, 1, COAT_LIGHT); 
+             box(29, 14, 4, 3, SKIN); // Arm
+             
+             // Hand/Glove
+             box(33, 13, 6, 5, GLOVE);
+             box(33, 13, 2, 5, GLOVE_DARK); // glove detailing
+
+             // Giant Electric Burst on Fist (Cone shape)
+             alphaBox(30, 9, 12, 12, ELECTRIC, 0.4);
+             alphaBox(32, 11, 8, 8, ELECTRIC, 0.7);
+             box(34, 13, 4, 4, WHITE); // intense core
+             
+             // Huge Errant sparks
+             box(31, 7, 2, 3, ELECTRIC);
+             box(41, 10, 3, 1, ELECTRIC);
+             box(28, 19, 2, 2, ELECTRIC);
+             box(42, 18, 1, 3, ELECTRIC);
+
+             // Left arm bracing
+             box(7, 15, 4, 5, COAT_BLUE);
+             box(6, 16, 3, 4, GLOVE);
+          } else {
+             // Arms idle - crackling with power
+             const armBreathe = Math.round(Math.sin(f * 0.2) * 1);
+             box(7, 14 + armBreathe, 4, 6, COAT_BLUE);
+             box(21, 14 - armBreathe, 4, 6, COAT_BLUE);
+             
+             box(7, 20 + armBreathe, 3, 3, GLOVE);
+             box(22, 20 - armBreathe, 3, 3, GLOVE);
+             
+             // Idle arm sparks
+             if (f % 2 === 0) {
+                 dot(23, 22 - armBreathe, ELECTRIC);
+                 dot(6, 21 + armBreathe, ELECTRIC);
+             }
+          }
+
+          // --- HEAD ---
+          headBox(13, 5, 6, 8, SKIN);
+          headBox(13, 5, 2, 8, SKIN_SHADOW); // heavy cheek shadow
+          headBox(16, 9, 3, 1, SKIN_SHADOW); // nose bridge shadow
+          
+          // Mouth
+          if (isAttack) {
+             headBox(15, 11, 3, 2, 0x330000); // Shouting
+             headBox(15, 11, 3, 1, WHITE); // teeth
+          } else {
+             headBox(15, 11, 2, 1, SHIRT_DARK); // smirking/focused
+          }
+          
+          // Goggles/Mask (Sleek, aerodynamic, angled)
+          // Mask base framing
+          headBox(10, 8, 12, 3, YELLOW); 
+          headBox(10, 9, 12, 2, YELLOW_DARK);
+          
+          // Outer sharp edges (aerodynamic points)
+          headBox(9, 7, 2, 2, YELLOW);
+          headBox(21, 7, 2, 2, YELLOW);
+
+          // Visor lens (angled)
+          headBox(11, 8, 10, 2, MASK_BLUE); 
+          headBox(15, 9, 2, 2, MASK_BLUE); // Center dip over nose
+          headBox(12, 7, 3, 1, MASK_BLUE); // Angled top left
+          headBox(17, 7, 3, 1, MASK_BLUE); // Angled top right
+          
+          // Bright glowing eyes inside Visor
+          headBox(13, 8, 2, 1, WHITE); 
+          headBox(17, 8, 2, 1, WHITE);
+          if (isTransformed) {
+              headBox(12, 8, 3, 2, WHITE); 
+              headBox(17, 8, 3, 2, WHITE);
+              headBox(13, 7, 2, 1, WHITE);
+              headBox(17, 7, 2, 1, WHITE);
+          }
+          
+          // --- HAIR (Dynamic, defying gravity dreads/locs) ---
+          // Heavy dread mass
+          headBox(12, 1, 8, 4, HAIR);
+          headBox(13, 0, 6, 2, HAIR);
+          headBox(14, -1, 4, 2, HAIR); // peak volume
+          
+          // Loc strands twisting outwards & flying up (static electricity)
+          headBox(10, 2, 2, 6, HAIR);
+          headBox(9, 4, 2, 4, HAIR); // side stray
+          headBox(20, 2, 2, 6, HAIR);
+          headBox(21, 4, 2, 4, HAIR); 
+          
+          // Flying locks
+          headBox(11, -2, 2, 3, HAIR);
+          headBox(19, -2, 2, 3, HAIR);
+          
+          // Hair highlights for depth
+          headBox(13, 2, 1, 4, HAIR_SHINE);
+          headBox(17, 2, 1, 4, HAIR_SHINE);
+          headBox(11, 5, 1, 2, HAIR_SHINE);
+
+          // --- AURA & PARTICLES (Constantly charging) ---
+          const sparkOffset = Math.round(Math.sin(f) * 3);
+          dot(10 - sparkOffset, 10 + sparkOffset, ELECTRIC);
+          dot(24 + sparkOffset, 15 - sparkOffset, ELECTRIC);
+          dot(14, 2 + sparkOffset, ELECTRIC);
+          
+          if (f % 3 === 0) {
+              box(6, 18, 2, 4, ELECTRIC);
+              box(23, 11, 2, 3, ELECTRIC);
+              box(18, 5, 3, 1, WHITE);
+          }
+          
+          if (isTransformed) {
+              // Super Form Intense Lightning Aura
+              alphaBox(2, -5, 28, 40, ELECTRIC, 0.2); // Massive field
+              
+              if (f % 2 === 0) {
+                 // Huge lightning strikes within aura
+                 box(4, Math.floor(Math.random()*30), 2, 8, WHITE);
+                 box(26, Math.floor(Math.random()*30), 2, 8, WHITE);
+                 box(Math.floor(Math.random()*28+2), -5, 2, 15, WHITE);
+              }
+              // Radiating eye trails
+              alphaBox(10, 8, 4, 1, WHITE, 0.6);
+              alphaBox(18, 8, 4, 1, WHITE, 0.6);
+          }
 
           break;
         }

@@ -85,6 +85,29 @@ export default class StoreScene extends Phaser.Scene {
     this.scrollBarThumb = this.add.rectangle(trackX, this.visibleArea.y + 40, 10, 80, 0x666666).setDepth(11);
     this.scrollBarThumb.setInteractive({ draggable: true });
 
+    let isDraggingList = false;
+    let dragStartY = 0;
+    let startScrollY = 0;
+    
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        if (pointer.x < 900) { // Dragging anywhere in the list area
+            isDraggingList = true;
+            dragStartY = pointer.y;
+            startScrollY = this.scrollYPos;
+        }
+    });
+
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+        if (isDraggingList && pointer.isDown) {
+            const deltaY = dragStartY - pointer.y;
+            this.updateScrollFromTouch(startScrollY + deltaY);
+        }
+    });
+
+    this.input.on('pointerup', () => {
+        isDraggingList = false;
+    });
+
     // Scroll Events (Mouse)
     const wheelHandler = (pointer: any, gameObjects: any, deltaX: number, deltaY: number) => {
         this.updateScroll(deltaY);
@@ -246,6 +269,16 @@ export default class StoreScene extends Phaser.Scene {
       this.updateScrollBarPosition();
   }
 
+  private updateScrollFromTouch(newY: number) {
+      const maxScroll = Math.max(0, this.contentHeight - this.visibleArea.height);
+      if (maxScroll <= 0) return;
+
+      this.scrollYPos = Phaser.Math.Clamp(newY, 0, maxScroll);
+      this.listContainer.y = this.visibleArea.y - this.scrollYPos;
+      
+      this.updateScrollBarPosition();
+  }
+
   updateScrollBarPosition() {
       const maxScroll = Math.max(0, this.contentHeight - this.visibleArea.height);
       if (maxScroll <= 0) {
@@ -307,9 +340,12 @@ export default class StoreScene extends Phaser.Scene {
             const btnBg = this.add.rectangle(40, 30, 140, 40, 0xd35400);
             const btnTxt = this.add.text(40, 30, `${char.price} G`, { fontSize: '20px', fontStyle: 'bold' }).setOrigin(0.5);
             
-            // Mouse Interaction
+            // Buy Button Interaction
             btnBg.setInteractive({ useHandCursor: true })
-                .on('pointerdown', () => {
+                .on('pointerup', () => {
+                    // If we dragged more than a few pixels, cancel the buy because it was a swipe
+                    if (Math.abs(this.input.activePointer.y - this.input.activePointer.downY) > 10) return;
+                    
                     this.selectedIndex = index; // Sync selection
                     this.updateSelectionHighlight();
                     this.attemptBuy(char);

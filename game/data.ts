@@ -316,5 +316,20 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     specialName: "SERIOUS PUNCH",
     superName: "SUPREME HEADBUTT",
     specialColor: 0xffcc00
+  },
+  {
+    id: 22,
+    key: "static",
+    name: "Super Choque",
+    price: 2000,
+    unlocked: true,
+    maxHp: 230,
+    transformAvailable: true,
+    sprite: "",
+    frameWidth: 64,
+    frameHeight: 64,
+    specialName: "ELECTRIC DISC",
+    superName: "STATIC BURST",
+    specialColor: 0x00ffff
   }
 ];
