@@ -722,12 +722,12 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   createMobileControls() {
-    // Always show on mobile devices or touch screens
-    const isTouch = this.sys.game.device.input.touch || 
-                    this.sys.game.device.os.android || 
-                    this.sys.game.device.os.iOS || 
-                    window.innerWidth < 1024;
-    if (!isTouch) return;
+    // Only show on actual mobile devices, not desktop computers with small windows or touch screens
+    const isMobile = (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) || 
+                     this.sys.game.device.os.android || 
+                     this.sys.game.device.os.iOS;
+                     
+    if (!isMobile) return;
 
     const size = 50; // Increased significantly for better touch target
     const alpha = 0.5;

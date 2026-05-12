@@ -4356,32 +4356,33 @@ export default class PreloadScene extends Phaser.Scene {
 
         case "static": {
           const isTransformed = form > 0;
-          const COAT_BLUE = isTransformed ? 0x222222 : 0x1f3c88;
-          const COAT_DARK = isTransformed ? 0x111111 : 0x0f1e44;
-          const COAT_LIGHT = isTransformed ? 0x3a3a3a : 0x3d64d9;
-          const YELLOW = isTransformed ? 0xffffff : 0xffd900; 
-          const YELLOW_DARK = isTransformed ? 0xcccccc : 0xb59a00;
+          const COAT_BLUE = isTransformed ? 0xf0f0f0 : 0x1f3c88;
+          const COAT_DARK = isTransformed ? 0xcccccc : 0x0f1e44;
+          const COAT_LIGHT = isTransformed ? 0xffffff : 0x3d64d9;
+          const YELLOW = isTransformed ? 0x00ffff : 0xffd900; 
+          const YELLOW_DARK = isTransformed ? 0x0088cc : 0xb59a00;
           const WHITE = 0xffffff;
-          const SHIRT_DARK = 0x111111; 
-          const SHIRT_SHINE = 0x333333;
-          const PANTS = 0x2c3e50;
-          const PANTS_DARK = 0x1a252f;
-          const PANTS_LIGHT = 0x34495e;
-          const GLOVE = 0xf0f0f0;
-          const GLOVE_DARK = 0xbababa;
+          const SHIRT_DARK = isTransformed ? 0x050505 : 0x111111; 
+          const SHIRT_SHINE = isTransformed ? 0x1a1a1a : 0x333333;
+          const PANTS = isTransformed ? 0x151515 : 0x2c3e50;
+          const PANTS_DARK = isTransformed ? 0x050505 : 0x1a252f;
+          const PANTS_LIGHT = isTransformed ? 0x2a2a2a : 0x34495e;
+          const GLOVE = isTransformed ? 0x111111 : 0xf0f0f0;
+          const GLOVE_DARK = isTransformed ? 0x000000 : 0xbababa;
           const ELECTRIC = isTransformed ? 0xffffff : 0x00ffff;
+          const ELECTRIC_GLOW = isTransformed ? 0x00ffff : 0x00ffff;
           const SKIN = 0x6e4a2e;
           const SKIN_SHADOW = 0x4a321f;
-          const HAIR = 0x151515;
-          const HAIR_SHINE = 0x242424;
-          const MASK_BLUE = isTransformed ? 0x000000 : 0x3498db;
+          const HAIR = isTransformed ? 0xe0ffff : 0x151515;
+          const HAIR_SHINE = isTransformed ? 0xffffff : 0x242424;
+          const MASK_BLUE = isTransformed ? 0x00e5ff : 0x3498db;
 
           // --- Static Saucer (Disc Base) ---
           if (!isAttack && !isDefend) {
             const discBounce = Math.sin(f * 0.5) * 2;
             
             // Electric Aura Base & Ground Sparks
-            alphaBox(4, 30 + discBounce, 24, 6, ELECTRIC, 0.2);
+            alphaBox(4, 30 + discBounce, 24, 6, ELECTRIC_GLOW, 0.2);
             if (f % 3 === 0) {
                 alphaBox(6, 31 + discBounce, 20, 2, WHITE, 0.5);
                 dot(Math.floor(Math.random()*24+4), 33 + discBounce, ELECTRIC);
@@ -4450,6 +4451,10 @@ export default class PreloadScene extends Phaser.Scene {
              box(-2, 19, 8, 10, COAT_BLUE); 
              box(-2, 28, 8, 2, YELLOW); // heavy trim whipping up
              box(-3, 19, 1, 10, COAT_LIGHT); // wind highlight
+             
+             // Extra whipping tail fragment
+             box(-5, 23, 4, 3, COAT_BLUE);
+             box(-5, 26, 4, 1, YELLOW);
           } else {
              // Dynamic wind flapping, massive billowing tails hanging low
              const coatSway = Math.round(Math.sin(f * 0.3) * 4);
@@ -4484,24 +4489,26 @@ export default class PreloadScene extends Phaser.Scene {
           // --- ARMS ---
           if (isAttack) {
              // Brutal Electric Punch Extended
-             box(22, 13, 7, 5, COAT_BLUE); // Thicker sleeve
-             box(22, 13, 7, 1, COAT_LIGHT); 
-             box(29, 14, 4, 3, SKIN); // Arm
+             box(22, 13, 8, 5, COAT_BLUE); // Thicker sleeve
+             box(22, 13, 8, 1, COAT_LIGHT); 
+             box(30, 14, 5, 3, SKIN); // Arm
              
              // Hand/Glove
-             box(33, 13, 6, 5, GLOVE);
-             box(33, 13, 2, 5, GLOVE_DARK); // glove detailing
+             box(35, 13, 6, 5, GLOVE);
+             box(35, 13, 2, 5, GLOVE_DARK); // glove detailing
 
              // Giant Electric Burst on Fist (Cone shape)
-             alphaBox(30, 9, 12, 12, ELECTRIC, 0.4);
-             alphaBox(32, 11, 8, 8, ELECTRIC, 0.7);
-             box(34, 13, 4, 4, WHITE); // intense core
+             alphaBox(30, 9, 15, 15, ELECTRIC_GLOW, 0.4);
+             alphaBox(34, 11, 10, 10, ELECTRIC, 0.7);
+             box(37, 13, 5, 5, WHITE); // intense core
              
-             // Huge Errant sparks
+             // Huge Errant sparks out of the punch
              box(31, 7, 2, 3, ELECTRIC);
-             box(41, 10, 3, 1, ELECTRIC);
+             box(45, 10, 4, 1, WHITE);
+             box(43, 8, 3, 2, ELECTRIC);
              box(28, 19, 2, 2, ELECTRIC);
-             box(42, 18, 1, 3, ELECTRIC);
+             box(46, 18, 1, 3, ELECTRIC);
+             box(50, 15, 2, 2, WHITE);
 
              // Left arm bracing
              box(7, 15, 4, 5, COAT_BLUE);
@@ -4517,8 +4524,11 @@ export default class PreloadScene extends Phaser.Scene {
              
              // Idle arm sparks
              if (f % 2 === 0) {
-                 dot(23, 22 - armBreathe, ELECTRIC);
+                 dot(23, 22 - armBreathe, WHITE);
                  dot(6, 21 + armBreathe, ELECTRIC);
+             } else {
+                 dot(25, 20 - armBreathe, ELECTRIC);
+                 dot(4, 22 + armBreathe, WHITE);
              }
           }
 
@@ -4532,80 +4542,113 @@ export default class PreloadScene extends Phaser.Scene {
              headBox(15, 11, 3, 2, 0x330000); // Shouting
              headBox(15, 11, 3, 1, WHITE); // teeth
           } else {
-             headBox(15, 11, 2, 1, SHIRT_DARK); // smirking/focused
+             headBox(15, 11, 2, 2, SHIRT_DARK); // smirking/focused
+             headBox(16, 11, 1, 1, WHITE); // little teeth gleam
           }
           
           // Goggles/Mask (Sleek, aerodynamic, angled)
           // Mask base framing
-          headBox(10, 8, 12, 3, YELLOW); 
-          headBox(10, 9, 12, 2, YELLOW_DARK);
+          headBox(10, 8, 12, 4, YELLOW); 
+          headBox(10, 9, 12, 3, YELLOW_DARK);
           
           // Outer sharp edges (aerodynamic points)
-          headBox(9, 7, 2, 2, YELLOW);
-          headBox(21, 7, 2, 2, YELLOW);
+          headBox(9, 6, 2, 3, YELLOW);
+          headBox(21, 6, 2, 3, YELLOW);
 
           // Visor lens (angled)
-          headBox(11, 8, 10, 2, MASK_BLUE); 
-          headBox(15, 9, 2, 2, MASK_BLUE); // Center dip over nose
+          headBox(11, 8, 10, 3, MASK_BLUE); 
+          headBox(15, 10, 2, 2, MASK_BLUE); // Center dip over nose
           headBox(12, 7, 3, 1, MASK_BLUE); // Angled top left
           headBox(17, 7, 3, 1, MASK_BLUE); // Angled top right
           
           // Bright glowing eyes inside Visor
-          headBox(13, 8, 2, 1, WHITE); 
-          headBox(17, 8, 2, 1, WHITE);
+          headBox(13, 8, 2, 2, WHITE); 
+          headBox(17, 8, 2, 2, WHITE);
           if (isTransformed) {
-              headBox(12, 8, 3, 2, WHITE); 
-              headBox(17, 8, 3, 2, WHITE);
+              headBox(12, 8, 4, 3, WHITE); 
+              headBox(17, 8, 4, 3, WHITE);
               headBox(13, 7, 2, 1, WHITE);
               headBox(17, 7, 2, 1, WHITE);
           }
           
           // --- HAIR (Dynamic, defying gravity dreads/locs) ---
+          const hairBounce = Math.round(Math.sin(f * 0.4) * 1);
           // Heavy dread mass
-          headBox(12, 1, 8, 4, HAIR);
-          headBox(13, 0, 6, 2, HAIR);
-          headBox(14, -1, 4, 2, HAIR); // peak volume
+          headBox(12, 1 + hairBounce, 8, 4, HAIR);
+          headBox(13, 0 + hairBounce, 6, 2, HAIR);
+          headBox(14, -1 + hairBounce, 4, 2, HAIR); // peak volume
           
           // Loc strands twisting outwards & flying up (static electricity)
-          headBox(10, 2, 2, 6, HAIR);
-          headBox(9, 4, 2, 4, HAIR); // side stray
-          headBox(20, 2, 2, 6, HAIR);
-          headBox(21, 4, 2, 4, HAIR); 
+          headBox(10, 2 + hairBounce, 2, 6, HAIR);
+          headBox(8, 4 + hairBounce, 2, 4, HAIR); // side stray
+          headBox(20, 2 + hairBounce, 2, 6, HAIR);
+          headBox(22, 4 + hairBounce, 2, 4, HAIR); 
           
           // Flying locks
-          headBox(11, -2, 2, 3, HAIR);
-          headBox(19, -2, 2, 3, HAIR);
+          headBox(11, -3 + hairBounce, 2, 4, HAIR);
+          headBox(19, -3 + hairBounce, 2, 4, HAIR);
+          
+          if (isTransformed || isAttack) {
+             headBox(15, -4 + hairBounce, 2, 3, HAIR);
+             headBox(9, -1 + hairBounce, 2, 3, HAIR);
+             headBox(21, -1 + hairBounce, 2, 3, HAIR);
+          }
           
           // Hair highlights for depth
-          headBox(13, 2, 1, 4, HAIR_SHINE);
-          headBox(17, 2, 1, 4, HAIR_SHINE);
-          headBox(11, 5, 1, 2, HAIR_SHINE);
+          headBox(13, 2 + hairBounce, 1, 4, HAIR_SHINE);
+          headBox(17, 2 + hairBounce, 1, 4, HAIR_SHINE);
+          headBox(11, 5 + hairBounce, 1, 2, HAIR_SHINE);
+          headBox(15, 0 + hairBounce, 2, 1, HAIR_SHINE);
 
           // --- AURA & PARTICLES (Constantly charging) ---
           const sparkOffset = Math.round(Math.sin(f) * 3);
-          dot(10 - sparkOffset, 10 + sparkOffset, ELECTRIC);
-          dot(24 + sparkOffset, 15 - sparkOffset, ELECTRIC);
-          dot(14, 2 + sparkOffset, ELECTRIC);
+          dot(9 - sparkOffset, 10 + sparkOffset, ELECTRIC);
+          dot(25 + sparkOffset, 15 - sparkOffset, WHITE);
+          dot(14, 1 + sparkOffset, ELECTRIC);
           
           if (f % 3 === 0) {
-              box(6, 18, 2, 4, ELECTRIC);
-              box(23, 11, 2, 3, ELECTRIC);
-              box(18, 5, 3, 1, WHITE);
+              box(5, 18, 2, 4, ELECTRIC);
+              box(24, 11, 2, 3, WHITE);
+              box(18, 4, 3, 1, WHITE);
+          } else if (f % 2 === 0) {
+              box(4, 9, 3, 2, WHITE);
+              box(26, 17, 2, 3, ELECTRIC);
+              box(12, 3, 1, 3, ELECTRIC);
           }
           
           if (isTransformed) {
-              // Super Form Intense Lightning Aura
-              alphaBox(2, -5, 28, 40, ELECTRIC, 0.2); // Massive field
+              // Super Form God-Level Lightning Aura
+              alphaBox(-5, -10, 42, 50, ELECTRIC_GLOW, 0.15); // Massive outer field
+              alphaBox(2, -5, 28, 40, ELECTRIC_GLOW, 0.3); // Inner dense field
               
-              if (f % 2 === 0) {
-                 // Huge lightning strikes within aura
-                 box(4, Math.floor(Math.random()*30), 2, 8, WHITE);
-                 box(26, Math.floor(Math.random()*30), 2, 8, WHITE);
-                 box(Math.floor(Math.random()*28+2), -5, 2, 15, WHITE);
+              const flash = f % 2 === 0;
+              if (flash) {
+                 // Huge lightning strikes branching out
+                 
+                 // Left giant bolt
+                 box(0, Math.floor(Math.random()*30), 4, 10, WHITE);
+                 box(2, Math.floor(Math.random()*30), 2, 8, ELECTRIC);
+                 
+                 // Right giant bolt
+                 box(28, Math.floor(Math.random()*30), 4, 10, WHITE);
+                 box(26, Math.floor(Math.random()*30), 2, 8, ELECTRIC);
+                 
+                 // Upward surge
+                 box(Math.floor(Math.random()*28+2), -10, 3, 18, WHITE);
+              } else {
+                 // Alternating streaks
+                 box(4, Math.floor(Math.random()*20+10), 2, 12, ELECTRIC);
+                 box(26, Math.floor(Math.random()*20+10), 2, 12, ELECTRIC);
+                 box(Math.floor(Math.random()*20+6), -8, 2, 12, WHITE);
               }
-              // Radiating eye trails
-              alphaBox(10, 8, 4, 1, WHITE, 0.6);
-              alphaBox(18, 8, 4, 1, WHITE, 0.6);
+              
+              // Radiating eye trails (anime style pure energy)
+              const eyeTrailLength = Math.floor(Math.random() * 6) + 4;
+              alphaBox(12 - eyeTrailLength, 8, eyeTrailLength, 2, WHITE, 0.8);
+              alphaBox(10 - eyeTrailLength, 7, eyeTrailLength, 4, ELECTRIC_GLOW, 0.4);
+              
+              alphaBox(20, 8, eyeTrailLength, 2, WHITE, 0.8);
+              alphaBox(20, 7, eyeTrailLength, 4, ELECTRIC_GLOW, 0.4);
           }
 
           break;

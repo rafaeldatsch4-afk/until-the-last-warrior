@@ -37,8 +37,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
 
     // Force single player on mobile if local_pvp
-    const isTouch = this.sys.game.device.input.touch || window.innerWidth < 800;
-    if (isTouch && this.state.gameMode === 'local_pvp') {
+    const isMobile = (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) || 
+                     this.sys.game.device.os.android || 
+                     this.sys.game.device.os.iOS;
+    if (isMobile && this.state.gameMode === 'local_pvp') {
         this.state.gameMode = 'single';
     }
 
