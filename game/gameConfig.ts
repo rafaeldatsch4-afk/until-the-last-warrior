@@ -18,7 +18,6 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   backgroundColor: '#071026',
   pixelArt: true,
   antialias: false,
-  resolution: typeof window !== 'undefined' ? Math.max(2, window.devicePixelRatio || 2) : 2,
   scene: [
     BootScene,
     PreloadScene,

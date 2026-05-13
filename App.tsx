@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import GameCanvas from './components/GameCanvas';
+import { AuthButton } from './components/AuthModal';
 
 const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -56,6 +57,7 @@ const App: React.FC = () => {
   return (
     <div className="h-[100dvh] w-full flex flex-col bg-black text-white overflow-hidden relative">
       <main className="flex-1 flex items-center justify-center w-full p-0 relative overflow-hidden">
+        <AuthButton />
         {/* Buttons Container */}
         <div className="absolute top-4 right-4 z-40 flex flex-col sm:flex-row gap-2">
           {deferredPrompt && (

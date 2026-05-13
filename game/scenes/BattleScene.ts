@@ -77,6 +77,7 @@ export default class BattleScene extends Phaser.Scene {
   private p2HpBar!: Phaser.GameObjects.Rectangle;
   private p1KiBar!: Phaser.GameObjects.Rectangle;
   private p2KiBar!: Phaser.GameObjects.Rectangle;
+  private uiContainer!: Phaser.GameObjects.Container;
   private logText!: Phaser.GameObjects.Text;
 
   private p1ComboCount: number = 0;
@@ -10551,8 +10552,7 @@ export default class BattleScene extends Phaser.Scene {
 
       if (!isTargetActing) {
         // Kill previous knockback tweens on the target to prevent weird stacking
-        this.tweens.killTweensOf(target, 'x');
-        this.tweens.killTweensOf(target, 'rotation');
+        this.tweens.killTweensOf(target);
         target.x = originalX; // Snap back before knocking back again to prevent drift
 
         this.tweens.add({

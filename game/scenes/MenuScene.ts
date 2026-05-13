@@ -18,6 +18,12 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   create() {
+    window.dispatchEvent(new CustomEvent('scene-changed', { detail: 'MenuScene' }));
+
+    this.events.on('shutdown', () => {
+      window.dispatchEvent(new CustomEvent('scene-changed', { detail: null }));
+    });
+
     this.state = this.registry.get('gameState') as GameState;
     const { width, height } = this.cameras.main;
     

@@ -10,6 +10,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "firebase": "^12.13.0",
     "phaser": "^3.90.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
