@@ -10765,6 +10765,7 @@ export default class BattleScene extends Phaser.Scene {
       // Award coins in PvP regardless of who won (shared stash)
       this.gameState.coins += coinsEarned;
       window.UTLW.save();
+      window.dispatchEvent(new CustomEvent('battle-ended', { detail: { win, gameMode: this.gameState.gameMode } }));
     } else {
       // Single Player Outcome
       if (win) {
@@ -10790,6 +10791,10 @@ export default class BattleScene extends Phaser.Scene {
         this.gameState.coins += coinsEarned;
         window.UTLW.save();
       }
+    }
+
+    if (this.gameState.gameMode !== "local_pvp") {
+       window.dispatchEvent(new CustomEvent('battle-ended', { detail: { win, gameMode: this.gameState.gameMode } }));
     }
 
     // Display Title

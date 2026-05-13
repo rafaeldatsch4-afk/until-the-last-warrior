@@ -6,28 +6,7 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // Allow read for anyone (so we can check username uniqueness if needed)
-      // Wait, let's just make it only readable by the owner for privacy
-      allow read: if request.auth != null && request.auth.uid == userId;
-
-      // Allow create only if the doc ID matches their UID, and fields are valid
-      allow create: if request.auth != null 
-                    && request.auth.uid == userId
-                    && request.resource.data.keys().hasAll(['username', 'createdAt', 'lastLogin'])
-                    && request.resource.data.keys().size() == 3
-                    && request.resource.data.username is string
-                    && request.resource.data.username.size() >= 3
-                    && request.resource.data.createdAt == request.time
-                    && request.resource.data.lastLogin == request.time;
-      
-      // Allow update only to lastLogin, and only if they are the owner
-      allow update: if request.auth != null 
-                    && request.auth.uid == userId
-                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLogin'])
-                    && request.resource.data.lastLogin == request.time;
-                    
-      // Allow delete only if they are the owner
-      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

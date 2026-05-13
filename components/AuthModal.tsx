@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   deleteUser
 } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, getDoc, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc, deleteDoc, increment, arrayUnion } from 'firebase/firestore';
 
 export const AuthButton: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -20,6 +20,7 @@ export const AuthButton: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [dbUsername, setDbUsername] = useState('');
+  const [stats, setStats] = useState({ matches: 0, wins: 0, losses: 0, achievements: [] as string[] });
 
   useEffect(() => {
     const handleSceneChange = (e: any) => {
@@ -31,6 +32,62 @@ export const AuthButton: React.FC = () => {
     };
     window.addEventListener('scene-changed', handleSceneChange);
 
+    const handleBattleEnded = async (e: any) => {
+      if (!auth.currentUser) return;
+      const { win, gameMode } = e.detail;
+      const u = auth.currentUser;
+      const userRef = doc(db, 'users', u.uid);
+
+      try {
+        const updateData: any = {
+           matches: increment(1)
+        };
+        if (win) {
+           updateData.wins = increment(1);
+        } else {
+           updateData.losses = increment(1);
+        }
+
+        const docSnap = await getDoc(userRef);
+        let newAchievements: string[] = [];
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const currentWins = (data.wins || 0) + (win ? 1 : 0);
+          const currentMatches = (data.matches || 0) + 1;
+          const currentAchievements = data.achievements || [];
+          
+          if (currentWins >= 1 && !currentAchievements.includes("Primeira Vitória!")) {
+             newAchievements.push("Primeira Vitória!");
+          }
+          if (currentWins >= 10 && !currentAchievements.includes("Campeão (10 Vitórias)")) {
+             newAchievements.push("Campeão (10 Vitórias)");
+          }
+          if (currentMatches >= 50 && !currentAchievements.includes("Veterano (50 Partidas)")) {
+             newAchievements.push("Veterano (50 Partidas)");
+          }
+          if (win && gameMode === "arcade" && !currentAchievements.includes("Mestre do Arcade")) {
+             newAchievements.push("Mestre do Arcade");
+          }
+        }
+
+        if (newAchievements.length > 0) {
+           updateData.achievements = arrayUnion(...newAchievements);
+        }
+
+        await setDoc(userRef, updateData, { merge: true });
+
+        setStats(prev => ({
+           matches: prev.matches + 1,
+           wins: prev.wins + (win ? 1 : 0),
+           losses: prev.losses + (win ? 0 : 1),
+           achievements: [...prev.achievements, ...newAchievements]
+        }));
+      } catch (err) {
+        console.error("Erro ao salvar estatísticas:", err);
+      }
+    };
+    window.addEventListener('battle-ended', handleBattleEnded);
+
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
@@ -38,22 +95,34 @@ export const AuthButton: React.FC = () => {
           const userRef = doc(db, 'users', u.uid);
           const docSnap = await getDoc(userRef);
           if (docSnap.exists()) {
-             setDbUsername(docSnap.data()?.username || u.email?.split('@')[0]);
+             const data = docSnap.data();
+             setDbUsername(data?.username || u.email?.split('@')[0]);
+             setStats({
+               matches: data?.matches || 0,
+               wins: data?.wins || 0,
+               losses: data?.losses || 0,
+               achievements: data?.achievements || []
+             });
              await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
           } else {
              setDbUsername(u.email?.split('@')[0] || '');
+             setStats({ matches: 0, wins: 0, losses: 0, achievements: [] });
           }
-        } catch (err) {
-          console.error("Erro ao atualizar lastLogin:", err);
+        } catch (err: any) {
+          if (err.code !== 'permission-denied') {
+            console.error("Erro ao atualizar lastLogin:", err);
+          }
           setDbUsername(u.email?.split('@')[0] || '');
         }
       } else {
         setDbUsername('');
+        setStats({ matches: 0, wins: 0, losses: 0, achievements: [] });
       }
     });
     return () => {
       unsub();
       window.removeEventListener('scene-changed', handleSceneChange);
+      window.removeEventListener('battle-ended', handleBattleEnded);
     };
   }, []);
 
@@ -99,6 +168,8 @@ export const AuthButton: React.FC = () => {
         msg = 'Usuário ou senha incorretos.';
       } else if (err.code === 'auth/email-already-in-use') {
         msg = 'Este nome já está sendo usado.';
+      } else if (err.code === 'auth/operation-not-allowed') {
+        msg = '⚠️ Login por Email/Senha está desativado! Por favor, ative nas configurações do Firebase Authentication.';
       }
       setError(msg);
     } finally {
@@ -138,7 +209,13 @@ export const AuthButton: React.FC = () => {
 
   return (
     <>
-      <div className="absolute top-4 left-4 z-50">
+      <div 
+        className="absolute top-4 left-4 z-50"
+        onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+        onMouseDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+        onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+        onTouchStart={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+      >
         <button
           onClick={() => setShowModal(true)}
           className="bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur transition-all flex items-center justify-center border-2 border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]"
@@ -159,7 +236,13 @@ export const AuthButton: React.FC = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4">
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
+          onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+          onMouseDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+          onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+          onTouchStart={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+        >
           <div className="bg-gray-900 border-2 border-yellow-500 rounded-xl p-6 w-full max-w-sm relative text-white shadow-[0_0_20px_rgba(234,179,8,0.3)]">
             <button 
               onClick={() => setShowModal(false)}
@@ -172,8 +255,38 @@ export const AuthButton: React.FC = () => {
               <div className="text-center">
                 <h2 className="text-2xl font-black mb-2 text-yellow-400">CONTA</h2>
                 <div className="bg-black/50 p-4 rounded mb-6">
-                  <p className="text-gray-300 mb-1">Logado como:</p>
-                  <p className="font-bold text-xl drop-shadow-md">{dbUsername}</p>
+                  <p className="text-gray-300 text-sm mb-1 text-center">Logado como:</p>
+                  <p className="font-bold text-xl drop-shadow-md text-center">{dbUsername}</p>
+                  
+                  <div className="mt-4 grid grid-cols-3 gap-2 text-center border-t border-gray-700 pt-4">
+                     <div>
+                       <div className="text-gray-400 text-xs uppercase font-bold">Partidas</div>
+                       <div className="font-bold text-lg">{stats.matches}</div>
+                     </div>
+                     <div>
+                       <div className="text-gray-400 text-xs uppercase font-bold text-green-500">Vitórias</div>
+                       <div className="font-bold text-lg text-green-500">{stats.wins}</div>
+                     </div>
+                     <div>
+                       <div className="text-gray-400 text-xs uppercase font-bold text-red-500">Derrotas</div>
+                       <div className="font-bold text-lg text-red-500">{stats.losses}</div>
+                     </div>
+                  </div>
+
+                  <div className="mt-4 border-t border-gray-700 pt-4">
+                     <div className="text-gray-400 text-xs text-center mb-2 font-bold uppercase">Conquistas</div>
+                     <div className="flex flex-wrap gap-2 justify-center max-h-32 overflow-y-auto custom-scrollbar">
+                        {stats.achievements.length > 0 ? (
+                           stats.achievements.map((ach, idx) => (
+                              <span key={idx} className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 text-[10px] uppercase font-bold px-2 py-1 rounded whitespace-nowrap">
+                                 🏆 {ach}
+                              </span>
+                           ))
+                        ) : (
+                           <span className="text-gray-500 text-xs italic">Nenhuma conquista ainda.</span>
+                        )}
+                     </div>
+                  </div>
                 </div>
                 <button
                   onClick={handleLogout}
