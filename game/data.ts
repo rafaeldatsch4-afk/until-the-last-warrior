@@ -309,7 +309,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     price: 3000,
     unlocked: true,
     maxHp: 350,
-    transformAvailable: true, // Serious Mode
+    transformAvailable: false, // User requested to disable transformation
     sprite: "",
     frameWidth: 64,
     frameHeight: 64,

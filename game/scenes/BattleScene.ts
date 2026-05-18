@@ -21,6 +21,7 @@ export default class BattleScene extends Phaser.Scene {
   mobileJoystickVector = { x: 0, y: 0 };
   mobileJoystickPointerId: number | null = null;
   private mobileControls: Phaser.GameObjects.GameObject[] = [];
+  private trnBtnGroup?: Phaser.GameObjects.Container;
   declare tweens: Phaser.Tweens.TweenManager;
   declare cameras: Phaser.Cameras.Scene2D.CameraManager;
   declare children: Phaser.GameObjects.DisplayList;
@@ -813,49 +814,69 @@ export default class BattleScene extends Phaser.Scene {
   createUI() {
     this.uiContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(10);
     
-    this.uiContainer.add(this.add.rectangle(150, 50, 250, 20, 0x333333));
-    this.uiContainer.add(this.add.rectangle(150, 75, 250, 10, 0x333333));
-    this.uiContainer.add(this.add.rectangle(810, 50, 250, 20, 0x333333));
-    this.uiContainer.add(this.add.rectangle(810, 75, 250, 10, 0x333333));
+    // Player 1 HP/Ki Backgrounds
+    const p1HpBg = this.add.rectangle(150, 50, 250, 22, 0x111111).setStrokeStyle(3, 0xffffff, 0.8);
+    const p1KiBg = this.add.rectangle(150, 80, 250, 12, 0x111111).setStrokeStyle(2, 0xaaaaaa, 0.6);
+    this.uiContainer.add([p1HpBg, p1KiBg]);
+
+    // Player 2 HP/Ki Backgrounds
+    const p2HpBg = this.add.rectangle(810, 50, 250, 22, 0x111111).setStrokeStyle(3, 0xffffff, 0.8);
+    const p2KiBg = this.add.rectangle(810, 80, 250, 12, 0x111111).setStrokeStyle(2, 0xaaaaaa, 0.6);
+    this.uiContainer.add([p2HpBg, p2KiBg]);
 
     this.p1HpBar = this.add
-      .rectangle(25, 50, 250, 20, 0x2ecc71)
+      .rectangle(25, 50, 250, 22, 0x2ecc71)
       .setOrigin(0, 0.5);
     this.uiContainer.add(this.p1HpBar);
 
     this.p1KiBar = this.add
-      .rectangle(25, 75, 0, 10, 0x3498db)
+      .rectangle(25, 80, 0, 12, 0x3498db)
       .setOrigin(0, 0.5);
     this.uiContainer.add(this.p1KiBar);
 
     this.p2HpBar = this.add
-      .rectangle(685, 50, 250, 20, 0xe74c3c)
-      .setOrigin(0, 0.5);
+      .rectangle(935, 50, 250, 22, 0xe74c3c)
+      .setOrigin(1, 0.5);
     this.uiContainer.add(this.p2HpBar);
 
     this.p2KiBar = this.add
-      .rectangle(685, 75, 0, 10, 0xf1c40f)
-      .setOrigin(0, 0.5);
+      .rectangle(935, 80, 0, 12, 0xf1c40f)
+      .setOrigin(1, 0.5);
     this.uiContainer.add(this.p2KiBar);
 
-    this.uiContainer.add(this.add
-      .text(25, 25, this.playerData.name, {
-        fontSize: "20px",
-        fontStyle: "bold",
-      }));
+    // Player 1 Name
+    const p1NameTxt = this.add
+      .text(25, 15, this.playerData.name, {
+        fontSize: "22px",
+        fontFamily: "Impact, sans-serif",
+        color: "#fff",
+        stroke: "#000",
+        strokeThickness: 4,
+        shadow: { color: "#3498db", blur: 4, fill: true }
+      });
+    this.uiContainer.add(p1NameTxt);
       
-    this.uiContainer.add(this.add
-      .text(935, 25, this.enemyData.name, {
-        fontSize: "20px",
-        fontStyle: "bold",
+    // Player 2 Name
+    const p2NameTxt = this.add
+      .text(935, 15, this.enemyData.name, {
+        fontSize: "22px",
+        fontFamily: "Impact, sans-serif",
+        color: "#fff",
+        stroke: "#000",
+        strokeThickness: 4,
+        shadow: { color: "#e74c3c", blur: 4, fill: true }
       })
-      .setOrigin(1, 0));
+      .setOrigin(1, 0);
+    this.uiContainer.add(p2NameTxt);
       
     this.logText = this.add
-      .text(480, 100, "", {
-        fontSize: "24px",
+      .text(480, 120, "", {
+        fontSize: "26px",
         color: "#fff",
-        fontStyle: "bold",
+        fontFamily: "Impact, sans-serif",
+        stroke: "#000",
+        strokeThickness: 5,
+        shadow: { color: "#000", blur: 4, offsetX: 2, offsetY: 2, fill: true }
       })
       .setOrigin(0.5);
     this.uiContainer.add(this.logText);
@@ -863,11 +884,12 @@ export default class BattleScene extends Phaser.Scene {
     if (this.gameState.gameMode === "arcade") {
       this.add
         .text(480, 25, `ARCADE: ROUND ${this.gameState.arcadeRound || 1} / 5`, {
-          fontSize: "20px",
+          fontSize: "22px",
           color: "#f1c40f",
-          fontStyle: "bold",
+          fontFamily: "Impact, sans-serif",
           stroke: "#000",
           strokeThickness: 4,
+          shadow: { color: "#000", blur: 4, fill: true }
         })
         .setOrigin(0.5)
         .setDepth(12);
@@ -878,11 +900,12 @@ export default class BattleScene extends Phaser.Scene {
       if (this.gameState.tournamentCurrentRoundIndex === 2) roundName = "FINAL";
       this.add
         .text(480, 25, `TORNEIO: ${roundName}`, {
-          fontSize: "20px",
+          fontSize: "22px",
           color: "#f1c40f",
-          fontStyle: "bold",
+          fontFamily: "Impact, sans-serif",
           stroke: "#000",
           strokeThickness: 4,
+          shadow: { color: "#000", blur: 4, fill: true }
         })
         .setOrigin(0.5)
         .setDepth(12);
@@ -892,33 +915,33 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   createMobileControls() {
-    // Only show on actual mobile devices, not desktop computers with small windows or touch screens
-    const isMobile = (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) || 
-                     this.sys.game.device.os.android || 
-                     this.sys.game.device.os.iOS;
+    // Ensure accurate isMobile check
+    const isMobile = this.sys.game.device.input.touch || 
+                     (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
                      
     if (!isMobile) return;
 
-    const size = 50; // Increased significantly for better touch target
-    const alpha = 0.5;
+    const gw = this.cameras.main.width;
+    const gh = this.cameras.main.height;
 
     const createBtn = (
       x: number,
       y: number,
       text: string,
       color: number,
+      radius: number,
       onDown: () => void,
       onUp?: () => void,
     ) => {
       // Modern Glassy Button Setup
       const btnGroup = this.add.container(x, y).setScrollFactor(0).setDepth(100);
       
-      const outerBtn = this.add.circle(0, 0, 42, color, 0.4).setStrokeStyle(3, 0xffffff, 0.5);
-      const innerBtn = this.add.circle(0, 0, 36, 0x000000, 0.3);
+      const outerBtn = this.add.circle(0, 0, radius, color, 0.4).setStrokeStyle(3, 0xffffff, 0.5);
+      const innerBtn = this.add.circle(0, 0, radius * 0.85, 0x000000, 0.3);
       
       const txt = this.add.text(0, 0, text, {
         fontFamily: "Impact, sans-serif",
-        fontSize: "20px",
+        fontSize: radius > 40 ? "24px" : "18px",
         color: "#ffffff",
         stroke: "#000",
         strokeThickness: 3
@@ -932,7 +955,8 @@ export default class BattleScene extends Phaser.Scene {
       }
 
       // Invisible hit area (larger than the button itself for easier tapping)
-      const hitArea = this.add.circle(0, 0, 55, 0x000000, 0).setInteractive();
+      const padding = 10; // safe padding space without overlapping other buttons
+      const hitArea = this.add.circle(0, 0, radius + padding, 0x000000, 0).setInteractive();
       btnGroup.add(hitArea);
 
       let isPressed = false;
@@ -962,26 +986,32 @@ export default class BattleScene extends Phaser.Scene {
       });
       hitArea.on("pointerup", release);
       hitArea.on("pointerout", release);
+      
+      return btnGroup;
     };
 
     // --- Virtual Joystick ---
-    const joyBaseX = 140;
-    const joyBaseY = 440;
+    const defaultJoyX = 140;
+    const defaultJoyY = gh - 100;
+    let joyRootX = defaultJoyX;
+    let joyRootY = defaultJoyY;
     
-    const joyContainer = this.add.container(joyBaseX, joyBaseY).setScrollFactor(0).setDepth(100);
+    const joyContainer = this.add.container(joyRootX, joyRootY).setScrollFactor(0).setDepth(100);
     const joyBase = this.add.circle(0, 0, 75, 0x000000, 0.4).setStrokeStyle(3, 0xffffff, 0.3);
-    const joyThumb = this.add.circle(0, 0, 35, 0xffffff, 0.6).setStrokeStyle(2, 0x000000, 0.5);
+    const joyThumb = this.add.circle(0, 0, 35, 0xffffff, 0.6).setStrokeStyle(2, 0x000000, 0.5); // bolinha cinza
     
     joyContainer.add([joyBase, joyThumb]);
     this.mobileControls.push(joyContainer);
     
-    if (this.uiContainer) {
-        this.uiContainer.add(joyContainer);
-    }
+    // Large invisible hit area on the bottom-left quadrant for the FLOATING joystick
+    const joyHitArea = this.add.rectangle(0, gh/2, gw/2, gh/2, 0x000000, 0).setOrigin(0).setInteractive();
     
-    // Create large static hit area for the joystick
-    const joyHitArea = this.add.circle(0, 0, 100, 0x000000, 0).setInteractive();
-    joyContainer.add(joyHitArea);
+    if (this.uiContainer) {
+        this.uiContainer.add(joyHitArea);
+        this.uiContainer.add(joyContainer);
+    } else {
+        joyHitArea.setScrollFactor(0);
+    }
 
     const getLocalPnt = (pointer: Phaser.Input.Pointer) => {
         if (!this.uiContainer) return { x: pointer.x, y: pointer.y };
@@ -995,8 +1025,8 @@ export default class BattleScene extends Phaser.Scene {
         if (this.mobileJoystickPointerId !== pointer.id) return;
         
         const loc = getLocalPnt(pointer);
-        let dx = loc.x - joyBaseX;
-        let dy = loc.y - joyBaseY;
+        let dx = loc.x - joyRootX;
+        let dy = loc.y - joyRootY;
         const maxDist = 45;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
@@ -1006,7 +1036,13 @@ export default class BattleScene extends Phaser.Scene {
         }
         
         joyThumb.setPosition(dx, dy);
-        this.mobileJoystickVector = { x: dx / maxDist, y: dy / maxDist };
+        
+        // Remove deadzone by returning raw normalized direction if finger pressed beyond a tiny distance
+        if (dist > 5) {
+            this.mobileJoystickVector = { x: dx / dist, y: dy / dist };
+        } else {
+            this.mobileJoystickVector = { x: 0, y: 0 };
+        }
         
         // Push up for jumping
         if (this.mobileJoystickVector.y < -0.5) {
@@ -1016,10 +1052,10 @@ export default class BattleScene extends Phaser.Scene {
         }
         
         // Push left/right for movement
-        if (this.mobileJoystickVector.x < -0.2) {
+        if (this.mobileJoystickVector.x < -0.3) {
             this.keys.p1_left.isDown = true;
             this.keys.p1_right.isDown = false;
-        } else if (this.mobileJoystickVector.x > 0.2) {
+        } else if (this.mobileJoystickVector.x > 0.3) {
             this.keys.p1_right.isDown = true;
             this.keys.p1_left.isDown = false;
         } else {
@@ -1031,7 +1067,15 @@ export default class BattleScene extends Phaser.Scene {
     joyHitArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
         if (this.mobileJoystickPointerId === null) {
             this.mobileJoystickPointerId = pointer.id;
+            
+            const loc = getLocalPnt(pointer);
+            joyRootX = loc.x;
+            joyRootY = loc.y;
+            joyContainer.setPosition(joyRootX, joyRootY);
+            
             joyBase.setAlpha(0.7);
+            joyThumb.setPosition(0, 0);
+            
             handleJoystick(pointer);
         }
     });
@@ -1041,9 +1085,15 @@ export default class BattleScene extends Phaser.Scene {
     const releaseJoystick = (pointer: Phaser.Input.Pointer) => {
         if (this.mobileJoystickPointerId === pointer.id) {
             this.mobileJoystickPointerId = null;
+            
+            joyRootX = defaultJoyX;
+            joyRootY = defaultJoyY;
+            joyContainer.setPosition(joyRootX, joyRootY);
+            
             joyBase.setAlpha(0.4);
             joyThumb.setPosition(0, 0);
             this.mobileJoystickVector = { x: 0, y: 0 };
+            
             this.keys.p1_up.isDown = false;
             this.keys.p1_left.isDown = false;
             this.keys.p1_right.isDown = false;
@@ -1052,27 +1102,25 @@ export default class BattleScene extends Phaser.Scene {
 
     this.input.on('pointerup', releaseJoystick);
     this.input.on('pointerout', releaseJoystick);
+    joyHitArea.on('pointerup', releaseJoystick);
+    joyHitArea.on('pointerout', releaseJoystick);
     // --- End Virtual Joystick ---
 
     // Right side (Attacks)
-    // ATK (Attack)
-    createBtn(810, 350, "ATK", 0xe74c3c, () => {
+    // Intelligent positioning logic based on screen dimensions
+    // Main ATK is bottom-right and largest
+    createBtn(gw - 110, gh - 110, "ATK", 0xe74c3c, 75, () => {
       this.mobileP1Attack = true;
       this.p1AttackBuffer = this.BUFFER_MS;
     });
 
-    // TRN (Transform)
-    createBtn(720, 440, "TRN", 0x9b59b6, () => {
-      this.mobileP1Transform = true;
-      this.p1TransformBuffer = this.BUFFER_MS;
-    });
-
-    // SPC (Special)
+    // SPC (Special) - above ATK
     createBtn(
-      810,
-      530,
+      gw - 100,
+      gh - 280,
       "SPC",
       0xf1c40f,
+      55,
       () => {
         this.mobileP1Special = true;
       },
@@ -1082,12 +1130,13 @@ export default class BattleScene extends Phaser.Scene {
       },
     );
 
-    // DEF (Defend & Charge)
+    // DEF (Defend) - left of ATK
     createBtn(
-      900,
-      440,
+      gw - 280,
+      gh - 100,
       "DEF",
       0x3498db,
+      55,
       () => {
         this.mobileP1Defend = true;
       },
@@ -1096,11 +1145,19 @@ export default class BattleScene extends Phaser.Scene {
       },
     );
 
-    // KI (Ki Blast)
-    createBtn(900, 350, "KI", 0x00ffff, () => {
+    // KI (Ki Blast) - diagonal between ATK and SPC/DEF
+    createBtn(gw - 240, gh - 230, "KI", 0x00ffff, 55, () => {
       this.mobileP1KiBlast = true;
       this.p1KiBlastBuffer = this.BUFFER_MS;
     });
+
+    // TRN (Transform) - Top Left, above Joystick, below Energy Bar
+    if (this.playerData.transformAvailable) {
+      this.trnBtnGroup = createBtn(140, 200, "TRN", 0x9b59b6, 40, () => {
+        this.mobileP1Transform = true;
+        this.p1TransformBuffer = this.BUFFER_MS;
+      });
+    }
 
     // Pause Button (Top Center)
     const pauseBtn = this.add
@@ -10803,6 +10860,42 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  createFloatingDamage(x: number, y: number, amount: number, isCritical: boolean = false, isBlock: boolean = false) {
+    if (!this.scene.isActive()) return;
+
+    const color = isBlock ? "#3498db" : isCritical ? "#e74c3c" : "#ffffff";
+    const fontSize = isCritical ? "36px" : "28px";
+    
+    // Add some random jitter so numbers don't overlap perfectly
+    const jitterX = Phaser.Math.Between(-20, 20);
+    const jitterY = Phaser.Math.Between(-10, 10);
+    
+    const text = this.add.text(x + jitterX, y + jitterY, `-${amount}`, {
+      fontFamily: "Impact, sans-serif",
+      fontSize: fontSize,
+      color: color,
+      stroke: "#000000",
+      strokeThickness: isCritical ? 6 : 4,
+      shadow: { color: "#000", blur: 4, offsetX: 2, offsetY: 2, fill: true }
+    }).setOrigin(0.5).setDepth(100);
+
+    // Critical hits get a slightly longer, more dramatic animation
+    const duration = isCritical ? 1000 : 800;
+    const yOffset = isCritical ? -100 : -60;
+
+    this.tweens.add({
+      targets: text,
+      y: y + jitterY + yOffset,
+      alpha: { start: 1, end: 0 },
+      scale: isCritical ? { start: 1.5, end: 1 } : { start: 1, end: 1 },
+      duration: duration,
+      ease: "Cubic.easeOut",
+      onComplete: () => {
+        text.destroy();
+      }
+    });
+  }
+
   takeDamage(isP: boolean, dmg: number) {
     if (this.isBattleOver || !this.scene.isActive()) return;
 
@@ -10819,15 +10912,20 @@ export default class BattleScene extends Phaser.Scene {
       this.p2ComboCount = 0;
     }
 
+    let isCritical = false;
     if (def) {
       dmg = Math.floor(dmg * 0.3);
       // Block effect
       this.createImpactEffect(target.x, target.y + 120, 0x3498db, "block"); // Blue shield spark
       if (this.cache.audio.exists("sfx_block")) this.sound.play("sfx_block");
     } else {
+      isCritical = dmg > 25; // threshold for critical visual
       if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
       // Removed global hitstop to fix "travado" stutter bug
     }
+    
+    // Spawn floating damage number
+    this.createFloatingDamage(target.x, target.y + 60, dmg, isCritical, def);
 
     if (isP) this.playerHp = Math.max(0, this.playerHp - dmg);
     else this.enemyHp = Math.max(0, this.enemyHp - dmg);
@@ -10909,6 +11007,22 @@ export default class BattleScene extends Phaser.Scene {
       this.p2HpBar.width = 250 * p2p;
       this.p1KiBar.width = 2.5 * this.playerKi;
       this.p2KiBar.width = 2.5 * this.enemyKi;
+    }
+    
+    // Hide Transform Button if max level reached
+    if (this.trnBtnGroup && this.playerData) {
+        let maxLevel = 1;
+        if (this.playerData.key === "goku" || this.playerData.key === "vegeta" || this.playerData.key === "naruto") {
+          maxLevel = 2;
+        }
+        if (this.playerTransformLevel >= maxLevel) {
+            this.trnBtnGroup.setVisible(false);
+            // Disable interaction
+            this.trnBtnGroup.each((child: any) => {
+               if (child.disableInteractive) child.disableInteractive(); 
+            });
+            this.trnBtnGroup = undefined; // prevent running this block again
+        }
     }
   }
 

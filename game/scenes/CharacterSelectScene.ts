@@ -235,11 +235,15 @@ export default class CharacterSelectScene extends Phaser.Scene {
       this.charContainer.removeAll(true);
       const unlockedChars = this.state.characters.filter(c => c.unlocked);
       
-      const cardSize = 100; // Larger square cards
+      const { width } = this.cameras.main;
+      const cardSize = width < 600 ? 70 : 100; // Responsive card size
       const gapX = 12;
       const gapY = 24;
-      const itemsPerRow = 8;
-      const totalWidth = (itemsPerRow * cardSize) + ((itemsPerRow - 1) * gapX);
+      let itemsPerRow = Math.floor((width - 40) / (cardSize + gapX));
+      if (itemsPerRow < 1) itemsPerRow = 1;
+      
+      const colsInRow = Math.min(unlockedChars.length, itemsPerRow);
+      const totalWidth = (colsInRow * cardSize) + (Math.max(0, colsInRow - 1) * gapX);
       const startX = -(totalWidth / 2) + (cardSize / 2);
 
       unlockedChars.forEach((char, index) => {
@@ -285,9 +289,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
           const innerBg = this.add.rectangle(0, 0, cardSize - 6, cardSize - 6, 0x000000, 0.2);
 
           // Character Sprite - ALIGNED AND SCALED TO FIT
+          const spriteScale = width < 600 ? 0.7 : 1.0;
           const sprite = this.add.sprite(0, -6, char.key, 0)
               .setOrigin(0.5, 0.75)
-              .setScale(1.0);
+              .setScale(spriteScale);
               
           if (sprite.postFX) {
               sprite.postFX.addShadow(0, 0, 0.05, 1, 0x000000, 4, 1);
@@ -300,7 +305,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
           // Name plate
           const nameBg = this.add.rectangle(0, cardSize/2 - 12, cardSize - 4, 24, 0x000000, 0.8);
           const nameTxt = this.add.text(0, cardSize/2 - 12, char.name, {
-              fontSize: '11px',
+              fontSize: width < 600 ? '9px' : '11px',
               fontStyle: 'bold',
               color: isSelected ? '#fff' : '#ccc',
               wordWrap: { width: cardSize - 6, useAdvancedWrap: true },
@@ -312,14 +317,16 @@ export default class CharacterSelectScene extends Phaser.Scene {
           let p1BadgeX = 0, p2BadgeX = 0;
           if (isP1 && isP2) { p1BadgeX = -20; p2BadgeX = 20; }
           
+          const badgeScale = width < 600 ? 0.7 : 1;
+          
           if (isP1) {
-              const p1Badge = this.add.rectangle(p1BadgeX, -cardSize/2 - 12, 40, 24, 0x3498db).setStrokeStyle(2, 0xffffff);
-              const p1Txt = this.add.text(p1BadgeX, -cardSize/2 - 12, 'P1', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+              const p1Badge = this.add.rectangle(p1BadgeX, -cardSize/2 - 12, 40 * badgeScale, 24 * badgeScale, 0x3498db).setStrokeStyle(2, 0xffffff);
+              const p1Txt = this.add.text(p1BadgeX, -cardSize/2 - 12, 'P1', { fontSize: width < 600 ? '10px' : '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
               card.add([p1Badge, p1Txt]);
           }
           if (isP2) {
-              const p2Badge = this.add.rectangle(p2BadgeX, -cardSize/2 - 12, 40, 24, 0xe74c3c).setStrokeStyle(2, 0xffffff);
-              const p2Txt = this.add.text(p2BadgeX, -cardSize/2 - 12, 'P2', { fontSize: '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+              const p2Badge = this.add.rectangle(p2BadgeX, -cardSize/2 - 12, 40 * badgeScale, 24 * badgeScale, 0xe74c3c).setStrokeStyle(2, 0xffffff);
+              const p2Txt = this.add.text(p2BadgeX, -cardSize/2 - 12, 'P2', { fontSize: width < 600 ? '10px' : '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
               card.add([p2Badge, p2Txt]);
           }
 
