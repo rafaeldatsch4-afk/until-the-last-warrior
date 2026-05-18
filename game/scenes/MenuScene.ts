@@ -42,48 +42,100 @@ export default class MenuScene extends Phaser.Scene {
          }
     }
 
-    // Background
+    // Background Layers
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1a0b2e, 0x000000, 0x1a0b2e, 0x000000, 1);
+    bg.fillGradientStyle(0x0a0515, 0x000000, 0x1f0f38, 0x050510, 1);
     bg.fillRect(0, 0, width, height);
     
-    this.add.image(width / 2, height / 2, 'arena').setAlpha(0.15).setBlendMode(Phaser.BlendModes.ADD);
+    // Grid pattern for retro feel
+    const grid = this.add.graphics();
+    grid.lineStyle(1, 0x3498db, 0.1);
+    for (let x = 0; x < width; x += 40) grid.moveTo(x, 0).lineTo(x, height);
+    for (let y = 0; y < height; y += 40) grid.moveTo(0, y).lineTo(width, y);
+    grid.strokePath();
+    
+    this.add.image(width / 2, height / 2, 'arena').setAlpha(0.2).setBlendMode(Phaser.BlendModes.SCREEN);
 
-    // Animated particles
-    for (let i = 0; i < 30; i++) {
-        const p = this.add.circle(Phaser.Math.Between(0, width), Phaser.Math.Between(0, height), Phaser.Math.FloatBetween(1, 4), 0x3498db, Phaser.Math.FloatBetween(0.2, 0.6));
+    // Glowing Particles (Sparks)
+    for (let i = 0; i < 40; i++) {
+        const size = Phaser.Math.FloatBetween(1, 4);
+        const p = this.add.circle(Phaser.Math.Between(0, width), Phaser.Math.Between(0, height), size, 0xf1c40f, Phaser.Math.FloatBetween(0.3, 0.8));
+        p.setBlendMode(Phaser.BlendModes.ADD);
         this.tweens.add({
             targets: p,
-            y: p.y - Phaser.Math.Between(50, 150),
+            y: p.y - Phaser.Math.Between(100, 250),
+            x: p.x + Phaser.Math.Between(-30, 30),
             alpha: 0,
-            duration: Phaser.Math.Between(2000, 4000),
+            scale: 0,
+            duration: Phaser.Math.Between(2000, 5000),
+            ease: 'Sine.inOut',
             repeat: -1,
             onRepeat: () => {
                 p.y = height + 10;
                 p.x = Phaser.Math.Between(0, width);
+                p.scale = 1;
+                p.alpha = Phaser.Math.FloatBetween(0.3, 0.8);
             }
         });
     }
 
-    // Title
-    const title = this.add.text(width / 2, 120, 'UNTIL THE LAST WARRIOR', {
-      fontSize: '64px',
-      color: '#f1c40f',
+    // Title Section
+    const titleContainer = this.add.container(width / 2, 130);
+    
+    // Add postFX to main camera in Menu
+    if (this.cameras.main.postFX) {
+        this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
+        const cm = this.cameras.main.postFX.addColorMatrix();
+        // saturation removed
+    }
+    
+    const titleShadow = this.add.text(0, 5, 'UNTIL THE LAST WARRIOR', {
+      fontSize: '70px',
+      color: '#000000',
       fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 8,
       fontFamily: 'Impact',
-      shadow: { offsetX: 0, offsetY: 4, color: '#000000', blur: 4, stroke: true, fill: true }
+      shadow: { offsetX: 0, offsetY: 0, blur: 20, color: '#f1c40f' }
+    }).setOrigin(0.5).setAlpha(0.5);
+
+    const title = this.add.text(0, 0, 'UNTIL THE LAST WARRIOR', {
+      fontSize: '70px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      stroke: '#f39c12',
+      strokeThickness: 10,
+      fontFamily: 'Impact',
     }).setOrigin(0.5);
     
+    const subtitle = this.add.text(0, 50, 'A BATALHA FINAL COMEÇA AQUI', {
+      fontSize: '20px',
+      color: '#e0e0e0',
+      fontStyle: 'bold',
+      letterSpacing: 6,
+      fontFamily: 'Verdana, sans-serif'
+    }).setOrigin(0.5);
+
+    titleContainer.add([titleShadow, title, subtitle]);
+    
     this.tweens.add({
-        targets: title,
-        y: 110,
-        duration: 2000,
+        targets: titleContainer,
+        y: 120,
+        duration: 2500,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
     });
+
+    // Coins Display
+    const coinDisplay = this.add.container(width - 120, 40);
+    const coinBg = this.add.rectangle(0, 0, 160, 40, 0x000000, 0.6).setStrokeStyle(2, 0xf1c40f).setOrigin(0.5);
+    const coinIcon = this.add.circle(-55, 0, 12, 0xf1c40f).setStrokeStyle(2, 0xffffff);
+    const coinText = this.add.text(-35, 0, `${this.state.coins || 0}`, {
+        fontSize: '22px',
+        color: '#f1c40f',
+        fontStyle: 'bold',
+        fontFamily: 'Impact'
+    }).setOrigin(0, 0.5);
+    coinDisplay.add([coinBg, coinIcon, this.add.text(-55, 0, '$', { fontSize: '14px', color:'#000', fontStyle:'bold' }).setOrigin(0.5), coinText]);
 
     // Botões Centralizados
     const buttonY = 280;
@@ -117,34 +169,43 @@ export default class MenuScene extends Phaser.Scene {
   createMenuButton(x: number, y: number, text: string, callback: () => void, color: number) {
       const container = this.add.container(x, y);
       
-      const shadow = this.add.rectangle(4, 4, 320, 60, 0x000000, 0.5).setOrigin(0.5);
-      const bg = this.add.rectangle(0, 0, 320, 60, 0x1f2940).setStrokeStyle(3, 0x3a4866).setOrigin(0.5);
-      const innerBg = this.add.rectangle(0, 0, 312, 52, 0x000000, 0.2).setOrigin(0.5);
+      const width = 340;
+      const height = 65;
+
+      const shadow = this.add.rectangle(6, 6, width, height, 0x000000, 0.6).setOrigin(0.5);
+      
+      // We can use a path or polygon for slanted buttons, but simple rectangles with glowing borders look nice too.
+      const hoverGlow = this.add.rectangle(0, 0, width + 10, height + 10, color, 0.5).setOrigin(0.5).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+      const bg = this.add.rectangle(0, 0, width, height, 0x111625).setStrokeStyle(4, color).setOrigin(0.5);
+      const innerBg = this.add.rectangle(0, 0, width - 8, height - 8, 0x000000, 0.5).setOrigin(0.5);
       
       const txt = this.add.text(0, 0, text, { 
-          fontSize: '28px', 
-          fontStyle: 'bold',
-          fontFamily: 'Impact',
-          letterSpacing: 2,
+          fontSize: '30px', 
+          fontStyle: 'italic bold',
+          fontFamily: 'Impact, sans-serif',
+          letterSpacing: 4,
           color: '#ffffff',
           stroke: '#000000',
-          strokeThickness: 4
+          strokeThickness: 5,
+          shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 0, fill: true }
       }).setOrigin(0.5);
       
-      container.add([shadow, bg, innerBg, txt]);
+      container.add([hoverGlow, shadow, bg, innerBg, txt]);
       
-      const hitArea = this.add.rectangle(0, 0, 320, 60, 0x000000, 0).setInteractive({ useHandCursor: true });
+      const hitArea = this.add.rectangle(0, 0, width, height, 0x000000, 0).setInteractive({ useHandCursor: true });
       container.add(hitArea);
       
       hitArea.on('pointerover', () => { 
           bg.setFillStyle(color); 
-          bg.setStrokeStyle(3, 0xffffff);
-          this.tweens.add({ targets: container, scale: 1.05, duration: 100 }); 
+          bg.setStrokeStyle(4, 0xffffff);
+          this.tweens.add({ targets: hoverGlow, alpha: 1, duration: 150 });
+          this.tweens.add({ targets: container, scale: 1.08, duration: 150, ease: 'Back.easeOut' }); 
       })
       .on('pointerout', () => { 
-          bg.setFillStyle(0x1f2940); 
-          bg.setStrokeStyle(3, 0x3a4866);
-          this.tweens.add({ targets: container, scale: 1, duration: 100 }); 
+          bg.setFillStyle(0x111625); 
+          bg.setStrokeStyle(4, color);
+          this.tweens.add({ targets: hoverGlow, alpha: 0, duration: 150 });
+          this.tweens.add({ targets: container, scale: 1, duration: 150, ease: 'Power2' }); 
       })
       .on('pointerdown', () => {
           this.tweens.add({ targets: container, scale: 0.95, yoyo: true, duration: 50, onComplete: callback });

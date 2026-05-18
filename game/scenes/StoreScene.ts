@@ -41,6 +41,13 @@ export default class StoreScene extends Phaser.Scene {
 
     this.add.rectangle(480, 270, 960, 540, 0x0c141f);
     
+    // Add postFX to main camera
+    if (this.cameras.main.postFX) {
+        this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
+        const cm = this.cameras.main.postFX.addColorMatrix();
+        // saturation removed
+    }
+    
     // --- Static Header ---
     // Back Button (Top Left)
     const backContainer = this.add.container(80, 40);

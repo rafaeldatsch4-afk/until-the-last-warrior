@@ -18,6 +18,8 @@ export default class BattleScene extends Phaser.Scene {
   mobileP1Special = false;
   mobileP1Transform = false;
   mobileP1SpecialJustUp = false;
+  mobileJoystickVector = { x: 0, y: 0 };
+  mobileJoystickPointerId: number | null = null;
   private mobileControls: Phaser.GameObjects.GameObject[] = [];
   declare tweens: Phaser.Tweens.TweenManager;
   declare cameras: Phaser.Cameras.Scene2D.CameraManager;
@@ -47,7 +49,9 @@ export default class BattleScene extends Phaser.Scene {
 
   // Action Flags to prevent spamming
   private p1ActionActive: boolean = false;
+  private isP1Jumping: boolean = false;
   private p2ActionActive: boolean = false;
+  private isP2Jumping: boolean = false;
   private p2BufferedAttack: boolean = false;
   private p2BufferedKiBlast: boolean = false;
   private p2BufferedTransform: boolean = false;
@@ -143,13 +147,34 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     // Set arena to back depth
-    const arenas = ["arena", "arena_namek", "arena_city", "arena_tournament"];
+    const arenas = ["arena", "arena_namek", "arena_city", "arena_tournament", "arena_ice", "arena_lava", "arena_desert", "arena_dark"];
     const randomArena = Phaser.Utils.Array.GetRandom(arenas);
-    this.add
-      .image(480, 270, randomArena)
-      .setDisplaySize(960, 540)
+    const mapWidth = 5000;
+    const bgImage = this.add
+      .image(mapWidth/2, 270, randomArena)
+      .setDisplaySize(mapWidth * 1.5, 540 * 2.5) // Make it large enough so edges are not seen when zoomed out
       .setTint(0x888888)
       .setDepth(-10);
+      
+    // Intelligently desaturate and adjust only the background so characters remain colorful
+    if (bgImage.postFX) {
+        const bgMatrix = bgImage.postFX.addColorMatrix();
+        // Lower saturation of the background by 40% to stop eye burn
+        bgMatrix.saturate(-0.4); 
+        // Slightly dim it
+        bgMatrix.brightness(0.8);
+        // Subtle blur for depth of field
+        bgImage.postFX.addBlur(0.3, 0.3, 0.3, 1); 
+    }
+      
+    // Set bounds such that camera can zoom out, removing restrictive Y bounds
+    this.cameras.main.setBounds(-500, -500, mapWidth + 1000, 1500);
+      
+    // Cinematic Camera Effects - keep very subtle to NOT alter characters
+    if (this.cameras.main.postFX) {
+        // Add a cinematic vignette for dramatic effect
+        this.cameras.main.postFX.addVignette(0.5, 0.5, 0.9, 0.3);
+    }
 
     if (this.cache.audio.exists("bgm_menu")) this.sound.stopByKey("bgm_menu");
     if (this.cache.audio.exists("bgm_battle")) {
@@ -201,48 +226,112 @@ export default class BattleScene extends Phaser.Scene {
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
     
     // Auto-heal character positions (prevent getting stuck outside bounds)
-    const bounds = { minX: 50, maxX: 910, minY: 100, maxY: 440 };
+    const bounds = { minX: 50, maxX: 1950, minY: 100, maxY: 440 };
 
-    if (this.player && this.player.active) {
-        // Clamp position during normal play
-        if (!this.p1ActionActive) {
-            this.player.x = Phaser.Math.Clamp(this.player.x, bounds.minX, bounds.maxX);
+    if (this.player && this.player.active && this.enemy && this.enemy.active) {
+        if (!this.p1ActionActive && !this.tweens.isTweening(this.player) && !this.isP1Jumping) {
+            const moveSpeed = 6;
+            let isMoving = false;
+            if (this.keys.p1_left.isDown || this.mobileJoystickVector.x < -0.3) {
+                this.player.x -= moveSpeed;
+                this.player.setFlipX(true);
+                isMoving = true;
+            } else if (this.keys.p1_right.isDown || this.mobileJoystickVector.x > 0.3) {
+                this.player.x += moveSpeed;
+                this.player.setFlipX(false);
+                isMoving = true;
+            } else {
+                this.player.setFlipX(this.player.x > this.enemy.x);
+            }
+            
+            if (isMoving) {
+                if (this.player.anims.currentAnim?.key !== `${this.playerData.key}_walk`) {
+                    this.player.play(this.getAnimKey(this.playerData.key, this.playerTransformLevel, "walk"), true);
+                }
+                // Dynamic walk effect: slight tilt forward and bobbing
+                this.player.setRotation(this.player.flipX ? -0.1 : 0.1);
+                this.player.y = this.p1StartPos.y + Math.sin(time * 0.02) * 8;
+            } else if (this.player.anims.currentAnim?.key === `${this.playerData.key}_walk` || this.player.anims.currentAnim?.key === undefined) {
+                this.player.play(this.getAnimKey(this.playerData.key, this.playerTransformLevel, "idle"), true);
+                this.player.setRotation(0);
+                this.player.y = Phaser.Math.Linear(this.player.y, this.p1StartPos.y, 0.2);
+            }
+            
+            if (this.keys.p1_up.isDown && !this.isP1Jumping) {
+                this.performJump(true);
+            }
+            
+            // Cannot cross the enemy
+            if (this.player.x <= this.enemy.x) {
+                this.player.x = Math.min(this.player.x, this.enemy.x - 40);
+                this.player.x = Math.max(this.player.x, bounds.minX);
+            } else {
+                this.player.x = Math.max(this.player.x, this.enemy.x + 40);
+                this.player.x = Math.min(this.player.x, bounds.maxX);
+            }
             this.player.y = Phaser.Math.Clamp(this.player.y, bounds.minY, bounds.maxY);
         }
-
-        if (!this.p1ActionActive && !this.tweens.isTweening(this.player)) {
-            if (Math.abs(this.player.x - this.p1StartPos.x) > 1 || Math.abs(this.player.y - this.p1StartPos.y) > 1) {
-                this.player.x = Phaser.Math.Linear(this.player.x, this.p1StartPos.x, 0.15);
-                this.player.y = Phaser.Math.Linear(this.player.y, this.p1StartPos.y, 0.15);
+    
+        if (!this.p2ActionActive && !this.tweens.isTweening(this.enemy) && !this.isP2Jumping) {
+            const moveSpeed = 6;
+            let isMoving = false;
+            if (this.keys.p2_left.isDown) {
+                this.enemy.x -= moveSpeed;
+                this.enemy.setFlipX(true);
+                isMoving = true;
+            } else if (this.keys.p2_right.isDown) {
+                this.enemy.x += moveSpeed;
+                this.enemy.setFlipX(false);
+                isMoving = true;
+            } else {
+                this.enemy.setFlipX(this.enemy.x > this.player.x);
             }
-        }
-        
-        // Forced safety return if REALLY far out for too long
-        if (this.player.x < -200 || this.player.x > 1160) {
-            if (!this.tweens.isTweening(this.player)) {
-               this.player.setX(this.p1StartPos.x);
-               this.player.setY(this.p1StartPos.y);
+            
+            if (isMoving) {
+                if (this.enemy.anims.currentAnim?.key !== `${this.enemyData.key}_walk`) {
+                    this.enemy.play(this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "walk"), true);
+                }
+                this.enemy.setRotation(this.enemy.flipX ? -0.1 : 0.1);
+                this.enemy.y = this.p2StartPos.y + Math.sin(time * 0.02) * 8;
+            } else if (this.enemy.anims.currentAnim?.key === `${this.enemyData.key}_walk` || this.enemy.anims.currentAnim?.key === undefined) {
+                this.enemy.play(this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "idle"), true);
+                this.enemy.setRotation(0);
+                this.enemy.y = Phaser.Math.Linear(this.enemy.y, this.p2StartPos.y, 0.2);
             }
-        }
-    }
-    if (this.enemy && this.enemy.active) {
-        if (!this.p2ActionActive) {
-            this.enemy.x = Phaser.Math.Clamp(this.enemy.x, bounds.minX, bounds.maxX);
+            
+            if (this.keys.p2_up.isDown && !this.isP2Jumping) {
+                this.performJump(false);
+            }
+            
+            // Cannot cross the player
+            if (this.enemy.x >= this.player.x) {
+                this.enemy.x = Math.max(this.enemy.x, this.player.x + 40);
+                this.enemy.x = Math.min(this.enemy.x, bounds.maxX);
+            } else {
+                this.enemy.x = Math.min(this.enemy.x, this.player.x - 40);
+                this.enemy.x = Math.max(this.enemy.x, bounds.minX);
+            }
             this.enemy.y = Phaser.Math.Clamp(this.enemy.y, bounds.minY, bounds.maxY);
         }
 
-        if (!this.p2ActionActive && !this.tweens.isTweening(this.enemy)) {
-            if (Math.abs(this.enemy.x - this.p2StartPos.x) > 1 || Math.abs(this.enemy.y - this.p2StartPos.y) > 1) {
-                this.enemy.x = Phaser.Math.Linear(this.enemy.x, this.p2StartPos.x, 0.15);
-                this.enemy.y = Phaser.Math.Linear(this.enemy.y, this.p2StartPos.y, 0.15);
-            }
+        const midX = (this.player.x + this.enemy.x) / 2;
+        const dist = Math.abs(this.player.x - this.enemy.x);
+        
+        let targetZoom = 1;
+        if (dist > 600) {
+            targetZoom = 960 / (dist + 360);
         }
-
-        if (this.enemy.x < -200 || this.enemy.x > 1160) {
-            if (!this.tweens.isTweening(this.enemy)) {
-               this.enemy.setX(this.p2StartPos.x);
-               this.enemy.setY(this.p2StartPos.y);
-            }
+        targetZoom = Phaser.Math.Clamp(targetZoom, 0.6, 1.0);
+        
+        this.cameras.main.setZoom(Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, 0.1));
+        this.cameras.main.centerOnX(Phaser.Math.Linear(this.cameras.main.midPoint.x, midX, 0.1));
+        
+        if (this.uiContainer) {
+            this.uiContainer.setScale(1 / this.cameras.main.zoom);
+            this.uiContainer.setPosition(
+                (960 - 960 / this.cameras.main.zoom) / 2,
+                (540 - 540 / this.cameras.main.zoom) / 2
+            );
         }
     }
 
@@ -288,12 +377,18 @@ export default class BattleScene extends Phaser.Scene {
       const yDist = Math.max(0, this.p1StartPos.y - this.player.y);
       this.p1Shadow.setAlpha(Math.max(0.1, 0.5 - (yDist / 200)));
       this.p1Shadow.setScale(Math.max(0.2, 1 - (yDist / 200)));
+      
+      if (this.p1Aura) { this.p1Aura.setX(this.player.x); this.p1Aura.setY(this.player.y + 80); }
+      if (this.p1Shield) { this.p1Shield.setX(this.player.x); this.p1Shield.setY(this.player.y + 80); }
     }
     if (this.p2Shadow && this.enemy) {
       this.p2Shadow.setX(this.enemy.x);
       const yDist = Math.max(0, this.p2StartPos.y - this.enemy.y);
       this.p2Shadow.setAlpha(Math.max(0.1, 0.5 - (yDist / 200)));
       this.p2Shadow.setScale(Math.max(0.2, 1 - (yDist / 200)));
+      
+      if (this.p2Aura) { this.p2Aura.setX(this.enemy.x); this.p2Aura.setY(this.enemy.y + 80); }
+      if (this.p2Shield) { this.p2Shield.setX(this.enemy.x); this.p2Shield.setY(this.enemy.y + 80); }
     }
 
     if (this.gameState.gameMode === "training") {
@@ -541,6 +636,11 @@ export default class BattleScene extends Phaser.Scene {
       .setScale(3) // Scaled down from 4 to fit screen better (Texture height 128 * 3 = 384px)
       .setDepth(1);
     this.player.play(`${this.playerData.key}_idle`, true);
+    
+    // Add cool graphical effects to the sprite
+    if (this.player.postFX) {
+        this.player.postFX.addShadow(0, 0, 0.05, 1, 0x000000, 4, 1);
+    }
 
     // Shadows (offset +180 relative to sprite center Y to land at Y=460)
     this.p1Shadow = this.add
@@ -582,6 +682,12 @@ export default class BattleScene extends Phaser.Scene {
       .setFlipX(true)
       .setDepth(1);
     this.enemy.play(`${this.enemyData.key}_idle`, true);
+    
+    // Add cool graphical effects to the sprite
+    if (this.enemy.postFX) {
+        this.enemy.postFX.addShadow(0, 0, 0.05, 1, 0x000000, 4, 1);
+    }
+    
     this.p2Shadow = this.add
       .ellipse(
         this.p2StartPos.x,
@@ -612,6 +718,59 @@ export default class BattleScene extends Phaser.Scene {
     this.p2Shield.setStrokeStyle(4, 0xe74c3c, 0.8);
   }
 
+  performJump(isP: boolean) {
+    const player = isP ? this.player : this.enemy;
+    if (!player || !player.active) return;
+    
+    // Scale up slightly during jump to give depth perspective
+    const startY = isP ? this.p1StartPos.y : this.p2StartPos.y;
+    const startScale = 3;
+    const jumpScale = 3.6;
+    const jumpHeight = -250; // Jump up (y decreases)
+
+    if (isP) this.isP1Jumping = true;
+    else this.isP2Jumping = true;
+
+    // Optional flip for acrobatic effect
+    const direction = player.flipX ? -1 : 1;
+    
+    // Jump Up
+    this.tweens.add({
+      targets: player,
+      y: startY + jumpHeight,
+      scaleX: jumpScale * (player.scaleX > 0 ? 1 : -1),
+      scaleY: jumpScale,
+      angle: isP ? -15 : 15,
+      duration: 350,
+      ease: "Quad.easeOut",
+      onComplete: () => {
+        if (!this.scene.isActive()) return;
+        
+        // Fall Down
+        this.tweens.add({
+          targets: player,
+          y: startY,
+          scaleX: startScale * (player.scaleX > 0 ? 1 : -1),
+          scaleY: startScale,
+          angle: 0,
+          duration: 250,
+          ease: "Quad.easeIn",
+          onComplete: () => {
+            if (isP) this.isP1Jumping = false;
+            else this.isP2Jumping = false;
+            
+            // Landing dust
+            this.createImpactEffect(player.x, startY + 80, 0xecf0f1, "block");
+            
+            if (this.cache.audio.exists("sfx_step")) {
+                this.sound.play("sfx_step", { volume: 0.5 });
+            }
+          }
+        });
+      }
+    });
+  }
+
   createInputs() {
     if (!this.input.keyboard) return;
 
@@ -619,16 +778,26 @@ export default class BattleScene extends Phaser.Scene {
     this.input.keyboard.removeAllKeys();
 
     this.keys = this.input.keyboard.addKeys({
-      p1_attack: Phaser.Input.Keyboard.KeyCodes.W,
-      p1_kiblast: Phaser.Input.Keyboard.KeyCodes.E,
-      p1_defend: Phaser.Input.Keyboard.KeyCodes.S,
-      p1_special: Phaser.Input.Keyboard.KeyCodes.D,
-      p1_transform: Phaser.Input.Keyboard.KeyCodes.A,
-      p2_attack: Phaser.Input.Keyboard.KeyCodes.UP,
-      p2_kiblast: Phaser.Input.Keyboard.KeyCodes.SHIFT,
-      p2_defend: Phaser.Input.Keyboard.KeyCodes.DOWN,
-      p2_special: Phaser.Input.Keyboard.KeyCodes.LEFT,
-      p2_transform: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+      p1_up: Phaser.Input.Keyboard.KeyCodes.W,
+      p1_down: Phaser.Input.Keyboard.KeyCodes.S,
+      p1_left: Phaser.Input.Keyboard.KeyCodes.A,
+      p1_right: Phaser.Input.Keyboard.KeyCodes.D,
+      p1_attack: Phaser.Input.Keyboard.KeyCodes.J,
+      p1_kiblast: Phaser.Input.Keyboard.KeyCodes.K,
+      p1_defend: Phaser.Input.Keyboard.KeyCodes.U,
+      p1_special: Phaser.Input.Keyboard.KeyCodes.L,
+      p1_transform: Phaser.Input.Keyboard.KeyCodes.I,
+      
+      p2_up: Phaser.Input.Keyboard.KeyCodes.UP,
+      p2_down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+      p2_left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+      p2_right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+      p2_attack: Phaser.Input.Keyboard.KeyCodes.NUMPAD_ONE,
+      p2_kiblast: Phaser.Input.Keyboard.KeyCodes.NUMPAD_TWO,
+      p2_defend: Phaser.Input.Keyboard.KeyCodes.NUMPAD_FOUR,
+      p2_special: Phaser.Input.Keyboard.KeyCodes.NUMPAD_THREE,
+      p2_transform: Phaser.Input.Keyboard.KeyCodes.NUMPAD_FIVE,
+
       pause: Phaser.Input.Keyboard.KeyCodes.ESC,
     });
 
@@ -741,83 +910,167 @@ export default class BattleScene extends Phaser.Scene {
       onDown: () => void,
       onUp?: () => void,
     ) => {
-      const btn = this.add
-        .circle(x, y, size, color, alpha)
-        .setInteractive()
-        .setScrollFactor(0)
-        .setDepth(100);
-      const txt = this.add
-        .text(x, y, text, { fontSize: "18px", fontStyle: "bold" })
-        .setOrigin(0.5)
-        .setScrollFactor(0)
-        .setDepth(101);
-      this.mobileControls.push(btn, txt);
+      // Modern Glassy Button Setup
+      const btnGroup = this.add.container(x, y).setScrollFactor(0).setDepth(100);
+      
+      const outerBtn = this.add.circle(0, 0, 42, color, 0.4).setStrokeStyle(3, 0xffffff, 0.5);
+      const innerBtn = this.add.circle(0, 0, 36, 0x000000, 0.3);
+      
+      const txt = this.add.text(0, 0, text, {
+        fontFamily: "Impact, sans-serif",
+        fontSize: "20px",
+        color: "#ffffff",
+        stroke: "#000",
+        strokeThickness: 3
+      }).setOrigin(0.5);
+
+      btnGroup.add([outerBtn, innerBtn, txt]);
+      
+      this.mobileControls.push(btnGroup);
+      if (this.uiContainer) {
+          this.uiContainer.add(btnGroup);
+      }
+
+      // Invisible hit area (larger than the button itself for easier tapping)
+      const hitArea = this.add.circle(0, 0, 55, 0x000000, 0).setInteractive();
+      btnGroup.add(hitArea);
 
       let isPressed = false;
 
-      btn.on("pointerdown", () => {
+      const press = () => {
         isPressed = true;
-        btn.setAlpha(0.8);
+        outerBtn.setAlpha(0.8);
+        outerBtn.setScale(0.9);
+        innerBtn.setScale(0.9);
+        txt.setScale(0.9);
         onDown();
-      });
-
-      btn.on("pointerover", (pointer: Phaser.Input.Pointer) => {
-        if (pointer.isDown) {
-          isPressed = true;
-          btn.setAlpha(0.8);
-          onDown();
-        }
-      });
+      };
 
       const release = () => {
         if (!isPressed) return;
         isPressed = false;
-        btn.setAlpha(alpha);
+        outerBtn.setAlpha(0.4);
+        outerBtn.setScale(1);
+        innerBtn.setScale(1);
+        txt.setScale(1);
         if (onUp) onUp();
       };
 
-      btn.on("pointerup", release);
-      btn.on("pointerout", () => {
-         // Optionally you could cancel the hold, but leaving it pressed unless 'pointerup'
-         // prevents slip-offs. But wait, if they slide off to press something else, it gets stuck!
-         // We must use release on pointerout, but we'll accept the larger size will prevent slips.
-         release(); 
+      hitArea.on("pointerdown", press);
+      hitArea.on("pointerover", (pointer: Phaser.Input.Pointer) => {
+        if (pointer.isDown) press();
       });
+      hitArea.on("pointerup", release);
+      hitArea.on("pointerout", release);
     };
 
-    // Left side (Movement/Defense/Ki)
-    // Left side can just be a big KI button, as the user didn't mention KI in the cross.
-    createBtn(100, 420, "KI", 0x00ffff, () => {
-      this.mobileP1KiBlast = true;
-      this.p1KiBlastBuffer = this.BUFFER_MS;
+    // --- Virtual Joystick ---
+    const joyBaseX = 140;
+    const joyBaseY = 440;
+    
+    const joyContainer = this.add.container(joyBaseX, joyBaseY).setScrollFactor(0).setDepth(100);
+    const joyBase = this.add.circle(0, 0, 75, 0x000000, 0.4).setStrokeStyle(3, 0xffffff, 0.3);
+    const joyThumb = this.add.circle(0, 0, 35, 0xffffff, 0.6).setStrokeStyle(2, 0x000000, 0.5);
+    
+    joyContainer.add([joyBase, joyThumb]);
+    this.mobileControls.push(joyContainer);
+    
+    if (this.uiContainer) {
+        this.uiContainer.add(joyContainer);
+    }
+    
+    // Create large static hit area for the joystick
+    const joyHitArea = this.add.circle(0, 0, 100, 0x000000, 0).setInteractive();
+    joyContainer.add(joyHitArea);
+
+    const getLocalPnt = (pointer: Phaser.Input.Pointer) => {
+        if (!this.uiContainer) return { x: pointer.x, y: pointer.y };
+        return {
+           x: (pointer.x - this.uiContainer.x) / this.uiContainer.scaleX,
+           y: (pointer.y - this.uiContainer.y) / this.uiContainer.scaleY
+        };
+    };
+
+    const handleJoystick = (pointer: Phaser.Input.Pointer) => {
+        if (this.mobileJoystickPointerId !== pointer.id) return;
+        
+        const loc = getLocalPnt(pointer);
+        let dx = loc.x - joyBaseX;
+        let dy = loc.y - joyBaseY;
+        const maxDist = 45;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > maxDist) {
+            dx = (dx / dist) * maxDist;
+            dy = (dy / dist) * maxDist;
+        }
+        
+        joyThumb.setPosition(dx, dy);
+        this.mobileJoystickVector = { x: dx / maxDist, y: dy / maxDist };
+        
+        // Push up for jumping
+        if (this.mobileJoystickVector.y < -0.5) {
+            this.keys.p1_up.isDown = true;
+        } else {
+            this.keys.p1_up.isDown = false;
+        }
+        
+        // Push left/right for movement
+        if (this.mobileJoystickVector.x < -0.2) {
+            this.keys.p1_left.isDown = true;
+            this.keys.p1_right.isDown = false;
+        } else if (this.mobileJoystickVector.x > 0.2) {
+            this.keys.p1_right.isDown = true;
+            this.keys.p1_left.isDown = false;
+        } else {
+            this.keys.p1_left.isDown = false;
+            this.keys.p1_right.isDown = false;
+        }
+    };
+
+    joyHitArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        if (this.mobileJoystickPointerId === null) {
+            this.mobileJoystickPointerId = pointer.id;
+            joyBase.setAlpha(0.7);
+            handleJoystick(pointer);
+        }
     });
 
-    // Right side (Attacks in a cross formation)
-    // Center of the cross around (800, 420)
-    // Top (UP): ATK (Attack)
-    createBtn(800, 340, "ATK", 0xe74c3c, () => {
+    this.input.on('pointermove', handleJoystick);
+
+    const releaseJoystick = (pointer: Phaser.Input.Pointer) => {
+        if (this.mobileJoystickPointerId === pointer.id) {
+            this.mobileJoystickPointerId = null;
+            joyBase.setAlpha(0.4);
+            joyThumb.setPosition(0, 0);
+            this.mobileJoystickVector = { x: 0, y: 0 };
+            this.keys.p1_up.isDown = false;
+            this.keys.p1_left.isDown = false;
+            this.keys.p1_right.isDown = false;
+        }
+    };
+
+    this.input.on('pointerup', releaseJoystick);
+    this.input.on('pointerout', releaseJoystick);
+    // --- End Virtual Joystick ---
+
+    // Right side (Attacks)
+    // ATK (Attack)
+    createBtn(810, 350, "ATK", 0xe74c3c, () => {
       this.mobileP1Attack = true;
       this.p1AttackBuffer = this.BUFFER_MS;
     });
 
-    // Right (RIGHT): DEF (Defend & Charge)
-    createBtn(
-      880,
-      420,
-      "DEF",
-      0x3498db,
-      () => {
-        this.mobileP1Defend = true;
-      },
-      () => {
-        this.mobileP1Defend = false;
-      },
-    );
+    // TRN (Transform)
+    createBtn(720, 440, "TRN", 0x9b59b6, () => {
+      this.mobileP1Transform = true;
+      this.p1TransformBuffer = this.BUFFER_MS;
+    });
 
-    // Bottom (DOWN): SPC (Special)
+    // SPC (Special)
     createBtn(
-      800,
-      500,
+      810,
+      530,
       "SPC",
       0xf1c40f,
       () => {
@@ -829,10 +1082,24 @@ export default class BattleScene extends Phaser.Scene {
       },
     );
 
-    // Left (LEFT): TRN (Transform)
-    createBtn(720, 420, "TRN", 0x9b59b6, () => {
-      this.mobileP1Transform = true;
-      this.p1TransformBuffer = this.BUFFER_MS;
+    // DEF (Defend & Charge)
+    createBtn(
+      900,
+      440,
+      "DEF",
+      0x3498db,
+      () => {
+        this.mobileP1Defend = true;
+      },
+      () => {
+        this.mobileP1Defend = false;
+      },
+    );
+
+    // KI (Ki Blast)
+    createBtn(900, 350, "KI", 0x00ffff, () => {
+      this.mobileP1KiBlast = true;
+      this.p1KiBlastBuffer = this.BUFFER_MS;
     });
 
     // Pause Button (Top Center)
@@ -872,16 +1139,46 @@ export default class BattleScene extends Phaser.Scene {
     return `${baseKey}_${animType}`;
   }
 
+  
+  performWhiffMelee(isPlayer: boolean) {
+    const attacker = isPlayer ? this.player : this.enemy;
+    const attackerData = isPlayer ? this.playerData : this.enemyData;
+    const transLevel = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
+    
+    this.setActionState(isPlayer, true);
+    attacker.play(this.getAnimKey(attackerData.key, transLevel, "attack"));
+
+    this.tweens.add({
+      targets: attacker,
+      x: attacker.x + (attacker.flipX ? -30 : 30),
+      duration: 150,
+      yoyo: true,
+      ease: "Quad.easeOut",
+      onComplete: () => {
+        if (!this.scene.isActive()) return;
+        attacker.play(this.getAnimKey(attackerData.key, transLevel, "idle"));
+        this.setActionState(isPlayer, false);
+      }
+    });
+  }
+
   performAttack(isPlayer: boolean, attackType: "melee" | "ki") {
     if (this.isBattleOver) return;
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
     const attackerData = isPlayer ? this.playerData : this.enemyData;
+
+    const dist = Math.abs(attacker.x - target.x);
+    const yDist = Math.abs((attacker.y || 0) - (target.y || 0));
+    if (attackType === "melee" && (dist > 250 || yDist > 100)) {
+        this.performWhiffMelee(isPlayer);
+        return;
+    }
 
     this.setActionState(isPlayer, true);
 
@@ -1126,8 +1423,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -1140,7 +1437,7 @@ export default class BattleScene extends Phaser.Scene {
       this.time.delayedCall(100, () => {
         if (!this.scene.isActive()) return;
         attacker.setAlpha(1);
-        attacker.x = target.x + (isPlayer ? -40 : 40);
+        attacker.x = target.x + (attacker.x < target.x ? -40 : 40);
         attacker.y = target.y + 120 - (isComboFinisher ? 50 : 0); // Attack from above on finisher
         attacker.play(this.getAnimKey("goku", transLevel, "attack"));
 
@@ -1161,7 +1458,7 @@ export default class BattleScene extends Phaser.Scene {
 
         this.tweens.add({
           targets: target,
-          x: target.x + (isPlayer ? 50 : -50),
+          x: target.x + (attacker.x < target.x ? 50 : -50),
           duration: 100,
           yoyo: true,
         });
@@ -1229,8 +1526,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -1239,7 +1536,7 @@ export default class BattleScene extends Phaser.Scene {
       // Vegeta Melee: Rapid aggressive punches
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 100,
         onComplete: () => {
           if (!this.scene.isActive()) return;
@@ -1255,7 +1552,7 @@ export default class BattleScene extends Phaser.Scene {
                 !isPlayer,
                 Math.floor(5 * this.getDamageMultiplier(transLevel)),
               );
-              target.x += isPlayer ? 5 : -5; // Push back slightly
+              target.x += attacker.x < target.x ? 5 : -5; // Push back slightly
             });
           }
           this.time.delayedCall(hits * 100 + 100, () => {
@@ -1321,8 +1618,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -1334,7 +1631,7 @@ export default class BattleScene extends Phaser.Scene {
       // Dash forward
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 100,
         ease: "Power2",
         onComplete: () => {
@@ -1455,8 +1752,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -1468,7 +1765,7 @@ export default class BattleScene extends Phaser.Scene {
       // Dash forward
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 100,
         ease: "Power2",
         onComplete: () => {
@@ -1590,8 +1887,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -1603,7 +1900,7 @@ export default class BattleScene extends Phaser.Scene {
       // Dash forward
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 100,
         ease: "Power2",
         onComplete: () => {
@@ -1704,8 +2001,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
 
     if (attackType === "melee") {
@@ -1714,7 +2011,7 @@ export default class BattleScene extends Phaser.Scene {
 
         this.tweens.add({
             targets: attacker,
-            x: target.x + (isPlayer ? -40 : 40),
+            x: target.x + (attacker.x < target.x ? -40 : 40),
             duration: 100,
             onComplete: () => {
                 if (!this.scene.isActive()) return;
@@ -1725,7 +2022,7 @@ export default class BattleScene extends Phaser.Scene {
                     this.time.delayedCall(i * 100, () => {
                         this.createImpactEffect(target.x, target.y + 120, 0xffffff);
                         this.takeDamage(!isPlayer, Math.floor((isComboFinisher ? 8 : 12) * this.getDamageMultiplier(transLevel)));
-                        target.x += isPlayer ? 5 : -5;
+                        target.x += attacker.x < target.x ? 5 : -5;
                         this.cameras.main.shake(100, 0.01);
                     });
                 }
@@ -1770,7 +2067,7 @@ export default class BattleScene extends Phaser.Scene {
                     if (isComboFinisher) {
                         this.tweens.add({
                            targets: target,
-                           x: target.x + (isPlayer ? -20 : 20),
+                           x: target.x + (attacker.x < target.x ? -20 : 20),
                            duration: 100,
                            yoyo: true
                         });
@@ -1795,7 +2092,7 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
     const transLevel = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
 
     if (attackType === "melee") {
@@ -1803,7 +2100,7 @@ export default class BattleScene extends Phaser.Scene {
       
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 100,
         onComplete: () => {
           if (!this.scene.isActive()) return;
@@ -1895,8 +2192,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -1908,7 +2205,7 @@ export default class BattleScene extends Phaser.Scene {
       // Spawn clone
       const clone = this.add
         .sprite(
-          target.x + (isPlayer ? 40 : -40),
+          target.x + (attacker.x < target.x ? 40 : -40),
           target.y + 120,
           attacker.texture.key,
           attacker.frame.name,
@@ -1923,7 +2220,7 @@ export default class BattleScene extends Phaser.Scene {
 
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 150,
         onComplete: () => {
           if (!this.scene.isActive()) return;
@@ -1967,7 +2264,7 @@ export default class BattleScene extends Phaser.Scene {
 
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 200,
         ease: "Power2",
         onUpdate: () => {
@@ -1992,7 +2289,7 @@ export default class BattleScene extends Phaser.Scene {
           this.cameras.main.shake(150, 0.02);
           this.tweens.add({
             targets: target,
-            x: target.x + (isPlayer ? 80 : -80),
+            x: target.x + (attacker.x < target.x ? 80 : -80),
             duration: 150,
             yoyo: true,
           });
@@ -2022,8 +2319,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -2082,7 +2379,7 @@ export default class BattleScene extends Phaser.Scene {
             -10,
             0,
             10,
-            isPlayer ? 30 : -30,
+            attacker.x < target.x ? 30 : -30,
             0,
             0xff4500,
           )
@@ -2124,8 +2421,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -2135,7 +2432,7 @@ export default class BattleScene extends Phaser.Scene {
       attacker.play(this.getAnimKey("batman", transLevel, "attack"));
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         y: target.y + 20,
         rotation: isPlayer ? 0.5 : -0.5,
         duration: 150,
@@ -2192,7 +2489,7 @@ export default class BattleScene extends Phaser.Scene {
             -5,
             0,
             5,
-            isPlayer ? 15 : -15,
+            attacker.x < target.x ? 15 : -15,
             0,
             0x333333,
           )
@@ -2238,8 +2535,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -2254,7 +2551,7 @@ export default class BattleScene extends Phaser.Scene {
       dashLine.lineBetween(
         attacker.x,
         attacker.y + 120,
-        target.x + (isPlayer ? 40 : -40),
+        target.x + (attacker.x < target.x ? 40 : -40),
         target.y + 120,
       );
       this.tweens.add({
@@ -2266,7 +2563,7 @@ export default class BattleScene extends Phaser.Scene {
 
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? 40 : -40),
+        x: target.x + (attacker.x < target.x ? 40 : -40),
         duration: 100, // Dash through
         onComplete: () => {
           if (!this.scene.isActive()) return;
@@ -2372,8 +2669,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -2382,7 +2679,7 @@ export default class BattleScene extends Phaser.Scene {
       // MiniPekka Melee: Heavy sword slash
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -30 : 30),
+        x: target.x + (attacker.x < target.x ? -30 : 30),
         duration: 150,
         onComplete: () => {
           if (!this.scene.isActive()) return;
@@ -2485,8 +2782,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -2495,7 +2792,7 @@ export default class BattleScene extends Phaser.Scene {
       // Optimus Melee: Heavy punch
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 200,
         ease: "Power2",
         onComplete: () => {
@@ -2576,8 +2873,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -2680,8 +2977,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -2791,8 +3088,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -2801,7 +3098,7 @@ export default class BattleScene extends Phaser.Scene {
       // Madara Melee: Gunbai swing or Susanoo sword
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 150,
         ease: "Power2",
         onComplete: () => {
@@ -2883,8 +3180,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -2893,7 +3190,7 @@ export default class BattleScene extends Phaser.Scene {
       // Gohan Melee: High kick
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -30 : 30),
+        x: target.x + (attacker.x < target.x ? -30 : 30),
         y: target.y - 30,
         duration: 150,
         ease: "Sine.easeOut",
@@ -2976,8 +3273,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -2986,7 +3283,7 @@ export default class BattleScene extends Phaser.Scene {
       attacker.play(this.getAnimKey("leonardo", transLevel, "attack"));
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 150,
         onComplete: () => {
           if (!this.scene.isActive()) return;
@@ -3083,8 +3380,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -3094,12 +3391,12 @@ export default class BattleScene extends Phaser.Scene {
       attacker.play(this.getAnimKey("saitama", transLevel, "attack"));
       
       // Dash effect
-      const dashGlow = this.add.rectangle(attacker.x - (isPlayer ? -20 : 20), attacker.y + 100, 80, 10, 0xffffff, 0.5).setDepth(2);
+      const dashGlow = this.add.rectangle(attacker.x - (attacker.x < target.x ? -20 : 20), attacker.y + 100, 80, 10, 0xffffff, 0.5).setDepth(2);
       this.tweens.add({ targets: dashGlow, scaleX: 3, alpha: 0, duration: 200, onComplete: () => dashGlow.destroy() });
 
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -45 : 45),
+        x: target.x + (attacker.x < target.x ? -45 : 45),
         duration: 50, // SUPER FAST
         ease: "Expo.easeOut",
         onComplete: () => {
@@ -3157,7 +3454,7 @@ export default class BattleScene extends Phaser.Scene {
       attacker.play(this.getAnimKey("saitama", transLevel, "attack"));
 
       // Small dash forward
-      this.tweens.add({ targets: attacker, x: attacker.x + (isPlayer ? 20 : -20), duration: 50, yoyo: true });
+      this.tweens.add({ targets: attacker, x: attacker.x + (attacker.x < target.x ? 20 : -20), duration: 50, yoyo: true });
       
       this.time.delayedCall(50, () => {
         if (!this.scene.isActive()) return;
@@ -3194,7 +3491,7 @@ export default class BattleScene extends Phaser.Scene {
 
               this.tweens.add({
                 targets: [blast, core, ...lines],
-                x: target.x + (isPlayer ? 200 : -200),
+                x: target.x + (attacker.x < target.x ? 200 : -200),
                 scale: i === blastsCount - 1 ? 6 : 3, // Last one is HUGE
                 alpha: 0,
                 duration: 200,
@@ -3237,8 +3534,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -3247,7 +3544,7 @@ export default class BattleScene extends Phaser.Scene {
       attacker.play(this.getAnimKey("frieren", transLevel, "attack"));
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -40 : 40),
+        x: target.x + (attacker.x < target.x ? -40 : 40),
         duration: 150,
         onComplete: () => {
           if (!this.scene.isActive()) return;
@@ -3325,8 +3622,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -3335,7 +3632,7 @@ export default class BattleScene extends Phaser.Scene {
       attacker.play(this.getAnimKey("chapolim", transLevel, "attack"));
       this.tweens.add({
         targets: attacker,
-        x: target.x + (isPlayer ? -30 : 30),
+        x: target.x + (attacker.x < target.x ? -30 : 30),
         y: target.y - 30,
         duration: 150,
         onComplete: () => {
@@ -3431,8 +3728,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -3444,7 +3741,7 @@ export default class BattleScene extends Phaser.Scene {
       this.time.delayedCall(100, () => {
         if (!this.scene.isActive()) return;
         attacker.setAlpha(1);
-        attacker.x = target.x + (isPlayer ? -30 : 30);
+        attacker.x = target.x + (attacker.x < target.x ? -30 : 30);
         attacker.play(this.getAnimKey("gojo", transLevel, "attack"));
 
         if (this.cache.audio.exists("sfx_attack"))
@@ -3517,8 +3814,8 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -3706,7 +4003,7 @@ export default class BattleScene extends Phaser.Scene {
           );
           this.tweens.add({
             targets: attacker,
-            x: startX + (isPlayer ? 30 : -30), // Forward lunge to throw
+            x: startX + (attacker.x < target.x ? 30 : -30), // Forward lunge to throw
             y: startY,
             rotation: -rotDir * 0.8,
             scaleX: 3.2,
@@ -4558,8 +4855,9 @@ export default class BattleScene extends Phaser.Scene {
   // Helper to get EXACT hand position based on sprite flipping
   private getHandPosition(isPlayer: boolean): { x: number; y: number } {
     const sprite = isPlayer ? this.player : this.enemy;
+    const target = isPlayer ? this.enemy : this.player;
     // Default for all characters
-    const xOffset = isPlayer ? 45 : -45; 
+    const xOffset = sprite.x < target.x ? 45 : -45; 
     const yOffset = 120; // Lowered from 84 so it aligns with hands visually rather than mouth
     return { x: sprite.x + xOffset, y: sprite.y + yOffset };
   }
@@ -5137,11 +5435,11 @@ export default class BattleScene extends Phaser.Scene {
   private specialSupremeHeadbutt(isP: boolean) {
     const attacker = isP ? this.player : this.enemy;
     const target = isP ? this.enemy : this.player;
-    const startX = isP ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isP ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = isP ? this.player.x : this.enemy.x;
+    const startY = isP ? this.player.y : this.enemy.y;
     const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
     const dmg = Math.floor(130 * this.getDamageMultiplier(transLevel));
-    const targetStartX = isP ? this.p2StartPos.x : this.p1StartPos.x;
+    const targetStartX = isP ? this.enemy.x : this.player.x;
 
     this.log("SUPREME HEADBUTT!");
     
@@ -5177,7 +5475,7 @@ export default class BattleScene extends Phaser.Scene {
         // DASH! (Almost instantaneous)
         this.tweens.add({
           targets: attacker,
-          x: target.x + (isP ? 30 : -30),
+          x: target.x + (attacker.x < target.x ? 30 : -30),
           duration: 60,
           ease: "Linear",
           onComplete: () => {
@@ -5197,7 +5495,7 @@ export default class BattleScene extends Phaser.Scene {
             // PHYSICS-BASED KNOCKBACK (Intense)
             this.tweens.add({
               targets: target,
-              x: target.x + (isP ? 400 : -400),
+              x: target.x + (attacker.x < target.x ? 400 : -400),
               y: target.y - 100,
               angle: isP ? 20 : -20,
               duration: 500,
@@ -5235,10 +5533,10 @@ export default class BattleScene extends Phaser.Scene {
   private specialSeriousPunch(isP: boolean) {
     const attacker = isP ? this.player : this.enemy;
     const target = isP ? this.enemy : this.player;
-    const startX = isP ? this.p1StartPos.x : this.p2StartPos.x;
+    const startX = isP ? this.player.x : this.enemy.x;
     const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
     const dmg = Math.floor(110 * this.getDamageMultiplier(transLevel));
-    const targetStartX = isP ? this.p2StartPos.x : this.p1StartPos.x;
+    const targetStartX = isP ? this.enemy.x : this.player.x;
 
     this.log("SERIOUS PUNCH!");
     
@@ -5264,7 +5562,7 @@ export default class BattleScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: attacker,
-      x: target.x + (isP ? -120 : 120),
+      x: target.x + (attacker.x < target.x ? -120 : 120),
       duration: 1200,
       ease: "Power1.easeInOut",
       onComplete: () => {
@@ -5301,7 +5599,7 @@ export default class BattleScene extends Phaser.Scene {
                const p = this.add.rectangle(target.x, target.y + 120, Phaser.Math.Between(4, 10), Phaser.Math.Between(4, 10), Math.random() > 0.5 ? 0xffffff : 0xffaa00).setDepth(20);
                this.tweens.add({
                   targets: p,
-                  x: p.x + (isP ? 600 : -600) + Phaser.Math.Between(-150, 150),
+                  x: p.x + (attacker.x < target.x ? 600 : -600) + Phaser.Math.Between(-150, 150),
                   y: p.y + Phaser.Math.Between(-400, 400),
                   angle: Phaser.Math.Between(0, 360),
                   alpha: 0,
@@ -5316,7 +5614,7 @@ export default class BattleScene extends Phaser.Scene {
             // Horizontal knockback that flies off screen briefly, then bounces back
             this.tweens.add({
               targets: target,
-              x: target.x + (isP ? 600 : -600),
+              x: target.x + (attacker.x < target.x ? 600 : -600),
               angle: isP ? 45 : -45,
               alpha: 0,
               duration: 300,
@@ -5579,7 +5877,7 @@ export default class BattleScene extends Phaser.Scene {
   // 5. ZOLTRAAK (MASSIVE MAGIC REMASTER)
   private specialZoltraak(isP: boolean, isS: boolean) {
     const hand = this.getHandPosition(isP);
-    const circleOffset = isP ? 40 : -40;
+    const circleOffset = attacker.x < target.x ? 40 : -40;
     const transLevel = isP
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
@@ -5824,8 +6122,8 @@ export default class BattleScene extends Phaser.Scene {
   // 7. PANCAKE (JUMP ATTACK - Uses specific tweens)
   private specialPancake(isP: boolean, isS: boolean) {
     const attacker = isP ? this.player : this.enemy;
-    const startX = isP ? this.p1StartPos.x : this.p2StartPos.x;
-    const startY = isP ? this.p1StartPos.y : this.p2StartPos.y;
+    const startX = isP ? this.player.x : this.enemy.x;
+    const startY = isP ? this.player.y : this.enemy.y;
     const target = isP ? this.enemy : this.player;
     const transLevel = isP
       ? this.playerTransformLevel
@@ -6118,7 +6416,7 @@ export default class BattleScene extends Phaser.Scene {
              
              this.tweens.add({
                  targets: [target, webLine],
-                 x: attacker.x + (isPlayer ? 50 : -50),
+                 x: attacker.x + (attacker.x < target.x ? 50 : -50),
                  width: 50,
                  duration: 200,
                  ease: "Back.easeIn",
@@ -6161,8 +6459,8 @@ export default class BattleScene extends Phaser.Scene {
   private specialMaximumSpider(isPlayer: boolean) {
       const attacker = isPlayer ? this.player : this.enemy;
       const target = isPlayer ? this.enemy : this.player;
-      const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
-      const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+      const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+      const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
       const transLevel = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
       const isIron = transLevel > 0;
       
@@ -6582,7 +6880,7 @@ export default class BattleScene extends Phaser.Scene {
 
     // Ghost Goku (Visual representation)
     const ghost = this.add
-      .sprite(attacker.x + (isP ? -40 : 40), attacker.y - 60, "goku_ssj")
+      .sprite(attacker.x + (attacker.x < target.x ? -40 : 40), attacker.y - 60, "goku_ssj")
       .setOrigin(0.5, 0.5)
       .setAlpha(0)
       .setScale(3.5)
@@ -7001,7 +7299,7 @@ export default class BattleScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: [attacker, dashGlow],
-      x: target.x + (isP ? -80 : 80),
+      x: target.x + (attacker.x < target.x ? -80 : 80),
       duration: 150,
       ease: "Cubic.easeIn",
       onComplete: () => {
@@ -7726,7 +8024,7 @@ export default class BattleScene extends Phaser.Scene {
     mallet.fillStyle(0xffff00, 1);
     mallet.fillRect(-5, 30, 10, 80); // Handle
 
-    const startX = attacker.x + (isP ? 50 : -50);
+    const startX = attacker.x + (attacker.x < target.x ? 50 : -50);
     const startY = attacker.y - 100;
     mallet.setPosition(startX, startY);
     mallet.rotation = isP ? -Math.PI / 4 : Math.PI / 4;
@@ -7995,7 +8293,7 @@ export default class BattleScene extends Phaser.Scene {
         // 2. Dash towards enemy holding the Rasengan
         this.tweens.add({
           targets: attacker,
-          x: target.x + (isP ? -40 : 40), // Get right up to the target
+          x: target.x + (attacker.x < target.x ? -40 : 40), // Get right up to the target
           duration: 200,
           ease: "Power2",
           onUpdate: () => {
@@ -8065,7 +8363,7 @@ export default class BattleScene extends Phaser.Scene {
             // Target knockback
             this.tweens.add({
               targets: target,
-              x: target.x + (isP ? 150 : -150),
+              x: target.x + (attacker.x < target.x ? 150 : -150),
               duration: 250,
               yoyo: true,
               ease: "Sine.easeOut",
@@ -8982,22 +9280,22 @@ export default class BattleScene extends Phaser.Scene {
 
     // Combine Red and Blue
     const blueGlow = this.add
-      .circle(hand.x - (isP ? 40 : -40), hand.y, 40, 0x0000ff)
+      .circle(hand.x - (attacker.x < target.x ? 40 : -40), hand.y, 40, 0x0000ff)
       .setDepth(9)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setAlpha(0.6);
     const blue = this.add
-      .circle(hand.x - (isP ? 40 : -40), hand.y, 20, 0x0000ff, 1)
+      .circle(hand.x - (attacker.x < target.x ? 40 : -40), hand.y, 20, 0x0000ff, 1)
       .setDepth(10)
       .setBlendMode(Phaser.BlendModes.ADD);
 
     const redGlow = this.add
-      .circle(hand.x + (isP ? 40 : -40), hand.y, 40, 0xff0000)
+      .circle(hand.x + (attacker.x < target.x ? 40 : -40), hand.y, 40, 0xff0000)
       .setDepth(9)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setAlpha(0.6);
     const red = this.add
-      .circle(hand.x + (isP ? 40 : -40), hand.y, 20, 0xff0000, 1)
+      .circle(hand.x + (attacker.x < target.x ? 40 : -40), hand.y, 20, 0xff0000, 1)
       .setDepth(10)
       .setBlendMode(Phaser.BlendModes.ADD);
 
@@ -9784,7 +10082,7 @@ export default class BattleScene extends Phaser.Scene {
     // Dash to target
     this.tweens.add({
       targets: attacker,
-      x: target.x + (isP ? -50 : 50),
+      x: target.x + (attacker.x < target.x ? -50 : 50),
       duration: 150,
       ease: "Power2",
       onComplete: () => {
@@ -9916,7 +10214,7 @@ export default class BattleScene extends Phaser.Scene {
                 // Knockback
                 this.tweens.add({
                   targets: target,
-                  x: target.x + (isP ? 200 : -200),
+                  x: target.x + (attacker.x < target.x ? 200 : -200),
                   duration: 250,
                   yoyo: true,
                   ease: "Sine.easeOut",
@@ -10001,7 +10299,7 @@ export default class BattleScene extends Phaser.Scene {
       for (let i = 0; i < 30; i++) {
         const fireGlow = this.add
           .circle(
-            attacker.x + (isP ? 40 : -40),
+            attacker.x + (attacker.x < target.x ? 40 : -40),
             attacker.y - 60 + i * 8,
             40,
             0xff4500,
@@ -10011,7 +10309,7 @@ export default class BattleScene extends Phaser.Scene {
           .setBlendMode(Phaser.BlendModes.ADD);
         const fire = this.add
           .circle(
-            attacker.x + (isP ? 40 : -40),
+            attacker.x + (attacker.x < target.x ? 40 : -40),
             attacker.y - 60 + i * 8,
             25,
             0xff4500,
@@ -10024,7 +10322,7 @@ export default class BattleScene extends Phaser.Scene {
 
         this.tweens.add({
           targets: [fire, core, fireGlow],
-          x: target.x + (isP ? 200 : -200),
+          x: target.x + (attacker.x < target.x ? 200 : -200),
           y: target.y - 80 + i * 12,
           scale: 4,
           duration: 800,
@@ -10508,6 +10806,9 @@ export default class BattleScene extends Phaser.Scene {
   takeDamage(isP: boolean, dmg: number) {
     if (this.isBattleOver || !this.scene.isActive()) return;
 
+    if (isP) this.isP1Jumping = false;
+    else this.isP2Jumping = false;
+
     const def = isP ? this.playerDefending : this.enemyDefending;
     const target = isP ? this.player : this.enemy;
 
@@ -10742,8 +11043,10 @@ export default class BattleScene extends Phaser.Scene {
     if (this.regenTimer) this.regenTimer.remove();
 
     this.mobileControls.forEach((c) => c.destroy());
+    this.cameras.main.setZoom(1);
+    this.cameras.main.centerOn(480, 270);
 
-    this.add.rectangle(480, 270, 960, 540, 0x000000, 0.8).setDepth(20);
+    const bg = this.add.rectangle(480, 270, 20000, 20000, 0x000000, 0.8).setDepth(20).setScrollFactor(0);
 
     let titleMessage = "DEFEAT...";
     let subtitleMessage = "";
@@ -10808,7 +11111,7 @@ export default class BattleScene extends Phaser.Scene {
         strokeThickness: 8,
       })
       .setOrigin(0.5)
-      .setDepth(21);
+      .setDepth(21).setScrollFactor(0);
 
     this.tweens.add({
       targets: titleText,
@@ -10830,7 +11133,7 @@ export default class BattleScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setDepth(21)
         .setAlpha(0)
-        .setScale(0.5);
+        .setScale(0.5).setScrollFactor(0);
 
       this.tweens.add({
         targets: subText,
@@ -10854,7 +11157,7 @@ export default class BattleScene extends Phaser.Scene {
         })
         .setOrigin(0.5)
         .setDepth(21)
-        .setAlpha(0);
+        .setAlpha(0).setScrollFactor(0);
 
       this.tweens.add({
         targets: coinText,
@@ -10877,7 +11180,7 @@ export default class BattleScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(21)
       .setInteractive({ useHandCursor: true })
-      .setAlpha(0);
+      .setAlpha(0).setScrollFactor(0);
 
     this.tweens.add({
       targets: btn,

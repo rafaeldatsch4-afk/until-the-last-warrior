@@ -1,0 +1,6 @@
+{
+  "firestore": {
+    "database": "ai-studio-remixuntilthelas-d2255fdf-404d-497f-8108-4e7d7840cb53",
+    "rules": "firestore.rules"
+  }
+}

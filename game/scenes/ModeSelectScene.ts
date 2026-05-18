@@ -26,6 +26,13 @@ export default class ModeSelectScene extends Phaser.Scene {
     const bg = this.add.graphics();
     bg.fillGradientStyle(0x0f0c29, 0x302b63, 0x0f0c29, 0x24243e, 1);
     bg.fillRect(0, 0, 960, 540);
+    
+    // Add postFX to main camera
+    if (this.cameras.main.postFX) {
+        this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
+        const cm = this.cameras.main.postFX.addColorMatrix();
+        // saturation removed
+    }
 
     // Animated grid or particles in background
     for (let i = 0; i < 20; i++) {

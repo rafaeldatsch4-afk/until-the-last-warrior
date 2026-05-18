@@ -9,6 +9,53 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, getDoc, deleteDoc, increment, arrayUnion } from 'firebase/firestore';
 
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 export const AuthButton: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
@@ -39,6 +86,7 @@ export const AuthButton: React.FC = () => {
       const userRef = doc(db, 'users', u.uid);
 
       try {
+        await u.getIdToken(true);
         const updateData: any = {
            matches: increment(1)
         };
@@ -84,6 +132,7 @@ export const AuthButton: React.FC = () => {
         }));
       } catch (err) {
         console.error("Erro ao salvar estatísticas:", err);
+        handleFirestoreError(err, OperationType.WRITE, `users/${u.uid}`);
       }
     };
     window.addEventListener('battle-ended', handleBattleEnded);
@@ -91,8 +140,9 @@ export const AuthButton: React.FC = () => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
+        const userRef = doc(db, 'users', u.uid);
         try {
-          const userRef = doc(db, 'users', u.uid);
+          await u.getIdToken(true);
           const docSnap = await getDoc(userRef);
           if (docSnap.exists()) {
              const data = docSnap.data();
@@ -109,9 +159,30 @@ export const AuthButton: React.FC = () => {
              setStats({ matches: 0, wins: 0, losses: 0, achievements: [] });
           }
         } catch (err: any) {
-          if (err.code !== 'permission-denied') {
-            console.error("Erro ao atualizar lastLogin:", err);
-          }
+          // Retry automatically after a short delay to account for token propagation latency
+          setTimeout(async () => {
+             try {
+                await u.getIdToken(true);
+                const retrySnap = await getDoc(userRef);
+                if (retrySnap.exists()) {
+                   const data = retrySnap.data();
+                   setDbUsername(data?.username || u.email?.split('@')[0]);
+                   setStats({
+                     matches: data?.matches || 0,
+                     wins: data?.wins || 0,
+                     losses: data?.losses || 0,
+                     achievements: data?.achievements || []
+                   });
+                   await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
+                } else {
+                   setDbUsername(u.email?.split('@')[0] || '');
+                   setStats({ matches: 0, wins: 0, losses: 0, achievements: [] });
+                }
+             } catch (retryErr: any) {
+                console.error("Erro ao atualizar lastLogin:", retryErr);
+                handleFirestoreError(retryErr, OperationType.GET, `users/${u.uid}`);
+             }
+          }, 3000);
           setDbUsername(u.email?.split('@')[0] || '');
         }
       } else {
@@ -153,11 +224,16 @@ export const AuthButton: React.FC = () => {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, 'users', cred.user.uid), {
-          username: username,
-          createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp(),
-        });
+        try {
+          await cred.user.getIdToken(true);
+          await setDoc(doc(db, 'users', cred.user.uid), {
+            username: username,
+            createdAt: serverTimestamp(),
+            lastLogin: serverTimestamp(),
+          });
+        } catch (dbErr: any) {
+          handleFirestoreError(dbErr, OperationType.CREATE, `users/${cred.user.uid}`);
+        }
       }
       setShowModal(false);
       setUsername('');
@@ -189,8 +265,12 @@ export const AuthButton: React.FC = () => {
 
     setLoading(true);
     try {
-      // Deletar doc do firestore
-      await deleteDoc(doc(db, 'users', user.uid));
+      try {
+        // Deletar doc do firestore
+        await deleteDoc(doc(db, 'users', user.uid));
+      } catch (dbErr: any) {
+        handleFirestoreError(dbErr, OperationType.DELETE, `users/${user.uid}`);
+      }
       // Deletar auth
       await deleteUser(user);
       setShowModal(false);
@@ -210,7 +290,7 @@ export const AuthButton: React.FC = () => {
   return (
     <>
       <div 
-        className="absolute top-4 left-4 z-50"
+        className="absolute top-6 left-6 z-50"
         onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onMouseDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
@@ -218,16 +298,17 @@ export const AuthButton: React.FC = () => {
       >
         <button
           onClick={() => setShowModal(true)}
-          className="bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur transition-all flex items-center justify-center border-2 border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]"
-          title={user ? "Minha Conta" : "Login / Criar Conta"}
+          className="group relative flex items-center justify-center w-14 h-14 bg-gradient-to-b from-gray-800 to-black rounded-full border-2 border-yellow-500/80 shadow-[0_0_15px_rgba(234,179,8,0.4)] hover:shadow-[0_0_25px_rgba(234,179,8,0.8)] hover:scale-105 transition-all duration-300"
+          title={user ? "Minha Conta / Perfil" : "Acessar Conta"}
+          aria-label={user ? "Minha Conta" : "Acessar Conta"}
         >
           {user ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-yellow-400">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-yellow-400 group-hover:text-yellow-300">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
           ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 text-gray-300 group-hover:text-white">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
@@ -237,104 +318,189 @@ export const AuthButton: React.FC = () => {
 
       {showModal && (
         <div 
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6"
           onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
           onMouseDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
           onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
           onTouchStart={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
         >
-          <div className="bg-gray-900 border-2 border-yellow-500 rounded-xl p-6 w-full max-w-sm relative text-white shadow-[0_0_20px_rgba(234,179,8,0.3)]">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" 
+            onClick={() => setShowModal(false)}
+          ></div>
+
+          {/* Modal Content */}
+          <div className="relative w-full max-w-md bg-gradient-to-b from-gray-900 to-black border-2 border-yellow-500/80 rounded-2xl shadow-[0_0_40px_rgba(234,179,8,0.3)] text-white overflow-hidden animate-in fade-in zoom-in duration-300">
+            {/* Header decoration */}
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-80"></div>
+            
             <button 
               onClick={() => setShowModal(false)}
-              className="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl font-bold"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+              aria-label="Fechar"
             >
-              &times;
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <path d="M18 6L6 18M6 6l12 12"></path>
+              </svg>
             </button>
             
+            <div className="p-6 sm:p-8">
             {user ? (
-              <div className="text-center">
-                <h2 className="text-2xl font-black mb-2 text-yellow-400">CONTA</h2>
-                <div className="bg-black/50 p-4 rounded mb-6">
-                  <p className="text-gray-300 text-sm mb-1 text-center">Logado como:</p>
-                  <p className="font-bold text-xl drop-shadow-md text-center">{dbUsername}</p>
-                  
-                  <div className="mt-4 grid grid-cols-3 gap-2 text-center border-t border-gray-700 pt-4">
-                     <div>
-                       <div className="text-gray-400 text-xs uppercase font-bold">Partidas</div>
-                       <div className="font-bold text-lg">{stats.matches}</div>
-                     </div>
-                     <div>
-                       <div className="text-gray-400 text-xs uppercase font-bold text-green-500">Vitórias</div>
-                       <div className="font-bold text-lg text-green-500">{stats.wins}</div>
-                     </div>
-                     <div>
-                       <div className="text-gray-400 text-xs uppercase font-bold text-red-500">Derrotas</div>
-                       <div className="font-bold text-lg text-red-500">{stats.losses}</div>
-                     </div>
+              <div className="flex flex-col h-full">
+                <div className="text-center mb-6">
+                  <h2 id="modal-title" className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 uppercase tracking-wider drop-shadow-sm">CARTÃO DE JOGADOR</h2>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 -mr-1">
+                  <div className="bg-gray-800/50 rounded-xl p-5 mb-5 border border-gray-700/50 shadow-inner">
+                    <div className="flex items-center gap-4 mb-5 pb-5 border-b border-gray-700/50">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-300 border-2 border-yellow-400 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.4)]">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 drop-shadow-md">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Combatente</p>
+                        <p className="font-black text-2xl text-white tracking-wide truncate max-w-[200px]" title={dbUsername}>{dbUsername}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                       <div className="bg-black/40 rounded-lg p-2 border border-gray-700/50">
+                         <div className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">Lutas</div>
+                         <div className="font-black text-xl text-blue-400">{stats.matches}</div>
+                       </div>
+                       <div className="bg-black/40 rounded-lg p-2 border border-green-900/30">
+                         <div className="text-green-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Vitórias</div>
+                         <div className="font-black text-xl text-green-400">{stats.wins}</div>
+                       </div>
+                       <div className="bg-black/40 rounded-lg p-2 border border-red-900/30">
+                         <div className="text-red-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Derrotas</div>
+                         <div className="font-black text-xl text-red-400">{stats.losses}</div>
+                       </div>
+                    </div>
                   </div>
 
-                  <div className="mt-4 border-t border-gray-700 pt-4">
-                     <div className="text-gray-400 text-xs text-center mb-2 font-bold uppercase">Conquistas</div>
-                     <div className="flex flex-wrap gap-2 justify-center max-h-32 overflow-y-auto custom-scrollbar">
+                  <div className="mb-6">
+                     <div className="flex items-center gap-2 mb-3">
+                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-yellow-500">
+                         <circle cx="12" cy="8" r="7"></circle>
+                         <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                       </svg>
+                       <h3 className="text-gray-300 text-sm font-bold uppercase tracking-widest">Sala de Troféus</h3>
+                     </div>
+                     <div className="bg-black/30 rounded-xl p-4 border border-gray-800 h-32 overflow-y-auto custom-scrollbar">
                         {stats.achievements.length > 0 ? (
-                           stats.achievements.map((ach, idx) => (
-                              <span key={idx} className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 text-[10px] uppercase font-bold px-2 py-1 rounded whitespace-nowrap">
-                                 🏆 {ach}
-                              </span>
-                           ))
+                           <div className="flex flex-col gap-2">
+                             {stats.achievements.map((ach, idx) => (
+                                <div key={idx} className="flex items-center gap-3 bg-gradient-to-r from-yellow-900/40 to-transparent border-l-2 border-yellow-500 px-3 py-2 rounded-r">
+                                   <span className="text-xl">🏆</span>
+                                   <span className="text-yellow-100 text-xs font-bold uppercase tracking-wide">{ach}</span>
+                                </div>
+                             ))}
+                           </div>
                         ) : (
-                           <span className="text-gray-500 text-xs italic">Nenhuma conquista ainda.</span>
+                           <div className="flex flex-col items-center justify-center h-full text-center opacity-50">
+                             <span className="text-3xl mb-2">🏅</span>
+                             <span className="text-gray-400 text-xs font-medium">Continue lutando para desbloquear conquistas.</span>
+                           </div>
                         )}
                      </div>
                   </div>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded uppercase transition-colors mb-2"
-                >
-                  Sair da Conta
-                </button>
-                <button
-                  onClick={handleDeleteAccount}
-                  disabled={loading}
-                  className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded uppercase transition-colors disabled:opacity-50"
-                >
-                  {loading ? 'Excluindo...' : 'Excluir Conta'}
-                </button>
+
+                <div className="mt-auto pt-4 border-t border-gray-800 flex flex-col gap-2">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 font-bold py-3 rounded-lg uppercase tracking-wider transition-all"
+                  >
+                    Desconectar
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={loading}
+                    className="w-full bg-transparent hover:bg-red-950 text-red-500 hover:text-red-400 border border-transparent hover:border-red-900/50 font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition-all disabled:opacity-50 mt-2"
+                  >
+                    {loading ? 'Processando...' : 'Excluir Conta Permanentemente'}
+                  </button>
+                </div>
               </div>
             ) : (
-              <div>
-                <h2 className="text-2xl font-black mb-6 text-center text-yellow-400">
-                  {isLogin ? 'ENTRAR' : 'CRIAR CONTA'}
-                </h2>
+              <div className="flex flex-col">
+                <div className="text-center mb-6">
+                  <h2 id="modal-title" className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 uppercase tracking-wider drop-shadow-sm">
+                    PORTAL DO GUERREIRO
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-2 font-medium tracking-wide uppercase">Identifique-se para salvar o seu progresso</p>
+                </div>
                 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                {/* Tabs */}
+                <div className="flex p-1 bg-gray-800/80 rounded-lg mb-6 border border-gray-700/50">
+                  <button
+                    type="button"
+                    onClick={() => { setIsLogin(true); setError(''); }}
+                    className={`flex-1 py-2 text-sm font-bold uppercase tracking-wider rounded-md transition-all ${isLogin ? 'bg-yellow-500 text-black shadow-md' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                  >
+                    Entrar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setIsLogin(false); setError(''); }}
+                    className={`flex-1 py-2 text-sm font-bold uppercase tracking-wider rounded-md transition-all ${!isLogin ? 'bg-yellow-500 text-black shadow-md' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                  >
+                    Alistar-se
+                  </button>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                   <div>
-                    <label className="block text-xs font-bold text-gray-400 mb-1">NOME DE USUÁRIO</label>
-                    <input
-                      type="text"
-                      className="w-full bg-black/60 border border-gray-600 rounded p-3 text-white focus:border-yellow-500 focus:outline-none placeholder-gray-600 font-bold"
-                      placeholder="Seu nome"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      required
-                    />
+                    <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">Codinome (Min. 3)</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-gray-500">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </div>
+                      <input
+                        type="text"
+                        className="w-full bg-black/40 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/50 focus:outline-none transition-all placeholder-gray-600 font-bold"
+                        placeholder="Nome de guerreiro"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value.replace(/[^A-Za-z0-9]/g, ''))}
+                        required
+                        minLength={3}
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-400 mb-1">SENHA (Mín. 6)</label>
+                    <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">Código Secreto (Min. 6)</label>
                     <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-gray-500">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      </div>
                       <input
                         type={showPassword ? "text" : "password"}
-                        className="w-full bg-black/60 border border-gray-600 rounded p-3 pr-12 text-white focus:border-yellow-500 focus:outline-none placeholder-gray-600 font-bold"
-                        placeholder="Senha"
+                        className="w-full bg-black/40 border border-gray-700 rounded-lg py-3 pl-10 pr-12 text-white focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/50 focus:outline-none transition-all placeholder-gray-600 font-bold"
+                        placeholder="*************"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        minLength={6}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-1 transition-colors"
+                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                       >
                         {showPassword ? (
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -351,30 +517,36 @@ export const AuthButton: React.FC = () => {
                     </div>
                   </div>
                   
-                  {error && <p className="text-red-400 text-sm font-bold bg-red-900/30 p-2 rounded">{error}</p>}
+                  {error && (
+                    <div className="flex items-start gap-2 bg-red-950/50 border-l-2 border-red-500 p-3 rounded text-red-400 text-sm font-medium">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0 mt-0.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <p>{error}</p>
+                    </div>
+                  )}
                   
                   <button
                     type="submit"
                     disabled={loading}
-                    className="mt-2 w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-3 rounded uppercase transition-colors disabled:opacity-50"
+                    className="mt-2 w-full bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 hover:from-yellow-500 hover:via-yellow-400 hover:to-yellow-500 text-black font-black py-3.5 rounded-lg text-lg uppercase tracking-widest shadow-[0_4px_15px_rgba(234,179,8,0.3)] hover:shadow-[0_6px_25px_rgba(234,179,8,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0"
                   >
-                    {loading ? 'Aguarde...' : (isLogin ? 'Entrar' : 'Registrar')}
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5 text-black" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Aguarde...
+                      </span>
+                    ) : (isLogin ? 'Adentrar Arena' : 'Confirmar Alistamento')}
                   </button>
                 </form>
-
-                <div className="mt-6 text-center border-t border-gray-700 pt-4">
-                  <p className="text-sm text-gray-400">
-                    {isLogin ? 'Ainda não tem conta?' : 'Já possui uma conta?'}
-                  </p>
-                  <button
-                    onClick={() => { setIsLogin(!isLogin); setError(''); }}
-                    className="text-yellow-400 hover:text-yellow-300 font-bold mt-1 uppercase text-sm"
-                  >
-                    {isLogin ? 'CRIAR UMA CONTA AQUI' : 'ENTRAR COM SUA CONTA'}
-                  </button>
-                </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       )}

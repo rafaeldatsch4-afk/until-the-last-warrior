@@ -19,18 +19,20 @@ const GameCanvas: React.FC = () => {
 
       const handleResize = () => {
         if (gameRef.current && containerRef.current) {
-          gameRef.current.scale.resize(960, 540);
-          if (gameRef.current.canvas) {
-            gameRef.current.canvas.style.width = `${containerRef.current.clientWidth}px`;
-            gameRef.current.canvas.style.height = `${containerRef.current.clientHeight}px`;
-          }
+          gameRef.current.scale.refresh();
         }
       };
 
+      const resizeObserver = new ResizeObserver(() => {
+        handleResize();
+      });
+      
+      resizeObserver.observe(containerRef.current);
       window.addEventListener('resize', handleResize);
       setTimeout(handleResize, 100); // Initial resize
       
       return () => {
+        resizeObserver.disconnect();
         window.removeEventListener('resize', handleResize);
         if (gameRef.current) {
           if (gameRef.current.sound) {
@@ -49,7 +51,7 @@ const GameCanvas: React.FC = () => {
     <div 
       ref={containerRef} 
       id="game-container" 
-      className="w-full h-full bg-black overflow-hidden flex items-center justify-center touch-none overscroll-none [&>canvas]:!w-full [&>canvas]:!h-full [&>canvas]:!object-contain [&>canvas]:![image-rendering:pixelated]"
+      className="w-full h-full bg-black overflow-hidden flex items-center justify-center touch-none overscroll-none"
     />
   );
 };

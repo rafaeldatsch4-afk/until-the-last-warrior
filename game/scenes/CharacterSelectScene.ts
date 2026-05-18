@@ -53,6 +53,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     const { width, height } = this.cameras.main;
     this.selectionStep = 0;
+    
+    // Add postFX to main camera
+    if (this.cameras.main.postFX) {
+        this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
+        const cm = this.cameras.main.postFX.addColorMatrix();
+        // saturation removed
+    }
 
     // Keyboard handlers for confirm
     this.input.keyboard?.on('keydown-ENTER', () => this.handleConfirm());
@@ -281,6 +288,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
           const sprite = this.add.sprite(0, -6, char.key, 0)
               .setOrigin(0.5, 0.75)
               .setScale(1.0);
+              
+          if (sprite.postFX) {
+              sprite.postFX.addShadow(0, 0, 0.05, 1, 0x000000, 4, 1);
+          }
           
           if (this.anims.exists(`${char.key}_idle`)) {
               sprite.play(`${char.key}_idle`, true);

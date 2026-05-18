@@ -1,0 +1,3923 @@
+10-  declare registry: Phaser.Data.DataManager;
+11-  declare time: Phaser.Time.Clock;
+12-  declare input: Phaser.Input.InputPlugin;
+13-
+14-  // Mobile Controls Flags
+15:  mobileP1Attack = false;
+16-  mobileP1KiBlast = false;
+17-  mobileP1Defend = false;
+18-  mobileP1Special = false;
+19-  mobileP1Transform = false;
+20-  mobileP1SpecialJustUp = false;
+--
+46-  private enemyDefending: boolean = false;
+47-
+48-  // Action Flags to prevent spamming
+49-  private p1ActionActive: boolean = false;
+50-  private p2ActionActive: boolean = false;
+51:  private p2BufferedAttack: boolean = false;
+52-  private p2BufferedKiBlast: boolean = false;
+53-  private p2BufferedTransform: boolean = false;
+54-
+55:  private p1AttackBuffer: number = 0;
+56-  private p1KiBlastBuffer: number = 0;
+57-  private p1TransformBuffer: number = 0;
+58:  private p2AttackBuffer: number = 0;
+59-  private p2KiBlastBuffer: number = 0;
+60-  private p2TransformBuffer: number = 0;
+61-  private readonly BUFFER_MS = 250;
+62-
+63-  private p1Shadow!: Phaser.GameObjects.Ellipse;
+--
+79-  private p2KiBar!: Phaser.GameObjects.Rectangle;
+80-  private uiContainer!: Phaser.GameObjects.Container;
+81-  private logText!: Phaser.GameObjects.Text;
+82-
+83-  private p1ComboCount: number = 0;
+84:  private p1LastAttackTime: number = 0;
+85-  private p2ComboCount: number = 0;
+86:  private p2LastAttackTime: number = 0;
+87-
+88-  private isBattleOver: boolean = false;
+89-  private turnTimer?: Phaser.Time.TimerEvent;
+90-  private regenTimer?: Phaser.Time.TimerEvent;
+91-  private keys!: any;
+--
+104-    this.gameState = this.registry.get("gameState") as GameState;
+105-    this.isBattleOver = false;
+106-    this.input.addPointer(3); // Support up to 4 touches (1 default + 3 added)
+107-    this.p1ActionActive = false;
+108-    this.p2ActionActive = false;
+109:    this.p2BufferedAttack = false;
+110-    this.p2BufferedKiBlast = false;
+111-    this.p2BufferedTransform = false;
+112:    this.p1AttackBuffer = 0;
+113-    this.p1KiBlastBuffer = 0;
+114-    this.p1TransformBuffer = 0;
+115:    this.p2AttackBuffer = 0;
+116-    this.p2KiBlastBuffer = 0;
+117-    this.p2TransformBuffer = 0;
+118-    this.p1SpecialHoldTime = 0;
+119-    this.p2SpecialHoldTime = 0;
+120-
+--
+307-            );
+308-        }
+309-    }
+310-
+311-    // Buffer keyboard inputs with a timer
+312:    if (Phaser.Input.Keyboard.JustDown(this.keys.p1_attack)) { this.mobileP1Attack = true; this.p1AttackBuffer = this.BUFFER_MS; }
+313-    if (Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast)) { this.mobileP1KiBlast = true; this.p1KiBlastBuffer = this.BUFFER_MS; }
+314-    if (Phaser.Input.Keyboard.JustDown(this.keys.p1_transform)) { this.mobileP1Transform = true; this.p1TransformBuffer = this.BUFFER_MS; }
+315-
+316:    if (Phaser.Input.Keyboard.JustDown(this.keys.p2_attack)) { this.p2BufferedAttack = true; this.p2AttackBuffer = this.BUFFER_MS; }
+317-    if (Phaser.Input.Keyboard.JustDown(this.keys.p2_kiblast)) { this.p2BufferedKiBlast = true; this.p2KiBlastBuffer = this.BUFFER_MS; }
+318-    if (Phaser.Input.Keyboard.JustDown(this.keys.p2_transform)) { this.p2BufferedTransform = true; this.p2TransformBuffer = this.BUFFER_MS; }
+319-
+320-    // Decay the buffers
+321:    if (this.p1AttackBuffer > 0) {
+322:      this.p1AttackBuffer -= delta;
+323:      if (this.p1AttackBuffer <= 0) this.mobileP1Attack = false;
+324-    }
+325-    if (this.p1KiBlastBuffer > 0) {
+326-      this.p1KiBlastBuffer -= delta;
+327-      if (this.p1KiBlastBuffer <= 0) this.mobileP1KiBlast = false;
+328-    }
+329-    if (this.p1TransformBuffer > 0) {
+330-      this.p1TransformBuffer -= delta;
+331-      if (this.p1TransformBuffer <= 0) this.mobileP1Transform = false;
+332-    }
+333-
+334:    if (this.p2AttackBuffer > 0) {
+335:      this.p2AttackBuffer -= delta;
+336:      if (this.p2AttackBuffer <= 0) this.p2BufferedAttack = false;
+337-    }
+338-    if (this.p2KiBlastBuffer > 0) {
+339-      this.p2KiBlastBuffer -= delta;
+340-      if (this.p2KiBlastBuffer <= 0) this.p2BufferedKiBlast = false;
+341-    }
+--
+385-        this.clearChargeIndicator(true);
+386-      } else {
+387-        this.playerDefending = false;
+388-        this.stopContinuousCharge(true);
+389-
+390:        // Attack
+391-        if (
+392:          Phaser.Input.Keyboard.JustDown(this.keys.p1_attack) ||
+393:          this.mobileP1Attack
+394-        ) {
+395:          this.performAttack(true, "melee");
+396:          this.mobileP1Attack = false; // Reset flag
+397-        }
+398-        // Ki Blast
+399-        else if (
+400-          Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast) ||
+401-          this.mobileP1KiBlast
+402-        ) {
+403:          this.performAttack(true, "ki");
+404-          this.mobileP1KiBlast = false; // Reset flag
+405-        }
+406-        // Transform
+407-        else if (
+408-          Phaser.Input.Keyboard.JustDown(this.keys.p1_transform) ||
+--
+462-          this.clearChargeIndicator(false);
+463-        } else {
+464-          this.enemyDefending = false;
+465-          this.stopContinuousCharge(false);
+466-
+467:          if (Phaser.Input.Keyboard.JustDown(this.keys.p2_attack) || this.p2BufferedAttack) {
+468:            this.performAttack(false, "melee");
+469:            this.p2BufferedAttack = false;
+470-          } else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_kiblast) || this.p2BufferedKiBlast) {
+471:            this.performAttack(false, "ki");
+472-            this.p2BufferedKiBlast = false;
+473-          } else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_transform) || this.p2BufferedTransform) {
+474-            this.performTransform(false);
+475-            this.p2BufferedTransform = false;
+476-          }
+--
+700-    this.keys = this.input.keyboard.addKeys({
+701-      p1_up: Phaser.Input.Keyboard.KeyCodes.W,
+702-      p1_down: Phaser.Input.Keyboard.KeyCodes.S,
+703-      p1_left: Phaser.Input.Keyboard.KeyCodes.A,
+704-      p1_right: Phaser.Input.Keyboard.KeyCodes.D,
+705:      p1_attack: Phaser.Input.Keyboard.KeyCodes.J,
+706-      p1_kiblast: Phaser.Input.Keyboard.KeyCodes.K,
+707-      p1_defend: Phaser.Input.Keyboard.KeyCodes.U,
+708-      p1_special: Phaser.Input.Keyboard.KeyCodes.L,
+709-      p1_transform: Phaser.Input.Keyboard.KeyCodes.I,
+710-      
+711-      p2_up: Phaser.Input.Keyboard.KeyCodes.UP,
+712-      p2_down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+713-      p2_left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+714-      p2_right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+715:      p2_attack: Phaser.Input.Keyboard.KeyCodes.NUMPAD_ONE,
+716-      p2_kiblast: Phaser.Input.Keyboard.KeyCodes.NUMPAD_TWO,
+717-      p2_defend: Phaser.Input.Keyboard.KeyCodes.NUMPAD_FOUR,
+718-      p2_special: Phaser.Input.Keyboard.KeyCodes.NUMPAD_THREE,
+719-      p2_transform: Phaser.Input.Keyboard.KeyCodes.NUMPAD_FIVE,
+720-
+--
+879-    createBtn(100, 420, "KI", 0x00ffff, () => {
+880-      this.mobileP1KiBlast = true;
+881-      this.p1KiBlastBuffer = this.BUFFER_MS;
+882-    });
+883-
+884:    // Right side (Attacks in a cross formation)
+885-    // Center of the cross around (800, 420)
+886:    // Top (UP): ATK (Attack)
+887-    createBtn(800, 340, "ATK", 0xe74c3c, () => {
+888:      this.mobileP1Attack = true;
+889:      this.p1AttackBuffer = this.BUFFER_MS;
+890-    });
+891-
+892-    // Right (RIGHT): DEF (Defend & Charge)
+893-    createBtn(
+894-      880,
+--
+959-      return animKey;
+960-    }
+961-    return `${baseKey}_${animType}`;
+962-  }
+963-
+964:  performAttack(isPlayer: boolean, attackType: "melee" | "ki") {
+965-    if (this.isBattleOver) return;
+966:    const attacker = isPlayer ? this.player : this.enemy;
+967-    const target = isPlayer ? this.enemy : this.player;
+968-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+969-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+970-    const transLevel = isPlayer
+971-      ? this.playerTransformLevel
+972-      : this.enemyTransformLevel;
+973:    const attackerData = isPlayer ? this.playerData : this.enemyData;
+974-
+975-    this.setActionState(isPlayer, true);
+976-
+977-    // Combo Logic
+978-    const currentTime = this.time.now;
+979-    let comboCount = 0;
+980-
+981-    if (isPlayer) {
+982:      if (currentTime - this.p1LastAttackTime < 1000) {
+983-        this.p1ComboCount++;
+984-      } else {
+985-        this.p1ComboCount = 1;
+986-      }
+987:      this.p1LastAttackTime = currentTime;
+988-      comboCount = this.p1ComboCount;
+989-    } else {
+990:      if (currentTime - this.p2LastAttackTime < 1000) {
+991-        this.p2ComboCount++;
+992-      } else {
+993-        this.p2ComboCount = 1;
+994-      }
+995:      this.p2LastAttackTime = currentTime;
+996-      comboCount = this.p2ComboCount;
+997-    }
+998-
+999-    const isComboFinisher = comboCount % 3 === 0;
+1000-
+1001-    if (
+1002:      this.performCustomAttack(
+1003-        isPlayer,
+1004:        attackType,
+1005-        comboCount,
+1006-        isComboFinisher,
+1007-      )
+1008-    ) {
+1009-      return;
+1010-    }
+1011-
+1012:    this.performGenericAttack(
+1013-      isPlayer,
+1014:      attackType,
+1015-      comboCount,
+1016-      isComboFinisher,
+1017-    );
+1018-  }
+1019-
+1020:  performCustomAttack(
+1021-    isPlayer: boolean,
+1022:    attackType: "melee" | "ki",
+1023-    comboCount: number,
+1024-    isComboFinisher: boolean,
+1025-  ): boolean {
+1026:    const attackerData = isPlayer ? this.playerData : this.enemyData;
+1027-
+1028:    switch (attackerData.key) {
+1029-      case "goku":
+1030:        this.performGokuAttack(
+1031-          isPlayer,
+1032:          attackType,
+1033-          comboCount,
+1034-          isComboFinisher,
+1035-        );
+1036-        return true;
+1037-      case "vegeta":
+1038:        this.performVegetaAttack(
+1039-          isPlayer,
+1040:          attackType,
+1041-          comboCount,
+1042-          isComboFinisher,
+1043-        );
+1044-        return true;
+1045-      case "madara":
+1046:        this.performMadaraAttack(
+1047-          isPlayer,
+1048:          attackType,
+1049-          comboCount,
+1050-          isComboFinisher,
+1051-        );
+1052-        return true;
+1053-      case "obito":
+1054:        this.performObitoAttack(
+1055-          isPlayer,
+1056:          attackType,
+1057-          comboCount,
+1058-          isComboFinisher,
+1059-        );
+1060-        return true;
+1061-      case "itachi":
+1062:        this.performItachiAttack(
+1063-          isPlayer,
+1064:          attackType,
+1065-          comboCount,
+1066-          isComboFinisher,
+1067-        );
+1068-        return true;
+1069-      case "jotaro":
+1070:        this.performJotaroAttack(
+1071-          isPlayer,
+1072:          attackType,
+1073-          comboCount,
+1074-          isComboFinisher,
+1075-        );
+1076-        return true;
+1077-      case "spiderman":
+1078:        this.performSpidermanAttack(
+1079-          isPlayer,
+1080:          attackType,
+1081-          comboCount,
+1082-          isComboFinisher,
+1083-        );
+1084-        return true;
+1085-      case "naruto":
+1086:        this.performNarutoAttack(
+1087-          isPlayer,
+1088:          attackType,
+1089-          comboCount,
+1090-          isComboFinisher,
+1091-        );
+1092-        return true;
+1093-      case "thukuna":
+1094:        this.performThukunaAttack(
+1095-          isPlayer,
+1096:          attackType,
+1097-          comboCount,
+1098-          isComboFinisher,
+1099-        );
+1100-        return true;
+1101-      case "batman":
+1102:        this.performBatmanAttack(
+1103-          isPlayer,
+1104:          attackType,
+1105-          comboCount,
+1106-          isComboFinisher,
+1107-        );
+1108-        return true;
+1109-      case "cyberninja":
+1110:        this.performCyberNinjaAttack(
+1111-          isPlayer,
+1112:          attackType,
+1113-          comboCount,
+1114-          isComboFinisher,
+1115-        );
+1116-        return true;
+1117-      case "minipekka":
+1118:        this.performMiniPekkaAttack(
+1119-          isPlayer,
+1120:          attackType,
+1121-          comboCount,
+1122-          isComboFinisher,
+1123-        );
+1124-        return true;
+1125-      case "optimus":
+1126:        this.performOptimusAttack(
+1127-          isPlayer,
+1128:          attackType,
+1129-          comboCount,
+1130-          isComboFinisher,
+1131-        );
+1132-        return true;
+1133-      case "cell":
+1134:        this.performCellAttack(
+1135-          isPlayer,
+1136:          attackType,
+1137-          comboCount,
+1138-          isComboFinisher,
+1139-        );
+1140-        return true;
+1141-      case "piccolo":
+1142:        this.performPiccoloAttack(
+1143-          isPlayer,
+1144:          attackType,
+1145-          comboCount,
+1146-          isComboFinisher,
+1147-        );
+1148-        return true;
+1149-      case "gohan":
+1150:        this.performGohanAttack(
+1151-          isPlayer,
+1152:          attackType,
+1153-          comboCount,
+1154-          isComboFinisher,
+1155-        );
+1156-        return true;
+1157-      case "leonardo":
+1158:        this.performLeonardoAttack(
+1159-          isPlayer,
+1160:          attackType,
+1161-          comboCount,
+1162-          isComboFinisher,
+1163-        );
+1164-        return true;
+1165-      case "saitama":
+1166:        this.performSaitamaAttack(
+1167-          isPlayer,
+1168:          attackType,
+1169-          comboCount,
+1170-          isComboFinisher,
+1171-        );
+1172-        return true;
+1173-      case "static":
+1174:        this.performStaticAttack(
+1175-          isPlayer,
+1176:          attackType,
+1177-          comboCount,
+1178-          isComboFinisher,
+1179-        );
+1180-        return true;
+1181-      case "frieren":
+1182:        this.performFrierenAttack(
+1183-          isPlayer,
+1184:          attackType,
+1185-          comboCount,
+1186-          isComboFinisher,
+1187-        );
+1188-        return true;
+1189-      case "chapolim":
+1190:        this.performChapolimAttack(
+1191-          isPlayer,
+1192:          attackType,
+1193-          comboCount,
+1194-          isComboFinisher,
+1195-        );
+1196-        return true;
+1197-      case "gojo":
+1198:        this.performGojoAttack(
+1199-          isPlayer,
+1200:          attackType,
+1201-          comboCount,
+1202-          isComboFinisher,
+1203-        );
+1204-        return true;
+1205-      default:
+1206-        return false; // Fallback to generic
+1207-    }
+1208-  }
+1209-
+1210:  performGokuAttack(
+1211-    isPlayer: boolean,
+1212:    attackType: "melee" | "ki",
+1213-    comboCount: number,
+1214-    isComboFinisher: boolean,
+1215-  ) {
+1216:    const attacker = isPlayer ? this.player : this.enemy;
+1217-    const target = isPlayer ? this.enemy : this.player;
+1218-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+1219-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+1220-    const transLevel = isPlayer
+1221-      ? this.playerTransformLevel
+1222-      : this.enemyTransformLevel;
+1223-
+1224:    if (attackType === "melee") {
+1225-      // Goku Melee: Teleport strike
+1226:      attacker.setAlpha(0);
+1227:      this.createImpactEffect(attacker.x, attacker.y + 120, 0xffffff); // Teleport poof
+1228-
+1229-      this.time.delayedCall(100, () => {
+1230-        if (!this.scene.isActive()) return;
+1231:        attacker.setAlpha(1);
+1232:        attacker.x = target.x + (isPlayer ? -40 : 40);
+1233:        attacker.y = target.y + 120 - (isComboFinisher ? 50 : 0); // Attack from above on finisher
+1234:        attacker.play(this.getAnimKey("goku", transLevel, "attack"));
+1235-
+1236:        if (this.cache.audio.exists("sfx_attack"))
+1237:          this.sound.play("sfx_attack", { volume: 1.2 });
+1238-        this.takeDamage(
+1239-          !isPlayer,
+1240-          Math.floor(
+1241-            (isComboFinisher ? 20 : 10) * this.getDamageMultiplier(transLevel),
+1242-          ),
+--
+1255-          yoyo: true,
+1256-        });
+1257-
+1258-        this.time.delayedCall(200, () => {
+1259-          if (!this.scene.isActive()) return;
+1260:          attacker.setAlpha(0);
+1261:          this.createImpactEffect(attacker.x, attacker.y + 120, 0xffffff);
+1262-          this.time.delayedCall(100, () => {
+1263-            if (!this.scene.isActive()) return;
+1264:            attacker.setAlpha(1);
+1265:            attacker.x = startX;
+1266:            attacker.y = startY;
+1267:            attacker.play(this.getAnimKey("goku", transLevel, "idle"));
+1268-            this.setActionState(isPlayer, false);
+1269-          });
+1270-        });
+1271-      });
+1272-    } else {
+1273-      // Goku Ki: Rapid small blasts
+1274:      attacker.play(this.getAnimKey("goku", transLevel, "attack"));
+1275-      const blastCount = isComboFinisher ? 5 : 3;
+1276-      for (let i = 0; i < blastCount; i++) {
+1277-        this.time.delayedCall(i * 80, () => {
+1278-          if (!this.scene.isActive()) return;
+1279-          if (this.cache.audio.exists("sfx_beam"))
+--
+1302-          });
+1303-        });
+1304-      }
+1305-      this.time.delayedCall(blastCount * 80 + 200, () => {
+1306-        if (!this.scene.isActive()) return;
+1307:        attacker.play(this.getAnimKey("goku", transLevel, "idle"));
+1308-        this.setActionState(isPlayer, false);
+1309-      });
+1310-    }
+1311-  }
+1312-
+1313:  performVegetaAttack(
+1314-    isPlayer: boolean,
+1315:    attackType: "melee" | "ki",
+1316-    comboCount: number,
+1317-    isComboFinisher: boolean,
+1318-  ) {
+1319:    const attacker = isPlayer ? this.player : this.enemy;
+1320-    const target = isPlayer ? this.enemy : this.player;
+1321-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+1322-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+1323-    const transLevel = isPlayer
+1324-      ? this.playerTransformLevel
+1325-      : this.enemyTransformLevel;
+1326-
+1327:    if (attackType === "melee") {
+1328-      // Vegeta Melee: Rapid aggressive punches
+1329-      this.tweens.add({
+1330:        targets: attacker,
+1331-        x: target.x + (isPlayer ? -40 : 40),
+1332-        duration: 100,
+1333-        onComplete: () => {
+1334-          if (!this.scene.isActive()) return;
+1335:          attacker.play(this.getAnimKey("vegeta", transLevel, "attack"));
+1336-          const hits = isComboFinisher ? 4 : 2;
+1337-          for (let i = 0; i < hits; i++) {
+1338-            this.time.delayedCall(i * 100, () => {
+1339-              if (!this.scene.isActive()) return;
+1340:              if (this.cache.audio.exists("sfx_attack"))
+1341:                this.sound.play("sfx_attack", { volume: 1.0 });
+1342-              this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+1343-              this.takeDamage(
+1344-                !isPlayer,
+1345-                Math.floor(5 * this.getDamageMultiplier(transLevel)),
+1346-              );
+--
+1348-            });
+1349-          }
+1350-          this.time.delayedCall(hits * 100 + 100, () => {
+1351-            if (!this.scene.isActive()) return;
+1352-            this.tweens.add({
+1353:              targets: attacker,
+1354-              x: startX,
+1355-              duration: 150,
+1356-              onComplete: () => {
+1357:                attacker.play(this.getAnimKey("vegeta", transLevel, "idle"));
+1358-                this.setActionState(isPlayer, false);
+1359-              },
+1360-            });
+1361-          });
+1362-        },
+1363-      });
+1364-    } else {
+1365-      // Vegeta Ki: Continuous energy bullets (Lucora Gun)
+1366:      attacker.play(this.getAnimKey("vegeta", transLevel, "attack"));
+1367-      const blastCount = isComboFinisher ? 8 : 4;
+1368-      for (let i = 0; i < blastCount; i++) {
+1369-        this.time.delayedCall(i * 50, () => {
+1370-          if (!this.scene.isActive()) return;
+1371-          if (this.cache.audio.exists("sfx_beam"))
+--
+1394-          });
+1395-        });
+1396-      }
+1397-      this.time.delayedCall(blastCount * 50 + 200, () => {
+1398-        if (!this.scene.isActive()) return;
+1399:        attacker.play(this.getAnimKey("vegeta", transLevel, "idle"));
+1400-        this.setActionState(isPlayer, false);
+1401-      });
+1402-    }
+1403-  }
+1404-
+1405:  performItachiAttack(
+1406-    isPlayer: boolean,
+1407:    attackType: "melee" | "ki",
+1408-    comboCount: number,
+1409-    isComboFinisher: boolean,
+1410-  ) {
+1411:    const attacker = isPlayer ? this.player : this.enemy;
+1412-    const target = isPlayer ? this.enemy : this.player;
+1413-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+1414-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+1415-    const transLevel = isPlayer
+1416-      ? this.playerTransformLevel
+1417-      : this.enemyTransformLevel;
+1418-
+1419:    if (attackType === "melee") {
+1420-      // Itachi Melee: Kunai slash
+1421:      attacker.play(this.getAnimKey("itachi", transLevel, "attack"));
+1422-
+1423-      // Dash forward
+1424-      this.tweens.add({
+1425:        targets: attacker,
+1426-        x: target.x + (isPlayer ? -40 : 40),
+1427-        duration: 100,
+1428-        ease: "Power2",
+1429-        onComplete: () => {
+1430-          if (!this.scene.isActive()) return;
+1431-
+1432:          if (this.cache.audio.exists("sfx_attack"))
+1433:            this.sound.play("sfx_attack", { volume: 1.2 });
+1434-
+1435-          const hitColor = transLevel === 1 ? 0xff4500 : 0xcccccc; // Susanoo sword or kunai
+1436-          const hitLine = this.add
+1437-            .rectangle(target.x, target.y + 120, 50, 4, hitColor)
+1438-            .setRotation(isPlayer ? 0.8 : -0.8)
+--
+1458-          this.time.delayedCall(200, () => {
+1459-            if (!this.scene.isActive()) return;
+1460-
+1461-            // Dash back
+1462-            this.tweens.add({
+1463:              targets: attacker,
+1464-              x: startX,
+1465-              duration: 150,
+1466-              ease: "Power2",
+1467-              onComplete: () => {
+1468:                attacker.play(this.getAnimKey("itachi", transLevel, "idle"));
+1469-                this.setActionState(isPlayer, false);
+1470-              },
+1471-            });
+1472-          });
+1473-        },
+1474-      });
+1475-    } else {
+1476-      // Itachi Ki: Fireball (Katon)
+1477:      attacker.play(this.getAnimKey("itachi", transLevel, "attack"));
+1478-
+1479-      this.time.delayedCall(100, () => {
+1480-        if (!this.scene.isActive()) return;
+1481-        if (this.cache.audio.exists("sfx_beam"))
+1482-          this.sound.play("sfx_beam", { volume: 0.8 });
+--
+1527-          },
+1528-        });
+1529-
+1530-        this.time.delayedCall(400, () => {
+1531-          if (!this.scene.isActive()) return;
+1532:          attacker.play(this.getAnimKey("itachi", transLevel, "idle"));
+1533-          this.setActionState(isPlayer, false);
+1534-        });
+1535-      });
+1536-    }
+1537-  }
+1538-
+1539:  performJotaroAttack(
+1540-    isPlayer: boolean,
+1541:    attackType: "melee" | "ki",
+1542-    comboCount: number,
+1543-    isComboFinisher: boolean,
+1544-  ) {
+1545:    const attacker = isPlayer ? this.player : this.enemy;
+1546-    const target = isPlayer ? this.enemy : this.player;
+1547-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+1548-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+1549-    const transLevel = isPlayer
+1550-      ? this.playerTransformLevel
+1551-      : this.enemyTransformLevel;
+1552-
+1553:    if (attackType === "melee") {
+1554-      // Jotaro Melee: ORA punches
+1555:      attacker.play(this.getAnimKey("jotaro", transLevel, "attack"));
+1556-
+1557-      // Dash forward
+1558-      this.tweens.add({
+1559:        targets: attacker,
+1560-        x: target.x + (isPlayer ? -40 : 40),
+1561-        duration: 100,
+1562-        ease: "Power2",
+1563-        onComplete: () => {
+1564-          if (!this.scene.isActive()) return;
+1565-
+1566:          if (this.cache.audio.exists("sfx_attack"))
+1567:            this.sound.play("sfx_attack", { volume: 1.2 });
+1568-
+1569-          // Multiple punch impacts for Star Platinum
+1570-          const hitColor = transLevel === 1 ? 0x8a2be2 : 0xcccccc;
+1571-
+1572-          const createPunch = (delay: number, offsetY: number) => {
+--
+1614-          this.time.delayedCall(200, () => {
+1615-            if (!this.scene.isActive()) return;
+1616-
+1617-            // Dash back
+1618-            this.tweens.add({
+1619:              targets: attacker,
+1620-              x: startX,
+1621-              duration: 150,
+1622-              ease: "Power2",
+1623-              onComplete: () => {
+1624-                if (this.scene.isActive()) {
+1625:                  attacker.play(this.getAnimKey("jotaro", transLevel, "idle"));
+1626-                  this.setActionState(isPlayer, false);
+1627-                }
+1628-              },
+1629-            });
+1630-          });
+1631-        },
+1632-      });
+1633-    } else {
+1634-      // Jotaro Ki: Star Finger (or throwing something)
+1635:      attacker.play(this.getAnimKey("jotaro", transLevel, "attack"));
+1636-      if (this.cache.audio.exists("sfx_ki"))
+1637-        this.sound.play("sfx_ki", { volume: 0.8 });
+1638-
+1639-      const projectileColor = transLevel === 1 ? 0x8a2be2 : 0xcccccc;
+1640-
+--
+1660-            Math.floor(12 * this.getDamageMultiplier(transLevel)),
+1661-          );
+1662-
+1663-          this.time.delayedCall(200, () => {
+1664-            if (this.scene.isActive()) {
+1665:              attacker.play(this.getAnimKey("jotaro", transLevel, "idle"));
+1666-              this.setActionState(isPlayer, false);
+1667-            }
+1668-          });
+1669-        },
+1670-      });
+1671-    }
+1672-  }
+1673-
+1674:  performObitoAttack(
+1675-    isPlayer: boolean,
+1676:    attackType: "melee" | "ki",
+1677-    comboCount: number,
+1678-    isComboFinisher: boolean,
+1679-  ) {
+1680:    const attacker = isPlayer ? this.player : this.enemy;
+1681-    const target = isPlayer ? this.enemy : this.player;
+1682-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+1683-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+1684-    const transLevel = isPlayer
+1685-      ? this.playerTransformLevel
+1686-      : this.enemyTransformLevel;
+1687-
+1688:    if (attackType === "melee") {
+1689-      // Obito Melee: Staff strike (Paulada)
+1690:      attacker.play(this.getAnimKey("obito", transLevel, "attack"));
+1691-
+1692-      // Dash forward
+1693-      this.tweens.add({
+1694:        targets: attacker,
+1695-        x: target.x + (isPlayer ? -40 : 40),
+1696-        duration: 100,
+1697-        ease: "Power2",
+1698-        onComplete: () => {
+1699-          if (!this.scene.isActive()) return;
+1700-
+1701:          if (this.cache.audio.exists("sfx_attack"))
+1702:            this.sound.play("sfx_attack", { volume: 1.2 });
+1703-
+1704-          // Visual effect for the staff hit
+1705-          const hitColor = transLevel === 1 ? 0x000000 : 0xffaa00;
+1706-          const hitLine = this.add
+1707-            .rectangle(target.x, target.y + 120, 60, 6, hitColor)
+--
+1728-          this.time.delayedCall(200, () => {
+1729-            if (!this.scene.isActive()) return;
+1730-
+1731-            // Dash back
+1732-            this.tweens.add({
+1733:              targets: attacker,
+1734-              x: startX,
+1735-              duration: 150,
+1736-              ease: "Power2",
+1737-              onComplete: () => {
+1738:                attacker.play(this.getAnimKey("obito", transLevel, "idle"));
+1739-                this.setActionState(isPlayer, false);
+1740-              },
+1741-            });
+1742-          });
+1743-        },
+1744-      });
+1745-    } else {
+1746-      // Obito Ki: Fireball / Truth-Seeking Orb
+1747:      attacker.play(this.getAnimKey("obito", transLevel, "attack"));
+1748-      this.time.delayedCall(150, () => {
+1749-        if (!this.scene.isActive()) return;
+1750-        if (this.cache.audio.exists("sfx_beam"))
+1751-          this.sound.play("sfx_beam", { volume: 1.0 });
+1752-
+--
+1776-          },
+1777-        });
+1778-
+1779-        this.time.delayedCall(400, () => {
+1780-          if (!this.scene.isActive()) return;
+1781:          attacker.play(this.getAnimKey("obito", transLevel, "idle"));
+1782-          this.setActionState(isPlayer, false);
+1783-        });
+1784-      });
+1785-    }
+1786-  }
+1787-
+1788:  performSpidermanAttack(
+1789-    isPlayer: boolean,
+1790:    attackType: "melee" | "ki",
+1791-    comboCount: number,
+1792-    isComboFinisher: boolean,
+1793-  ) {
+1794:    const attacker = isPlayer ? this.player : this.enemy;
+1795-    const target = isPlayer ? this.enemy : this.player;
+1796-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+1797-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+1798-    const transLevel = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
+1799-
+1800:    if (attackType === "melee") {
+1801-        // Swift kick/punch combo
+1802:        attacker.play(this.getAnimKey("spiderman", transLevel, "attack"));
+1803-
+1804-        this.tweens.add({
+1805:            targets: attacker,
+1806-            x: target.x + (isPlayer ? -40 : 40),
+1807-            duration: 100,
+1808-            onComplete: () => {
+1809-                if (!this.scene.isActive()) return;
+1810:                if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack", { volume: 1.0 });
+1811-
+1812-                const hits = isComboFinisher ? 3 : 1;
+1813-                for (let i = 0; i < hits; i++) {
+1814-                    this.time.delayedCall(i * 100, () => {
+1815-                        this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+--
+1820-                }
+1821-
+1822-                this.time.delayedCall(hits * 100 + 100, () => {
+1823-                    if (!this.scene.isActive()) return;
+1824-                    this.tweens.add({
+1825:                        targets: attacker,
+1826-                        x: startX,
+1827-                        duration: 150,
+1828-                        onComplete: () => {
+1829:                            attacker.play(this.getAnimKey("spiderman", transLevel, "idle"));
+1830-                            this.setActionState(isPlayer, false);
+1831-                        }
+1832-                    });
+1833-                });
+1834-            }
+1835-        });
+1836-    } else {
+1837-        // Ki Blast: Web Ball
+1838:        attacker.play(this.getAnimKey("spiderman", transLevel, "attack"));
+1839-        this.time.delayedCall(50, () => {
+1840-            if (!this.scene.isActive()) return;
+1841-            if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam", { volume: 0.6 });
+1842-            
+1843-            const hand = this.getHandPosition(isPlayer);
+--
+1867-                }
+1868-            });
+1869-
+1870-            this.time.delayedCall(250, () => {
+1871-                if (!this.scene.isActive()) return;
+1872:                attacker.play(this.getAnimKey("spiderman", transLevel, "idle"));
+1873-                this.setActionState(isPlayer, false);
+1874-            });
+1875-        });
+1876-    }
+1877-  }
+1878-
+1879:  performStaticAttack(
+1880-    isPlayer: boolean,
+1881:    attackType: "melee" | "ki",
+1882-    comboCount: number,
+1883-    isComboFinisher: boolean,
+1884-  ) {
+1885:    const attacker = isPlayer ? this.player : this.enemy;
+1886-    const target = isPlayer ? this.enemy : this.player;
+1887-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+1888-    const transLevel = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
+1889-
+1890:    if (attackType === "melee") {
+1891:      attacker.play(this.getAnimKey("static", transLevel, "attack"));
+1892-      
+1893-      this.tweens.add({
+1894:        targets: attacker,
+1895-        x: target.x + (isPlayer ? -40 : 40),
+1896-        duration: 100,
+1897-        onComplete: () => {
+1898-          if (!this.scene.isActive()) return;
+1899:          if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack", { volume: 1.0 });
+1900-
+1901-          const hits = isComboFinisher ? 3 : 1;
+1902-          for (let i = 0; i < hits; i++) {
+1903-            this.time.delayedCall(i * 100, () => {
+1904-              this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
+--
+1906-              
+1907-              // Zap visual
+1908-              const zap = this.add.graphics();
+1909-              zap.lineStyle(2, 0x00ffff, 1);
+1910-              zap.beginPath();
+1911:              zap.moveTo(attacker.x, attacker.y + 100);
+1912-              zap.lineTo(target.x + (Math.random() * 20 - 10), target.y + 120 + (Math.random() * 20 - 10));
+1913-              zap.strokePath();
+1914-              this.time.delayedCall(50, () => zap.destroy());
+1915-            });
+1916-          }
+1917-
+1918-          this.time.delayedCall(hits * 100 + 100, () => {
+1919-            if (!this.scene.isActive()) return;
+1920-            this.tweens.add({
+1921:              targets: attacker,
+1922-              x: startX,
+1923-              duration: 150,
+1924-              onComplete: () => {
+1925:                attacker.play(this.getAnimKey("static", transLevel, "idle"));
+1926-                this.setActionState(isPlayer, false);
+1927-              }
+1928-            });
+1929-          });
+1930-        }
+1931-      });
+1932-    } else {
+1933-      // Ki Blast: Electric Bolt
+1934:      attacker.play(this.getAnimKey("static", transLevel, "attack"));
+1935-      this.time.delayedCall(50, () => {
+1936-        if (!this.scene.isActive()) return;
+1937-        if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam", { volume: 0.4, rate: 1.5 });
+1938-        
+1939-        const hand = this.getHandPosition(isPlayer);
+--
+1966-            bolt.destroy();
+1967-            if (!this.scene.isActive()) return;
+1968-            this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
+1969-            this.takeDamage(!isPlayer, Math.floor((isComboFinisher ? 18 : 8) * this.getDamageMultiplier(transLevel)));
+1970-            
+1971:            attacker.play(this.getAnimKey("static", transLevel, "idle"));
+1972-            this.setActionState(isPlayer, false);
+1973-          }
+1974-        });
+1975-      });
+1976-    }
+1977-  }
+1978-
+1979:  performNarutoAttack(
+1980-    isPlayer: boolean,
+1981:    attackType: "melee" | "ki",
+1982-    comboCount: number,
+1983-    isComboFinisher: boolean,
+1984-  ) {
+1985:    const attacker = isPlayer ? this.player : this.enemy;
+1986-    const target = isPlayer ? this.enemy : this.player;
+1987-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+1988-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+1989-    const transLevel = isPlayer
+1990-      ? this.playerTransformLevel
+1991-      : this.enemyTransformLevel;
+1992-
+1993:    if (attackType === "melee") {
+1994-      // Naruto Melee: Shadow Clone combo
+1995:      attacker.play(this.getAnimKey("naruto", transLevel, "attack"));
+1996-
+1997-      // Spawn clone
+1998-      const clone = this.add
+1999-        .sprite(
+2000-          target.x + (isPlayer ? 40 : -40),
+2001-          target.y + 120,
+2002:          attacker.texture.key,
+2003:          attacker.frame.name,
+2004-        )
+2005-        .setScale(3)
+2006:        .setFlipX(!attacker.flipX)
+2007-        .setAlpha(0)
+2008-        .setTint(0xaaaaaa);
+2009-
+2010-      this.createImpactEffect(clone.x, clone.y + 120, 0xffffff); // Poof
+2011-      clone.setAlpha(1);
+2012-
+2013-      this.tweens.add({
+2014:        targets: attacker,
+2015-        x: target.x + (isPlayer ? -40 : 40),
+2016-        duration: 150,
+2017-        onComplete: () => {
+2018-          if (!this.scene.isActive()) return;
+2019:          if (this.cache.audio.exists("sfx_attack"))
+2020:            this.sound.play("sfx_attack", { volume: 1.2 });
+2021-          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+2022-          this.takeDamage(
+2023-            !isPlayer,
+2024-            Math.floor(
+2025-              (isComboFinisher ? 20 : 12) *
+--
+2031-            if (!this.scene.isActive()) return;
+2032-            this.createImpactEffect(clone.x, clone.y + 120, 0xffffff);
+2033-            clone.destroy();
+2034-
+2035-            this.tweens.add({
+2036:              targets: attacker,
+2037-              x: startX,
+2038-              duration: 150,
+2039-              onComplete: () => {
+2040:                attacker.play(this.getAnimKey("naruto", transLevel, "idle"));
+2041-                this.setActionState(isPlayer, false);
+2042-              },
+2043-            });
+2044-          });
+2045-        },
+2046-      });
+2047-    } else {
+2048-      // Naruto Ki: Rasengan thrust
+2049:      attacker.play(this.getAnimKey("naruto", transLevel, "attack"));
+2050-
+2051-      const hand = this.getHandPosition(isPlayer);
+2052-      const rasengan = this.add
+2053-        .circle(hand.x, hand.y, 15, 0x00ffff)
+2054-        .setDepth(6);
+2055-      rasengan.setBlendMode(Phaser.BlendModes.ADD);
+2056-
+2057-      this.tweens.add({
+2058:        targets: attacker,
+2059-        x: target.x + (isPlayer ? -40 : 40),
+2060-        duration: 200,
+2061-        ease: "Power2",
+2062-        onUpdate: () => {
+2063-          const hand = this.getHandPosition(isPlayer);
+2064-          rasengan.x = hand.x;
+2065-          rasengan.y = hand.y;
+2066-        },
+2067-        onComplete: () => {
+2068-          if (!this.scene.isActive()) return;
+2069:          if (this.cache.audio.exists("sfx_attack"))
+2070:            this.sound.play("sfx_attack", { volume: 1.5 });
+2071-          this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
+2072-          rasengan.destroy();
+2073-
+2074-          this.takeDamage(
+2075-            !isPlayer,
+--
+2087-          });
+2088-
+2089-          this.time.delayedCall(200, () => {
+2090-            if (!this.scene.isActive()) return;
+2091-            this.tweens.add({
+2092:              targets: attacker,
+2093-              x: startX,
+2094-              duration: 200,
+2095-              onComplete: () => {
+2096:                attacker.play(this.getAnimKey("naruto", transLevel, "idle"));
+2097-                this.setActionState(isPlayer, false);
+2098-              },
+2099-            });
+2100-          });
+2101-        },
+2102-      });
+2103-    }
+2104-  }
+2105-
+2106:  performThukunaAttack(
+2107-    isPlayer: boolean,
+2108:    attackType: "melee" | "ki",
+2109-    comboCount: number,
+2110-    isComboFinisher: boolean,
+2111-  ) {
+2112:    const attacker = isPlayer ? this.player : this.enemy;
+2113-    const target = isPlayer ? this.enemy : this.player;
+2114-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+2115-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+2116-    const transLevel = isPlayer
+2117-      ? this.playerTransformLevel
+2118-      : this.enemyTransformLevel;
+2119-
+2120:    if (attackType === "melee") {
+2121-      // Thukuna Melee: Cleave (invisible slashes)
+2122:      attacker.play(this.getAnimKey("thukuna", transLevel, "attack"));
+2123-
+2124-      const slashCount = isComboFinisher ? 5 : 2;
+2125-      for (let i = 0; i < slashCount; i++) {
+2126-        this.time.delayedCall(i * 100, () => {
+2127-          if (!this.scene.isActive()) return;
+2128:          if (this.cache.audio.exists("sfx_attack"))
+2129:            this.sound.play("sfx_attack", { volume: 1.0 });
+2130-
+2131-          // Draw slash lines on target
+2132-          const slash = this.add.graphics().setDepth(10);
+2133-          slash.lineStyle(4, 0xffffff, 1);
+2134-          const ox = target.x + (Math.random() * 40 - 20);
+--
+2149-        });
+2150-      }
+2151-
+2152-      this.time.delayedCall(slashCount * 100 + 200, () => {
+2153-        if (!this.scene.isActive()) return;
+2154:        attacker.play(this.getAnimKey("thukuna", transLevel, "idle"));
+2155-        this.setActionState(isPlayer, false);
+2156-      });
+2157-    } else {
+2158-      // Thukuna Ki: Fire Arrow
+2159:      attacker.play(this.getAnimKey("thukuna", transLevel, "attack"));
+2160-      this.time.delayedCall(150, () => {
+2161-        if (!this.scene.isActive()) return;
+2162-        if (this.cache.audio.exists("sfx_beam"))
+2163-          this.sound.play("sfx_beam", { volume: 1.2 });
+2164-
+--
+2196-          },
+2197-        });
+2198-
+2199-        this.time.delayedCall(300, () => {
+2200-          if (!this.scene.isActive()) return;
+2201:          attacker.play(this.getAnimKey("thukuna", transLevel, "idle"));
+2202-          this.setActionState(isPlayer, false);
+2203-        });
+2204-      });
+2205-    }
+2206-  }
+2207-
+2208:  performBatmanAttack(
+2209-    isPlayer: boolean,
+2210:    attackType: "melee" | "ki",
+2211-    comboCount: number,
+2212-    isComboFinisher: boolean,
+2213-  ) {
+2214:    const attacker = isPlayer ? this.player : this.enemy;
+2215-    const target = isPlayer ? this.enemy : this.player;
+2216-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+2217-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+2218-    const transLevel = isPlayer
+2219-      ? this.playerTransformLevel
+2220-      : this.enemyTransformLevel;
+2221-
+2222:    if (attackType === "melee") {
+2223-      // Batman Melee: Slide kick
+2224:      attacker.play(this.getAnimKey("batman", transLevel, "attack"));
+2225-      this.tweens.add({
+2226:        targets: attacker,
+2227-        x: target.x + (isPlayer ? -40 : 40),
+2228-        y: target.y + 20,
+2229-        rotation: isPlayer ? 0.5 : -0.5,
+2230-        duration: 150,
+2231-        onComplete: () => {
+2232-          if (!this.scene.isActive()) return;
+2233:          if (this.cache.audio.exists("sfx_attack"))
+2234:            this.sound.play("sfx_attack", { volume: 1.0 });
+2235-          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+2236-          this.takeDamage(
+2237-            !isPlayer,
+2238-            Math.floor(
+2239-              (isComboFinisher ? 18 : 10) *
+--
+2249-          });
+2250-
+2251-          this.time.delayedCall(200, () => {
+2252-            if (!this.scene.isActive()) return;
+2253-            this.tweens.add({
+2254:              targets: attacker,
+2255-              x: startX,
+2256-              y: startY,
+2257-              rotation: 0,
+2258-              duration: 150,
+2259-              onComplete: () => {
+2260:                attacker.play(this.getAnimKey("batman", transLevel, "idle"));
+2261-                this.setActionState(isPlayer, false);
+2262-              },
+2263-            });
+2264-          });
+2265-        },
+2266-      });
+2267-    } else {
+2268-      // Batman Ki: Batarang throw
+2269:      attacker.play(this.getAnimKey("batman", transLevel, "attack"));
+2270-      this.time.delayedCall(100, () => {
+2271-        if (!this.scene.isActive()) return;
+2272-        if (this.cache.audio.exists("sfx_beam"))
+2273-          this.sound.play("sfx_beam", { volume: 0.8 });
+2274-
+--
+2310-          },
+2311-        });
+2312-
+2313-        this.time.delayedCall(300, () => {
+2314-          if (!this.scene.isActive()) return;
+2315:          attacker.play(this.getAnimKey("batman", transLevel, "idle"));
+2316-          this.setActionState(isPlayer, false);
+2317-        });
+2318-      });
+2319-    }
+2320-  }
+2321-
+2322:  performCyberNinjaAttack(
+2323-    isPlayer: boolean,
+2324:    attackType: "melee" | "ki",
+2325-    comboCount: number,
+2326-    isComboFinisher: boolean,
+2327-  ) {
+2328:    const attacker = isPlayer ? this.player : this.enemy;
+2329-    const target = isPlayer ? this.enemy : this.player;
+2330-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+2331-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+2332-    const transLevel = isPlayer
+2333-      ? this.playerTransformLevel
+2334-      : this.enemyTransformLevel;
+2335-
+2336:    if (attackType === "melee") {
+2337-      // CyberNinja Melee: Katana dash
+2338:      attacker.play(this.getAnimKey("cyberninja", transLevel, "attack"));
+2339-
+2340-      // Dash line
+2341-      const dashLine = this.add.graphics().setDepth(5);
+2342-      dashLine.lineStyle(2, 0x00ffff, 0.8);
+2343-      dashLine.lineBetween(
+2344:        attacker.x,
+2345:        attacker.y + 120,
+2346-        target.x + (isPlayer ? 40 : -40),
+2347-        target.y + 120,
+2348-      );
+2349-      this.tweens.add({
+2350-        targets: dashLine,
+--
+2352-        duration: 200,
+2353-        onComplete: () => dashLine.destroy(),
+2354-      });
+2355-
+2356-      this.tweens.add({
+2357:        targets: attacker,
+2358-        x: target.x + (isPlayer ? 40 : -40),
+2359-        duration: 100, // Dash through
+2360-        onComplete: () => {
+2361-          if (!this.scene.isActive()) return;
+2362:          if (this.cache.audio.exists("sfx_attack"))
+2363:            this.sound.play("sfx_attack", { volume: 1.2 });
+2364-          this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
+2365-          this.takeDamage(
+2366-            !isPlayer,
+2367-            Math.floor(
+2368-              (isComboFinisher ? 22 : 12) *
+--
+2386-            onComplete: () => slash.destroy(),
+2387-          });
+2388-
+2389-          this.time.delayedCall(200, () => {
+2390-            if (!this.scene.isActive()) return;
+2391:            attacker.setFlipX(!attacker.flipX); // Face back
+2392-            this.tweens.add({
+2393:              targets: attacker,
+2394-              x: startX,
+2395-              duration: 150,
+2396-              onComplete: () => {
+2397:                attacker.setFlipX(isPlayer ? false : true); // Reset flip
+2398:                attacker.play(
+2399-                  this.getAnimKey("cyberninja", transLevel, "idle"),
+2400-                );
+2401-                this.setActionState(isPlayer, false);
+2402-              },
+2403-            });
+2404-          });
+2405-        },
+2406-      });
+2407-    } else {
+2408-      // CyberNinja Ki: Shuriken throw
+2409:      attacker.play(this.getAnimKey("cyberninja", transLevel, "attack"));
+2410-      this.time.delayedCall(100, () => {
+2411-        if (!this.scene.isActive()) return;
+2412-        if (this.cache.audio.exists("sfx_beam"))
+2413-          this.sound.play("sfx_beam", { volume: 0.8 });
+2414-
+--
+2444-          });
+2445-        }
+2446-
+2447-        this.time.delayedCall(300, () => {
+2448-          if (!this.scene.isActive()) return;
+2449:          attacker.play(this.getAnimKey("cyberninja", transLevel, "idle"));
+2450-          this.setActionState(isPlayer, false);
+2451-        });
+2452-      });
+2453-    }
+2454-  }
+2455-
+2456:  performMiniPekkaAttack(
+2457-    isPlayer: boolean,
+2458:    attackType: "melee" | "ki",
+2459-    comboCount: number,
+2460-    isComboFinisher: boolean,
+2461-  ) {
+2462:    const attacker = isPlayer ? this.player : this.enemy;
+2463-    const target = isPlayer ? this.enemy : this.player;
+2464-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+2465-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+2466-    const transLevel = isPlayer
+2467-      ? this.playerTransformLevel
+2468-      : this.enemyTransformLevel;
+2469-
+2470:    if (attackType === "melee") {
+2471-      // MiniPekka Melee: Heavy sword slash
+2472-      this.tweens.add({
+2473:        targets: attacker,
+2474-        x: target.x + (isPlayer ? -30 : 30),
+2475-        duration: 150,
+2476-        onComplete: () => {
+2477-          if (!this.scene.isActive()) return;
+2478:          attacker.play(this.getAnimKey("minipekka", transLevel, "attack"));
+2479-
+2480:          if (this.cache.audio.exists("sfx_attack"))
+2481:            this.sound.play("sfx_attack", { volume: 1.5 });
+2482-
+2483-          // Sword arc
+2484-          const arc = this.add.graphics().setDepth(6);
+2485-          arc.lineStyle(6, 0xaaaaaa, 1);
+2486-          arc.beginPath();
+2487-          arc.arc(
+2488:            attacker.x,
+2489:            attacker.y,
+2490-            40,
+2491-            isPlayer ? -Math.PI / 2 : Math.PI / 2,
+2492-            isPlayer ? Math.PI / 2 : -Math.PI / 2,
+2493-            isPlayer ? false : true,
+2494-          );
+--
+2512-          this.cameras.main.shake(150, 0.02);
+2513-
+2514-          this.time.delayedCall(200, () => {
+2515-            if (!this.scene.isActive()) return;
+2516-            this.tweens.add({
+2517:              targets: attacker,
+2518-              x: startX,
+2519-              duration: 200,
+2520-              onComplete: () => {
+2521:                attacker.play(this.getAnimKey("minipekka", transLevel, "idle"));
+2522-                this.setActionState(isPlayer, false);
+2523-              },
+2524-            });
+2525-          });
+2526-        },
+2527-      });
+2528-    } else {
+2529-      // MiniPekka Ki: Pancake throw
+2530:      attacker.play(this.getAnimKey("minipekka", transLevel, "attack"));
+2531-      this.time.delayedCall(100, () => {
+2532-        if (!this.scene.isActive()) return;
+2533-        if (this.cache.audio.exists("sfx_beam"))
+2534-          this.sound.play("sfx_beam", { volume: 0.8 });
+2535-
+--
+2557-          },
+2558-        });
+2559-
+2560-        this.time.delayedCall(300, () => {
+2561-          if (!this.scene.isActive()) return;
+2562:          attacker.play(this.getAnimKey("minipekka", transLevel, "idle"));
+2563-          this.setActionState(isPlayer, false);
+2564-        });
+2565-      });
+2566-    }
+2567-  }
+2568-
+2569:  performOptimusAttack(
+2570-    isPlayer: boolean,
+2571:    attackType: "melee" | "ki",
+2572-    comboCount: number,
+2573-    isComboFinisher: boolean,
+2574-  ) {
+2575:    const attacker = isPlayer ? this.player : this.enemy;
+2576-    const target = isPlayer ? this.enemy : this.player;
+2577-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+2578-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+2579-    const transLevel = isPlayer
+2580-      ? this.playerTransformLevel
+2581-      : this.enemyTransformLevel;
+2582-
+2583:    if (attackType === "melee") {
+2584-      // Optimus Melee: Heavy punch
+2585-      this.tweens.add({
+2586:        targets: attacker,
+2587-        x: target.x + (isPlayer ? -40 : 40),
+2588-        duration: 200,
+2589-        ease: "Power2",
+2590-        onComplete: () => {
+2591-          if (!this.scene.isActive()) return;
+2592:          attacker.play(this.getAnimKey("optimus", transLevel, "attack"));
+2593-
+2594:          if (this.cache.audio.exists("sfx_attack"))
+2595:            this.sound.play("sfx_attack", { volume: 1.5 });
+2596-          this.createImpactEffect(target.x, target.y + 120, 0xffaa00);
+2597-          this.takeDamage(
+2598-            !isPlayer,
+2599-            Math.floor(
+2600-              (isComboFinisher ? 25 : 15) *
+--
+2604-          this.cameras.main.shake(200, 0.02);
+2605-
+2606-          this.time.delayedCall(250, () => {
+2607-            if (!this.scene.isActive()) return;
+2608-            this.tweens.add({
+2609:              targets: attacker,
+2610-              x: startX,
+2611-              duration: 200,
+2612-              onComplete: () => {
+2613:                attacker.play(this.getAnimKey("optimus", transLevel, "idle"));
+2614-                this.setActionState(isPlayer, false);
+2615-              },
+2616-            });
+2617-          });
+2618-        },
+2619-      });
+2620-    } else {
+2621-      // Optimus Ki: Ion Blaster
+2622:      attacker.play(this.getAnimKey("optimus", transLevel, "attack"));
+2623-      this.time.delayedCall(100, () => {
+2624-        if (!this.scene.isActive()) return;
+2625-        if (this.cache.audio.exists("sfx_beam"))
+2626-          this.sound.play("sfx_beam", { volume: 1.2 });
+2627-
+--
+2648-          },
+2649-        });
+2650-
+2651-        this.time.delayedCall(300, () => {
+2652-          if (!this.scene.isActive()) return;
+2653:          attacker.play(this.getAnimKey("optimus", transLevel, "idle"));
+2654-          this.setActionState(isPlayer, false);
+2655-        });
+2656-      });
+2657-    }
+2658-  }
+2659-
+2660:  performCellAttack(
+2661-    isPlayer: boolean,
+2662:    attackType: "melee" | "ki",
+2663-    comboCount: number,
+2664-    isComboFinisher: boolean,
+2665-  ) {
+2666:    const attacker = isPlayer ? this.player : this.enemy;
+2667-    const target = isPlayer ? this.enemy : this.player;
+2668-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+2669-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+2670-    const transLevel = isPlayer
+2671-      ? this.playerTransformLevel
+2672-      : this.enemyTransformLevel;
+2673-
+2674:    if (attackType === "melee") {
+2675-      // Cell Melee: Teleport above and stomp
+2676:      attacker.setAlpha(0);
+2677:      this.createImpactEffect(attacker.x, attacker.y + 120, 0x00ff00);
+2678-
+2679-      this.time.delayedCall(100, () => {
+2680-        if (!this.scene.isActive()) return;
+2681:        attacker.setAlpha(1);
+2682:        attacker.x = target.x;
+2683:        attacker.y = target.y - 60;
+2684:        attacker.play(this.getAnimKey("cell", transLevel, "attack"));
+2685-
+2686-        this.tweens.add({
+2687:          targets: attacker,
+2688-          y: target.y + 120,
+2689-          duration: 100,
+2690-          ease: "Expo.easeIn",
+2691-          onComplete: () => {
+2692-            if (!this.scene.isActive()) return;
+2693:            if (this.cache.audio.exists("sfx_attack"))
+2694:              this.sound.play("sfx_attack", { volume: 1.2 });
+2695-            this.createImpactEffect(target.x, target.y + 120, 0x00ff00);
+2696-            this.takeDamage(
+2697-              !isPlayer,
+2698-              Math.floor(
+2699-                (isComboFinisher ? 22 : 12) *
+--
+2702-            );
+2703-            this.cameras.main.shake(150, 0.02);
+2704-
+2705-            this.time.delayedCall(200, () => {
+2706-              if (!this.scene.isActive()) return;
+2707:              attacker.setAlpha(0);
+2708:              this.createImpactEffect(attacker.x, attacker.y + 120, 0x00ff00);
+2709-              this.time.delayedCall(100, () => {
+2710-                if (!this.scene.isActive()) return;
+2711:                attacker.setAlpha(1);
+2712:                attacker.x = startX;
+2713:                attacker.y = startY;
+2714:                attacker.play(this.getAnimKey("cell", transLevel, "idle"));
+2715-                this.setActionState(isPlayer, false);
+2716-              });
+2717-            });
+2718-          },
+2719-        });
+2720-      });
+2721-    } else {
+2722-      // Cell Ki: Finger beam
+2723:      attacker.play(this.getAnimKey("cell", transLevel, "attack"));
+2724-      this.time.delayedCall(100, () => {
+2725-        if (!this.scene.isActive()) return;
+2726-        if (this.cache.audio.exists("sfx_beam"))
+2727-          this.sound.play("sfx_beam", { volume: 1.0 });
+2728-
+2729-        const hand = this.getHandPosition(isPlayer);
+2730-        const beam = this.add
+2731-          .rectangle(
+2732-            hand.x,
+2733-            hand.y,
+2734:            Math.abs(target.x - attacker.x),
+2735-            2,
+2736-            0xffff00,
+2737-          )
+2738-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+2739-          .setDepth(5);
+--
+2752-          ),
+2753-        );
+2754-
+2755-        this.time.delayedCall(250, () => {
+2756-          if (!this.scene.isActive()) return;
+2757:          attacker.play(this.getAnimKey("cell", transLevel, "idle"));
+2758-          this.setActionState(isPlayer, false);
+2759-        });
+2760-      });
+2761-    }
+2762-  }
+2763-
+2764:  performPiccoloAttack(
+2765-    isPlayer: boolean,
+2766:    attackType: "melee" | "ki",
+2767-    comboCount: number,
+2768-    isComboFinisher: boolean,
+2769-  ) {
+2770:    const attacker = isPlayer ? this.player : this.enemy;
+2771-    const target = isPlayer ? this.enemy : this.player;
+2772-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+2773-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+2774-    const transLevel = isPlayer
+2775-      ? this.playerTransformLevel
+2776-      : this.enemyTransformLevel;
+2777-
+2778:    if (attackType === "melee") {
+2779-      // Piccolo Melee: Stretchy arm
+2780:      attacker.play(this.getAnimKey("piccolo", transLevel, "attack"));
+2781-
+2782-      const hand = this.getHandPosition(isPlayer);
+2783-      const arm = this.add
+2784-        .rectangle(hand.x, hand.y, 0, 8, 0x228b22)
+2785-        .setOrigin(isPlayer ? 0 : 1, 0.5)
+2786-        .setDepth(4);
+2787-
+2788-      this.tweens.add({
+2789-        targets: arm,
+2790:        width: Math.abs(target.x - attacker.x) - 20,
+2791-        duration: 100,
+2792-        onComplete: () => {
+2793-          if (!this.scene.isActive()) return;
+2794:          if (this.cache.audio.exists("sfx_attack"))
+2795:            this.sound.play("sfx_attack", { volume: 1.0 });
+2796-          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+2797-          this.takeDamage(
+2798-            !isPlayer,
+2799-            Math.floor(
+2800-              (isComboFinisher ? 18 : 10) *
+--
+2807-            width: 0,
+2808-            duration: 100,
+2809-            delay: 50,
+2810-            onComplete: () => {
+2811-              arm.destroy();
+2812:              attacker.play(this.getAnimKey("piccolo", transLevel, "idle"));
+2813-              this.setActionState(isPlayer, false);
+2814-            },
+2815-          });
+2816-        },
+2817-      });
+2818-    } else {
+2819-      // Piccolo Ki: Eye laser
+2820:      attacker.play(this.getAnimKey("piccolo", transLevel, "attack"));
+2821-      this.time.delayedCall(50, () => {
+2822-        if (!this.scene.isActive()) return;
+2823-        if (this.cache.audio.exists("sfx_beam"))
+2824-          this.sound.play("sfx_beam", { volume: 0.8 });
+2825-
+2826-        const hand = this.getHandPosition(isPlayer);
+2827-        const beam1 = this.add
+2828-          .rectangle(
+2829-            hand.x,
+2830-            hand.y,
+2831:            Math.abs(target.x - attacker.x),
+2832-            2,
+2833-            0xff0000,
+2834-          )
+2835-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+2836-          .setDepth(5);
+2837-        const beam2 = this.add
+2838-          .rectangle(
+2839-            hand.x,
+2840-            hand.y,
+2841:            Math.abs(target.x - attacker.x),
+2842-            2,
+2843-            0xff0000,
+2844-          )
+2845-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+2846-          .setDepth(5);
+--
+2863-          ),
+2864-        );
+2865-
+2866-        this.time.delayedCall(200, () => {
+2867-          if (!this.scene.isActive()) return;
+2868:          attacker.play(this.getAnimKey("piccolo", transLevel, "idle"));
+2869-          this.setActionState(isPlayer, false);
+2870-        });
+2871-      });
+2872-    }
+2873-  }
+2874-
+2875:  performMadaraAttack(
+2876-    isPlayer: boolean,
+2877:    attackType: "melee" | "ki",
+2878-    comboCount: number,
+2879-    isComboFinisher: boolean,
+2880-  ) {
+2881:    const attacker = isPlayer ? this.player : this.enemy;
+2882-    const target = isPlayer ? this.enemy : this.player;
+2883-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+2884-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+2885-    const transLevel = isPlayer
+2886-      ? this.playerTransformLevel
+2887-      : this.enemyTransformLevel;
+2888-
+2889:    if (attackType === "melee") {
+2890-      // Madara Melee: Gunbai swing or Susanoo sword
+2891-      this.tweens.add({
+2892:        targets: attacker,
+2893-        x: target.x + (isPlayer ? -40 : 40),
+2894-        duration: 150,
+2895-        ease: "Power2",
+2896-        onComplete: () => {
+2897-          if (!this.scene.isActive()) return;
+2898:          attacker.play(this.getAnimKey("madara", transLevel, "attack"));
+2899-
+2900:          if (this.cache.audio.exists("sfx_attack"))
+2901:            this.sound.play("sfx_attack", { volume: 1.2 });
+2902-          this.createImpactEffect(
+2903-            target.x,
+2904-            target.y + 120,
+2905-            transLevel > 0 ? 0x3b82f6 : 0xb91c1c,
+2906-          );
+--
+2913-          );
+2914-
+2915-          this.time.delayedCall(200, () => {
+2916-            if (!this.scene.isActive()) return;
+2917-            this.tweens.add({
+2918:              targets: attacker,
+2919-              x: startX,
+2920-              y: startY,
+2921-              duration: 200,
+2922-              ease: "Power2",
+2923-              onComplete: () => {
+2924:                attacker.play(this.getAnimKey("madara", transLevel, "idle"));
+2925-                this.setActionState(isPlayer, false);
+2926-              },
+2927-            });
+2928-          });
+2929-        },
+2930-      });
+2931-    } else {
+2932-      // Madara Ki: Fireball
+2933:      attacker.play(this.getAnimKey("madara", transLevel, "attack"));
+2934-      this.time.delayedCall(100, () => {
+2935-        if (!this.scene.isActive()) return;
+2936-        if (this.cache.audio.exists("sfx_beam"))
+2937-          this.sound.play("sfx_beam", { volume: 1.0 });
+2938-
+--
+2954-            this.createImpactEffect(target.x, target.y + 120, kiColor);
+2955-            this.takeDamage(
+2956-              !isPlayer,
+2957-              Math.floor(12 * this.getDamageMultiplier(transLevel)),
+2958-            );
+2959:            attacker.play(this.getAnimKey("madara", transLevel, "idle"));
+2960-            this.setActionState(isPlayer, false);
+2961-          },
+2962-        });
+2963-      });
+2964-    }
+2965-  }
+2966-
+2967:  performGohanAttack(
+2968-    isPlayer: boolean,
+2969:    attackType: "melee" | "ki",
+2970-    comboCount: number,
+2971-    isComboFinisher: boolean,
+2972-  ) {
+2973:    const attacker = isPlayer ? this.player : this.enemy;
+2974-    const target = isPlayer ? this.enemy : this.player;
+2975-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+2976-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+2977-    const transLevel = isPlayer
+2978-      ? this.playerTransformLevel
+2979-      : this.enemyTransformLevel;
+2980-
+2981:    if (attackType === "melee") {
+2982-      // Gohan Melee: High kick
+2983-      this.tweens.add({
+2984:        targets: attacker,
+2985-        x: target.x + (isPlayer ? -30 : 30),
+2986-        y: target.y - 30,
+2987-        duration: 150,
+2988-        ease: "Sine.easeOut",
+2989-        onComplete: () => {
+2990-          if (!this.scene.isActive()) return;
+2991:          attacker.play(this.getAnimKey("gohan", transLevel, "attack"));
+2992-
+2993:          if (this.cache.audio.exists("sfx_attack"))
+2994:            this.sound.play("sfx_attack", { volume: 1.2 });
+2995-          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+2996-          this.takeDamage(
+2997-            !isPlayer,
+2998-            Math.floor(
+2999-              (isComboFinisher ? 20 : 12) *
+--
+3002-          );
+3003-
+3004-          this.time.delayedCall(150, () => {
+3005-            if (!this.scene.isActive()) return;
+3006-            this.tweens.add({
+3007:              targets: attacker,
+3008-              x: startX,
+3009-              y: startY,
+3010-              duration: 200,
+3011-              ease: "Sine.easeIn",
+3012-              onComplete: () => {
+3013:                attacker.play(this.getAnimKey("gohan", transLevel, "idle"));
+3014-                this.setActionState(isPlayer, false);
+3015-              },
+3016-            });
+3017-          });
+3018-        },
+3019-      });
+3020-    } else {
+3021-      // Gohan Ki: Quick Masenko blast
+3022:      attacker.play(this.getAnimKey("gohan", transLevel, "attack"));
+3023-      this.time.delayedCall(100, () => {
+3024-        if (!this.scene.isActive()) return;
+3025-        if (this.cache.audio.exists("sfx_beam"))
+3026-          this.sound.play("sfx_beam", { volume: 1.0 });
+3027-
+--
+3048-          },
+3049-        });
+3050-
+3051-        this.time.delayedCall(250, () => {
+3052-          if (!this.scene.isActive()) return;
+3053:          attacker.play(this.getAnimKey("gohan", transLevel, "idle"));
+3054-          this.setActionState(isPlayer, false);
+3055-        });
+3056-      });
+3057-    }
+3058-  }
+3059-
+3060:  performLeonardoAttack(
+3061-    isPlayer: boolean,
+3062:    attackType: "melee" | "ki",
+3063-    comboCount: number,
+3064-    isComboFinisher: boolean,
+3065-  ) {
+3066:    const attacker = isPlayer ? this.player : this.enemy;
+3067-    const target = isPlayer ? this.enemy : this.player;
+3068-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+3069-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+3070-    const transLevel = isPlayer
+3071-      ? this.playerTransformLevel
+3072-      : this.enemyTransformLevel;
+3073-
+3074:    if (attackType === "melee") {
+3075:      attacker.play(this.getAnimKey("leonardo", transLevel, "attack"));
+3076-      this.tweens.add({
+3077:        targets: attacker,
+3078-        x: target.x + (isPlayer ? -40 : 40),
+3079-        duration: 150,
+3080-        onComplete: () => {
+3081-          if (!this.scene.isActive()) return;
+3082:          if (this.cache.audio.exists("sfx_attack"))
+3083:            this.sound.play("sfx_attack", { volume: 1.2 });
+3084-
+3085-          const slash = this.add.graphics().setDepth(6);
+3086-          slash.lineStyle(4, 0x00ff00, 1);
+3087-          slash.lineBetween(
+3088-            target.x - 20,
+--
+3107-          );
+3108-
+3109-          this.time.delayedCall(200, () => {
+3110-            if (!this.scene.isActive()) return;
+3111-            this.tweens.add({
+3112:              targets: attacker,
+3113-              x: startX,
+3114-              duration: 150,
+3115-              onComplete: () => {
+3116:                attacker.play(this.getAnimKey("leonardo", transLevel, "idle"));
+3117-                this.setActionState(isPlayer, false);
+3118-              },
+3119-            });
+3120-          });
+3121-        },
+3122-      });
+3123-    } else {
+3124:      attacker.play(this.getAnimKey("leonardo", transLevel, "attack"));
+3125-      this.time.delayedCall(100, () => {
+3126-        if (!this.scene.isActive()) return;
+3127-        if (this.cache.audio.exists("sfx_beam"))
+3128-          this.sound.play("sfx_beam", { volume: 0.8 });
+3129-
+--
+3155-          },
+3156-        });
+3157-
+3158-        this.time.delayedCall(300, () => {
+3159-          if (!this.scene.isActive()) return;
+3160:          attacker.play(this.getAnimKey("leonardo", transLevel, "idle"));
+3161-          this.setActionState(isPlayer, false);
+3162-        });
+3163-      });
+3164-    }
+3165-  }
+3166-
+3167:  performSaitamaAttack(
+3168-    isPlayer: boolean,
+3169:    attackType: "melee" | "ki",
+3170-    comboCount: number,
+3171-    isComboFinisher: boolean,
+3172-  ) {
+3173:    const attacker = isPlayer ? this.player : this.enemy;
+3174-    const target = isPlayer ? this.enemy : this.player;
+3175-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+3176-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+3177-    const transLevel = isPlayer
+3178-      ? this.playerTransformLevel
+3179-      : this.enemyTransformLevel;
+3180-
+3181:    if (attackType === "melee") {
+3182-      // Saitama Melee: Fast strikes that create shockwaves
+3183:      attacker.play(this.getAnimKey("saitama", transLevel, "attack"));
+3184-      
+3185-      // Dash effect
+3186:      const dashGlow = this.add.rectangle(attacker.x - (isPlayer ? -20 : 20), attacker.y + 100, 80, 10, 0xffffff, 0.5).setDepth(2);
+3187-      this.tweens.add({ targets: dashGlow, scaleX: 3, alpha: 0, duration: 200, onComplete: () => dashGlow.destroy() });
+3188-
+3189-      this.tweens.add({
+3190:        targets: attacker,
+3191-        x: target.x + (isPlayer ? -45 : 45),
+3192-        duration: 50, // SUPER FAST
+3193-        ease: "Expo.easeOut",
+3194-        onComplete: () => {
+3195-          if (!this.scene.isActive()) return;
+3196:          if (this.cache.audio.exists("sfx_attack"))
+3197:            this.sound.play("sfx_attack", { volume: 2.0 });
+3198-
+3199-          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+3200-          this.cameras.main.shake(150, 0.02);
+3201-
+3202-          // Intense Impact shockwave
+--
+3227-          );
+3228-
+3229-          this.time.delayedCall(150, () => {
+3230-            if (!this.scene.isActive()) return;
+3231-            this.tweens.add({
+3232:              targets: attacker,
+3233-              x: startX,
+3234-              duration: 100,
+3235-              ease: "Expo.easeOut",
+3236-              onComplete: () => {
+3237:                attacker.play(this.getAnimKey("saitama", transLevel, "idle"));
+3238-                this.setActionState(isPlayer, false);
+3239-              },
+3240-            });
+3241-          });
+3242-        },
+3243-      });
+3244-    } else {
+3245-      // Saitama Ki: He doesn't have "ki", so he just does a "Normal Punch" that creates a wind pressure blast
+3246:      attacker.play(this.getAnimKey("saitama", transLevel, "attack"));
+3247-
+3248-      // Small dash forward
+3249:      this.tweens.add({ targets: attacker, x: attacker.x + (isPlayer ? 20 : -20), duration: 50, yoyo: true });
+3250-      
+3251-      this.time.delayedCall(50, () => {
+3252-        if (!this.scene.isActive()) return;
+3253-        if (this.cache.audio.exists("sfx_beam"))
+3254-          this.sound.play("sfx_beam", { volume: 1.0, rate: 0.8 }); // deeper sound for air pressure
+--
+3263-
+3264-        for (let i = 0; i < blastsCount; i++) {
+3265-           this.time.delayedCall(i * 80, () => {
+3266-              if (!this.scene.isActive()) return;
+3267-
+3268:              if (i > 0 && this.cache.audio.exists("sfx_attack")) {
+3269:                 this.sound.play("sfx_attack", { volume: 1.0, rate: 1.5 });
+3270-              }
+3271-              
+3272-              // Wind pressure (Giant expanding ellipse)
+3273-              const waveY = hand.y + Phaser.Math.Between(-20, 20);
+3274-              const blast = this.add.ellipse(hand.x, waveY, 40, 60, 0xffffff, 0.7).setDepth(5);
+--
+3309-           });
+3310-        }
+3311-
+3312-        this.time.delayedCall(200 + (blastsCount * 80), () => {
+3313-          if (!this.scene.isActive()) return;
+3314:          attacker.play(this.getAnimKey("saitama", transLevel, "idle"));
+3315-          this.setActionState(isPlayer, false);
+3316-        });
+3317-      });
+3318-    }
+3319-  }
+3320-
+3321:  performFrierenAttack(
+3322-    isPlayer: boolean,
+3323:    attackType: "melee" | "ki",
+3324-    comboCount: number,
+3325-    isComboFinisher: boolean,
+3326-  ) {
+3327:    const attacker = isPlayer ? this.player : this.enemy;
+3328-    const target = isPlayer ? this.enemy : this.player;
+3329-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+3330-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+3331-    const transLevel = isPlayer
+3332-      ? this.playerTransformLevel
+3333-      : this.enemyTransformLevel;
+3334-
+3335:    if (attackType === "melee") {
+3336:      attacker.play(this.getAnimKey("frieren", transLevel, "attack"));
+3337-      this.tweens.add({
+3338:        targets: attacker,
+3339-        x: target.x + (isPlayer ? -40 : 40),
+3340-        duration: 150,
+3341-        onComplete: () => {
+3342-          if (!this.scene.isActive()) return;
+3343:          if (this.cache.audio.exists("sfx_attack"))
+3344:            this.sound.play("sfx_attack", { volume: 1.0 });
+3345-          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+3346-          this.takeDamage(
+3347-            !isPlayer,
+3348-            Math.floor(
+3349-              (isComboFinisher ? 15 : 8) * this.getDamageMultiplier(transLevel),
+--
+3351-          );
+3352-
+3353-          this.time.delayedCall(200, () => {
+3354-            if (!this.scene.isActive()) return;
+3355-            this.tweens.add({
+3356:              targets: attacker,
+3357-              x: startX,
+3358-              duration: 150,
+3359-              onComplete: () => {
+3360:                attacker.play(this.getAnimKey("frieren", transLevel, "idle"));
+3361-                this.setActionState(isPlayer, false);
+3362-              },
+3363-            });
+3364-          });
+3365-        },
+3366-      });
+3367-    } else {
+3368:      attacker.play(this.getAnimKey("frieren", transLevel, "attack"));
+3369-      this.time.delayedCall(100, () => {
+3370-        if (!this.scene.isActive()) return;
+3371-        if (this.cache.audio.exists("sfx_beam"))
+3372-          this.sound.play("sfx_beam", { volume: 1.0 });
+3373-
+3374-        const hand = this.getHandPosition(isPlayer);
+3375-        const beam = this.add
+3376-          .rectangle(
+3377-            hand.x,
+3378-            hand.y,
+3379:            Math.abs(target.x - attacker.x),
+3380-            4,
+3381-            0xffffff,
+3382-          )
+3383-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+3384-          .setDepth(5);
+--
+3397-          ),
+3398-        );
+3399-
+3400-        this.time.delayedCall(250, () => {
+3401-          if (!this.scene.isActive()) return;
+3402:          attacker.play(this.getAnimKey("frieren", transLevel, "idle"));
+3403-          this.setActionState(isPlayer, false);
+3404-        });
+3405-      });
+3406-    }
+3407-  }
+3408-
+3409:  performChapolimAttack(
+3410-    isPlayer: boolean,
+3411:    attackType: "melee" | "ki",
+3412-    comboCount: number,
+3413-    isComboFinisher: boolean,
+3414-  ) {
+3415:    const attacker = isPlayer ? this.player : this.enemy;
+3416-    const target = isPlayer ? this.enemy : this.player;
+3417-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+3418-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+3419-    const transLevel = isPlayer
+3420-      ? this.playerTransformLevel
+3421-      : this.enemyTransformLevel;
+3422-
+3423:    if (attackType === "melee") {
+3424:      attacker.play(this.getAnimKey("chapolim", transLevel, "attack"));
+3425-      this.tweens.add({
+3426:        targets: attacker,
+3427-        x: target.x + (isPlayer ? -30 : 30),
+3428-        y: target.y - 30,
+3429-        duration: 150,
+3430-        onComplete: () => {
+3431-          if (!this.scene.isActive()) return;
+3432:          if (this.cache.audio.exists("sfx_attack"))
+3433:            this.sound.play("sfx_attack", { volume: 1.5 });
+3434-
+3435-          const hammer = this.add
+3436-            .rectangle(target.x, target.y + 120, 20, 10, 0xff0000)
+3437-            .setDepth(6);
+3438-          this.tweens.add({
+--
+3454-          this.cameras.main.shake(100, 0.02);
+3455-
+3456-          this.time.delayedCall(200, () => {
+3457-            if (!this.scene.isActive()) return;
+3458-            this.tweens.add({
+3459:              targets: attacker,
+3460-              x: startX,
+3461-              y: startY,
+3462-              duration: 150,
+3463-              onComplete: () => {
+3464:                attacker.play(this.getAnimKey("chapolim", transLevel, "idle"));
+3465-                this.setActionState(isPlayer, false);
+3466-              },
+3467-            });
+3468-          });
+3469-        },
+3470-      });
+3471-    } else {
+3472:      attacker.play(this.getAnimKey("chapolim", transLevel, "attack"));
+3473-      this.time.delayedCall(100, () => {
+3474-        if (!this.scene.isActive()) return;
+3475-        if (this.cache.audio.exists("sfx_beam"))
+3476-          this.sound.play("sfx_beam", { volume: 0.8 });
+3477-
+--
+3503-          },
+3504-        });
+3505-
+3506-        this.time.delayedCall(300, () => {
+3507-          if (!this.scene.isActive()) return;
+3508:          attacker.play(this.getAnimKey("chapolim", transLevel, "idle"));
+3509-          this.setActionState(isPlayer, false);
+3510-        });
+3511-      });
+3512-    }
+3513-  }
+3514-
+3515:  performGojoAttack(
+3516-    isPlayer: boolean,
+3517:    attackType: "melee" | "ki",
+3518-    comboCount: number,
+3519-    isComboFinisher: boolean,
+3520-  ) {
+3521:    const attacker = isPlayer ? this.player : this.enemy;
+3522-    const target = isPlayer ? this.enemy : this.player;
+3523-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+3524-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+3525-    const transLevel = isPlayer
+3526-      ? this.playerTransformLevel
+3527-      : this.enemyTransformLevel;
+3528-
+3529:    if (attackType === "melee") {
+3530:      attacker.setAlpha(0);
+3531:      this.createImpactEffect(attacker.x, attacker.y + 120, 0x00ffff);
+3532-
+3533-      this.time.delayedCall(100, () => {
+3534-        if (!this.scene.isActive()) return;
+3535:        attacker.setAlpha(1);
+3536:        attacker.x = target.x + (isPlayer ? -30 : 30);
+3537:        attacker.play(this.getAnimKey("gojo", transLevel, "attack"));
+3538-
+3539:        if (this.cache.audio.exists("sfx_attack"))
+3540:          this.sound.play("sfx_attack", { volume: 1.2 });
+3541-        this.createImpactEffect(target.x, target.y + 120, 0x00ffff);
+3542-        this.takeDamage(
+3543-          !isPlayer,
+3544-          Math.floor(
+3545-            (isComboFinisher ? 22 : 12) * this.getDamageMultiplier(transLevel),
+3546-          ),
+3547-        );
+3548-
+3549-        this.time.delayedCall(200, () => {
+3550-          if (!this.scene.isActive()) return;
+3551:          attacker.setAlpha(0);
+3552:          this.createImpactEffect(attacker.x, attacker.y + 120, 0x00ffff);
+3553-
+3554-          this.time.delayedCall(100, () => {
+3555-            if (!this.scene.isActive()) return;
+3556:            attacker.setAlpha(1);
+3557:            attacker.x = startX;
+3558:            attacker.play(this.getAnimKey("gojo", transLevel, "idle"));
+3559-            this.setActionState(isPlayer, false);
+3560-          });
+3561-        });
+3562-      });
+3563-    } else {
+3564:      attacker.play(this.getAnimKey("gojo", transLevel, "attack"));
+3565-      this.time.delayedCall(100, () => {
+3566-        if (!this.scene.isActive()) return;
+3567-        if (this.cache.audio.exists("sfx_beam"))
+3568-          this.sound.play("sfx_beam", { volume: 1.0 });
+3569-
+--
+3589-          },
+3590-        });
+3591-
+3592-        this.time.delayedCall(300, () => {
+3593-          if (!this.scene.isActive()) return;
+3594:          attacker.play(this.getAnimKey("gojo", transLevel, "idle"));
+3595-          this.setActionState(isPlayer, false);
+3596-        });
+3597-      });
+3598-    }
+3599-  }
+3600-
+3601:  performGenericAttack(
+3602-    isPlayer: boolean,
+3603:    attackType: "melee" | "ki",
+3604-    comboCount: number,
+3605-    isComboFinisher: boolean,
+3606-  ) {
+3607:    const attacker = isPlayer ? this.player : this.enemy;
+3608-    const target = isPlayer ? this.enemy : this.player;
+3609-    const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+3610-    const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+3611-    const transLevel = isPlayer
+3612-      ? this.playerTransformLevel
+3613-      : this.enemyTransformLevel;
+3614:    const attackerData = isPlayer ? this.playerData : this.enemyData;
+3615-
+3616-    // 1. Windup (Hop Back & Rotate)
+3617-    const windupDist = isPlayer ? -60 : 60;
+3618-    const rotDir = isPlayer ? -0.3 : 0.3;
+3619-
+3620-    this.tweens.add({
+3621:      targets: attacker,
+3622-      x: startX + windupDist,
+3623-      y: startY - 20,
+3624-      rotation: rotDir,
+3625-      scaleX: 2.8,
+3626-      scaleY: 3.2,
+3627-      duration: 150, // Slightly longer windup for impact
+3628-      ease: "Back.easeOut",
+3629-      onComplete: () => {
+3630-        if (!this.scene.isActive()) return;
+3631-
+3632:        if (attackType === "melee") {
+3633-          // MELEE: Quick Lunge with Follow-Through
+3634-          const trailTimer = this.time.addEvent({
+3635-            delay: 15,
+3636-            callback: () => {
+3637:              if (!this.scene.isActive() || !attacker.active) return;
+3638-              const ghost = this.add
+3639-                .sprite(
+3640:                  attacker.x,
+3641:                  attacker.y,
+3642:                  attacker.texture.key,
+3643:                  attacker.frame.name,
+3644-                )
+3645-                .setOrigin(0.5, 0.5)
+3646:                .setScale(attacker.scaleX, attacker.scaleY)
+3647:                .setRotation(attacker.rotation)
+3648:                .setFlipX(attacker.flipX)
+3649-                .setTint(0x00ffff)
+3650-                .setAlpha(0.6)
+3651-                .setDepth(0);
+3652-              this.tweens.add({
+3653-                targets: ghost,
+--
+3660-            },
+3661-            repeat: 10,
+3662-          });
+3663-
+3664-          // Lunge Forward
+3665:          attacker.play(
+3666:            this.getAnimKey(attackerData.key, transLevel, "attack"),
+3667-          );
+3668-
+3669-          const lungeDist = isComboFinisher
+3670-            ? isPlayer
+3671-              ? -50
+--
+3673-            : isPlayer
+3674-              ? -30
+3675-              : 30;
+3676-
+3677-          this.tweens.add({
+3678:            targets: attacker,
+3679-            x: target.x + lungeDist, // Deeper lunge
+3680-            y: startY,
+3681-            rotation: -rotDir * 2.5, // More rotation for follow-through
+3682-            scaleX: 3.4,
+3683-            scaleY: 2.6,
+--
+3686-            onComplete: () => {
+3687-              trailTimer.remove();
+3688-              if (!this.scene.isActive()) return;
+3689-
+3690-              // Impact
+3691:              if (this.cache.audio.exists("sfx_attack"))
+3692:                this.sound.play("sfx_attack", { volume: 1.2 });
+3693-
+3694-              const baseDamage = isComboFinisher ? 20 : 10;
+3695-              const damage = Math.floor(
+3696-                baseDamage * this.getDamageMultiplier(transLevel),
+3697-              );
+--
+3751-              });
+3752-
+3753-              // 3. Recover (Return to start)
+3754-              this.time.delayedCall(150, () => {
+3755-                if (!this.scene.isActive()) return;
+3756:                attacker.play(
+3757:                  this.getAnimKey(attackerData.key, transLevel, "idle"),
+3758-                );
+3759-                this.tweens.add({
+3760:                  targets: attacker,
+3761-                  x: startX,
+3762-                  y: startY,
+3763-                  rotation: 0,
+3764-                  scaleX: 3,
+3765-                  scaleY: 3,
+--
+3772-              });
+3773-            },
+3774-          });
+3775-        } else {
+3776-          // BEAM: Gather energy then shoot
+3777:          const blastColor = attackerData.specialColor || 0x00ffff;
+3778-
+3779-          // Gathering energy spark
+3780-          const hand = this.getHandPosition(isPlayer);
+3781-          const gatherSpark = this.add
+3782-            .circle(hand.x, hand.y, 2, blastColor)
+--
+3788-            duration: 150,
+3789-            yoyo: true,
+3790-            onComplete: () => gatherSpark.destroy(),
+3791-          });
+3792-
+3793:          attacker.play(
+3794:            this.getAnimKey(attackerData.key, transLevel, "attack"),
+3795-          );
+3796-          this.tweens.add({
+3797:            targets: attacker,
+3798-            x: startX + (isPlayer ? 30 : -30), // Forward lunge to throw
+3799-            y: startY,
+3800-            rotation: -rotDir * 0.8,
+3801-            scaleX: 3.2,
+3802-            scaleY: 2.8,
+--
+3807-
+3808-              // Shoot Blast
+3809-              if (this.cache.audio.exists("sfx_beam"))
+3810-                this.sound.play("sfx_beam", { volume: 1.2 });
+3811-
+3812:              // Attacker flash
+3813-              this.tweens.add({
+3814:                targets: attacker,
+3815-                alpha: 0.7,
+3816-                yoyo: true,
+3817-                duration: 50,
+3818-              });
+3819-
+--
+3882-                      core.destroy();
+3883-
+3884-                      if (!this.scene.isActive()) return;
+3885-
+3886-                      // Impact
+3887:                      if (this.cache.audio.exists("sfx_attack"))
+3888:                        this.sound.play("sfx_attack", { volume: 1.5 });
+3889-
+3890-                      const baseDamage = isComboFinisher ? 15 : 10;
+3891-                      const damage = Math.floor(
+3892-                        baseDamage * this.getDamageMultiplier(transLevel),
+3893-                      );
+--
+3916-                });
+3917-              }
+3918-
+3919-              // Return
+3920-              this.tweens.add({
+3921:                targets: attacker,
+3922-                x: startX,
+3923-                y: startY,
+3924-                rotation: 0,
+3925-                scaleX: 3,
+3926-                scaleY: 3,
+3927-                duration: 300,
+3928-                ease: "Back.easeOut",
+3929-                delay: 150 + blastCount * 100,
+3930-                onComplete: () => {
+3931-                  if (this.scene.isActive()) {
+3932:                    attacker.play(
+3933:                      this.getAnimKey(attackerData.key, transLevel, "idle"),
+3934-                    );
+3935-                    this.setActionState(isPlayer, false);
+3936-                  }
+3937-                },
+3938-              });
+--
+4393-    });
+4394-  }
+4395-
+4396-  // --- ANIMATION SEQUENCE (FIXED: NO MOVEMENT) ---
+4397-  animateCastSequence(
+4398:    attacker: Phaser.GameObjects.Sprite,
+4399-    isPlayer: boolean,
+4400-    tintColor: number,
+4401-    animKeySpecial: string,
+4402-    animKeyIdle: string,
+4403-    onFireCallback: () => void,
+4404-  ) {
+4405:    attacker.play(animKeySpecial);
+4406-
+4407:    // FIXED: Removed x movement (targets: attacker, x: ...)
+4408-    // We only scale to show effort/charging. This prevents the beam from detaching or spawning behind.
+4409-
+4410-    const rotDir = isPlayer ? -0.15 : 0.15;
+4411-
+4412-    // 1. Squash/Stretch (Charge)
+4413-    this.tweens.add({
+4414:      targets: attacker,
+4415-      scaleX: 3.5, // Stretch wide
+4416-      scaleY: 2.5, // Squash down
+4417-      rotation: rotDir,
+4418-      tint: tintColor,
+4419-      duration: 50,
+4420-      ease: "Quad.easeOut",
+4421-      onComplete: () => {
+4422-        if (!this.scene.isActive()) return;
+4423:        attacker.setTint(0xffffff);
+4424-
+4425-        // Flash screen slightly to indicate power
+4426-        this.cameras.main.flash(100, 255, 255, 255, false);
+4427-
+4428-        // Snap forward
+4429-        this.tweens.add({
+4430:          targets: attacker,
+4431-          rotation: -rotDir,
+4432-          scaleX: 2.8,
+4433-          scaleY: 3.2,
+4434-          duration: 50,
+4435-          ease: "Power2",
+--
+4442-        this.time.delayedCall(500, () => {
+4443-          if (!this.scene.isActive()) return;
+4444-
+4445-          // 3. Recovery (Return to Normal)
+4446-          this.tweens.add({
+4447:            targets: attacker,
+4448-            scaleX: 3,
+4449-            scaleY: 3,
+4450-            rotation: 0,
+4451-            duration: 200,
+4452-            ease: "Quad.easeOut",
+4453-            onComplete: () => {
+4454-              if (!this.scene.isActive()) return;
+4455:              attacker.clearTint();
+4456-              // Let onSpecialComplete handle returning to idle
+4457-            },
+4458-          });
+4459-        });
+4460-      },
+--
+4627-    const data = isPlayer ? this.playerData : this.enemyData;
+4628-    const transLevel = isPlayer
+4629-      ? this.playerTransformLevel
+4630-      : this.enemyTransformLevel;
+4631-    const animKeyIdle = this.getAnimKey(data.key, transLevel, "idle");
+4632:    const attacker = isPlayer ? this.player : this.enemy;
+4633-
+4634-    if (this.scene.isActive()) {
+4635:      attacker.play(animKeyIdle);
+4636-      this.setActionState(isPlayer, false);
+4637-    }
+4638-  }
+4639-
+4640-  // Helper to calculate damage multiplier based on transformation level
+--
+4652-    const yOffset = 120; // Lowered from 84 so it aligns with hands visually rather than mouth
+4653-    return { x: sprite.x + xOffset, y: sprite.y + yOffset };
+4654-  }
+4655-
+4656-  private specialKamehameha(isP: boolean) {
+4657:    const attacker = isP ? this.player : this.enemy;
+4658-    const target = isP ? this.enemy : this.player;
+4659-    const transLevel = isP
+4660-      ? this.playerTransformLevel
+4661-      : this.enemyTransformLevel;
+4662:    if (!attacker.active || !target.active) {
+4663-      this.setActionState(isP, false);
+4664-      return;
+4665-    }
+4666-
+4667-    const baseDmg = 35;
+--
+4840-      },
+4841-    });
+4842-  }
+4843-
+4844-  // =========================================================================
+4845:  // REMASTERED SPECIAL ATTACKS (VISUALLY UPGRADED FOR ALL)
+4846-  // =========================================================================
+4847-
+4848-  // 1. BEAM ENGINE (KAMEHAMEHA, GALICK GUN, MASENKO)
+4849-  private specialBeam(
+4850-    isP: boolean,
+--
+4852-    col: number,
+4853-    hasInner: boolean,
+4854-    vibrate: boolean,
+4855-    type: string,
+4856-  ) {
+4857:    const attacker = isP ? this.player : this.enemy;
+4858-    const target = isP ? this.enemy : this.player;
+4859-    const transLevel = isP
+4860-      ? this.playerTransformLevel
+4861-      : this.enemyTransformLevel;
+4862:    if (!attacker.active || !target.active) {
+4863-      this.setActionState(isP, false);
+4864-      return;
+4865-    }
+4866-
+4867-    const baseDmg = isS ? 60 : 35;
+--
+4871-
+4872-    const hand = this.getHandPosition(isP);
+4873-    const endX = target.x;
+4874-    const distance = Math.abs(endX - hand.x) + 50;
+4875-
+4876:    this.log(isS ? "SUPER ATTACK!" : type.toUpperCase() + "!");
+4877-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
+4878-
+4879-    // Charge Effect
+4880-    const chargeCore = this.add
+4881-      .circle(hand.x, hand.y, 2, 0xffffff)
+--
+5222-    });
+5223-  }
+5224-
+5225-  // 4. KATANA SLASH (DIMENSIONAL CUT REMASTER)
+5226-  private specialSupremeHeadbutt(isP: boolean) {
+5227:    const attacker = isP ? this.player : this.enemy;
+5228-    const target = isP ? this.enemy : this.player;
+5229-    const startX = isP ? this.p1StartPos.x : this.p2StartPos.x;
+5230-    const startY = isP ? this.p1StartPos.y : this.p2StartPos.y;
+5231-    const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
+5232-    const dmg = Math.floor(130 * this.getDamageMultiplier(transLevel));
+--
+5234-
+5235-    this.log("SUPREME HEADBUTT!");
+5236-    
+5237-    // Preparation: Wind gathering effect
+5238-    for(let i=0; i<15; i++) {
+5239:       const p = this.add.circle(attacker.x + Phaser.Math.Between(-60, 60), attacker.y + Phaser.Math.Between(-60, 60), Phaser.Math.Between(2, 4), 0xffffff, 0.8).setDepth(15);
+5240-       this.tweens.add({
+5241-         targets: p,
+5242:         x: attacker.x,
+5243:         y: attacker.y - 45,
+5244-         alpha: 0,
+5245-         scale: 0.2,
+5246-         duration: 600,
+5247-         onComplete: () => p.destroy()
+5248-       });
+5249-    }
+5250-
+5251-    this.tweens.add({
+5252:      targets: attacker,
+5253:      x: attacker.x + (isP ? -60 : 60),
+5254-      duration: 500,
+5255-      ease: "Cubic.easeOut",
+5256-      onComplete: () => {
+5257-        if (!this.scene.isActive()) return;
+5258-
+5259-        // Head glint
+5260:        const glow = this.add.circle(attacker.x, attacker.y - 45, 12, 0xffffff, 1).setDepth(20);
+5261-        this.tweens.add({ targets: glow, scale: 6, alpha: 0, duration: 200 });
+5262-
+5263:        if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack", { volume: 2.5 });
+5264-        this.cameras.main.shake(150, 0.04);
+5265-
+5266-        // DASH! (Almost instantaneous)
+5267-        this.tweens.add({
+5268:          targets: attacker,
+5269-          x: target.x + (isP ? 30 : -30),
+5270-          duration: 60,
+5271-          ease: "Linear",
+5272-          onComplete: () => {
+5273-            if (!this.scene.isActive()) return;
+--
+5306-
+5307-            // Afterimage return
+5308-            this.time.delayedCall(500, () => {
+5309-              if (!this.scene.isActive()) return;
+5310-              this.tweens.add({
+5311:                targets: attacker,
+5312-                x: startX,
+5313-                duration: 200,
+5314-                ease: "Power2",
+5315-                onComplete: () => this.onSpecialComplete(isP)
+5316-              });
+--
+5320-      }
+5321-    });
+5322-  }
+5323-
+5324-  private specialSeriousPunch(isP: boolean) {
+5325:    const attacker = isP ? this.player : this.enemy;
+5326-    const target = isP ? this.enemy : this.player;
+5327-    const startX = isP ? this.p1StartPos.x : this.p2StartPos.x;
+5328-    const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
+5329-    const dmg = Math.floor(110 * this.getDamageMultiplier(transLevel));
+5330-    const targetStartX = isP ? this.p2StartPos.x : this.p1StartPos.x;
+5331-
+5332-    this.log("SERIOUS PUNCH!");
+5333-    
+5334-    // Slow dramatic walk
+5335:    attacker.play(this.getAnimKey("saitama", transLevel, "idle"));
+5336-    
+5337-    // Manga-style speed lines in the background
+5338-    const speedLines = this.add.graphics();
+5339-    const cx = 480;
+5340-    const cy = 270;
+--
+5350-    }
+5351-    speedLines.setDepth(0);
+5352-    this.tweens.add({ targets: speedLines, angle: 10, duration: 1200, alpha: 0.8 });
+5353-
+5354-    this.tweens.add({
+5355:      targets: attacker,
+5356-      x: target.x + (isP ? -120 : 120),
+5357-      duration: 1200,
+5358-      ease: "Power1.easeInOut",
+5359-      onComplete: () => {
+5360-        if (!this.scene.isActive()) return;
+5361-        
+5362-        // Everything goes quiet for a second...
+5363-        this.time.delayedCall(300, () => {
+5364-          if (!this.scene.isActive()) return;
+5365-
+5366:          attacker.play(this.getAnimKey("saitama", transLevel, "attack"));
+5367-          
+5368-          this.time.delayedCall(100, () => {
+5369-            if (!this.scene.isActive()) return;
+5370-            
+5371-            if (this.cache.audio.exists("sfx_explosion")) this.sound.play("sfx_explosion", { volume: 3.0 });
+--
+5427-            });
+5428-
+5429-            this.time.delayedCall(800, () => {
+5430-               if (!this.scene.isActive()) return;
+5431-               this.tweens.add({
+5432:                 targets: attacker,
+5433-                 x: startX,
+5434-                 duration: 300,
+5435-                 onComplete: () => this.onSpecialComplete(isP)
+5436-               });
+5437-            });
+--
+5440-      }
+5441-    });
+5442-  }
+5443-
+5444-  private specialElectricDisc(isP: boolean) {
+5445:    const attacker = isP ? this.player : this.enemy;
+5446-    const target = isP ? this.enemy : this.player;
+5447-    const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
+5448-    const dmg = Math.floor(40 * this.getDamageMultiplier(transLevel));
+5449-
+5450-    this.log("ELECTRIC DISC!");
+--
+5484-      }
+5485-    });
+5486-  }
+5487-
+5488-  private specialStaticBurst(isP: boolean) {
+5489:    const attacker = isP ? this.player : this.enemy;
+5490-    const target = isP ? this.enemy : this.player;
+5491-    const transLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
+5492-    const dmg = Math.floor(85 * this.getDamageMultiplier(transLevel));
+5493-
+5494-    this.log("STATIC BURST!!!");
+--
+5496-    
+5497-    // Zoom in
+5498-    this.cameras.main.zoomTo(1.2, 500, "Cubic.easeInOut", true);
+5499-
+5500-    // Charge effect
+5501:    const charge = this.add.circle(attacker.x, attacker.y + 100, 10, 0x00ffff, 1).setDepth(5);
+5502-    this.tweens.add({
+5503-        targets: charge,
+5504-        scale: 6,
+5505-        alpha: 0.2,
+5506-        duration: 600,
+--
+5541-    const baseDmg = isS ? 55 : 30;
+5542-    const dmg = Math.floor(baseDmg * this.getDamageMultiplier(transLevel));
+5543-    const hand = this.getHandPosition(isP);
+5544-
+5545-    this.log("KATANA SLASH!");
+5546:    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+5547-
+5548-    // The Slash Graphic
+5549-    const slashGlow = this.add
+5550-      .graphics()
+5551-      .setDepth(4)
+--
+5908-    this.time.delayedCall(count * 100 + 800, () => {
+5909-      if (this.scene.isActive()) this.onSpecialComplete(isP);
+5910-    });
+5911-  }
+5912-
+5913:  // 7. PANCAKE (JUMP ATTACK - Uses specific tweens)
+5914-  private specialPancake(isP: boolean, isS: boolean) {
+5915:    const attacker = isP ? this.player : this.enemy;
+5916-    const startX = isP ? this.p1StartPos.x : this.p2StartPos.x;
+5917-    const startY = isP ? this.p1StartPos.y : this.p2StartPos.y;
+5918-    const target = isP ? this.enemy : this.player;
+5919-    const transLevel = isP
+5920-      ? this.playerTransformLevel
+5921-      : this.enemyTransformLevel;
+5922:    const attackerData = isP ? this.playerData : this.enemyData;
+5923-    const baseDmg = isS ? 80 : 50;
+5924-    const dmg = Math.floor(baseDmg * this.getDamageMultiplier(transLevel));
+5925-
+5926-    this.log("PANCAKES!");
+5927:    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+5928-
+5929-    const animKeySpecial = this.getAnimKey(
+5930:      attackerData.key,
+5931-      transLevel,
+5932-      "special",
+5933-    );
+5934:    const animKeyIdle = this.getAnimKey(attackerData.key, transLevel, "idle");
+5935:    attacker.play(animKeySpecial);
+5936-
+5937-    // Charge squash
+5938-    this.tweens.add({
+5939:      targets: attacker,
+5940-      scaleX: 3.5,
+5941-      scaleY: 2.5,
+5942-      duration: 200,
+5943-      ease: "Quad.easeOut",
+5944-      onComplete: () => {
+--
+5959-          scaleY: 5,
+5960-          duration: 400,
+5961-        });
+5962-
+5963-        this.tweens.add({
+5964:          targets: attacker,
+5965-          y: startY - 400, // Higher jump
+5966-          x: target.x,
+5967-          scaleX: 3,
+5968-          scaleY: 3,
+5969-          duration: 400,
+5970-          ease: "Cubic.easeOut",
+5971-          onComplete: () => {
+5972-            if (!this.scene.isActive()) return;
+5973-            this.tweens.add({
+5974:              targets: attacker,
+5975-              y: startY,
+5976-              duration: 150, // Faster drop
+5977-              ease: "Bounce.easeOut",
+5978-              onComplete: () => {
+5979-                if (!this.scene.isActive()) return;
+--
+6021-                shadow.destroy();
+6022-
+6023-                this.time.delayedCall(400, () => {
+6024-                  if (this.scene.isActive()) {
+6025-                    this.tweens.add({
+6026:                      targets: attacker,
+6027-                      x: startX,
+6028-                      y: startY,
+6029-                      duration: 300,
+6030-                      onComplete: () => {
+6031-                        this.onSpecialComplete(isP);
+--
+6041-    });
+6042-  }
+6043-
+6044-  // 8. PLASMA DASH (CYBER NINJA SPECIAL)
+6045-  private specialPlasmaDash(isP: boolean, isS: boolean) {
+6046:    const attacker = isP ? this.player : this.enemy;
+6047-    const target = isP ? this.enemy : this.player;
+6048:    const startX = attacker.x;
+6049:    const startY = attacker.y;
+6050-    const transLevel = isP
+6051-      ? this.playerTransformLevel
+6052-      : this.enemyTransformLevel;
+6053-    const baseDmg = isS ? 60 : 35;
+6054-    const dmg = Math.floor(baseDmg * this.getDamageMultiplier(transLevel));
+6055-    const dashColor = transLevel > 0 ? 0xff0055 : 0x00eaff;
+6056-
+6057-    this.log("PLASMA DASH!");
+6058:    if (this.cache.audio.exists("sfx_attack"))
+6059:      this.sound.play("sfx_attack", { rate: 2.0 });
+6060-
+6061-    // Vanish
+6062:    attacker.setVisible(false);
+6063-
+6064-    // Dash Line Visual
+6065-    const dashLineGlow = this.add
+6066-      .rectangle(
+6067-        (startX + target.x) / 2,
+--
+6095-      duration: 300,
+6096-    });
+6097-
+6098-    // Teleport behind enemy
+6099-    const behindX = isP ? target.x + 80 : target.x - 80;
+6100:    attacker.setPosition(behindX, startY);
+6101:    attacker.setVisible(true);
+6102:    attacker.setFlipX(isP ? true : false); // Face back towards enemy
+6103-
+6104-    // Impact Delay (The "Omae wa mou shindeiru" effect)
+6105-    this.time.delayedCall(400, () => {
+6106-      if (!this.scene.isActive()) return;
+6107-
+--
+6166-      this.takeDamage(!isP, dmg);
+6167-
+6168-      // Return to start
+6169-      this.time.delayedCall(300, () => {
+6170-        if (!this.scene.isActive()) return;
+6171:        attacker.setVisible(false); // Vanish
+6172-
+6173-        // Teleport back start
+6174:        attacker.setPosition(startX, startY);
+6175:        attacker.setFlipX(isP ? false : true); // Reset flip
+6176:        attacker.setVisible(true);
+6177-
+6178-        this.onSpecialComplete(isP);
+6179-      });
+6180-    });
+6181-  }
+6182-
+6183-  // =========================================================================
+6184:  // SPIDERMAN SPECIAL & SUPER ATTACKS
+6185-  // =========================================================================
+6186-
+6187-  private specialWebPullPunch(isPlayer: boolean) {
+6188:      const attacker = isPlayer ? this.player : this.enemy;
+6189-      const target = isPlayer ? this.enemy : this.player;
+6190-      const transLevel = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
+6191-      const isIron = transLevel > 0;
+6192-      
+6193-      const webColor = isIron ? 0xcc2222 : 0xdddddd;
+--
+6196-      const hand = this.getHandPosition(isPlayer);
+6197-      const webLine = this.add.rectangle(hand.x, hand.y, 0, 4, webColor).setOrigin(isPlayer ? 0 : 1, 0.5).setDepth(4);
+6198-      
+6199-      this.tweens.add({
+6200-          targets: webLine,
+6201:          width: Math.abs(target.x - attacker.x),
+6202-          duration: 150,
+6203-          onComplete: () => {
+6204-             if (!this.scene.isActive()) return;
+6205-             // Hit! the opponent is pulled towards spiderman
+6206-             this.createImpactEffect(target.x, target.y + 120, webColor);
+6207-             
+6208-             this.tweens.add({
+6209-                 targets: [target, webLine],
+6210:                 x: attacker.x + (isPlayer ? 50 : -50),
+6211-                 width: 50,
+6212-                 duration: 200,
+6213-                 ease: "Back.easeIn",
+6214-                 onComplete: () => {
+6215-                     webLine.destroy();
+6216-                     // BAM! Uppercut or heavy punch
+6217:                     attacker.play(this.getAnimKey("spiderman", transLevel, "attack"));
+6218-                     this.cameras.main.shake(200, 0.03);
+6219:                     if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack", { volume: 1.5 });
+6220-                     
+6221-                     this.createImpactEffect(target.x, target.y + 120, 0xff0000);
+6222-                     this.takeDamage(!isPlayer, Math.floor(40 * this.getDamageMultiplier(transLevel)));
+6223-                     
+6224-                     // Send them flying back
+--
+6236-                         ease: "Sine.easeOut"
+6237-                     });
+6238-                     
+6239-                     this.time.delayedCall(400, () => {
+6240-                         if (!this.scene.isActive()) return;
+6241:                         attacker.play(this.getAnimKey("spiderman", transLevel, "idle"));
+6242-                         this.onSpecialComplete(isPlayer);
+6243-                     });
+6244-                 }
+6245-             });
+6246-          }
+6247-      });
+6248-  }
+6249-
+6250-  private specialMaximumSpider(isPlayer: boolean) {
+6251:      const attacker = isPlayer ? this.player : this.enemy;
+6252-      const target = isPlayer ? this.enemy : this.player;
+6253-      const startX = isPlayer ? this.p1StartPos.x : this.p2StartPos.x;
+6254-      const startY = isPlayer ? this.p1StartPos.y : this.p2StartPos.y;
+6255-      const transLevel = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
+6256-      const isIron = transLevel > 0;
+6257-      
+6258-      const beamColor = isIron ? 0xffd700 : 0xaa0000;
+6259-      this.cameras.main.flash(500, 255, 255, 255);
+6260-
+6261-      // Dash through screen multiple times! INSTANT KILL MODE
+6262:      attacker.play(this.getAnimKey("spiderman", transLevel, "attack"));
+6263-      
+6264-      let strikes = 0;
+6265-      const maxStrikes = isIron ? 8 : 5;
+6266-      
+6267-      const performStrike = () => {
+6268-          if (!this.scene.isActive()) return;
+6269-          if (strikes >= maxStrikes) {
+6270-              // Final return
+6271:              attacker.setAlpha(0);
+6272:              attacker.x = startX;
+6273:              attacker.y = startY;
+6274-              this.time.delayedCall(150, () => {
+6275-                 if (!this.scene.isActive()) return;
+6276:                 attacker.setAlpha(1);
+6277:                 attacker.play(this.getAnimKey("spiderman", transLevel, "idle"));
+6278-                 this.onSpecialComplete(isPlayer);
+6279-              });
+6280-              return;
+6281-          }
+6282-          
+6283-          strikes++;
+6284-          
+6285:          // Random attack vector
+6286-          const fromX = target.x + (Math.random() * 400 - 200);
+6287-          const fromY = target.y + 120 + (Math.random() * 300 - 200);
+6288-          
+6289:          attacker.x = fromX;
+6290:          attacker.y = fromY;
+6291:          attacker.setAlpha(0);
+6292-          
+6293-          // Show quick line
+6294-          const slash = this.add.graphics();
+6295-          slash.lineStyle(6, beamColor, 0.8);
+6296-          slash.beginPath();
+--
+6305-              duration: 100,
+6306-              onComplete: () => slash.destroy()
+6307-          });
+6308-
+6309-          this.tweens.add({
+6310:              targets: attacker,
+6311-              x: target.x,
+6312-              y: target.y + 120,
+6313-              alpha: 1,
+6314-              duration: 80,
+6315-              onComplete: () => {
+6316-                  if (!this.scene.isActive()) return;
+6317:                  if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack", { volume: 0.8 });
+6318-                  this.createImpactEffect(target.x + (Math.random()*40-20), target.y + 120 + (Math.random()*40-20), 0xffffff);
+6319-                  this.takeDamage(!isPlayer, Math.floor((isIron ? 15 : 20) * this.getDamageMultiplier(transLevel)));
+6320-                  this.cameras.main.shake(50, 0.02);
+6321-                  performStrike();
+6322-              }
+--
+6325-      
+6326-      performStrike();
+6327-  }
+6328-
+6329-  // =========================================================================
+6330:  // 100% ULTIMATE ATTACKS
+6331-  // =========================================================================
+6332-
+6333-  private specialGenkidama(isP: boolean) {
+6334:    const attacker = isP ? this.player : this.enemy;
+6335-    const target = isP ? this.enemy : this.player;
+6336-    const transLevel = isP
+6337-      ? this.playerTransformLevel
+6338-      : this.enemyTransformLevel;
+6339-    const dmg = Math.floor(120 * this.getDamageMultiplier(transLevel));
+6340-
+6341-    this.log("GENKIDAMA!");
+6342-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
+6343-
+6344-    // Raise hands
+6345:    attacker.play(`${attacker.getData('charKey')}_charge`);
+6346-
+6347-    // Create giant spirit bomb
+6348-    const bomb = this.add
+6349:      .circle(attacker.x, attacker.y - 150, 10, 0x00ffff)
+6350-      .setDepth(15)
+6351-      .setAlpha(0.9);
+6352-    const bombGlow = this.add
+6353:      .circle(attacker.x, attacker.y - 150, 15, 0xffffff)
+6354-      .setDepth(14)
+6355-      .setAlpha(0.5)
+6356-      .setBlendMode(Phaser.BlendModes.ADD);
+6357-
+6358-    // Energy gathering particles
+--
+6388-      scale: 35,
+6389-      duration: 1500,
+6390-      ease: "Sine.easeInOut",
+6391-      onComplete: () => {
+6392-        if (!this.scene.isActive()) return;
+6393:        attacker.play(`${attacker.getData('charKey')}_attack`); // Throw forward
+6394-
+6395-        this.cameras.main.shake(300, 0.02);
+6396-
+6397-        // Throw
+6398-        this.tweens.add({
+--
+6487-      },
+6488-    });
+6489-  }
+6490-
+6491-  private specialFinalFlash(isP: boolean) {
+6492:    const attacker = isP ? this.player : this.enemy;
+6493-    const target = isP ? this.enemy : this.player;
+6494-    const transLevel = isP
+6495-      ? this.playerTransformLevel
+6496-      : this.enemyTransformLevel;
+6497-    const dmg = Math.floor(110 * this.getDamageMultiplier(transLevel));
+--
+6656-      },
+6657-    });
+6658-  }
+6659-
+6660-  private specialFatherSonKamehameha(isP: boolean) {
+6661:    const attacker = isP ? this.player : this.enemy;
+6662-    const target = isP ? this.enemy : this.player;
+6663-    const transLevel = isP
+6664-      ? this.playerTransformLevel
+6665-      : this.enemyTransformLevel;
+6666-    const dmg = Math.floor(115 * this.getDamageMultiplier(transLevel));
+--
+6669-    this.log("FATHER-SON KAMEHAMEHA!");
+6670-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
+6671-
+6672-    // Ghost Goku (Visual representation)
+6673-    const ghost = this.add
+6674:      .sprite(attacker.x + (isP ? -40 : 40), attacker.y - 60, "goku_ssj")
+6675-      .setOrigin(0.5, 0.5)
+6676-      .setAlpha(0)
+6677-      .setScale(3.5)
+6678-      .setDepth(2); // In front of Gohan to be clearly visible
+6679-    ghost.setFlipX(!isP);
+6680:    if (this.anims.exists("goku_ssj_attack")) {
+6681:      ghost.play("goku_ssj_attack");
+6682-    }
+6683-    this.tweens.add({ targets: ghost, alpha: 0.85, duration: 500 });
+6684-
+6685-    // Charge Effect
+6686-    const chargeCore = this.add
+--
+6794-      },
+6795-    });
+6796-  }
+6797-
+6798-  private specialHellzoneGrenade(isP: boolean) {
+6799:    const attacker = isP ? this.player : this.enemy;
+6800-    const target = isP ? this.enemy : this.player;
+6801-    const transLevel = isP
+6802-      ? this.playerTransformLevel
+6803-      : this.enemyTransformLevel;
+6804-    const dmg = Math.floor(105 * this.getDamageMultiplier(transLevel));
+--
+6927-      });
+6928-    });
+6929-  }
+6930-
+6931-  private specialSolarKamehameha(isP: boolean) {
+6932:    const attacker = isP ? this.player : this.enemy;
+6933-    const target = isP ? this.enemy : this.player;
+6934-    const transLevel = isP
+6935-      ? this.playerTransformLevel
+6936-      : this.enemyTransformLevel;
+6937-    const dmg = Math.floor(120 * this.getDamageMultiplier(transLevel));
+--
+7068-      },
+7069-    });
+7070-  }
+7071-
+7072-  private specialNinjaBarrage(isP: boolean) {
+7073:    const attacker = isP ? this.player : this.enemy;
+7074-    const target = isP ? this.enemy : this.player;
+7075-    const transLevel = isP
+7076-      ? this.playerTransformLevel
+7077-      : this.enemyTransformLevel;
+7078-    const dmg = Math.floor(100 * this.getDamageMultiplier(transLevel));
+7079:    const startX = attacker.x;
+7080-
+7081-    this.log("NINJA BARRAGE!");
+7082:    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+7083-
+7084-    // Dash to target
+7085-    const dashGlow = this.add
+7086:      .rectangle(attacker.x, attacker.y, 100, 50, 0x3498db)
+7087-      .setDepth(14)
+7088-      .setAlpha(0.5)
+7089-      .setBlendMode(Phaser.BlendModes.ADD);
+7090-
+7091-    this.tweens.add({
+7092:      targets: [attacker, dashGlow],
+7093-      x: target.x + (isP ? -80 : 80),
+7094-      duration: 150,
+7095-      ease: "Cubic.easeIn",
+7096-      onComplete: () => {
+7097-        if (!this.scene.isActive()) return;
+--
+7197-          }
+7198-
+7199-          this.takeDamage(!isP, dmg);
+7200-          // Dash back
+7201-          this.tweens.add({
+7202:            targets: attacker,
+7203-            x: startX,
+7204-            duration: 200,
+7205-            ease: "Cubic.easeOut",
+7206-            onComplete: () => this.onSpecialComplete(isP),
+7207-          });
+--
+7209-      },
+7210-    });
+7211-  }
+7212-
+7213-  private specialBlackHole(isP: boolean) {
+7214:    const attacker = isP ? this.player : this.enemy;
+7215-    const target = isP ? this.enemy : this.player;
+7216-    const transLevel = isP
+7217-      ? this.playerTransformLevel
+7218-      : this.enemyTransformLevel;
+7219-    const dmg = Math.floor(115 * this.getDamageMultiplier(transLevel));
+--
+7348-      },
+7349-    });
+7350-  }
+7351-
+7352-  private specialMatrixBlast(isP: boolean) {
+7353:    const attacker = isP ? this.player : this.enemy;
+7354-    const target = isP ? this.enemy : this.player;
+7355-    const transLevel = isP
+7356-      ? this.playerTransformLevel
+7357-      : this.enemyTransformLevel;
+7358-    const dmg = Math.floor(125 * this.getDamageMultiplier(transLevel));
+--
+7420-          .setOrigin(0, 0.5)
+7421-          .setDepth(6);
+7422-        beamOuter.scaleX = isP ? 1 : -1;
+7423-        beam.scaleX = isP ? 1 : -1;
+7424-        beamCore.scaleX = isP ? 1 : -1;
+7425:        const distance = Math.abs(target.x - attacker.x) + 200;
+7426-
+7427-        // Beam Head
+7428-        const beamHeadGlow = this.add
+7429-          .ellipse(hand.x, hand.y, 140, 280, 0x00eaff)
+7430-          .setDepth(5)
+--
+7440-          duration: 150,
+7441-          ease: "Power2",
+7442-          onUpdate: () => {
+7443-            if (!this.scene.isActive()) return;
+7444-            const tipX = isP
+7445:              ? attacker.x + beam.width
+7446:              : attacker.x - beam.width;
+7447-            beamHeadGlow.setPosition(tipX, hand.y);
+7448-            beamHead.setPosition(tipX, hand.y);
+7449-          },
+7450-          onComplete: () => {
+7451-            if (!this.scene.isActive()) return;
+--
+7490-      },
+7491-    });
+7492-  }
+7493-
+7494-  private specialMegaPancake(isP: boolean) {
+7495:    const attacker = isP ? this.player : this.enemy;
+7496-    const target = isP ? this.enemy : this.player;
+7497-    const transLevel = isP
+7498-      ? this.playerTransformLevel
+7499-      : this.enemyTransformLevel;
+7500:    const attackerData = isP ? this.playerData : this.enemyData;
+7501-    const dmg = Math.floor(130 * this.getDamageMultiplier(transLevel));
+7502:    const startX = attacker.x;
+7503:    const startY = attacker.y;
+7504-
+7505-    this.log("MEGA PANCAKE!");
+7506:    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+7507-
+7508-    const animKeySpecial = this.getAnimKey(
+7509:      attackerData.key,
+7510-      transLevel,
+7511-      "special",
+7512-    );
+7513:    const animKeyIdle = this.getAnimKey(attackerData.key, transLevel, "idle");
+7514:    attacker.play(animKeySpecial);
+7515-
+7516-    // Charge squash
+7517-    this.tweens.add({
+7518:      targets: attacker,
+7519-      scaleX: 4,
+7520-      scaleY: 2,
+7521-      duration: 300,
+7522-      ease: "Quad.easeOut",
+7523-      onComplete: () => {
+--
+7614-
+7615-            this.createImpactEffect(target.x, target.y + 120, 0xd35400, "beam");
+7616-            this.takeDamage(!isP, dmg);
+7617-
+7618-            this.tweens.add({
+7619:              targets: attacker,
+7620-              scaleX: 3,
+7621-              scaleY: 3,
+7622-              duration: 200,
+7623-              ease: "Quad.easeIn",
+7624-            });
+--
+7630-              onComplete: () => {
+7631-                pancakeGlow.destroy();
+7632-                pancake.destroy();
+7633-                butter.destroy();
+7634-                shadow.destroy();
+7635:                attacker.play(animKeyIdle);
+7636-                this.time.delayedCall(500, () => trail.destroy());
+7637-                this.onSpecialComplete(isP);
+7638-              },
+7639-            });
+7640-          },
+--
+7642-      },
+7643-    });
+7644-  }
+7645-
+7646-  private specialCyberOverdrive(isP: boolean) {
+7647:    const attacker = isP ? this.player : this.enemy;
+7648-    const target = isP ? this.enemy : this.player;
+7649-    const transLevel = isP
+7650-      ? this.playerTransformLevel
+7651-      : this.enemyTransformLevel;
+7652-    const dmg = Math.floor(120 * this.getDamageMultiplier(transLevel));
+7653:    const startX = attacker.x;
+7654:    const startY = attacker.y;
+7655-    const dashColor = 0xff0055; // Always red for overdrive
+7656-
+7657-    this.log("CYBER OVERDRIVE!");
+7658:    if (this.cache.audio.exists("sfx_attack"))
+7659:      this.sound.play("sfx_attack", { rate: 1.5 });
+7660-
+7661:    attacker.setVisible(false);
+7662-
+7663-    // Screen darkens slightly for contrast
+7664-    const dark = this.add
+7665-      .rectangle(0, 0, 1000, 600, 0x000000, 0.8)
+7666-      .setOrigin(0)
+--
+7787-        targets: dark,
+7788-        alpha: 0,
+7789-        duration: 400,
+7790-        onComplete: () => dark.destroy(),
+7791-      });
+7792:      attacker.setPosition(startX, startY);
+7793:      attacker.setVisible(true);
+7794-      this.onSpecialComplete(isP);
+7795-    });
+7796-  }
+7797-
+7798-  private specialChipote(isP: boolean) {
+7799:    const attacker = isP ? this.player : this.enemy;
+7800-    const target = isP ? this.enemy : this.player;
+7801-    const transLevel = isP
+7802-      ? this.playerTransformLevel
+7803-      : this.enemyTransformLevel;
+7804-    const dmg = Math.floor(40 * this.getDamageMultiplier(transLevel));
+7805-
+7806-    this.log("CHIPOTE CHILLÓN!");
+7807:    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+7808-
+7809-    // Create a giant mallet sprite (using graphics)
+7810-    const mallet = this.add.graphics().setDepth(15);
+7811-    mallet.fillStyle(0xff0000, 1);
+7812-    mallet.fillRect(-20, -30, 40, 60); // Head
+7813-    mallet.fillStyle(0xffff00, 1);
+7814-    mallet.fillRect(-25, -20, 50, 40); // Yellow middle
+7815-    mallet.fillStyle(0xffff00, 1);
+7816-    mallet.fillRect(-5, 30, 10, 80); // Handle
+7817-
+7818:    const startX = attacker.x + (isP ? 50 : -50);
+7819:    const startY = attacker.y - 100;
+7820-    mallet.setPosition(startX, startY);
+7821-    mallet.rotation = isP ? -Math.PI / 4 : Math.PI / 4;
+7822-
+7823-    // Charge up effect
+7824-    this.tweens.add({
+--
+8000-      });
+8001-    }
+8002-  }
+8003-
+8004-  private specialRasengan(isP: boolean, isS: boolean) {
+8005:    const attacker = isP ? this.player : this.enemy;
+8006-    const target = isP ? this.enemy : this.player;
+8007:    const startX = attacker.x;
+8008:    const startY = attacker.y;
+8009-    const transLevel = isP
+8010-      ? this.playerTransformLevel
+8011-      : this.enemyTransformLevel;
+8012-    const baseDmg = isS ? 60 : 35;
+8013-    const dmg = Math.floor(baseDmg * this.getDamageMultiplier(transLevel));
+8014-
+8015-    let color = 0x3498db; // Blue Rasengan
+8016-    let scaleTarget = 15;
+8017:    let attackName = "RASENGAN!";
+8018-
+8019-    if (transLevel === 1) {
+8020-      scaleTarget = 25; // Oodama Rasengan (Bigger)
+8021:      attackName = "OODAMA RASENGAN!";
+8022-    } else if (transLevel === 2) {
+8023-      color = 0xffaa00; // Tailed Beast Rasengan (Orange)
+8024-      scaleTarget = 30;
+8025:      attackName = "TAILED BEAST RASENGAN!";
+8026-    }
+8027-
+8028:    this.log(attackName);
+8029:    if (this.cache.audio.exists("sfx_attack"))
+8030:      this.sound.play("sfx_attack", { rate: 1.5 });
+8031-
+8032-    // Create Rasengan in hand
+8033-    const hand = this.getHandPosition(isP);
+8034-    const rasengan = this.add
+8035-      .circle(hand.x, hand.y, 2, color)
+--
+8081-          repeat: -1,
+8082-        });
+8083-
+8084-        // 2. Dash towards enemy holding the Rasengan
+8085-        this.tweens.add({
+8086:          targets: attacker,
+8087-          x: target.x + (isP ? -40 : 40), // Get right up to the target
+8088-          duration: 200,
+8089-          ease: "Power2",
+8090-          onUpdate: () => {
+8091-            const currentHand = this.getHandPosition(isP);
+--
+8160-              ease: "Sine.easeOut",
+8161-            });
+8162-
+8163-            // Jump back
+8164-            this.tweens.add({
+8165:              targets: attacker,
+8166-              x: startX,
+8167-              y: startY,
+8168-              duration: 300,
+8169-              ease: "Power1",
+8170-              onComplete: () => {
+--
+8176-      },
+8177-    });
+8178-  }
+8179-
+8180-  private specialRasenshuriken(isP: boolean) {
+8181:    const attacker = isP ? this.player : this.enemy;
+8182-    const target = isP ? this.enemy : this.player;
+8183-    const transLevel = isP
+8184-      ? this.playerTransformLevel
+8185-      : this.enemyTransformLevel;
+8186-    const dmg = Math.floor(120 * this.getDamageMultiplier(transLevel));
+8187-
+8188-    let color = 0x3498db; // Blue/White
+8189:    let attackName = "RASENSHURIKEN!";
+8190-    let scaleTarget = 1.5;
+8191-
+8192-    if (transLevel === 1) {
+8193:      attackName = "SENPOU: RASENSHURIKEN!";
+8194-      scaleTarget = 2.0;
+8195-    } else if (transLevel === 2) {
+8196-      color = 0xffaa00; // Orange/Yellow
+8197:      attackName = "BIJUU RASENSHURIKEN!";
+8198-      scaleTarget = 2.5;
+8199-    }
+8200-
+8201:    this.log(attackName);
+8202-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
+8203-
+8204-    // Raise hand
+8205:    attacker.y -= 20;
+8206-
+8207-    const hand = this.getHandPosition(isP);
+8208-
+8209-    // Create Rasenshuriken
+8210-    const shuriken = this.add
+--
+8255-      scale: scaleTarget,
+8256-      duration: 600,
+8257-      ease: "Sine.easeIn",
+8258-      onComplete: () => {
+8259-        if (!this.scene.isActive()) return;
+8260:        attacker.y += 20; // Lower hand
+8261-
+8262-        // Throw
+8263-        this.tweens.add({
+8264-          targets: shuriken,
+8265-          x: target.x,
+--
+8351-      },
+8352-    });
+8353-  }
+8354-
+8355-  private specialBatarang(isP: boolean) {
+8356:    const attacker = isP ? this.player : this.enemy;
+8357-    const target = isP ? this.enemy : this.player;
+8358-    const transLevel = isP
+8359-      ? this.playerTransformLevel
+8360-      : this.enemyTransformLevel;
+8361-    const dmg = Math.floor(35 * this.getDamageMultiplier(transLevel));
+8362-
+8363-    this.log("BATARANG!");
+8364:    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+8365-
+8366-    const hand = this.getHandPosition(isP);
+8367-
+8368-    // Throw 5 batarangs
+8369-    for (let i = 0; i < 5; i++) {
+--
+8461-      });
+8462-    }
+8463-  }
+8464-
+8465-  private specialTheDarkKnight(isP: boolean) {
+8466:    const attacker = isP ? this.player : this.enemy;
+8467-    const target = isP ? this.enemy : this.player;
+8468-    const transLevel = isP
+8469-      ? this.playerTransformLevel
+8470-      : this.enemyTransformLevel;
+8471-    const dmg = Math.floor(100 * this.getDamageMultiplier(transLevel));
+8472:    const startX = attacker.x;
+8473-
+8474-    this.log("THE DARK KNIGHT!");
+8475:    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+8476-
+8477-    // Screen goes dark
+8478-    const darkOverlay = this.add
+8479-      .rectangle(
+8480-        this.cameras.main.width / 2,
+--
+8492-      duration: 300,
+8493-      onComplete: () => {
+8494-        if (!this.scene.isActive()) return;
+8495-
+8496-        // Teleport behind target
+8497:        attacker.x = target.x + (isP ? 60 : -60);
+8498-
+8499-        // Multiple strikes in the dark
+8500-        for (let i = 0; i < 12; i++) {
+8501-          this.time.delayedCall(i * 80, () => {
+8502-            if (!this.scene.isActive()) return;
+--
+8564-            targets: darkOverlay,
+8565-            fillAlpha: 0,
+8566-            duration: 400,
+8567-            onComplete: () => {
+8568-              darkOverlay.destroy();
+8569:              attacker.x = startX;
+8570-              this.onSpecialComplete(isP);
+8571-            },
+8572-          });
+8573-        });
+8574-      },
+8575-    });
+8576-  }
+8577-
+8578-  private specialCleave(isP: boolean) {
+8579:    const attacker = isP ? this.player : this.enemy;
+8580-    const target = isP ? this.enemy : this.player;
+8581-    const transLevel = isP
+8582-      ? this.playerTransformLevel
+8583-      : this.enemyTransformLevel;
+8584-    const dmg = Math.floor(45 * this.getDamageMultiplier(transLevel));
+8585-    const hand = this.getHandPosition(isP);
+8586-
+8587-    this.log("CLEAVE!");
+8588:    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+8589-
+8590-    // Create invisible slash effect
+8591-    const slashGlow1 = this.add
+8592-      .graphics()
+8593-      .setDepth(14)
+--
+8674-      },
+8675-    });
+8676-  }
+8677-
+8678-  private specialMalevolentShrine(isP: boolean) {
+8679:    const attacker = isP ? this.player : this.enemy;
+8680-    const target = isP ? this.enemy : this.player;
+8681-    const transLevel = isP
+8682-      ? this.playerTransformLevel
+8683-      : this.enemyTransformLevel;
+8684-    const dmg = Math.floor(140 * this.getDamageMultiplier(transLevel));
+8685-
+8686-    this.log("CASTELO MANIVOLENTE!");
+8687:    if (this.cache.audio.exists("sfx_attack"))
+8688:      this.sound.play("sfx_attack", { rate: 0.5 });
+8689-
+8690-    // Screen goes dark red
+8691-    const darkOverlay = this.add
+8692-      .rectangle(
+8693-        this.cameras.main.width / 2,
+--
+8706-      onComplete: () => {
+8707-        if (!this.scene.isActive()) return;
+8708-
+8709-        // Shrine visual (Demonic Temple)
+8710-        const shrine = this.add.graphics().setDepth(9);
+8711:        const sx = attacker.x;
+8712:        const sy = attacker.y - 40;
+8713-
+8714-        // Base/Platform
+8715-        shrine.fillStyle(0x1a1a1a, 1);
+8716-        shrine.fillRect(sx - 100, sy, 200, 40);
+8717-        shrine.fillRect(sx - 80, sy - 20, 160, 20);
+--
+8901-      },
+8902-    });
+8903-  }
+8904-
+8905-  private specialRedAndBlue(isP: boolean) {
+8906:    const attacker = isP ? this.player : this.enemy;
+8907-    const target = isP ? this.enemy : this.player;
+8908-    const transLevel = isP
+8909-      ? this.playerTransformLevel
+8910-      : this.enemyTransformLevel;
+8911-    const dmg = Math.floor(45 * this.getDamageMultiplier(transLevel));
+--
+9041-      },
+9042-    });
+9043-  }
+9044-
+9045-  private specialHollowPurple(isP: boolean) {
+9046:    const attacker = isP ? this.player : this.enemy;
+9047-    const target = isP ? this.enemy : this.player;
+9048-    const transLevel = isP
+9049-      ? this.playerTransformLevel
+9050-      : this.enemyTransformLevel;
+9051-    const dmg = Math.floor(150 * this.getDamageMultiplier(transLevel));
+--
+9200-            ease: "Power2",
+9201-            onUpdate: () => {
+9202-              // Destroy everything in its path (visual effect)
+9203-              if (!this.scene.isActive()) return;
+9204-
+9205:              // Use a local flag to trigger impact only once per attack
+9206-              if (
+9207:                !attacker.getData("hollowPurpleTriggered") &&
+9208-                Math.abs(purple.x - target.x) < 120
+9209-              ) {
+9210:                attacker.setData("hollowPurpleTriggered", true);
+9211-                this.createImpactEffect(target.x, target.y + 120, 0x8a2be2, "beam");
+9212-                this.cameras.main.shake(300, 0.15);
+9213-
+9214-                // Spatial distortion rings
+9215-                for (let i = 0; i < 4; i++) {
+--
+9230-                  });
+9231-                }
+9232-              }
+9233-            },
+9234-            onComplete: () => {
+9235:              attacker.setData("hollowPurpleTriggered", false);
+9236-              purple.destroy();
+9237-              purpleAura.destroy();
+9238-              purpleCore.destroy();
+9239-              purpleGlow.destroy();
+9240-              lightningEvent.remove();
+--
+9307-      },
+9308-    });
+9309-  }
+9310-
+9311-  private specialAmaterasu(isP: boolean) {
+9312:    const attacker = isP ? this.player : this.enemy;
+9313-    const target = isP ? this.enemy : this.player;
+9314-    const transLevel = isP
+9315-      ? this.playerTransformLevel
+9316-      : this.enemyTransformLevel;
+9317-    const dmg = Math.floor(40 * this.getDamageMultiplier(transLevel));
+9318-
+9319-    this.log("AMATERASU!");
+9320:    attacker.play(this.getAnimKey("itachi", transLevel, "attack"));
+9321-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
+9322-
+9323:    // Eye bleeding effect on attacker (Itachi)
+9324-    const eyeBleed = this.add
+9325:      .rectangle(attacker.x + (isP ? 5 : -5), attacker.y - 25, 2, 10, 0xff0000)
+9326-      .setDepth(15);
+9327-    this.tweens.add({
+9328-      targets: eyeBleed,
+9329-      scaleY: 3,
+9330-      alpha: 0,
+--
+9422-      });
+9423-    });
+9424-  }
+9425-
+9426-  private specialTsukuyomi(isP: boolean) {
+9427:    const attacker = isP ? this.player : this.enemy;
+9428-    const target = isP ? this.enemy : this.player;
+9429-    const transLevel = isP
+9430-      ? this.playerTransformLevel
+9431-      : this.enemyTransformLevel;
+9432-    const dmg = Math.floor(100 * this.getDamageMultiplier(transLevel));
+9433-
+9434-    this.log("TSUKUYOMI!");
+9435:    attacker.play(this.getAnimKey("itachi", transLevel, "attack"));
+9436-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
+9437-
+9438-    // Screen turns red/black
+9439-    const bg = this.add
+9440-      .rectangle(480, 270, 960, 540, 0x8b0000)
+--
+9559-      },
+9560-    });
+9561-  }
+9562-
+9563-  private specialKamui(isP: boolean) {
+9564:    const attacker = isP ? this.player : this.enemy;
+9565-    const target = isP ? this.enemy : this.player;
+9566-    const transLevel = isP
+9567-      ? this.playerTransformLevel
+9568-      : this.enemyTransformLevel;
+9569-    const dmg = Math.floor(60 * this.getDamageMultiplier(transLevel));
+9570:    const startX = attacker.x;
+9571-
+9572-    this.log("KAMUI!");
+9573:    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+9574-
+9575:    // Swirl effect around attacker
+9576-    const swirlGlow = this.add
+9577:      .circle(attacker.x, attacker.y + 120, 60, 0x000000)
+9578-      .setDepth(14)
+9579-      .setAlpha(0.6);
+9580-    const swirl = this.add.graphics().setDepth(15);
+9581-    swirl.lineStyle(10, 0x000000, 0.9);
+9582:    swirl.strokeCircle(attacker.x, attacker.y, 40);
+9583-
+9584-    const swirlCore = this.add
+9585:      .circle(attacker.x, attacker.y + 120, 15, 0x000000)
+9586-      .setDepth(16);
+9587-
+9588-    // Distortion spiral
+9589-    const spiral = this.add
+9590:      .particles(attacker.x, attacker.y, "particle", {
+9591-        color: [0x000000, 0x444444],
+9592-        colorEase: "quad.out",
+9593-        lifespan: 500,
+9594-        angle: { min: 0, max: 360 },
+9595-        scale: { start: 2, end: 0 },
+--
+9610-        if (!this.scene.isActive()) return;
+9611-        swirl.destroy();
+9612-        swirlCore.destroy();
+9613-        swirlGlow.destroy();
+9614-        spiral.stop();
+9615:        attacker.setVisible(false); // Teleport
+9616-
+9617-        // Spatial distortion sound
+9618-        if (this.cache.audio.exists("sfx_beam"))
+9619-          this.sound.play("sfx_beam", { rate: 1.5, volume: 0.5 });
+9620-
+9621-        // Reappear behind target
+9622-        this.time.delayedCall(400, () => {
+9623-          if (!this.scene.isActive()) return;
+9624:          attacker.x = target.x + (isP ? 60 : -60);
+9625:          attacker.setVisible(true);
+9626-
+9627-          // Swirl reappear
+9628-          const swirlGlow2 = this.add
+9629:            .circle(attacker.x, attacker.y + 120, 10, 0x000000)
+9630-            .setDepth(14)
+9631-            .setAlpha(0.6);
+9632-          const swirl2 = this.add.graphics().setDepth(15);
+9633-          swirl2.lineStyle(10, 0x000000, 0.9);
+9634:          swirl2.strokeCircle(attacker.x, attacker.y, 5);
+9635-
+9636-          const swirlCore2 = this.add
+9637:            .circle(attacker.x, attacker.y + 120, 5, 0x000000)
+9638-            .setDepth(16);
+9639-
+9640-          const spiral2 = this.add
+9641:            .particles(attacker.x, attacker.y, "particle", {
+9642-              color: [0x000000, 0x444444],
+9643-              colorEase: "quad.out",
+9644-              lifespan: 500,
+9645-              angle: { min: 0, max: 360 },
+9646-              scale: { start: 0, end: 2 },
+--
+9670-          });
+9671-
+9672-          // Strike
+9673-          this.time.delayedCall(100, () => {
+9674-            if (!this.scene.isActive()) return;
+9675:            attacker.play(this.getAnimKey("obito", transLevel, "attack"));
+9676-            if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
+9677-
+9678-            // Distortion impact
+9679-            const impactSwirl = this.add
+9680-              .circle(target.x, target.y + 120, 10, 0x000000)
+--
+9724-            });
+9725-
+9726-            // Teleport back
+9727-            this.time.delayedCall(500, () => {
+9728-              if (!this.scene.isActive()) return;
+9729:              attacker.setVisible(false);
+9730-
+9731-              this.time.delayedCall(200, () => {
+9732-                if (!this.scene.isActive()) return;
+9733:                attacker.x = startX;
+9734:                attacker.setVisible(true);
+9735-                this.onSpecialComplete(isP);
+9736-              });
+9737-            });
+9738-          });
+9739-        });
+9740-      },
+9741-    });
+9742-  }
+9743-
+9744-  private specialStarFinger(isP: boolean) {
+9745:    const attacker = isP ? this.player : this.enemy;
+9746-    const target = isP ? this.enemy : this.player;
+9747-    const transLevel = isP
+9748-      ? this.playerTransformLevel
+9749-      : this.enemyTransformLevel;
+9750-    const dmg = Math.floor(45 * this.getDamageMultiplier(transLevel));
+9751-
+9752-    this.log("STAR FINGER!");
+9753:    attacker.play(this.getAnimKey("jotaro", transLevel, "attack"));
+9754-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
+9755-
+9756-    // Stand aura
+9757-    const aura = this.add
+9758:      .circle(attacker.x, attacker.y + 120, 60, 0x8a2be2)
+9759-      .setDepth(8)
+9760-      .setAlpha(0)
+9761-      .setBlendMode(Phaser.BlendModes.ADD);
+9762-    this.tweens.add({
+9763-      targets: aura,
+--
+9842-      },
+9843-    });
+9844-  }
+9845-
+9846-  private specialOraOraOra(isP: boolean) {
+9847:    const attacker = isP ? this.player : this.enemy;
+9848-    const target = isP ? this.enemy : this.player;
+9849-    const transLevel = isP
+9850-      ? this.playerTransformLevel
+9851-      : this.enemyTransformLevel;
+9852-    const dmg = Math.floor(110 * this.getDamageMultiplier(transLevel));
+9853-
+9854-    this.log("ORA ORA ORA ORA ORA!");
+9855:    attacker.play(this.getAnimKey("jotaro", transLevel, "attack"));
+9856-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
+9857-
+9858-    // Stand aura
+9859-    const aura = this.add
+9860:      .circle(attacker.x, attacker.y + 120, 60, 0x8a2be2)
+9861-      .setDepth(8)
+9862-      .setAlpha(0)
+9863-      .setBlendMode(Phaser.BlendModes.ADD);
+9864-    this.tweens.add({
+9865-      targets: aura,
+--
+9870-      repeat: -1,
+9871-    });
+9872-
+9873-    // Dash to target
+9874-    this.tweens.add({
+9875:      targets: attacker,
+9876-      x: target.x + (isP ? -50 : 50),
+9877-      duration: 150,
+9878-      ease: "Power2",
+9879-      onComplete: () => {
+9880-        // Flurry of punches
+--
+9930-                  onComplete: () => line.destroy(),
+9931-                });
+9932-              },
+9933-            });
+9934-
+9935:            if (punches % 2 === 0 && this.cache.audio.exists("sfx_attack")) {
+9936:              this.sound.play("sfx_attack", { volume: 0.9, rate: 1.2 });
+9937-            }
+9938-
+9939-            this.cameras.main.shake(50, 0.04);
+9940-
+9941-            // Target hit flash
+--
+10011-                  ease: "Sine.easeOut",
+10012-                });
+10013-
+10014-                // Dash back
+10015-                this.tweens.add({
+10016:                  targets: attacker,
+10017-                  x: isP ? this.p1StartPos.x : this.p2StartPos.x,
+10018-                  duration: 200,
+10019-                  ease: "Power2",
+10020-                  onComplete: () => {
+10021-                    aura.destroy();
+10022:                    attacker.play(
+10023-                      this.getAnimKey("jotaro", transLevel, "idle"),
+10024-                    );
+10025-                    this.onSpecialComplete(isP);
+10026-                  },
+10027-                });
+--
+10033-      },
+10034-    });
+10035-  }
+10036-
+10037-  private specialMajesticDestroyerFlame(isP: boolean) {
+10038:    const attacker = isP ? this.player : this.enemy;
+10039-    const target = isP ? this.enemy : this.player;
+10040-    const dmg = Math.floor(
+10041-      45 *
+10042-        this.getDamageMultiplier(
+10043-          isP ? this.playerTransformLevel : this.enemyTransformLevel,
+--
+10047-    this.log("MAJESTIC DESTROYER FLAME!");
+10048-    if (this.cache.audio.exists("sfx_charge")) this.sound.play("sfx_charge");
+10049-
+10050-    // Inhale effect
+10051-    const inhale = this.add
+10052:      .particles(attacker.x + (isP ? 20 : -20), attacker.y - 20, "particle", {
+10053-        color: [0xffa500, 0xff4500],
+10054-        colorEase: "quad.out",
+10055-        lifespan: 400,
+10056-        angle: { min: 0, max: 360 },
+10057-        scale: { start: 0, end: 1 },
+--
+10088-      this.cameras.main.shake(800, 0.03);
+10089-
+10090-      for (let i = 0; i < 30; i++) {
+10091-        const fireGlow = this.add
+10092-          .circle(
+10093:            attacker.x + (isP ? 40 : -40),
+10094:            attacker.y - 60 + i * 8,
+10095-            40,
+10096-            0xff4500,
+10097-          )
+10098-          .setDepth(9)
+10099-          .setAlpha(0.6)
+10100-          .setBlendMode(Phaser.BlendModes.ADD);
+10101-        const fire = this.add
+10102-          .circle(
+10103:            attacker.x + (isP ? 40 : -40),
+10104:            attacker.y - 60 + i * 8,
+10105-            25,
+10106-            0xff4500,
+10107-          )
+10108-          .setDepth(10);
+10109-        const core = this.add.circle(fire.x, fire.y, 15, 0xffa500).setDepth(11);
+--
+10166-      });
+10167-    });
+10168-  }
+10169-
+10170-  private specialTengaiShinsei(isP: boolean) {
+10171:    const attacker = isP ? this.player : this.enemy;
+10172-    const target = isP ? this.enemy : this.player;
+10173-    const dmg = Math.floor(
+10174-      100 *
+10175-        this.getDamageMultiplier(
+10176-          isP ? this.playerTransformLevel : this.enemyTransformLevel,
+--
+10344-      });
+10345-    });
+10346-  }
+10347-
+10348-  private specialTenTailsBeastBomb(isP: boolean) {
+10349:    const attacker = isP ? this.player : this.enemy;
+10350-    const target = isP ? this.enemy : this.player;
+10351-    const transLevel = isP
+10352-      ? this.playerTransformLevel
+10353-      : this.enemyTransformLevel;
+10354-    const dmg = Math.floor(130 * this.getDamageMultiplier(transLevel));
+--
+10357-    if (this.cache.audio.exists("sfx_beam"))
+10358-      this.sound.play("sfx_beam", { rate: 0.7 });
+10359-
+10360-    // Charge massive dark red/black sphere
+10361-    const bombGlow = this.add
+10362:      .circle(attacker.x, attacker.y - 120, 15, 0xcc0000)
+10363-      .setDepth(14)
+10364-      .setAlpha(0.6)
+10365-      .setBlendMode(Phaser.BlendModes.ADD);
+10366-    const bomb = this.add
+10367:      .circle(attacker.x, attacker.y - 120, 5, 0x111111)
+10368-      .setDepth(15);
+10369-    const aura = this.add
+10370:      .circle(attacker.x, attacker.y - 120, 8, 0xcc0000)
+10371-      .setDepth(14)
+10372-      .setAlpha(0.6)
+10373-      .setBlendMode(Phaser.BlendModes.ADD);
+10374-
+10375-    this.cameras.main.shake(1000, 0.02);
+10376-
+10377-    // Gathering particles
+10378-    const gatherParticles = this.add
+10379-      .particles(0, 0, "particle", {
+10380:        x: attacker.x,
+10381:        y: attacker.y - 120,
+10382-        speed: { min: -350, max: 350 },
+10383-        scale: { start: 2, end: 0 },
+10384-        blendMode: "ADD",
+10385-        lifespan: 500,
+10386-        tint: 0xcc0000,
+--
+10399-        this.createScreenFlash(0xcc0000, 500, 0.9);
+10400-        this.cameras.main.shake(1000, 0.08);
+10401-
+10402-        // Fire as a massive beam
+10403-        const beamOuter = this.add
+10404:          .rectangle(attacker.x, attacker.y - 120, 0, 250, 0xcc0000)
+10405-          .setOrigin(0, 0.5)
+10406-          .setDepth(4)
+10407-          .setAlpha(0.6)
+10408-          .setBlendMode(Phaser.BlendModes.ADD);
+10409-        const beam = this.add
+10410:          .rectangle(attacker.x, attacker.y - 120, 0, 180, 0x111111)
+10411-          .setOrigin(0, 0.5)
+10412-          .setDepth(5);
+10413-        beam.setStrokeStyle(8, 0xcc0000);
+10414-
+10415-        beamOuter.scaleX = isP ? 1 : -1;
+10416-        beam.scaleX = isP ? 1 : -1;
+10417:        const distance = Math.abs(target.x - attacker.x) + 300;
+10418-
+10419-        // Beam Head
+10420-        const beamHeadGlow = this.add
+10421:          .ellipse(attacker.x, attacker.y - 120, 150, 300, 0xcc0000)
+10422-          .setDepth(5)
+10423-          .setBlendMode(Phaser.BlendModes.ADD)
+10424-          .setAlpha(0.8);
+10425-        const beamHead = this.add
+10426:          .ellipse(attacker.x, attacker.y - 120, 80, 160, 0x111111)
+10427-          .setDepth(6);
+10428-        beamHead.setStrokeStyle(6, 0xcc0000);
+10429-
+10430-        this.tweens.add({
+10431-          targets: [beamOuter, beam],
+10432-          width: distance,
+10433-          duration: 200,
+10434-          onUpdate: () => {
+10435-            if (!this.scene.isActive()) return;
+10436-            const tipX = isP
+10437:              ? attacker.x + beam.width
+10438:              : attacker.x - beam.width;
+10439:            beamHeadGlow.setPosition(tipX, attacker.y - 120);
+10440:            beamHead.setPosition(tipX, attacker.y - 120);
+10441-          },
+10442-          onComplete: () => {
+10443-            if (!this.scene.isActive()) return;
+10444-
+10445-            bomb.destroy();
+--
+10757-      if (this.enemyKi >= 80 && r < 0.8) {
+10758-        this.performSpecial(false, true);
+10759-      } else if (this.enemyKi >= 40 && r < 0.7) {
+10760-        this.performSpecial(false, false);
+10761-      } else if (r < 0.6) {
+10762:        this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
+10763-      } else {
+10764-        this.performCharge(false);
+10765-      }
+10766-      return;
+10767-    }
+--
+10773-      } else if (this.enemyKi >= 40 && r < 0.6) {
+10774-        this.performSpecial(false, false);
+10775-      } else if (this.enemyKi < 40 && r < 0.8) {
+10776-        this.performCharge(false);
+10777-      } else {
+10778:        this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
+10779-      }
+10780-      return;
+10781-    }
+10782-
+10783-    // 4. If player has high Ki, try to interrupt them or defend
+--
+10795-        return;
+10796-      } else if (this.enemyKi >= 40 && r < 0.6) {
+10797-        this.performSpecial(false, false);
+10798-        return;
+10799-      } else if (r < 0.8) {
+10800:        this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
+10801-        return;
+10802-      } else {
+10803-        this.performCharge(false);
+10804-        return;
+10805-      }
+--
+10808-    // 5. Standard tactical decisions based on Ki
+10809-    if (this.enemyKi >= 80) {
+10810-      // High Ki: Favor Super or Normal Special
+10811-      if (r < 0.5) this.performSpecial(false, true);
+10812-      else if (r < 0.8) this.performSpecial(false, false);
+10813:      else this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
+10814-    } else if (this.enemyKi >= 40) {
+10815:      // Medium Ki: Mix of Special, Attack, and Charge
+10816-      if (r < 0.4) this.performSpecial(false, false);
+10817-      else if (r < 0.7)
+10818:        this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
+10819-      else this.performCharge(false);
+10820-    } else {
+10821-      // Low Ki: Favor Charging
+10822-      if (r < 0.7) this.performCharge(false);
+10823:      else this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
+10824-    }
+10825-  }
+10826-
+10827-  endBattle(win: boolean) {
+10828-    if (this.isBattleOver) return; // Prevent double call

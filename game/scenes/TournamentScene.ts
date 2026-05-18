@@ -28,6 +28,13 @@ export default class TournamentScene extends Phaser.Scene {
     bg.fillGradientStyle(0x1a0b2e, 0x000000, 0x1a0b2e, 0x000000, 1);
     bg.fillRect(0, 0, 960, 540);
     
+    // Add postFX to main camera
+    if (this.cameras.main.postFX) {
+        this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
+        const cm = this.cameras.main.postFX.addColorMatrix();
+        // saturation removed
+    }
+    
     this.add.image(480, 270, 'arena').setAlpha(0.1).setBlendMode(Phaser.BlendModes.ADD);
 
     // Title

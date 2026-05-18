@@ -1,0 +1,4 @@
+71:    this.load.image("arena", "https://labs.phaser.io/assets/skies/space3.png");
+73:      "arena_namek",
+77:      "arena_city",
+81:      "arena_tournament",

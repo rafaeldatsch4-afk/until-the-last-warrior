@@ -16,6 +16,15 @@ export default class SettingsScene extends Phaser.Scene {
   create() {
     const state = this.registry.get('gameState') as GameState;
 
+    this.add.rectangle(480, 270, 960, 540, 0x0f0c29);
+    
+    // Add postFX to main camera
+    if (this.cameras.main.postFX) {
+        this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
+        const cm = this.cameras.main.postFX.addColorMatrix();
+        // saturation removed
+    }
+    
     // Back Button (Top Left)
     const backContainer = this.add.container(80, 40);
     const backBtn = this.add.rectangle(0, 0, 100, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
@@ -80,6 +89,15 @@ export default class SettingsScene extends Phaser.Scene {
          });
     });
 
+    // --- CONTROLS ---
+    const controlsBtn = this.add.rectangle(480, 290, 200, 40, 0x9b59b6).setStrokeStyle(2, 0xffffff);
+    const controlsTxt = this.add.text(480, 290, 'PC CONTROLS', { fontSize: '18px', fontStyle: 'bold' }).setOrigin(0.5);
+    
+    controlsBtn.setInteractive({ useHandCursor: true })
+        .on('pointerover', () => controlsBtn.setFillStyle(0x8e44ad))
+        .on('pointerout', () => controlsBtn.setFillStyle(0x9b59b6))
+        .on('pointerdown', () => this.showControlsOverlay());
+
     // --- DATA MANAGEMENT (SAVE/LOAD) ---
     this.add.text(480, 350, 'DATA MANAGEMENT', { fontSize: '20px', color: '#aaa' }).setOrigin(0.5);
 
@@ -100,6 +118,60 @@ export default class SettingsScene extends Phaser.Scene {
         .on('pointerover', () => importBtn.setFillStyle(0xd35400))
         .on('pointerout', () => importBtn.setFillStyle(0xe67e22))
         .on('pointerdown', () => this.triggerImportSave());
+  }
+
+  showControlsOverlay() {
+      const overlay = this.add.container(0, 0);
+      overlay.setDepth(100);
+
+      // Dark background
+      const bg = this.add.rectangle(480, 270, 960, 540, 0x000000, 0.85);
+      bg.setInteractive(); // Block clicks
+
+      // Modal Background
+      const modal = this.add.rectangle(480, 270, 700, 400, 0x1f1f1f).setStrokeStyle(4, 0xffd54a);
+      
+      const title = this.add.text(480, 110, 'PC CONTROLS', { fontSize: '28px', fontStyle: 'bold', color: '#ffd54a' }).setOrigin(0.5);
+
+      // Player 1 Controls
+      const p1Title = this.add.text(260, 160, 'PLAYER 1', { fontSize: '22px', fontStyle: 'bold', color: '#3498db' }).setOrigin(0.5);
+      const p1Controls = this.add.text(260, 260, 
+        'Move: W, A, S, D\n\n' +
+        'Attack: J\n' +
+        'Ki Blast: K\n' +
+        'Defend: U\n' +
+        'Special: L\n' +
+        'Transform: I', 
+        { fontSize: '18px', align: 'center' }
+      ).setOrigin(0.5);
+
+      // Player 2 Controls
+      const p2Title = this.add.text(700, 160, 'PLAYER 2', { fontSize: '22px', fontStyle: 'bold', color: '#e74c3c' }).setOrigin(0.5);
+      const p2Controls = this.add.text(700, 260, 
+        'Move: Arrows\n\n' +
+        'Attack: Numpad 1\n' +
+        'Ki Blast: Numpad 2\n' +
+        'Defend: Numpad 4\n' +
+        'Special: Numpad 3\n' +
+        'Transform: Numpad 5', 
+        { fontSize: '18px', align: 'center' }
+      ).setOrigin(0.5);
+
+      // Divider
+      const divider = this.add.rectangle(480, 260, 2, 220, 0xffffff, 0.3);
+
+      // Close Button
+      const closeBtn = this.add.rectangle(480, 420, 150, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
+      const closeTxt = this.add.text(480, 420, 'CLOSE', { fontSize: '18px', fontStyle: 'bold' }).setOrigin(0.5);
+      
+      closeBtn.setInteractive({ useHandCursor: true })
+        .on('pointerover', () => closeBtn.setFillStyle(0xc0392b))
+        .on('pointerout', () => closeBtn.setFillStyle(0xe74c3c))
+        .on('pointerdown', () => {
+            overlay.destroy();
+        });
+
+      overlay.add([bg, modal, title, p1Title, p1Controls, p2Title, p2Controls, divider, closeBtn, closeTxt]);
   }
 
   downloadSaveData() {

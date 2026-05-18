@@ -81,6 +81,10 @@ export default class PreloadScene extends Phaser.Scene {
       "arena_tournament",
       "https://labs.phaser.io/assets/skies/clouds.png",
     );
+    this.load.image("arena_ice", "https://labs.phaser.io/assets/skies/sky1.png");
+    this.load.image("arena_lava", "https://labs.phaser.io/assets/skies/underwater3.png");
+    this.load.image("arena_desert", "https://labs.phaser.io/assets/skies/sky2.png");
+    this.load.image("arena_dark", "https://labs.phaser.io/assets/skies/deepblue.png");
   }
 
   create() {
@@ -174,12 +178,13 @@ export default class PreloadScene extends Phaser.Scene {
       }
     };
 
-    const createAllForTex = (baseKey: string, texKey: string) => {
+        const createAllForTex = (baseKey: string, texKey: string) => {
       createAnim(`${baseKey}_idle`, texKey, 0, 3, 10);
-      createAnim(`${baseKey}_attack`, texKey, 4, 5, 16, 0);
-      createAnim(`${baseKey}_special`, texKey, 4, 5, 12, -1); // Looping charge/fire
-      createAnim(`${baseKey}_defend`, texKey, 6, 6, 10, -1); // Defensive pose
-      createAnim(`${baseKey}_transform`, texKey, 0, 3, 24, -1); // Fast idle
+      createAnim(`${baseKey}_walk`, texKey, 4, 7, 12);
+      createAnim(`${baseKey}_attack`, texKey, 8, 9, 16, 0);
+      createAnim(`${baseKey}_special`, texKey, 8, 9, 12, -1);
+      createAnim(`${baseKey}_defend`, texKey, 10, 10, 10, -1);
+      createAnim(`${baseKey}_transform`, texKey, 0, 3, 24, -1);
     };
 
     createAllForTex(key, key);
@@ -357,7 +362,7 @@ export default class PreloadScene extends Phaser.Scene {
     const FRAME_WIDTH = 96;
     const FRAME_HEIGHT = 64; // Taller frame to support big hair
     const DRAW_OFFSET_Y = 32; // Shift body down so feet are at bottom of 64px frame
-    const FRAMES = 8;
+    const FRAMES = 12;
 
     // Calculate total dimensions
     const sheetWidth = FRAME_WIDTH * SCALE * FRAMES;
@@ -372,25 +377,44 @@ export default class PreloadScene extends Phaser.Scene {
     // Loop to draw 8 frames side by side
     for (let f = 0; f < FRAMES; f++) {
       const offsetX = f * FRAME_WIDTH;
-      const isAttack = f === 4 || f === 5;
-      const isDefend = f === 6;
-      const isCharge = f === 7;
+      const isWalk = f >= 4 && f <= 7;
+      const isAttack = f === 8 || f === 9;
+      const isDefend = f === 10;
+      const isCharge = f === 11;
 
       // ANIMATION LOGIC: Breathing / Bobbing
       // Note: y coordinates below 22 are bobbed. DRAW_OFFSET_Y is added to final position.
-      const breatheOffset =
-        !isAttack && !isDefend && !isCharge && (f === 1 || f === 3) ? 1 : 0;
+      const breatheOffset = (!isAttack && !isDefend && !isCharge && !isWalk && (f === 1 || f === 3)) ? 1 : 0;
 
       // Pose offsets
-      const poseOffsetX = f === 4 ? 2 : f === 5 ? 4 : f === 6 ? -2 : 0;
-      const poseOffsetY = f === 4 ? -1 : f === 5 ? -2 : f === 6 ? 2 : f === 7 ? -1 : 0;
+      const poseOffsetX = f === 8 ? 2 : f === 9 ? 4 : f === 10 ? -2 : 0;
+      const poseOffsetY = f === 8 ? -1 : f === 9 ? -2 : f === 10 ? 2 : f === 11 ? -1 : (isWalk && (f===5 || f===7)) ? -1 : 0;
+
+      
+      const getWalkOffsets = (x: number, y: number) => {
+        if (!isWalk || y < 22) return { ox: 0, oy: 0 };
+        const isLeftLeg = x < 15;
+        const wIndex = f - 4;
+        let ox = 0, oy = 0;
+        if (isLeftLeg) {
+           if (wIndex === 0) { ox = 1; oy = -1; }
+           else if (wIndex === 1) { ox = 3; oy = -2; }
+           else if (wIndex === 2) { ox = 0; oy = 0; }
+           else if (wIndex === 3) { ox = -2; oy = 0; }
+        } else {
+           if (wIndex === 0) { ox = -2; oy = 0; }
+           else if (wIndex === 1) { ox = -4; oy = 0; }
+           else if (wIndex === 2) { ox = -1; oy = -1; }
+           else if (wIndex === 3) { ox = 2; oy = -2; }
+        }
+        return { ox, oy };
+      };
 
       const dot = (x: number, y: number, color: number) => {
         const finalY = y < 24 ? y + breatheOffset : y;
-        const finalX =
-          (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) + shiftX;
-        const finalYPose =
-          isAttack || isDefend || isCharge ? finalY + poseOffsetY / 2 : finalY;
+        const { ox, oy } = typeof getWalkOffsets === 'function' ? getWalkOffsets(x, y) : { ox:0, oy:0 };
+        const finalX = (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) + shiftX + ox;
+        const finalYPose = (isAttack || isDefend || isCharge ? finalY + poseOffsetY / 2 : finalY) + (typeof oy !== 'undefined' ? oy : 0);
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -409,10 +433,9 @@ export default class PreloadScene extends Phaser.Scene {
         alpha: number,
       ) => {
         const finalY = y < 24 ? y + breatheOffset : y;
-        const finalX =
-          (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) + shiftX;
-        const finalYPose =
-          isAttack || isDefend || isCharge ? finalY + poseOffsetY / 2 : finalY;
+        const { ox, oy } = typeof getWalkOffsets === 'function' ? getWalkOffsets(x, y) : { ox:0, oy:0 };
+        const finalX = (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) + shiftX + ox;
+        const finalYPose = (isAttack || isDefend || isCharge ? finalY + poseOffsetY / 2 : finalY) + (typeof oy !== 'undefined' ? oy : 0);
         canvas.fillStyle(color, alpha);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -430,10 +453,9 @@ export default class PreloadScene extends Phaser.Scene {
         color: number,
       ) => {
         const finalY = y < 24 ? y + breatheOffset : y;
-        const finalX =
-          (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) + shiftX;
-        const finalYPose =
-          isAttack || isDefend || isCharge ? finalY + poseOffsetY / 2 : finalY;
+        const { ox, oy } = typeof getWalkOffsets === 'function' ? getWalkOffsets(x, y) : { ox:0, oy:0 };
+        const finalX = (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) + shiftX + ox;
+        const finalYPose = (isAttack || isDefend || isCharge ? finalY + poseOffsetY / 2 : finalY) + (typeof oy !== 'undefined' ? oy : 0);
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -450,8 +472,8 @@ export default class PreloadScene extends Phaser.Scene {
         h: number,
         color: number,
       ) => {
-        const finalX =
-          (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) + shiftX;
+        const { ox, oy } = typeof getWalkOffsets === 'function' ? getWalkOffsets(x, y) : { ox:0, oy:0 };
+        const finalX = (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) + shiftX + ox;
         const finalYPose = isAttack || isDefend ? y + poseOffsetY / 2 : y;
         canvas.fillStyle(color, 1);
         canvas.fillRect(
@@ -462,8 +484,8 @@ export default class PreloadScene extends Phaser.Scene {
         );
       };
       const headDot = (x: number, y: number, color: number) => {
-        const finalX =
-          (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) + shiftX;
+        const { ox, oy } = typeof getWalkOffsets === 'function' ? getWalkOffsets(x, y) : { ox:0, oy:0 };
+        const finalX = (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) + shiftX + ox;
         const finalYPose = isAttack || isDefend ? y + poseOffsetY / 2 : y;
         canvas.fillStyle(color, 1);
         canvas.fillRect(
@@ -764,63 +786,68 @@ export default class PreloadScene extends Phaser.Scene {
             BROW = 0x9b59b6;
           } else if (isTransformed) {
             // SSJ
-            HAIR = 0xffea00; // Vibrant gold
+            HAIR = 0xffe600; // Golden
             EYE = 0x00f2ff;
-            BROW = 0xffea00;
+            BROW = 0xffe600;
           }
 
-          // Legs (more shaped, tapering down)
+          // --- LEGS & BOOTS ---
+          // Bodysuit base
           box(11, 23, 4, 6, SUIT_BLUE);
           box(17, 23, 4, 6, SUIT_BLUE); // Thighs base
           
-          // Ribbed bodysuit texture on legs
-          for(let ly = 23; ly < 29; ly += 2) {
+          // Enhanced Ribbed bodysuit texture on legs
+          for(let ly = 23; ly < 28; ly += 2) {
             box(11, ly, 4, 1, SUIT_SHADOW);
             box(17, ly, 4, 1, SUIT_SHADOW);
+            box(11, ly+1, 4, 1, SUIT_LIGHT);
+            box(17, ly+1, 4, 1, SUIT_LIGHT);
           }
-          // Leg highlights (muscular curve)
-          box(12, 23, 2, 4, SUIT_LIGHT);
-          box(18, 23, 2, 4, SUIT_LIGHT); 
           // Inner leg shadow
           box(14, 23, 1, 5, 0x0a142c);
           box(17, 23, 1, 5, 0x0a142c);
 
-          // Boots (Classic white with bold gold tips)
-          box(11, 28, 4, 3, ARMOR_WHITE);
-          box(17, 28, 4, 3, ARMOR_WHITE);
-          box(10, 30, 5, 2, ARMOR_WHITE);
-          box(17, 30, 5, 2, ARMOR_WHITE);
+          // Segmented Boots
+          box(11, 28, 4, 4, ARMOR_WHITE);
+          box(17, 28, 4, 4, ARMOR_WHITE);
           
-          // Distinct Gold Tips
-          box(9, 31, 5, 1, GOLD);
-          box(18, 31, 5, 1, GOLD);
-          dot(9, 30, GOLD);
-          dot(13, 30, GOLD);
-          dot(18, 30, GOLD);
-          dot(22, 30, GOLD);
-          // Highlight on gold tip
-          dot(9, 31, 0xffeb73);
-          dot(18, 31, 0xffeb73);
-
-          // Boot shading & folds
-          box(12, 28, 2, 3, ARMOR_SHADOW);
-          box(18, 28, 2, 3, ARMOR_SHADOW);
+          // Horizontal boot segments
           box(11, 29, 4, 1, ARMOR_SHADOW);
           box(17, 29, 4, 1, ARMOR_SHADOW);
-          box(10, 32, 5, 1, 0x000000);
-          box(17, 32, 5, 1, 0x000000); // Sole shadow
+          box(11, 31, 4, 1, ARMOR_SHADOW);
+          box(17, 31, 4, 1, ARMOR_SHADOW);
 
-          // Torso (Suit underneath)
+          box(10, 32, 5, 2, ARMOR_WHITE);
+          box(17, 32, 5, 2, ARMOR_WHITE);
+          
+          // Distinct Gold Tips
+          box(9, 33, 5, 1, GOLD);
+          box(18, 33, 5, 1, GOLD);
+          dot(9, 32, GOLD);
+          dot(13, 32, GOLD);
+          dot(18, 32, GOLD);
+          dot(22, 32, GOLD);
+          // Highlight on gold tip
+          dot(9, 33, 0xffeb73);
+          dot(18, 33, 0xffeb73);
+
+          box(10, 34, 5, 1, 0x000000);
+          box(17, 34, 5, 1, 0x000000); // Sole shadow
+
+          // --- TORSO ---
+          // Bodysuit underneath
           box(12, 19, 8, 4, SUIT_BLUE);
           box(14, 23, 4, 2, SUIT_BLUE); // Crotch connection gap
           
-          // Bodysuit ribbing on abdomen
-          box(12, 20, 8, 1, SUIT_SHADOW);
-          box(12, 22, 8, 1, SUIT_SHADOW);
+          // Enhanced Bodysuit ribbing on abdomen
+          for(let ty = 19; ty < 23; ty += 2) {
+             box(12, ty, 8, 1, SUIT_SHADOW);
+             box(12, ty+1, 8, 1, SUIT_LIGHT);
+          }
           box(12, 19, 1, 5, 0x0a142c);
           box(19, 19, 1, 5, 0x0a142c); // Side shadow
 
-          // Armor (Segmented Chest Plate)
+          // --- ANGULAR ARMOR ---
           // Main armor block
           box(11, 14, 10, 6, ARMOR_WHITE); 
           
@@ -830,9 +857,10 @@ export default class PreloadScene extends Phaser.Scene {
           box(11, 14, 1, 6, GOLD_SHADOW);
           box(20, 14, 1, 6, GOLD_SHADOW); // Gold strap shadow
           
-          // Chest segments (Pectorals)
-          box(13, 16, 6, 1, ARMOR_SHADOW); // Underside of pecs
-          box(15, 14, 2, 2, ARMOR_DARK); // Center division
+          // Chest segments (Angular Pectorals)
+          box(11, 16, 4, 1, ARMOR_SHADOW); 
+          box(17, 16, 4, 1, ARMOR_SHADOW); 
+          box(15, 14, 2, 3, ARMOR_DARK); // Center division
           
           // Abdomen armor segments (vertical ribbed plates)
           for(let rx = 13; rx <= 18; rx += 1) {
@@ -847,57 +875,63 @@ export default class PreloadScene extends Phaser.Scene {
           box(13, 14, 2, 1, 0xffffff);
           box(17, 14, 2, 1, 0xffffff); // Top chest
 
-          // Shoulders (Iconic pointy pads)
+          // --- SHOULDERS (Classic angular gold pads) ---
           // Left Pad (overlapping arm and chest)
-          box(7, 12, 5, 2, GOLD); // Base gold trim
-          box(6, 13, 6, 2, ARMOR_WHITE); // White pad overlapping
-          dot(6, 11, GOLD); // Peak point gold
-          dot(5, 12, ARMOR_WHITE); // Peak point white
-          box(8, 14, 4, 1, ARMOR_SHADOW); // Underside shadow
-          box(7, 13, 1, 1, 0xffffff); // Glint
+          box(5, 12, 7, 2, GOLD); // Extended Gold Shoulder
+          box(6, 13, 5, 2, ARMOR_WHITE); // White pad overlapping
+          dot(5, 11, GOLD); // Peak point gold
+          dot(6, 12, ARMOR_WHITE); // Peak point white
+          box(7, 14, 4, 1, ARMOR_SHADOW); // Underside shadow
+          box(7, 13, 2, 1, 0xffffff); // Glint
           
           // Right Pad
-          box(20, 12, 5, 2, GOLD);
-          box(20, 13, 6, 2, ARMOR_WHITE);
-          dot(25, 11, GOLD); 
-          dot(26, 12, ARMOR_WHITE); 
-          box(20, 14, 4, 1, ARMOR_SHADOW);
-          box(24, 13, 1, 1, 0xffffff);
+          box(20, 12, 7, 2, GOLD);
+          box(21, 13, 5, 2, ARMOR_WHITE);
+          dot(26, 11, GOLD); 
+          dot(25, 12, ARMOR_WHITE); 
+          box(21, 14, 4, 1, ARMOR_SHADOW);
+          box(23, 13, 2, 1, 0xffffff);
 
           // --- ARMS ---
           if (isAttack) {
             box(21, 13, 6, 4, SUIT_BLUE); // Bicep extended
-            box(21, 14, 6, 1, SUIT_SHADOW); // Ribbing
+            box(22, 13, 5, 1, SUIT_SHADOW); // Ribbing
+            box(22, 15, 5, 1, SUIT_SHADOW); 
             box(27, 14, 6, 3, SUIT_BLUE); // Forearm
-            // Glove
-            box(31, 13, 5, 5, ARMOR_WHITE); 
-            box(31, 14, 2, 2, ARMOR_SHADOW); // Knuckles
+            // Segmented Glove
+            box(30, 12, 2, 7, ARMOR_WHITE); // Flare
+            box(30, 13, 1, 5, ARMOR_SHADOW); 
+            box(32, 13, 4, 5, ARMOR_WHITE); 
+            box(32, 14, 2, 2, ARMOR_SHADOW); // Knuckles
             box(34, 13, 3, 4, ARMOR_WHITE); // Extended fist
             alphaBox(36, 13, 4, 4, ARMOR_WHITE, 0.5); // Blur
             box(6, 15, 4, 5, SUIT_BLUE); // Left arm back
-            box(6, 18, 4, 3, ARMOR_WHITE); // Left glove
+            box(5, 17, 6, 2, ARMOR_WHITE); // Left glove flare
+            box(6, 19, 4, 3, ARMOR_WHITE); // Left glove
           } else {
             // Resting arms with Suit Ribbing
             box(8, 16, 3, 4, SUIT_BLUE);
             box(21, 16, 3, 4, SUIT_BLUE);
             // Arm ribbed shading
             box(8, 16, 3, 1, SUIT_SHADOW);
-            box(21, 16, 3, 1, SUIT_SHADOW);
+            box(8, 17, 3, 1, SUIT_LIGHT);
             box(8, 18, 3, 1, SUIT_SHADOW);
-            box(21, 18, 3, 1, SUIT_SHADOW);
-            box(9, 17, 1, 2, SUIT_LIGHT);
-            box(22, 17, 1, 2, SUIT_LIGHT); // Bicep curve
+            box(8, 19, 3, 1, SUIT_LIGHT);
 
-            // Gloves (White, flared top)
-            box(7, 19, 5, 2, ARMOR_WHITE);
-            box(20, 19, 5, 2, ARMOR_WHITE);
-            box(8, 19, 3, 2, ARMOR_SHADOW); 
-            box(21, 19, 3, 2, ARMOR_SHADOW);
+            box(21, 16, 3, 1, SUIT_SHADOW);
+            box(21, 17, 3, 1, SUIT_LIGHT);
+            box(21, 18, 3, 1, SUIT_SHADOW);
+            box(21, 19, 3, 1, SUIT_LIGHT);
+
+            // Gloves (White, flared top, segmented)
+            box(6, 19, 7, 2, ARMOR_WHITE);
+            box(19, 19, 7, 2, ARMOR_WHITE);
+            box(6, 20, 7, 1, ARMOR_SHADOW); 
+            box(19, 20, 7, 1, ARMOR_SHADOW);
             
-            // Hands (smaller actual fist size)
+            // Hands 
             box(8, 21, 3, 3, ARMOR_WHITE);
             box(21, 21, 3, 3, ARMOR_WHITE);
-            // Hand shading/detail
             box(8, 22, 3, 1, ARMOR_SHADOW);
             box(21, 22, 3, 1, ARMOR_SHADOW);
           }
@@ -952,57 +986,86 @@ export default class PreloadScene extends Phaser.Scene {
 
           // --- HAIR (Iconic Flame & Widow's Peak) ---
           // Deep Widow's Peak
-          headBox(13, 5, 6, 3, SKIN); 
-          headBox(14, 4, 4, 1, SKIN); 
-          headDot(15, 3, SKIN); // Point
-          headDot(16, 3, SKIN); 
+          headBox(13, 4, 6, 2, SKIN); 
+          headBox(14, 3, 4, 1, SKIN); 
+          headDot(15, 2, SKIN); // Point
+          headDot(16, 2, SKIN); 
           
           // Sideburns
           headBox(10, 5, 1, 3, HAIR);
           headBox(21, 5, 1, 3, HAIR);
 
-          // Flame-like spiky volume (very tall and sharp)
-          headBox(9, -2, 14, 7, HAIR); // base volume at top of head
-          headBox(10, -6, 12, 4, HAIR);
-          headBox(11, -9, 10, 3, HAIR);
-          headBox(13, -12, 6, 3, HAIR);
-          
-          // Individual tall spikes (tips of the flames)
-          headBox(14, -16, 2, 4, HAIR);
-          headBox(16, -14, 2, 2, HAIR);
-          headBox(11, -13, 2, 4, HAIR);
-          headBox(19, -12, 2, 3, HAIR);
-          
-          // Side flares / flame-like barbs
-          headBox(8, -5, 2, 4, HAIR);
-          headBox(7, -8, 2, 3, HAIR);
-          headBox(6, -4, 1, 2, HAIR); // extra jagged
-          
-          headBox(22, -5, 2, 4, HAIR);
-          headBox(23, -8, 2, 3, HAIR);
-          headBox(25, -4, 1, 2, HAIR);
+          if (isTransformed) {
+            // SUPER SAIYAN DYNAMIC HAIR
+            headBox(9, -4, 14, 9, HAIR); // Base volume
+            headBox(10, -8, 12, 4, HAIR);
+            headBox(11, -12, 10, 4, HAIR);
+            
+            // Large dynamic spikes separating outwards
+            headBox(14, -18, 4, 6, HAIR); // Central tall spike
+            headBox(10, -15, 3, 6, HAIR); // Left angled spike
+            headBox(19, -15, 3, 6, HAIR); // Right angled spike
+            headBox(7, -10, 3, 6, HAIR); // Far left flare
+            headBox(22, -10, 3, 6, HAIR); // Far right flare
+            
+            // Tapered tips
+            headBox(15, -20, 2, 2, HAIR);
+            headBox(10, -17, 2, 2, HAIR);
+            headBox(20, -17, 2, 2, HAIR);
+            headDot(7, -12, HAIR);
+            headDot(24, -12, HAIR);
+            
+            // Hair highlights and shading for golden volume
+            const LIGHT = isUI ? 0xd2b4de : 0xffcf40;
+            const SHADE = isUI ? 0x732d91 : 0xcfa000;
+            
+            // Inner highlights
+            headBox(15, -17, 2, 8, LIGHT);
+            headBox(11, -14, 2, 6, LIGHT);
+            headBox(19, -14, 2, 6, LIGHT);
+            
+            // Shadows along the edges of the spikes
+            headBox(14, -18, 1, 10, SHADE);
+            headBox(18, -15, 1, 8, SHADE);
+            headBox(13, -15, 1, 8, SHADE);
+            headBox(21, -10, 1, 6, SHADE);
+            headBox(10, -10, 1, 6, SHADE);
+          } else {
+            // BASE FORM FLAME HAIR
+            headBox(9, -2, 14, 7, HAIR); // base volume at top of head
+            headBox(10, -6, 12, 4, HAIR);
+            headBox(11, -9, 10, 3, HAIR);
+            headBox(13, -12, 6, 3, HAIR);
+            
+            // Individual tall spikes (tips of the flames)
+            headBox(14, -16, 2, 4, HAIR);
+            headBox(16, -14, 2, 2, HAIR);
+            headBox(11, -13, 2, 4, HAIR);
+            headBox(19, -12, 2, 3, HAIR);
+            
+            // Side flares / flame-like barbs
+            headBox(8, -5, 2, 4, HAIR);
+            headBox(7, -8, 2, 3, HAIR);
+            headBox(6, -4, 1, 2, HAIR); // extra jagged
+            
+            headBox(22, -5, 2, 4, HAIR);
+            headBox(23, -8, 2, 3, HAIR);
+            headBox(25, -4, 1, 2, HAIR);
 
-          headBox(10, -10, 2, 2, HAIR);
-          headBox(20, -9, 2, 2, HAIR);
+            headBox(10, -10, 2, 2, HAIR);
+            headBox(20, -9, 2, 2, HAIR);
 
-          // Hair Texture & Shading (Striated upwards flame lines)
-          const hairShadowC = HAIR === BLACK ? 0x222222 : isUI ? 0x732d91 : 0xd4a000;
-          const hairLight = isTransformed ? (isUI ? 0xd2b4de : 0xffffff) : (isUI ? 0xaf6ec9 : 0x4a4a4a);
-          
-          // Flame contouring
-          headBox(11, -8, 1, 10, hairShadowC);
-          headBox(20, -7, 1, 9, hairShadowC);
-          headBox(14, -14, 1, 16, hairShadowC);
-          headBox(17, -12, 1, 14, hairShadowC);
-          headBox(9, -6, 1, 8, hairShadowC);
-          headBox(22, -6, 1, 8, hairShadowC);
-
-          // Bright highlights for flame-like energy
-          headBox(13, -11, 1, 10, hairLight);
-          headBox(16, -12, 1, 11, hairLight);
-          headBox(15, -15, 1, 6, hairLight); // Core spike flash
-          headBox(18, -10, 1, 6, hairLight); 
-          headBox(12, -8, 1, 5, hairLight);
+            // Hair Texture & Shading (Striated upwards flame lines)
+            const hairShadowC = 0x222222;
+            
+            // Flame contouring
+            headBox(11, -8, 1, 10, hairShadowC);
+            headBox(20, -7, 1, 9, hairShadowC);
+            headBox(14, -14, 1, 16, hairShadowC);
+            headBox(17, -12, 1, 14, hairShadowC);
+            headBox(9, -6, 1, 8, hairShadowC);
+            headBox(22, -6, 1, 8, hairShadowC);
+          }
           break;
         }
         case "piccolo": {
