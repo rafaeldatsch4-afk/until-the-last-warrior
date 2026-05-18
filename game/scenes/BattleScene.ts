@@ -539,21 +539,36 @@ export default class BattleScene extends Phaser.Scene {
 
   performContinuousCharge(isPlayer: boolean, delta: number) {
     if (this.isBattleOver) return;
-    const chargeRate = 0.03 * delta; // Adjusted for delta
+    const chargeRate = 0.04 * delta; // Slightly faster charge
     this.modifyKi(isPlayer, chargeRate);
     const aura = isPlayer ? this.p1Aura : this.p2Aura;
     const shield = isPlayer ? this.p1Shield : this.p2Shield;
     if (aura && aura.active) {
       aura.setVisible(true);
-      aura.setScale(1 + Math.sin(this.time.now * 0.02) * 0.2);
-      aura.setAlpha(0.6);
+      aura.setScale(1 + Math.sin(this.time.now * 0.02) * 0.3);
+      aura.setAlpha(0.6 + Math.sin(this.time.now * 0.05) * 0.2);
     }
     if (shield && shield.active) {
       shield.setVisible(true);
-      shield.setScale(1 + Math.sin(this.time.now * 0.05) * 0.05);
+      shield.setScale(1 + Math.sin(this.time.now * 0.08) * 0.1);
     }
 
+    // Ki Charge Particles Effect
     const sprite = isPlayer ? this.player : this.enemy;
+    if (Math.random() > 0.6) {
+        const px = sprite.x + Phaser.Math.Between(-60, 60);
+        const py = sprite.y + 120 + Phaser.Math.Between(-20, 20);
+        const p = this.add.circle(px, py, 4, isPlayer ? 0x3498db : 0xe74c3c).setDepth(2);
+        this.tweens.add({
+            targets: p,
+            y: py - 150,
+            alpha: 0,
+            scale: 2,
+            duration: 600,
+            onComplete: () => p.destroy()
+        });
+    }
+
     const data = isPlayer ? this.playerData : this.enemyData;
     const transLevel = isPlayer
       ? this.playerTransformLevel
@@ -954,9 +969,8 @@ export default class BattleScene extends Phaser.Scene {
           this.uiContainer.add(btnGroup);
       }
 
-      // Invisible hit area (larger than the button itself for easier tapping)
-      const padding = 10; // safe padding space without overlapping other buttons
-      const hitArea = this.add.circle(0, 0, radius + padding, 0x000000, 0).setInteractive();
+      // Invisible hit area (exactly button size to prevent overlap)
+      const hitArea = this.add.circle(0, 0, radius + 5, 0x000000, 0).setInteractive();
       btnGroup.add(hitArea);
 
       let isPressed = false;
@@ -1004,7 +1018,7 @@ export default class BattleScene extends Phaser.Scene {
     this.mobileControls.push(joyContainer);
     
     // Large invisible hit area on the bottom-left quadrant for the FLOATING joystick
-    const joyHitArea = this.add.rectangle(0, gh/2, gw/2, gh/2, 0x000000, 0).setOrigin(0).setInteractive();
+    const joyHitArea = this.add.rectangle(0, gh/2 - 50, gw/2, gh/2 + 50, 0x000000, 0).setOrigin(0).setInteractive();
     
     if (this.uiContainer) {
         this.uiContainer.add(joyHitArea);
@@ -1027,7 +1041,7 @@ export default class BattleScene extends Phaser.Scene {
         const loc = getLocalPnt(pointer);
         let dx = loc.x - joyRootX;
         let dy = loc.y - joyRootY;
-        const maxDist = 45;
+        const maxDist = 75;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist > maxDist) {
@@ -1037,31 +1051,14 @@ export default class BattleScene extends Phaser.Scene {
         
         joyThumb.setPosition(dx, dy);
         
-        // Remove deadzone by returning raw normalized direction if finger pressed beyond a tiny distance
-        if (dist > 5) {
-            this.mobileJoystickVector = { x: dx / dist, y: dy / dist };
-        } else {
-            this.mobileJoystickVector = { x: 0, y: 0 };
-        }
+        this.mobileJoystickVector = { x: dx / maxDist, y: dy / maxDist };
         
         // Push up for jumping
-        if (this.mobileJoystickVector.y < -0.5) {
-            this.keys.p1_up.isDown = true;
-        } else {
-            this.keys.p1_up.isDown = false;
-        }
+        this.keys.p1_up.isDown = dy < -25;
         
         // Push left/right for movement
-        if (this.mobileJoystickVector.x < -0.3) {
-            this.keys.p1_left.isDown = true;
-            this.keys.p1_right.isDown = false;
-        } else if (this.mobileJoystickVector.x > 0.3) {
-            this.keys.p1_right.isDown = true;
-            this.keys.p1_left.isDown = false;
-        } else {
-            this.keys.p1_left.isDown = false;
-            this.keys.p1_right.isDown = false;
-        }
+        this.keys.p1_left.isDown = dx < -10;
+        this.keys.p1_right.isDown = dx > 10;
     };
 
     joyHitArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -1103,24 +1100,23 @@ export default class BattleScene extends Phaser.Scene {
     this.input.on('pointerup', releaseJoystick);
     this.input.on('pointerout', releaseJoystick);
     joyHitArea.on('pointerup', releaseJoystick);
-    joyHitArea.on('pointerout', releaseJoystick);
     // --- End Virtual Joystick ---
 
     // Right side (Attacks)
     // Intelligent positioning logic based on screen dimensions
     // Main ATK is bottom-right and largest
-    createBtn(gw - 110, gh - 110, "ATK", 0xe74c3c, 75, () => {
+    createBtn(gw - 120, gh - 120, "ATK", 0xe74c3c, 60, () => {
       this.mobileP1Attack = true;
       this.p1AttackBuffer = this.BUFFER_MS;
     });
 
     // SPC (Special) - above ATK
     createBtn(
-      gw - 100,
-      gh - 280,
+      gw - 120,
+      gh - 250,
       "SPC",
       0xf1c40f,
-      55,
+      45,
       () => {
         this.mobileP1Special = true;
       },
@@ -1132,11 +1128,11 @@ export default class BattleScene extends Phaser.Scene {
 
     // DEF (Defend) - left of ATK
     createBtn(
-      gw - 280,
-      gh - 100,
+      gw - 250,
+      gh - 120,
       "DEF",
       0x3498db,
-      55,
+      45,
       () => {
         this.mobileP1Defend = true;
       },
@@ -1145,8 +1141,8 @@ export default class BattleScene extends Phaser.Scene {
       },
     );
 
-    // KI (Ki Blast) - diagonal between ATK and SPC/DEF
-    createBtn(gw - 240, gh - 230, "KI", 0x00ffff, 55, () => {
+    // KI (Ki Blast) - diagonal between ATK and SPC/DEF, making a grid
+    createBtn(gw - 250, gh - 250, "KI", 0x00ffff, 45, () => {
       this.mobileP1KiBlast = true;
       this.p1KiBlastBuffer = this.BUFFER_MS;
     });
@@ -10804,31 +10800,32 @@ export default class BattleScene extends Phaser.Scene {
     });
 
     // Debris / Sparks - Faster and more dynamic
-    const particleCount = isBeam ? 24 : isBlock ? 8 : 16;
+    const particleCount = isBeam ? 32 : isBlock ? 12 : 20;
     for (let i = 0; i < particleCount; i++) {
       const p = this.add
         .rectangle(
           x,
           y,
-          isBeam ? 8 : 6,
-          isBeam ? 8 : 6,
-          isBlock ? 0x3498db : color,
+          isBeam ? 10 : 6,
+          isBeam ? 2 : 6, // Elongated sparks for beams
+          isBlock ? 0x3498db : (Math.random() > 0.5 ? 0xffffff : color),
         )
         .setDepth(20);
       const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
       const dist = isBeam
-        ? Phaser.Math.Between(100, 250)
-        : Phaser.Math.Between(60, 150);
+        ? Phaser.Math.Between(150, 350)
+        : Phaser.Math.Between(80, 200);
 
       this.tweens.add({
         targets: p,
         x: x + Math.cos(angle) * dist,
         y: y + Math.sin(angle) * dist,
         alpha: 0,
-        scale: 0.1,
-        rotation: Phaser.Math.FloatBetween(-Math.PI, Math.PI),
-        duration: Phaser.Math.Between(300, 600),
-        ease: "Quad.easeOut",
+        scaleY: 0.1,
+        scaleX: isBeam ? 2 : 0.1,
+        rotation: angle, // Align rotation to travel direction
+        duration: Phaser.Math.Between(400, 800),
+        ease: "Expo.easeOut",
         onComplete: () => p.destroy(),
       });
     }
@@ -10937,6 +10934,8 @@ export default class BattleScene extends Phaser.Scene {
 
     if (target.active) {
       target.setTintFill(0xffffff); // Initial white flash
+      this.cameras.main.flash(50, 255, 255, 255, true); // QUICK Flash for every hit
+      
       this.time.delayedCall(40, () => {
         if (target.active) target.setTint(0xff0000); // Then red
       });
@@ -11003,10 +11002,32 @@ export default class BattleScene extends Phaser.Scene {
     const p2p = this.enemyHp / this.enemyData.maxHp;
 
     if (this.p1HpBar && this.p1HpBar.active) {
-      this.p1HpBar.width = 250 * p1p;
-      this.p2HpBar.width = 250 * p2p;
-      this.p1KiBar.width = 2.5 * this.playerKi;
-      this.p2KiBar.width = 2.5 * this.enemyKi;
+      // Liquid HP Bars
+      this.tweens.add({
+        targets: this.p1HpBar,
+        width: 250 * p1p,
+        duration: 300,
+        ease: "Cubic.easeOut",
+      });
+      this.tweens.add({
+        targets: this.p2HpBar,
+        width: 250 * p2p,
+        duration: 300,
+        ease: "Cubic.easeOut",
+      });
+      // Liquid Ki Bars
+      this.tweens.add({
+        targets: this.p1KiBar,
+        width: 2.5 * this.playerKi,
+        duration: 200,
+        ease: "Cubic.easeOut",
+      });
+      this.tweens.add({
+        targets: this.p2KiBar,
+        width: 2.5 * this.enemyKi,
+        duration: 200,
+        ease: "Cubic.easeOut",
+      });
     }
     
     // Hide Transform Button if max level reached
@@ -11059,8 +11080,25 @@ export default class BattleScene extends Phaser.Scene {
     const r = Math.random();
     const playerHpPct = this.playerHp / this.playerData.maxHp;
     const enemyHpPct = this.enemyHp / this.enemyData.maxHp;
+    const dist = Math.abs(this.player.x - this.enemy.x);
 
-    // 1. Transform if available and have enough Ki
+    // SMARTER AI: Check player state
+    const playerIsAttacking = this.p1ActionActive;
+
+    // 1. Reactive Guard: If player is attacking and close, HIGH chance to block
+    if (playerIsAttacking && dist < 300 && r < 0.7) {
+      this.enemyDefending = true;
+      this.p2Aura.setVisible(true).setAlpha(0.4).setScale(1.1);
+      this.time.delayedCall(800, () => {
+        if (this.scene.isActive()) {
+          this.enemyDefending = false;
+          this.p2Aura.setVisible(false);
+        }
+      });
+      return;
+    }
+
+    // 2. Transform if available and have enough Ki
     let maxLevel = 1;
     if (
       this.enemyData.key === "goku" ||
@@ -11108,11 +11146,11 @@ export default class BattleScene extends Phaser.Scene {
 
     // 4. If player has high Ki, try to interrupt them or defend
     if (this.playerKi >= 80) {
-      if (r < 0.3) {
-        // Defend for 1 second against potential super
+      if (r < 0.4) {
+        // Defend for 1.2 seconds against potential super
         this.enemyDefending = true;
-        this.p2Aura.setVisible(true).setAlpha(0.6).setScale(1.2); // Visual feedback
-        this.time.delayedCall(1000, () => {
+        this.p2Aura.setVisible(true).setAlpha(0.6).setScale(1.2);
+        this.time.delayedCall(1200, () => {
           if (this.scene.isActive()) {
             this.enemyDefending = false;
             this.p2Aura.setVisible(false);
@@ -11123,7 +11161,7 @@ export default class BattleScene extends Phaser.Scene {
         this.performSpecial(false, false);
         return;
       } else if (r < 0.8) {
-        this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
+        this.performAttack(false, dist < 200 ? "melee" : "ki");
         return;
       } else {
         this.performCharge(false);
@@ -11131,22 +11169,25 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
 
-    // 5. Standard tactical decisions based on Ki
+    // 5. Standard tactical decisions based on Ki and Distance
     if (this.enemyKi >= 80) {
-      // High Ki: Favor Super or Normal Special
-      if (r < 0.5) this.performSpecial(false, true);
+      // High Ki: Favor Super or Strategic Attack
+      if (r < 0.5) {
+        if (dist < 400 || r < 0.3) this.performSpecial(false, true);
+        else this.performCharge(false);
+      }
       else if (r < 0.8) this.performSpecial(false, false);
-      else this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
+      else this.performAttack(false, dist < 150 ? "melee" : "ki");
     } else if (this.enemyKi >= 40) {
       // Medium Ki: Mix of Special, Attack, and Charge
       if (r < 0.4) this.performSpecial(false, false);
       else if (r < 0.7)
-        this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
+        this.performAttack(false, dist < 150 ? "melee" : "ki");
       else this.performCharge(false);
     } else {
-      // Low Ki: Favor Charging
+      // Low Ki: Favor Charging or distancing
       if (r < 0.7) this.performCharge(false);
-      else this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
+      else this.performAttack(false, dist < 150 ? "melee" : "ki");
     }
   }
 
