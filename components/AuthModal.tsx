@@ -5,7 +5,10 @@ import {
   createUserWithEmailAndPassword, 
   signOut,
   onAuthStateChanged,
-  deleteUser
+  deleteUser,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, getDoc, deleteDoc, increment, arrayUnion } from 'firebase/firestore';
 
@@ -68,6 +71,13 @@ export const AuthButton: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [dbUsername, setDbUsername] = useState('');
   const [stats, setStats] = useState({ matches: 0, wins: 0, losses: 0, achievements: [] as string[] });
+  
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false);
 
   useEffect(() => {
     const handleSceneChange = (e: any) => {
@@ -199,6 +209,37 @@ export const AuthButton: React.FC = () => {
 
   const getEmailFromUsername = (uname: string) => {
     return `${uname.toLowerCase().replace(/[^a-z0-9]/g, '')}@lastwarrior.app`;
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !user.email) return;
+    setError('');
+    setPasswordChangeSuccess(false);
+    
+    if (newPassword.length < 6) {
+      setError('A nova senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+      setPasswordChangeSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setTimeout(() => setPasswordChangeSuccess(false), 3000);
+    } catch (err: any) {
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+        setError('A senha atual está incorreta.');
+      } else {
+        setError('Erro ao alterar senha. Verifique a senha atual e tente novamente.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -415,19 +456,91 @@ export const AuthButton: React.FC = () => {
                 </div>
 
                 <div className="mt-auto pt-4 border-t border-gray-800 flex flex-col gap-2">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 font-bold py-3 rounded-lg uppercase tracking-wider transition-all"
-                  >
-                    Desconectar
-                  </button>
-                  <button
-                    onClick={handleDeleteAccount}
-                    disabled={loading}
-                    className="w-full bg-transparent hover:bg-red-950 text-red-500 hover:text-red-400 border border-transparent hover:border-red-900/50 font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition-all disabled:opacity-50 mt-2"
-                  >
-                    {loading ? 'Processando...' : 'Excluir Conta Permanentemente'}
-                  </button>
+                  {showPasswordChange ? (
+                    <form onSubmit={handleChangePassword} className="flex flex-col gap-3 mt-2 bg-black/40 p-4 rounded-lg border border-gray-700 shadow-inner">
+                      <div className="flex justify-between items-center mb-1">
+                        <h3 className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Alterar Senha</h3>
+                        <button type="button" onClick={() => { setShowPasswordChange(false); setError(''); setPasswordChangeSuccess(false); }} className="text-gray-400 hover:text-white p-1">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                        </button>
+                      </div>
+                      
+                      {passwordChangeSuccess && (
+                        <div className="text-green-400 text-xs font-bold text-center bg-green-950/50 border border-green-900/50 p-2 rounded">
+                          Senha alterada com sucesso!
+                        </div>
+                      )}
+                      
+                      {error && (
+                        <div className="text-red-400 text-xs font-bold text-center bg-red-950/50 border border-red-900/50 p-2 rounded">
+                          {error}
+                        </div>
+                      )}
+
+                      <div className="relative">
+                        <input
+                          type={showCurrentPassword ? "text" : "password"}
+                          className="w-full bg-black/60 border border-gray-600 rounded-lg p-2.5 pr-10 text-white text-xs font-bold placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition-colors"
+                          placeholder="Senha Atual"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          required
+                        />
+                        <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+                          {showCurrentPassword ? (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                          )}
+                        </button>
+                      </div>
+                      
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? "text" : "password"}
+                          className="w-full bg-black/60 border border-gray-600 rounded-lg p-2.5 pr-10 text-white text-xs font-bold placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition-colors"
+                          placeholder="Nova Senha (Mínimo 6)"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          required
+                          minLength={6}
+                        />
+                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+                          {showNewPassword ? (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                          )}
+                        </button>
+                      </div>
+
+                      <button type="submit" disabled={loading} className="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-2 rounded-lg mt-2 text-xs uppercase tracking-wider transition-all disabled:opacity-50">
+                        {loading ? 'Aguarde...' : 'Confirmar'}
+                      </button>
+                    </form>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => { setShowPasswordChange(true); setError(''); }}
+                        className="w-full bg-gray-800 hover:bg-gray-700 text-yellow-500 border border-gray-600 font-bold py-3 rounded-lg uppercase tracking-wider transition-all"
+                      >
+                        Alterar Senha
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 font-bold py-3 rounded-lg uppercase tracking-wider transition-all"
+                      >
+                        Desconectar
+                      </button>
+                      <button
+                        onClick={handleDeleteAccount}
+                        disabled={loading}
+                        className="w-full bg-transparent hover:bg-red-950 text-red-500 hover:text-red-400 border border-transparent hover:border-red-900/50 font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition-all disabled:opacity-50 mt-2"
+                      >
+                        {loading ? 'Processando...' : 'Excluir Conta Permanentemente'}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (

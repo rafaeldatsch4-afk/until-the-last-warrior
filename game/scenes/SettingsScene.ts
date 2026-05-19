@@ -90,8 +90,8 @@ export default class SettingsScene extends Phaser.Scene {
     });
 
     // --- CONTROLS ---
-    const controlsBtn = this.add.rectangle(480, 290, 200, 40, 0x9b59b6).setStrokeStyle(2, 0xffffff);
-    const controlsTxt = this.add.text(480, 290, 'PC CONTROLS', { fontSize: '18px', fontStyle: 'bold' }).setOrigin(0.5);
+    const controlsBtn = this.add.rectangle(850, 40, 180, 40, 0x9b59b6).setStrokeStyle(2, 0xffffff);
+    const controlsTxt = this.add.text(850, 40, 'PC CONTROLS', { fontSize: '18px', fontStyle: 'bold' }).setOrigin(0.5);
     
     controlsBtn.setInteractive({ useHandCursor: true })
         .on('pointerover', () => controlsBtn.setFillStyle(0x8e44ad))
