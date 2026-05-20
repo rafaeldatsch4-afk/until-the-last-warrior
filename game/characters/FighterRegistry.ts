@@ -1,8 +1,10 @@
 import { Fighter } from './base/Fighter';
 import { GokuFighter } from './goku';
+import { VegetaFighter } from './vegeta';
 
 const registry = new Map<string, Fighter>([
-  ['goku', new GokuFighter()]
+  ['goku', new GokuFighter()],
+  ['vegeta', new VegetaFighter()]
 ]);
 
 export function getFighter(key: string): Fighter {
