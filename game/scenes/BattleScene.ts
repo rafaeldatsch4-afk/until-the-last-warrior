@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { CharacterData, GameState } from "../types";
+import { getFighter } from '../characters/FighterRegistry';
 
 export default class BattleScene extends Phaser.Scene {
   declare sound:
@@ -1320,14 +1321,20 @@ export default class BattleScene extends Phaser.Scene {
     const attackerData = isPlayer ? this.playerData : this.enemyData;
 
     switch (attackerData.key) {
-      case "goku":
-        this.performGokuAttack(
+      case "goku": {
+        const fighter = getFighter("goku");
+        fighter.performAttack({
+          scene: this,
+          attacker: isPlayer ? this.player : this.enemy,
+          defender: isPlayer ? this.enemy : this.player,
           isPlayer,
           attackType,
           comboCount,
           isComboFinisher,
-        );
+          transformLevel: isPlayer ? this.playerTransformLevel : this.enemyTransformLevel
+        });
         return true;
+      }
       case "vegeta":
         this.performVegetaAttack(
           isPlayer,
@@ -1498,109 +1505,6 @@ export default class BattleScene extends Phaser.Scene {
         return true;
       default:
         return false; // Fallback to generic
-    }
-  }
-
-  performGokuAttack(
-    isPlayer: boolean,
-    attackType: "melee" | "ki",
-    comboCount: number,
-    isComboFinisher: boolean,
-  ) {
-    const attacker = isPlayer ? this.player : this.enemy;
-    const target = isPlayer ? this.enemy : this.player;
-    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
-    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
-    const transLevel = isPlayer
-      ? this.playerTransformLevel
-      : this.enemyTransformLevel;
-
-    if (attackType === "melee") {
-      // Goku Melee: Teleport strike
-      attacker.setAlpha(0);
-      this.createImpactEffect(attacker.x, attacker.y + 120, 0xffffff); // Teleport poof
-
-      this.time.delayedCall(100, () => {
-        if (!this.scene.isActive()) return;
-        attacker.setAlpha(1);
-        attacker.x = target.x + (attacker.x < target.x ? -40 : 40);
-        attacker.y = target.y - (isComboFinisher ? 50 : 0); // Attack from above on finisher
-        attacker.play(this.getAnimKey("goku", transLevel, "attack"));
-
-        if (this.cache.audio.exists("sfx_attack"))
-          this.sound.play("sfx_attack", { volume: 1.2 });
-        this.takeDamage(
-          !isPlayer,
-          Math.floor(
-            (isComboFinisher ? 20 : 10) * this.getDamageMultiplier(transLevel),
-          ),
-        );
-        this.modifyKi(isPlayer, 5);
-        this.createImpactEffect(target.x, target.y + 120, 0xffa500);
-        this.cameras.main.shake(
-          isComboFinisher ? 200 : 100,
-          isComboFinisher ? 0.02 : 0.01,
-        );
-
-        this.tweens.add({
-          targets: target,
-          x: target.x + (attacker.x < target.x ? 50 : -50),
-          duration: 100,
-          yoyo: true,
-        });
-
-        this.time.delayedCall(200, () => {
-          if (!this.scene.isActive()) return;
-          attacker.setAlpha(0);
-          this.createImpactEffect(attacker.x, attacker.y + 120, 0xffffff);
-          this.time.delayedCall(100, () => {
-            if (!this.scene.isActive()) return;
-            attacker.setAlpha(1);
-            attacker.x = startX;
-            attacker.y = startY;
-            attacker.play(this.getAnimKey("goku", transLevel, "idle"));
-            this.setActionState(isPlayer, false);
-          });
-        });
-      });
-    } else {
-      // Goku Ki: Rapid small blasts
-      attacker.play(this.getAnimKey("goku", transLevel, "attack"));
-      const blastCount = isComboFinisher ? 5 : 3;
-      for (let i = 0; i < blastCount; i++) {
-        this.time.delayedCall(i * 80, () => {
-          if (!this.scene.isActive()) return;
-          if (this.cache.audio.exists("sfx_beam"))
-            this.sound.play("sfx_beam", { volume: 0.5 });
-          const hand = this.getHandPosition(isPlayer);
-          const blast = this.add
-            .circle(hand.x, hand.y, 8, 0x00ffff)
-            .setDepth(5);
-          this.tweens.add({
-            targets: blast,
-            x: target.x,
-            duration: 150,
-            onComplete: () => {
-              blast.destroy();
-              if (!this.scene.isActive()) return;
-              this.createImpactEffect(
-                target.x,
-                target.y + 120 + (Math.random() * 20 - 10),
-                0x00ffff,
-              );
-              this.takeDamage(
-                !isPlayer,
-                Math.floor(5 * this.getDamageMultiplier(transLevel)),
-              );
-            },
-          });
-        });
-      }
-      this.time.delayedCall(blastCount * 80 + 200, () => {
-        if (!this.scene.isActive()) return;
-        attacker.play(this.getAnimKey("goku", transLevel, "idle"));
-        this.setActionState(isPlayer, false);
-      });
     }
   }
 
@@ -4793,10 +4697,12 @@ export default class BattleScene extends Phaser.Scene {
         animKeyIdle,
         () => {
           switch (data.key) {
-            case "goku":
-              if (isSuper) this.specialGenkidama(isPlayer);
-              else this.specialKamehameha(isPlayer);
+            case "goku": {
+              const fighter = getFighter("goku");
+              if (isSuper) fighter.performSuper({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
+              else fighter.performSpecial({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
               break;
+            }
             case "spiderman":
               if (isSuper) this.specialMaximumSpider(isPlayer);
               else this.specialWebPullPunch(isPlayer);
@@ -4939,7 +4845,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Helper to get EXACT hand position based on sprite flipping
-  private getHandPosition(isPlayer: boolean): { x: number; y: number } {
+  getHandPosition(isPlayer: boolean): { x: number; y: number } {
     const sprite = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
     // Default for all characters
@@ -4948,195 +4854,6 @@ export default class BattleScene extends Phaser.Scene {
     return { x: sprite.x + xOffset, y: sprite.y + yOffset };
   }
 
-  private specialKamehameha(isP: boolean) {
-    const attacker = isP ? this.player : this.enemy;
-    const target = isP ? this.enemy : this.player;
-    const transLevel = isP
-      ? this.playerTransformLevel
-      : this.enemyTransformLevel;
-    if (!attacker.active || !target.active) {
-      this.setActionState(isP, false);
-      return;
-    }
-
-    const baseDmg = 35;
-    const dmg = Math.floor(baseDmg * this.getDamageMultiplier(transLevel));
-
-    const size = 2.0;
-    const col = 0x00ffff;
-
-    const hand = this.getHandPosition(isP);
-    const endX = target.x;
-    const distance = Math.abs(endX - hand.x) + 50;
-
-    this.log("KAMEHAMEHA!");
-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
-
-    // Charge Effect
-    const chargeCore = this.add
-      .circle(hand.x, hand.y, 2, 0xffffff)
-      .setDepth(16);
-    const chargeGlow = this.add
-      .circle(hand.x, hand.y, 5, col)
-      .setDepth(15)
-      .setBlendMode(Phaser.BlendModes.ADD);
-
-    this.cameras.main.shake(400, 0.01);
-
-    // Gathering particles
-    const gatherParticles = this.add
-      .particles(0, 0, "particle", {
-        x: hand.x,
-        y: hand.y,
-        speed: { min: -150, max: 150 },
-        scale: { start: 0.8, end: 0 },
-        blendMode: "ADD",
-        lifespan: 300,
-        tint: col,
-        gravityY: 0,
-      })
-      .setDepth(14);
-
-    this.tweens.add({
-      targets: [chargeCore, chargeGlow],
-      scale: 12 * size,
-      alpha: { start: 1, end: 0.8 },
-      duration: 400,
-      yoyo: true,
-      repeat: 0,
-      onComplete: () => {
-        if (!this.scene.isActive()) return;
-        chargeCore.destroy();
-        chargeGlow.destroy();
-        gatherParticles.destroy();
-
-        this.createScreenFlash(col, 200, 0.6);
-        this.cameras.main.shake(300, 0.03);
-
-        // The Beam Structure
-        const originX = 0;
-
-        // Outer Glow
-        const beamOuter = this.add
-          .rectangle(hand.x, hand.y, 0, 40 * size, col)
-          .setOrigin(originX, 0.5)
-          .setDepth(4)
-          .setAlpha(0.6)
-          .setBlendMode(Phaser.BlendModes.ADD);
-        // Main Color Beam
-        const beamMain = this.add
-          .rectangle(hand.x, hand.y, 0, 24 * size, col)
-          .setOrigin(originX, 0.5)
-          .setDepth(5)
-          .setAlpha(0.9)
-          .setBlendMode(Phaser.BlendModes.ADD);
-        // Inner Core (White/Bright)
-        const beamCore = this.add
-          .rectangle(hand.x, hand.y, 0, 12 * size, 0xffffff)
-          .setOrigin(originX, 0.5)
-          .setDepth(6);
-
-        beamOuter.scaleX = isP ? 1 : -1;
-        beamMain.scaleX = isP ? 1 : -1;
-        beamCore.scaleX = isP ? 1 : -1;
-
-        // Beam Head/Tip
-        const beamHeadGlow = this.add
-          .circle(hand.x, hand.y, 30 * size, col)
-          .setDepth(5)
-          .setBlendMode(Phaser.BlendModes.ADD)
-          .setAlpha(0.8);
-        const beamHead = this.add
-          .circle(hand.x, hand.y, 15 * size, 0xffffff)
-          .setDepth(6);
-
-        // Particles Emitter for Beam
-        const particles = this.add
-          .particles(0, 0, "particle", {
-            speed: { min: 50, max: 200 },
-            angle: { min: isP ? 160 : -20, max: isP ? 200 : 20 },
-            scale: { start: 0.8 * size, end: 0 },
-            blendMode: "ADD",
-            lifespan: 300,
-            tint: col,
-          })
-          .setDepth(7);
-
-        // Animation
-        this.tweens.add({
-          targets: [beamOuter, beamMain, beamCore],
-          width: distance,
-          duration: 200,
-          ease: "Power2",
-          onUpdate: () => {
-            if (!this.scene.isActive()) return;
-
-            const shakeAmt = 2;
-            const jitterY = Phaser.Math.Between(-shakeAmt, shakeAmt);
-
-            beamOuter.setPosition(hand.x, hand.y + jitterY);
-            beamMain.setPosition(hand.x, hand.y + jitterY);
-            beamCore.setPosition(hand.x, hand.y + jitterY / 2);
-
-            // Tip Position
-            const tipX = isP
-              ? hand.x + beamMain.width
-              : hand.x - beamMain.width;
-            beamHeadGlow.setPosition(tipX, hand.y + jitterY);
-            beamHead.setPosition(tipX, hand.y + jitterY);
-
-            // Particle Emitter follows tip
-            particles.setPosition(tipX, hand.y + jitterY);
-          },
-          onComplete: () => {
-            if (!this.scene.isActive()) return;
-
-            this.createImpactEffect(endX, hand.y, col, "beam");
-            this.takeDamage(!isP, dmg);
-            particles.stop();
-
-            // Shockwave rings at impact
-            for (let i = 0; i < 3; i++) {
-              const ring = this.add
-                .circle(endX, hand.y, 20, col)
-                .setStrokeStyle(4 + size * 2, col)
-                .setDepth(20)
-                .setAlpha(0)
-                .setBlendMode(Phaser.BlendModes.ADD);
-              ring.isFilled = false;
-              this.tweens.add({
-                targets: ring,
-                scale: 4 + i * 1.5 + size,
-                alpha: { start: 1, end: 0 },
-                duration: 200 + i * 50,
-                ease: "Cubic.easeOut",
-                onComplete: () => ring.destroy(),
-              });
-            }
-
-            // Fade Out
-            this.tweens.add({
-              targets: [beamOuter, beamMain, beamCore, beamHead, beamHeadGlow],
-              alpha: 0,
-              scaleY: 0,
-              duration: 300,
-              onComplete: () => {
-                beamOuter.destroy();
-                beamMain.destroy();
-                beamCore.destroy();
-                beamHead.destroy();
-                beamHeadGlow.destroy();
-                particles.destroy();
-                this.onSpecialComplete(isP);
-              },
-            });
-          },
-        });
-      },
-    });
-  }
-
-  // =========================================================================
   // REMASTERED SPECIAL ATTACKS (VISUALLY UPGRADED FOR ALL)
   // =========================================================================
 
@@ -6627,163 +6344,7 @@ export default class BattleScene extends Phaser.Scene {
   // 100% ULTIMATE ATTACKS
   // =========================================================================
 
-  private specialGenkidama(isP: boolean) {
-    const attacker = isP ? this.player : this.enemy;
-    const target = isP ? this.enemy : this.player;
-    const transLevel = isP
-      ? this.playerTransformLevel
-      : this.enemyTransformLevel;
-    const dmg = Math.floor(120 * this.getDamageMultiplier(transLevel));
 
-    this.log("GENKIDAMA!");
-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
-
-    // Raise hands
-    attacker.play(`${attacker.getData('charKey')}_charge`);
-
-    // Create giant spirit bomb
-    const bomb = this.add
-      .circle(attacker.x, attacker.y - 150, 10, 0x00ffff)
-      .setDepth(15)
-      .setAlpha(0.9);
-    const bombGlow = this.add
-      .circle(attacker.x, attacker.y - 150, 15, 0xffffff)
-      .setDepth(14)
-      .setAlpha(0.5)
-      .setBlendMode(Phaser.BlendModes.ADD);
-
-    // Energy gathering particles
-    const gatherEvent = this.time.addEvent({
-      delay: 30,
-      callback: () => {
-        if (!this.scene.isActive()) return;
-        for (let i = 0; i < 2; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const dist = 300 + Math.random() * 150;
-          const px = bomb.x + Math.cos(angle) * dist;
-          const py = bomb.y + Math.sin(angle) * dist;
-          const p = this.add
-            .circle(px, py, 6, 0x00ffff)
-            .setDepth(16)
-            .setBlendMode(Phaser.BlendModes.ADD);
-          this.tweens.add({
-            targets: p,
-            x: bomb.x,
-            y: bomb.y,
-            duration: 400,
-            ease: "Cubic.easeIn",
-            onComplete: () => p.destroy(),
-          });
-        }
-      },
-      repeat: 40,
-    });
-
-    // Grow
-    this.tweens.add({
-      targets: [bomb, bombGlow],
-      scale: 35,
-      duration: 1500,
-      ease: "Sine.easeInOut",
-      onComplete: () => {
-        if (!this.scene.isActive()) return;
-        attacker.play(`${attacker.getData('charKey')}_attack`); // Throw forward
-
-        this.cameras.main.shake(300, 0.02);
-
-        // Throw
-        this.tweens.add({
-          targets: [bomb, bombGlow],
-          x: target.x,
-          y: target.y + 120,
-          duration: 700,
-          ease: "Cubic.easeIn",
-          onComplete: () => {
-            if (!this.scene.isActive()) return;
-
-            this.createScreenFlash(0xffffff, 600, 1);
-            this.cameras.main.shake(1000, 0.1);
-
-            // Massive crater/explosion
-            const crater = this.add
-              .ellipse(target.x, target.y + 30, 400, 150, 0x000000)
-              .setAlpha(0.7)
-              .setDepth(1);
-            const explosion = this.add
-              .circle(target.x, target.y + 120, 300, 0x00ffff)
-              .setDepth(20)
-              .setBlendMode(Phaser.BlendModes.ADD);
-            const core = this.add
-              .circle(target.x, target.y + 120, 200, 0xffffff)
-              .setDepth(21)
-              .setBlendMode(Phaser.BlendModes.ADD);
-
-            // Shockwave rings
-            for (let i = 0; i < 6; i++) {
-              const ring = this.add
-                .circle(target.x, target.y + 120, 60, 0x00ffff)
-                .setStrokeStyle(12, 0x00ffff)
-                .setDepth(22)
-                .setAlpha(0)
-                .setBlendMode(Phaser.BlendModes.ADD);
-              ring.isFilled = false;
-              this.tweens.add({
-                targets: ring,
-                scale: 12 + i * 6,
-                alpha: { start: 1, end: 0 },
-                duration: 500 + i * 120,
-                ease: "Cubic.easeOut",
-                onComplete: () => ring.destroy(),
-              });
-            }
-
-            // Extra debris particles
-            for (let i = 0; i < 20; i++) {
-              const p = this.add
-                .rectangle(target.x, target.y + 120, 10, 10, 0x00ffff)
-                .setDepth(23)
-                .setBlendMode(Phaser.BlendModes.ADD);
-              const angle = Math.random() * Math.PI * 2;
-              const dist = 200 + Math.random() * 300;
-              this.tweens.add({
-                targets: p,
-                x: target.x + Math.cos(angle) * dist,
-                y: target.y + 120 + Math.sin(angle) * dist,
-                alpha: 0,
-                scale: 0,
-                duration: 800,
-                onComplete: () => p.destroy(),
-              });
-            }
-
-            this.tweens.add({
-              targets: [explosion, core],
-              scale: 2.0,
-              alpha: 0,
-              duration: 800,
-              onComplete: () => {
-                explosion.destroy();
-                core.destroy();
-              },
-            });
-            this.tweens.add({
-              targets: crater,
-              alpha: 0,
-              duration: 2000,
-              delay: 1000,
-              onComplete: () => crater.destroy(),
-            });
-
-            this.createImpactEffect(target.x, target.y + 120, 0x00ffff, "beam");
-            this.takeDamage(!isP, dmg);
-            bomb.destroy();
-            bombGlow.destroy();
-            this.onSpecialComplete(isP);
-          },
-        });
-      },
-    });
-  }
 
   private specialFinalFlash(isP: boolean) {
     const attacker = isP ? this.player : this.enemy;
