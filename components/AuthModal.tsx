@@ -375,13 +375,13 @@ export const AuthButton: React.FC = () => {
           ></div>
 
           {/* Modal Content */}
-          <div className="relative w-full max-w-md bg-gradient-to-b from-gray-900 to-black border-2 border-yellow-500/80 rounded-2xl shadow-[0_0_40px_rgba(234,179,8,0.3)] text-white overflow-hidden animate-in fade-in zoom-in duration-300">
+          <div className={`relative w-full ${user ? 'max-w-3xl' : 'max-w-md'} max-h-[95vh] flex flex-col bg-gradient-to-b from-gray-900 to-black border-2 border-yellow-500/80 rounded-2xl shadow-[0_0_40px_rgba(234,179,8,0.3)] text-white overflow-hidden animate-in fade-in zoom-in duration-300`}>
             {/* Header decoration */}
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-80"></div>
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-80 shrink-0"></div>
             
             <button 
               onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+              className="absolute top-2 right-2 z-10 text-gray-400 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
               aria-label="Fechar"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -389,158 +389,162 @@ export const AuthButton: React.FC = () => {
               </svg>
             </button>
             
-            <div className="p-6 sm:p-8">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar">
             {user ? (
               <div className="flex flex-col h-full">
-                <div className="text-center mb-6">
-                  <h2 id="modal-title" className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 uppercase tracking-wider drop-shadow-sm">CARTÃO DE JOGADOR</h2>
+                <div className="text-center mb-4 shrink-0">
+                  <h2 id="modal-title" className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 uppercase tracking-wider drop-shadow-sm">CARTÃO DE JOGADOR</h2>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 -mr-1">
-                  <div className="bg-gray-800/50 rounded-xl p-5 mb-5 border border-gray-700/50 shadow-inner">
-                    <div className="flex items-center gap-4 mb-5 pb-5 border-b border-gray-700/50">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-300 border-2 border-yellow-400 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.4)]">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 drop-shadow-md">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                          <circle cx="12" cy="7" r="4" />
-                        </svg>
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 flex-1 min-h-0">
+                  {/* LEFT COLUMN: Player info & Accounts */}
+                  <div className="flex flex-col flex-1 min-w-0 sm:w-1/2">
+                    <div className="bg-gray-800/50 rounded-xl p-4 sm:p-5 mb-4 border border-gray-700/50 shadow-inner shrink-0">
+                      <div className="flex items-center gap-3 sm:gap-4 mb-4 pb-4 border-b border-gray-700/50">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-300 border-2 border-yellow-400 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.4)]">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-md">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                          </svg>
+                        </div>
+                        <div className="text-left min-w-0">
+                          <p className="text-gray-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">Combatente</p>
+                          <p className="font-black text-xl sm:text-2xl text-white tracking-wide truncate" title={dbUsername}>{dbUsername}</p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Combatente</p>
-                        <p className="font-black text-2xl text-white tracking-wide truncate max-w-[200px]" title={dbUsername}>{dbUsername}</p>
+                      
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center shrink-0">
+                         <div className="bg-black/40 rounded-lg p-2 border border-gray-700/50">
+                           <div className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">Lutas</div>
+                           <div className="font-black text-lg sm:text-xl text-blue-400">{stats.matches}</div>
+                         </div>
+                         <div className="bg-black/40 rounded-lg p-2 border border-green-900/30">
+                           <div className="text-green-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Vitórias</div>
+                           <div className="font-black text-lg sm:text-xl text-green-400">{stats.wins}</div>
+                         </div>
+                         <div className="bg-black/40 rounded-lg p-2 border border-red-900/30">
+                           <div className="text-red-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Derrotas</div>
+                           <div className="font-black text-lg sm:text-xl text-red-400">{stats.losses}</div>
+                         </div>
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                       <div className="bg-black/40 rounded-lg p-2 border border-gray-700/50">
-                         <div className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">Lutas</div>
-                         <div className="font-black text-xl text-blue-400">{stats.matches}</div>
-                       </div>
-                       <div className="bg-black/40 rounded-lg p-2 border border-green-900/30">
-                         <div className="text-green-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Vitórias</div>
-                         <div className="font-black text-xl text-green-400">{stats.wins}</div>
-                       </div>
-                       <div className="bg-black/40 rounded-lg p-2 border border-red-900/30">
-                         <div className="text-red-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Derrotas</div>
-                         <div className="font-black text-xl text-red-400">{stats.losses}</div>
-                       </div>
+
+                    <div className="mt-auto pt-2 flex flex-col gap-2 shrink-0">
+                      {showPasswordChange ? (
+                        <form onSubmit={handleChangePassword} className="flex flex-col gap-3 mt-2 bg-black/40 p-3 sm:p-4 rounded-lg border border-gray-700 shadow-inner">
+                          <div className="flex justify-between items-center mb-1">
+                            <h3 className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Alterar Senha</h3>
+                            <button type="button" onClick={() => { setShowPasswordChange(false); setError(''); setPasswordChangeSuccess(false); }} className="text-gray-400 hover:text-white p-1">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                            </button>
+                          </div>
+                          
+                          {passwordChangeSuccess && (
+                            <div className="text-green-400 text-xs font-bold text-center bg-green-950/50 border border-green-900/50 p-2 rounded">
+                              Senha alterada com sucesso!
+                            </div>
+                          )}
+                          
+                          {error && (
+                            <div className="text-red-400 text-xs font-bold text-center bg-red-950/50 border border-red-900/50 p-2 rounded">
+                              {error}
+                            </div>
+                          )}
+
+                          <div className="relative">
+                            <input
+                              type={showCurrentPassword ? "text" : "password"}
+                              className="w-full bg-black/60 border border-gray-600 rounded-lg p-2.5 pr-10 text-white text-xs font-bold placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition-colors"
+                              placeholder="Senha Atual"
+                              value={currentPassword}
+                              onChange={(e) => setCurrentPassword(e.target.value)}
+                              required
+                            />
+                            <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+                              {showCurrentPassword ? (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                              )}
+                            </button>
+                          </div>
+                          
+                          <div className="relative">
+                            <input
+                              type={showNewPassword ? "text" : "password"}
+                              className="w-full bg-black/60 border border-gray-600 rounded-lg p-2.5 pr-10 text-white text-xs font-bold placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition-colors"
+                              placeholder="Nova Senha (Mínimo 6)"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              required
+                              minLength={6}
+                            />
+                            <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+                              {showNewPassword ? (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                              )}
+                            </button>
+                          </div>
+
+                          <button type="submit" disabled={loading} className="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-2 rounded-lg mt-2 text-xs uppercase tracking-wider transition-all disabled:opacity-50">
+                            {loading ? 'Aguarde...' : 'Confirmar'}
+                          </button>
+                        </form>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => { setShowPasswordChange(true); setError(''); }}
+                            className="w-full bg-gray-800 hover:bg-gray-700 text-yellow-500 border border-gray-600 font-bold py-3 rounded-lg uppercase tracking-wider transition-all text-xs sm:text-sm"
+                          >
+                            Alterar Senha
+                          </button>
+                          <button
+                            onClick={handleLogout}
+                            className="w-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 font-bold py-3 rounded-lg uppercase tracking-wider transition-all text-xs sm:text-sm"
+                          >
+                            Desconectar
+                          </button>
+                          <button
+                            onClick={handleDeleteAccount}
+                            disabled={loading}
+                            className="w-full bg-transparent hover:bg-red-950 text-red-500 hover:text-red-400 border border-transparent hover:border-red-900/50 font-bold py-2 rounded-lg text-[10px] sm:text-xs uppercase tracking-wider transition-all disabled:opacity-50 mt-1 sm:mt-2"
+                          >
+                            {loading ? 'Processando...' : 'Excluir Conta Permanentemente'}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  <div className="mb-6">
-                     <div className="flex items-center gap-2 mb-3">
+                  {/* RIGHT COLUMN: Trophy Room */}
+                  <div className="flex flex-col flex-1 min-w-0 sm:w-1/2 bg-black/30 rounded-xl p-3 sm:p-4 border border-gray-800">
+                     <div className="flex items-center gap-2 mb-3 shrink-0">
                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-yellow-500">
                          <circle cx="12" cy="8" r="7"></circle>
                          <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
                        </svg>
-                       <h3 className="text-gray-300 text-sm font-bold uppercase tracking-widest">Sala de Troféus</h3>
+                       <h3 className="text-gray-300 text-xs sm:text-sm font-bold uppercase tracking-widest">Sala de Troféus</h3>
                      </div>
-                     <div className="bg-black/30 rounded-xl p-4 border border-gray-800 h-32 overflow-y-auto custom-scrollbar">
+                     <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 -mr-1">
                         {stats.achievements.length > 0 ? (
                            <div className="flex flex-col gap-2">
                              {stats.achievements.map((ach, idx) => (
                                 <div key={idx} className="flex items-center gap-3 bg-gradient-to-r from-yellow-900/40 to-transparent border-l-2 border-yellow-500 px-3 py-2 rounded-r">
                                    <span className="text-xl">🏆</span>
-                                   <span className="text-yellow-100 text-xs font-bold uppercase tracking-wide">{ach}</span>
+                                   <span className="text-yellow-100 text-[10px] sm:text-xs font-bold uppercase tracking-wide">{ach}</span>
                                 </div>
                              ))}
                            </div>
                         ) : (
-                           <div className="flex flex-col items-center justify-center h-full text-center opacity-50">
-                             <span className="text-3xl mb-2">🏅</span>
-                             <span className="text-gray-400 text-xs font-medium">Continue lutando para desbloquear conquistas.</span>
+                           <div className="flex flex-col items-center justify-center h-full text-center opacity-50 py-8">
+                             <span className="text-3xl sm:text-4xl mb-2">🏅</span>
+                             <span className="text-gray-400 text-[10px] sm:text-xs font-medium px-4">Continue lutando para desbloquear conquistas.</span>
                            </div>
                         )}
                      </div>
                   </div>
-                </div>
-
-                <div className="mt-auto pt-4 border-t border-gray-800 flex flex-col gap-2">
-                  {showPasswordChange ? (
-                    <form onSubmit={handleChangePassword} className="flex flex-col gap-3 mt-2 bg-black/40 p-4 rounded-lg border border-gray-700 shadow-inner">
-                      <div className="flex justify-between items-center mb-1">
-                        <h3 className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Alterar Senha</h3>
-                        <button type="button" onClick={() => { setShowPasswordChange(false); setError(''); setPasswordChangeSuccess(false); }} className="text-gray-400 hover:text-white p-1">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M18 6L6 18M6 6l12 12"></path></svg>
-                        </button>
-                      </div>
-                      
-                      {passwordChangeSuccess && (
-                        <div className="text-green-400 text-xs font-bold text-center bg-green-950/50 border border-green-900/50 p-2 rounded">
-                          Senha alterada com sucesso!
-                        </div>
-                      )}
-                      
-                      {error && (
-                        <div className="text-red-400 text-xs font-bold text-center bg-red-950/50 border border-red-900/50 p-2 rounded">
-                          {error}
-                        </div>
-                      )}
-
-                      <div className="relative">
-                        <input
-                          type={showCurrentPassword ? "text" : "password"}
-                          className="w-full bg-black/60 border border-gray-600 rounded-lg p-2.5 pr-10 text-white text-xs font-bold placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition-colors"
-                          placeholder="Senha Atual"
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                          required
-                        />
-                        <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
-                          {showCurrentPassword ? (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                          ) : (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                          )}
-                        </button>
-                      </div>
-                      
-                      <div className="relative">
-                        <input
-                          type={showNewPassword ? "text" : "password"}
-                          className="w-full bg-black/60 border border-gray-600 rounded-lg p-2.5 pr-10 text-white text-xs font-bold placeholder-gray-500 focus:border-yellow-500 focus:outline-none transition-colors"
-                          placeholder="Nova Senha (Mínimo 6)"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          required
-                          minLength={6}
-                        />
-                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
-                          {showNewPassword ? (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                          ) : (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                          )}
-                        </button>
-                      </div>
-
-                      <button type="submit" disabled={loading} className="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-2 rounded-lg mt-2 text-xs uppercase tracking-wider transition-all disabled:opacity-50">
-                        {loading ? 'Aguarde...' : 'Confirmar'}
-                      </button>
-                    </form>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => { setShowPasswordChange(true); setError(''); }}
-                        className="w-full bg-gray-800 hover:bg-gray-700 text-yellow-500 border border-gray-600 font-bold py-3 rounded-lg uppercase tracking-wider transition-all"
-                      >
-                        Alterar Senha
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 font-bold py-3 rounded-lg uppercase tracking-wider transition-all"
-                      >
-                        Desconectar
-                      </button>
-                      <button
-                        onClick={handleDeleteAccount}
-                        disabled={loading}
-                        className="w-full bg-transparent hover:bg-red-950 text-red-500 hover:text-red-400 border border-transparent hover:border-red-900/50 font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition-all disabled:opacity-50 mt-2"
-                      >
-                        {loading ? 'Processando...' : 'Excluir Conta Permanentemente'}
-                      </button>
-                    </>
-                  )}
                 </div>
               </div>
             ) : (

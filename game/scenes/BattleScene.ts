@@ -15,6 +15,7 @@ export default class BattleScene extends Phaser.Scene {
   mobileP1Attack = false;
   mobileP1KiBlast = false;
   mobileP1Defend = false;
+  mobileP1Charge = false;
   mobileP1Special = false;
   mobileP1Transform = false;
   mobileP1SpecialJustUp = false;
@@ -93,6 +94,7 @@ export default class BattleScene extends Phaser.Scene {
   private isBattleOver: boolean = false;
   private turnTimer?: Phaser.Time.TimerEvent;
   private regenTimer?: Phaser.Time.TimerEvent;
+  private aiMoveDir: number = 0;
   private keys!: any;
   private gameState!: GameState;
 
@@ -246,14 +248,18 @@ export default class BattleScene extends Phaser.Scene {
             }
             
             if (isMoving) {
-                if (this.player.anims.currentAnim?.key !== `${this.playerData.key}_walk`) {
-                    this.player.play(this.getAnimKey(this.playerData.key, this.playerTransformLevel, "walk"), true);
+                const walkAnim = this.getAnimKey(this.playerData.key, this.playerTransformLevel, "walk");
+                if (this.player.anims.currentAnim?.key !== walkAnim) {
+                    this.player.play(walkAnim, true);
                 }
                 // Dynamic walk effect: slight tilt forward and bobbing
                 this.player.setRotation(this.player.flipX ? -0.1 : 0.1);
                 this.player.y = this.p1StartPos.y + Math.sin(time * 0.02) * 8;
-            } else if (this.player.anims.currentAnim?.key === `${this.playerData.key}_walk` || this.player.anims.currentAnim?.key === undefined) {
-                this.player.play(this.getAnimKey(this.playerData.key, this.playerTransformLevel, "idle"), true);
+            } else {
+                const idleAnim = this.getAnimKey(this.playerData.key, this.playerTransformLevel, "idle");
+                if (this.player.anims.currentAnim?.key !== idleAnim) {
+                    this.player.play(idleAnim, true);
+                }
                 this.player.setRotation(0);
                 this.player.y = Phaser.Math.Linear(this.player.y, this.p1StartPos.y, 0.2);
             }
@@ -276,11 +282,23 @@ export default class BattleScene extends Phaser.Scene {
         if (!this.p2ActionActive && !this.tweens.isTweening(this.enemy) && !this.isP2Jumping) {
             const moveSpeed = 6;
             let isMoving = false;
-            if (this.keys.p2_left.isDown) {
+            let moveL = this.keys.p2_left.isDown;
+            let moveR = this.keys.p2_right.isDown;
+
+            if (this.gameState.gameMode !== "local_pvp" && this.gameState.gameMode !== "training") {
+                moveL = this.aiMoveDir === -1;
+                moveR = this.aiMoveDir === 1;
+                
+                const distToPlayer = Math.abs(this.enemy.x - this.player.x);
+                if (moveL && this.enemy.x < this.player.x && distToPlayer > 600) moveL = false;
+                if (moveR && this.enemy.x > this.player.x && distToPlayer > 600) moveR = false;
+            }
+
+            if (moveL) {
                 this.enemy.x -= moveSpeed;
                 this.enemy.setFlipX(true);
                 isMoving = true;
-            } else if (this.keys.p2_right.isDown) {
+            } else if (moveR) {
                 this.enemy.x += moveSpeed;
                 this.enemy.setFlipX(false);
                 isMoving = true;
@@ -289,13 +307,17 @@ export default class BattleScene extends Phaser.Scene {
             }
             
             if (isMoving) {
-                if (this.enemy.anims.currentAnim?.key !== `${this.enemyData.key}_walk`) {
-                    this.enemy.play(this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "walk"), true);
+                const walkAnim = this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "walk");
+                if (this.enemy.anims.currentAnim?.key !== walkAnim) {
+                    this.enemy.play(walkAnim, true);
                 }
                 this.enemy.setRotation(this.enemy.flipX ? -0.1 : 0.1);
                 this.enemy.y = this.p2StartPos.y + Math.sin(time * 0.02) * 8;
-            } else if (this.enemy.anims.currentAnim?.key === `${this.enemyData.key}_walk` || this.enemy.anims.currentAnim?.key === undefined) {
-                this.enemy.play(this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "idle"), true);
+            } else {
+                const idleAnim = this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "idle");
+                if (this.enemy.anims.currentAnim?.key !== idleAnim) {
+                    this.enemy.play(idleAnim, true);
+                }
                 this.enemy.setRotation(0);
                 this.enemy.y = Phaser.Math.Linear(this.enemy.y, this.p2StartPos.y, 0.2);
             }
@@ -392,11 +414,7 @@ export default class BattleScene extends Phaser.Scene {
       if (this.p2Shield) { this.p2Shield.setX(this.enemy.x); this.p2Shield.setY(this.enemy.y + 80); }
     }
 
-    if (this.gameState.gameMode === "training") {
-      this.modifyKi(true, 100);
-      this.modifyKi(false, 100);
-    }
-
+    // Keep training mode infinite HP but let them charge Ki normally
     // --- PLAYER 1 CONTROLS ---
     if (this.p1ActionActive) {
       this.stopContinuousCharge(true);
@@ -411,10 +429,18 @@ export default class BattleScene extends Phaser.Scene {
         this.performContinuousCharge(true, delta);
         this.p1SpecialHoldTime = 0;
         this.clearChargeIndicator(true);
+        
+        // Anti-Ghosting: If they hold DEF, clear any buffered attacks so they don't fire when DEF is released
+        this.mobileP1Attack = false;
+        this.mobileP1KiBlast = false;
+        this.p1AttackBuffer = 0;
+        this.p1KiBlastBuffer = 0;
       } else {
         this.playerDefending = false;
         this.stopContinuousCharge(true);
+      }
 
+      if (!this.playerDefending) {
         // Attack
         if (
           Phaser.Input.Keyboard.JustDown(this.keys.p1_attack) ||
@@ -422,6 +448,7 @@ export default class BattleScene extends Phaser.Scene {
         ) {
           this.performAttack(true, "melee");
           this.mobileP1Attack = false; // Reset flag
+          this.p1AttackBuffer = 0;
         }
         // Ki Blast
         else if (
@@ -430,6 +457,7 @@ export default class BattleScene extends Phaser.Scene {
         ) {
           this.performAttack(true, "ki");
           this.mobileP1KiBlast = false; // Reset flag
+          this.p1KiBlastBuffer = 0;
         }
         // Transform
         else if (
@@ -438,6 +466,7 @@ export default class BattleScene extends Phaser.Scene {
         ) {
           this.performTransform(true);
           this.mobileP1Transform = false; // Reset flag
+          this.p1TransformBuffer = 0;
         }
 
         // Special
@@ -483,7 +512,13 @@ export default class BattleScene extends Phaser.Scene {
         this.p2SpecialHoldTime = 0;
         this.clearChargeIndicator(false);
       } else {
-        if (this.keys.p2_defend.isDown) {
+        let isDefending = this.keys.p2_defend.isDown;
+        if (this.gameState.gameMode !== "local_pvp" && this.gameState.gameMode !== "training") {
+           // If AI, it sets its own enemyDefending state in enemyDecide.
+           isDefending = this.enemyDefending;
+        }
+
+        if (isDefending) {
           this.enemyDefending = true;
           this.performContinuousCharge(false, delta);
           this.p2SpecialHoldTime = 0;
@@ -801,6 +836,7 @@ export default class BattleScene extends Phaser.Scene {
       p1_attack: Phaser.Input.Keyboard.KeyCodes.J,
       p1_kiblast: Phaser.Input.Keyboard.KeyCodes.K,
       p1_defend: Phaser.Input.Keyboard.KeyCodes.U,
+      p1_charge: Phaser.Input.Keyboard.KeyCodes.O,
       p1_special: Phaser.Input.Keyboard.KeyCodes.L,
       p1_transform: Phaser.Input.Keyboard.KeyCodes.I,
       
@@ -969,13 +1005,10 @@ export default class BattleScene extends Phaser.Scene {
           this.uiContainer.add(btnGroup);
       }
 
-      // Invisible hit area (exactly button size to prevent overlap)
-      const hitArea = this.add.circle(0, 0, radius + 5, 0x000000, 0).setInteractive();
-      btnGroup.add(hitArea);
-
       let isPressed = false;
 
       const press = () => {
+        if (isPressed) return;
         isPressed = true;
         outerBtn.setAlpha(0.8);
         outerBtn.setScale(0.9);
@@ -994,12 +1027,20 @@ export default class BattleScene extends Phaser.Scene {
         if (onUp) onUp();
       };
 
-      hitArea.on("pointerdown", press);
-      hitArea.on("pointerover", (pointer: Phaser.Input.Pointer) => {
-        if (pointer.isDown) press();
+      const hitArea = new Phaser.Geom.Circle(0, 0, radius * 1.5);
+      btnGroup.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
+      
+      btnGroup.on("pointerdown", () => {
+          press();
       });
-      hitArea.on("pointerup", release);
-      hitArea.on("pointerout", release);
+
+      btnGroup.on("pointerup", () => {
+          release();
+      });
+
+      btnGroup.on("pointerout", () => {
+          release();
+      });
       
       return btnGroup;
     };
@@ -1012,33 +1053,26 @@ export default class BattleScene extends Phaser.Scene {
     
     const joyContainer = this.add.container(joyRootX, joyRootY).setScrollFactor(0).setDepth(100);
     const joyBase = this.add.circle(0, 0, 75, 0x000000, 0.4).setStrokeStyle(3, 0xffffff, 0.3);
-    const joyThumb = this.add.circle(0, 0, 35, 0xffffff, 0.6).setStrokeStyle(2, 0x000000, 0.5); // bolinha cinza
+    const joyThumb = this.add.circle(0, 0, 35, 0xffffff, 0.6).setStrokeStyle(2, 0x000000, 0.5);
     
     joyContainer.add([joyBase, joyThumb]);
     this.mobileControls.push(joyContainer);
     
     // Large invisible hit area on the bottom-left quadrant for the FLOATING joystick
-    const joyHitArea = this.add.rectangle(0, gh/2 - 50, gw/2, gh/2 + 50, 0x000000, 0).setOrigin(0).setInteractive();
-    
+    // We remove the old rectangle hit area and use global checking for this too.
     if (this.uiContainer) {
-        this.uiContainer.add(joyHitArea);
         this.uiContainer.add(joyContainer);
-    } else {
-        joyHitArea.setScrollFactor(0);
     }
 
     const getLocalPnt = (pointer: Phaser.Input.Pointer) => {
-        if (!this.uiContainer) return { x: pointer.x, y: pointer.y };
-        return {
-           x: (pointer.x - this.uiContainer.x) / this.uiContainer.scaleX,
-           y: (pointer.y - this.uiContainer.y) / this.uiContainer.scaleY
-        };
+        return { x: pointer.x, y: pointer.y };
     };
 
     const handleJoystick = (pointer: Phaser.Input.Pointer) => {
         if (this.mobileJoystickPointerId !== pointer.id) return;
         
         const loc = getLocalPnt(pointer);
+        
         let dx = loc.x - joyRootX;
         let dy = loc.y - joyRootY;
         const maxDist = 75;
@@ -1053,27 +1087,27 @@ export default class BattleScene extends Phaser.Scene {
         
         this.mobileJoystickVector = { x: dx / maxDist, y: dy / maxDist };
         
-        // Push up for jumping
-        this.keys.p1_up.isDown = dy < -25;
-        
-        // Push left/right for movement
+        // Instant response with very small deadzone (360-like responsiveness)
+        this.keys.p1_up.isDown = dy < -10;
         this.keys.p1_left.isDown = dx < -10;
         this.keys.p1_right.isDown = dx > 10;
     };
 
-    joyHitArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-        if (this.mobileJoystickPointerId === null) {
-            this.mobileJoystickPointerId = pointer.id;
-            
-            const loc = getLocalPnt(pointer);
-            joyRootX = loc.x;
-            joyRootY = loc.y;
-            joyContainer.setPosition(joyRootX, joyRootY);
-            
-            joyBase.setAlpha(0.7);
-            joyThumb.setPosition(0, 0);
-            
-            handleJoystick(pointer);
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        const loc = getLocalPnt(pointer);
+        // Only trigger joystick if the pointer is on the left half of the screen
+        if (loc.x < gw / 2 && loc.y > gh / 2 - 50) {
+            if (this.mobileJoystickPointerId === null) {
+                this.mobileJoystickPointerId = pointer.id;
+                
+                // Standard Floating Joystick Behavior
+                joyRootX = loc.x;
+                joyRootY = loc.y;
+                joyContainer.setPosition(joyRootX, joyRootY);
+                joyBase.setAlpha(0.7);
+                
+                handleJoystick(pointer);
+            }
         }
     });
 
@@ -1099,21 +1133,18 @@ export default class BattleScene extends Phaser.Scene {
 
     this.input.on('pointerup', releaseJoystick);
     this.input.on('pointerout', releaseJoystick);
-    joyHitArea.on('pointerup', releaseJoystick);
     // --- End Virtual Joystick ---
 
     // Right side (Attacks)
-    // Intelligent positioning logic based on screen dimensions
-    // Main ATK is bottom-right and largest
-    createBtn(gw - 120, gh - 120, "ATK", 0xe74c3c, 60, () => {
+    createBtn(gw - 100, gh - 100, "ATK", 0xe74c3c, 60, () => {
       this.mobileP1Attack = true;
       this.p1AttackBuffer = this.BUFFER_MS;
     });
 
-    // SPC (Special) - above ATK
+    // SPC (Special)
     createBtn(
-      gw - 120,
-      gh - 250,
+      gw - 100,
+      gh - 240,
       "SPC",
       0xf1c40f,
       45,
@@ -1126,11 +1157,11 @@ export default class BattleScene extends Phaser.Scene {
       },
     );
 
-    // DEF (Defend) - left of ATK
+    // DEF/CHARGE
     createBtn(
-      gw - 250,
-      gh - 120,
-      "DEF",
+      gw - 240,
+      gh - 100,
+      "DEF/\nCHG",
       0x3498db,
       45,
       () => {
@@ -1141,15 +1172,15 @@ export default class BattleScene extends Phaser.Scene {
       },
     );
 
-    // KI (Ki Blast) - diagonal between ATK and SPC/DEF, making a grid
-    createBtn(gw - 250, gh - 250, "KI", 0x00ffff, 45, () => {
+    // KI BLAST
+    createBtn(gw - 240, gh - 240, "KI", 0x00ffff, 45, () => {
       this.mobileP1KiBlast = true;
       this.p1KiBlastBuffer = this.BUFFER_MS;
     });
 
-    // TRN (Transform) - Top Left, above Joystick, below Energy Bar
+    // TRN (Transform)
     if (this.playerData.transformAvailable) {
-      this.trnBtnGroup = createBtn(140, 200, "TRN", 0x9b59b6, 40, () => {
+      this.trnBtnGroup = createBtn(140, 200, "TRN", 0x9b59b6, 50, () => {
         this.mobileP1Transform = true;
         this.p1TransformBuffer = this.BUFFER_MS;
       });
@@ -1491,7 +1522,7 @@ export default class BattleScene extends Phaser.Scene {
         if (!this.scene.isActive()) return;
         attacker.setAlpha(1);
         attacker.x = target.x + (attacker.x < target.x ? -40 : 40);
-        attacker.y = target.y + 120 - (isComboFinisher ? 50 : 0); // Attack from above on finisher
+        attacker.y = target.y - (isComboFinisher ? 50 : 0); // Attack from above on finisher
         attacker.play(this.getAnimKey("goku", transLevel, "attack"));
 
         if (this.cache.audio.exists("sfx_attack"))
@@ -2946,7 +2977,7 @@ export default class BattleScene extends Phaser.Scene {
 
         this.tweens.add({
           targets: attacker,
-          y: target.y + 120,
+          y: target.y,
           duration: 100,
           ease: "Expo.easeIn",
           onComplete: () => {
@@ -5930,6 +5961,8 @@ export default class BattleScene extends Phaser.Scene {
   // 5. ZOLTRAAK (MASSIVE MAGIC REMASTER)
   private specialZoltraak(isP: boolean, isS: boolean) {
     const hand = this.getHandPosition(isP);
+    const attacker = isP ? this.player : this.enemy;
+    const target = isP ? this.enemy : this.player;
     const circleOffset = attacker.x < target.x ? 40 : -40;
     const transLevel = isP
       ? this.playerTransformLevel
@@ -6571,7 +6604,7 @@ export default class BattleScene extends Phaser.Scene {
           this.tweens.add({
               targets: attacker,
               x: target.x,
-              y: target.y + 120,
+              y: target.y,
               alpha: 1,
               duration: 80,
               onComplete: () => {
@@ -10992,9 +11025,12 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   modifyKi(isP: boolean, amt: number) {
+    const oldKi = isP ? this.playerKi : this.enemyKi;
     if (isP) this.playerKi = Phaser.Math.Clamp(this.playerKi + amt, 0, 100);
     else this.enemyKi = Phaser.Math.Clamp(this.enemyKi + amt, 0, 100);
-    this.updateUI();
+    if (oldKi !== (isP ? this.playerKi : this.enemyKi)) {
+        this.updateUI();
+    }
   }
 
   updateUI() {
@@ -11008,26 +11044,18 @@ export default class BattleScene extends Phaser.Scene {
         width: 250 * p1p,
         duration: 300,
         ease: "Cubic.easeOut",
+        overwrite: true,
       });
       this.tweens.add({
         targets: this.p2HpBar,
         width: 250 * p2p,
         duration: 300,
         ease: "Cubic.easeOut",
+        overwrite: true,
       });
       // Liquid Ki Bars
-      this.tweens.add({
-        targets: this.p1KiBar,
-        width: 2.5 * this.playerKi,
-        duration: 200,
-        ease: "Cubic.easeOut",
-      });
-      this.tweens.add({
-        targets: this.p2KiBar,
-        width: 2.5 * this.enemyKi,
-        duration: 200,
-        ease: "Cubic.easeOut",
-      });
+      this.p1KiBar.width = 2.5 * this.playerKi;
+      this.p2KiBar.width = 2.5 * this.enemyKi;
     }
     
     // Hide Transform Button if max level reached
@@ -11070,6 +11098,51 @@ export default class BattleScene extends Phaser.Scene {
       delay: delay,
       loop: true,
       callback: () => this.enemyDecide(),
+    });
+
+    // AI Movement Loop
+    this.time.addEvent({
+      delay: 300,
+      loop: true,
+      callback: () => {
+        if (this.isBattleOver || !this.scene.isActive()) return;
+        if (this.p2ActionActive || this.enemyDefending) {
+           this.aiMoveDir = 0;
+           return;
+        }
+        
+        const dist = Math.abs(this.enemy.x - this.player.x);
+        const isLeftOfPlayer = this.enemy.x < this.player.x;
+        
+        let targetDir = 0; // -1 for Left, 1 for Right, 0 for stop
+        
+        // Dynamic behavior based on state
+        if (this.enemyKi < 30) {
+            // Needs Ki. If too close, retreat! If far enough, stay and charge.
+            if (dist < 400) {
+                targetDir = isLeftOfPlayer ? -1 : 1; // back away
+            } else {
+                targetDir = 0; // stop and charge
+            }
+        } else {
+            // Has Ki, ready to attack. If far, approach!
+            if (dist > 300) {
+                targetDir = isLeftOfPlayer ? 1 : -1; // approach
+            } else if (dist < 150) {
+                // very close, jitter a bit
+                targetDir = Math.random() < 0.3 ? (isLeftOfPlayer ? -1 : 1) : 0;
+            } else {
+                // sweet spot for attack, stay still or approach
+                targetDir = Math.random() < 0.6 ? (isLeftOfPlayer ? 1 : -1) : 0;
+            }
+        }
+        
+        // Prevent corner trapping
+        if (this.enemy.x <= 150) targetDir = 1;
+        if (this.enemy.x >= 1850) targetDir = -1;
+        
+        this.aiMoveDir = targetDir;
+      }
     });
   }
 
