@@ -881,9 +881,10 @@ export default class BattleScene extends Phaser.Scene {
     this.uiContainer.add(this.p1HpBar);
 
     this.p1KiBar = this.add
-      .rectangle(25, 80, 0, 12, 0x3498db)
+      .rectangle(25, 80, 250, 12, 0x3498db)
       .setOrigin(0, 0.5);
     this.uiContainer.add(this.p1KiBar);
+    this.p1KiBar.scaleX = 0; // Starts with 0 Ki
 
     this.p2HpBar = this.add
       .rectangle(935, 50, 250, 22, 0xe74c3c)
@@ -891,9 +892,10 @@ export default class BattleScene extends Phaser.Scene {
     this.uiContainer.add(this.p2HpBar);
 
     this.p2KiBar = this.add
-      .rectangle(935, 80, 0, 12, 0xf1c40f)
+      .rectangle(935, 80, 250, 12, 0xf1c40f)
       .setOrigin(1, 0.5);
     this.uiContainer.add(this.p2KiBar);
+    this.p2KiBar.scaleX = 0; // Starts with 0 Ki
 
     // Player 1 Name
     const p1NameTxt = this.add
@@ -11041,21 +11043,21 @@ export default class BattleScene extends Phaser.Scene {
       // Liquid HP Bars
       this.tweens.add({
         targets: this.p1HpBar,
-        width: 250 * p1p,
+        scaleX: Math.max(0, p1p),
         duration: 300,
         ease: "Cubic.easeOut",
         overwrite: true,
       });
       this.tweens.add({
         targets: this.p2HpBar,
-        width: 250 * p2p,
+        scaleX: Math.max(0, p2p),
         duration: 300,
         ease: "Cubic.easeOut",
         overwrite: true,
       });
       // Liquid Ki Bars
-      this.p1KiBar.width = 2.5 * this.playerKi;
-      this.p2KiBar.width = 2.5 * this.enemyKi;
+      this.p1KiBar.scaleX = Math.max(0, this.playerKi / 100);
+      this.p2KiBar.scaleX = Math.max(0, this.enemyKi / 100);
     }
     
     // Hide Transform Button if max level reached
