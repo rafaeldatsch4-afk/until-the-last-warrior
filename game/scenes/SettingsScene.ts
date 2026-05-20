@@ -118,6 +118,28 @@ export default class SettingsScene extends Phaser.Scene {
         .on('pointerover', () => importBtn.setFillStyle(0xd35400))
         .on('pointerout', () => importBtn.setFillStyle(0xe67e22))
         .on('pointerdown', () => this.triggerImportSave());
+
+    // --- APP INSTALLATION ---
+    if ((window as any).deferredPWAInstallPrompt) {
+        const installBtn = this.add.rectangle(480, 480, 250, 50, 0xf1c40f).setStrokeStyle(3, 0xffffff);
+        const installTxt = this.add.text(480, 480, 'INSTALL OFFLINE GAME', { fontSize: '18px', color: '#000', fontStyle: 'bold' }).setOrigin(0.5);
+        
+        // Add a pulsing effect to grab attention
+        this.tweens.add({ targets: installBtn, scaleX: 1.05, scaleY: 1.05, duration: 800, yoyo: true, repeat: -1 });
+
+        installBtn.setInteractive({ useHandCursor: true })
+            .on('pointerover', () => installBtn.setFillStyle(0xf39c12))
+            .on('pointerout', () => installBtn.setFillStyle(0xf1c40f))
+            .on('pointerdown', () => {
+                window.dispatchEvent(new Event('request-pwa-install'));
+                this.time.delayedCall(2000, () => {
+                    if (!(window as any).deferredPWAInstallPrompt) {
+                        installBtn.destroy();
+                        installTxt.destroy();
+                    }
+                });
+            });
+    }
   }
 
   showControlsOverlay() {

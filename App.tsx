@@ -19,13 +19,31 @@ const App: React.FC = () => {
       e.preventDefault();
       // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
+      (window as any).deferredPWAInstallPrompt = e;
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
+    const handleRequestInstall = async () => {
+      const prompt = (window as any).deferredPWAInstallPrompt;
+      if (prompt) {
+        prompt.prompt();
+        const { outcome } = await prompt.userChoice;
+        if (outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+          (window as any).deferredPWAInstallPrompt = null;
+          setDeferredPrompt(null);
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+      }
+    };
+    window.addEventListener('request-pwa-install', handleRequestInstall);
+
     return () => {
       document.removeEventListener('fullscreenchange', onFullscreenChange);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('request-pwa-install', handleRequestInstall);
     };
   }, []);
 
@@ -39,36 +57,12 @@ const App: React.FC = () => {
     }
   };
 
-  const handleInstallPWA = async () => {
-    if (deferredPrompt) {
-      // Show the install prompt
-      deferredPrompt.prompt();
-      // Wait for the user to respond to the prompt
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
-      }
-      setDeferredPrompt(null);
-    }
-  };
-
   return (
     <div className="h-[100dvh] w-full flex flex-col bg-black text-white overflow-hidden relative">
       <main className="flex-1 flex items-center justify-center w-full p-0 relative overflow-hidden">
         <AuthButton />
         {/* Buttons Container */}
         <div className="absolute top-4 right-4 z-40 flex flex-col sm:flex-row gap-2">
-          {deferredPrompt && (
-            <button
-              onClick={handleInstallPWA}
-              className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-4 py-2 rounded-full shadow-lg transition-all animate-pulse outline-none"
-              title="Instalar Jogo Offline"
-            >
-              Instalar Jogo
-            </button>
-          )}
           <button
             onClick={toggleFullscreen}
             className="bg-black/50 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur transition-all outline-none hidden landscape:block md:block"
