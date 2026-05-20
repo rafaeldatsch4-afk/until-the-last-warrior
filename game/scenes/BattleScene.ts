@@ -887,13 +887,13 @@ export default class BattleScene extends Phaser.Scene {
     this.p1KiBar.scaleX = 0; // Starts with 0 Ki
 
     this.p2HpBar = this.add
-      .rectangle(935, 50, 250, 22, 0xe74c3c)
-      .setOrigin(1, 0.5);
+      .rectangle(685, 50, 250, 22, 0xe74c3c)
+      .setOrigin(0, 0.5);
     this.uiContainer.add(this.p2HpBar);
 
     this.p2KiBar = this.add
-      .rectangle(935, 80, 250, 12, 0xf1c40f)
-      .setOrigin(1, 0.5);
+      .rectangle(685, 80, 250, 12, 0xf1c40f)
+      .setOrigin(0, 0.5);
     this.uiContainer.add(this.p2KiBar);
     this.p2KiBar.scaleX = 0; // Starts with 0 Ki
 
