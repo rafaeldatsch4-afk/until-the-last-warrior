@@ -1349,14 +1349,20 @@ export default class BattleScene extends Phaser.Scene {
         });
         return true;
       }
-      case "madara":
-        this.performMadaraAttack(
+      case "madara": {
+        const fighter = getFighter("madara");
+        fighter.performAttack({
+          scene: this,
+          attacker: isPlayer ? this.player : this.enemy,
+          defender: isPlayer ? this.enemy : this.player,
           isPlayer,
           attackType,
           comboCount,
           isComboFinisher,
-        );
+          transformLevel: isPlayer ? this.playerTransformLevel : this.enemyTransformLevel
+        });
         return true;
+      }
       case "obito":
         this.performObitoAttack(
           isPlayer,
@@ -1437,38 +1443,62 @@ export default class BattleScene extends Phaser.Scene {
           isComboFinisher,
         );
         return true;
-      case "cell":
-        this.performCellAttack(
+      case "cell": {
+        const fighter = getFighter("cell");
+        fighter.performAttack({
+          scene: this,
+          attacker: isPlayer ? this.player : this.enemy,
+          defender: isPlayer ? this.enemy : this.player,
           isPlayer,
           attackType,
           comboCount,
           isComboFinisher,
-        );
+          transformLevel: isPlayer ? this.playerTransformLevel : this.enemyTransformLevel
+        });
         return true;
-      case "piccolo":
-        this.performPiccoloAttack(
+      }
+      case "piccolo": {
+        const fighter = getFighter("piccolo");
+        fighter.performAttack({
+          scene: this,
+          attacker: isPlayer ? this.player : this.enemy,
+          defender: isPlayer ? this.enemy : this.player,
           isPlayer,
           attackType,
           comboCount,
           isComboFinisher,
-        );
+          transformLevel: isPlayer ? this.playerTransformLevel : this.enemyTransformLevel
+        });
         return true;
-      case "gohan":
-        this.performGohanAttack(
+      }
+      case "gohan": {
+        const fighter = getFighter("gohan");
+        fighter.performAttack({
+          scene: this,
+          attacker: isPlayer ? this.player : this.enemy,
+          defender: isPlayer ? this.enemy : this.player,
           isPlayer,
           attackType,
           comboCount,
           isComboFinisher,
-        );
+          transformLevel: isPlayer ? this.playerTransformLevel : this.enemyTransformLevel
+        });
         return true;
-      case "leonardo":
-        this.performLeonardoAttack(
+      }
+      case "leonardo": {
+        const fighter = getFighter("leonardo");
+        fighter.performAttack({
+          scene: this,
+          attacker: isPlayer ? this.player : this.enemy,
+          defender: isPlayer ? this.enemy : this.player,
           isPlayer,
           attackType,
           comboCount,
           isComboFinisher,
-        );
+          transformLevel: isPlayer ? this.playerTransformLevel : this.enemyTransformLevel
+        });
         return true;
+      }
       case "saitama":
         this.performSaitamaAttack(
           isPlayer,
@@ -3076,99 +3106,6 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
-  performGohanAttack(
-    isPlayer: boolean,
-    attackType: "melee" | "ki",
-    comboCount: number,
-    isComboFinisher: boolean,
-  ) {
-    const attacker = isPlayer ? this.player : this.enemy;
-    const target = isPlayer ? this.enemy : this.player;
-    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
-    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
-    const transLevel = isPlayer
-      ? this.playerTransformLevel
-      : this.enemyTransformLevel;
-
-    if (attackType === "melee") {
-      // Gohan Melee: High kick
-      this.tweens.add({
-        targets: attacker,
-        x: target.x + (attacker.x < target.x ? -30 : 30),
-        y: target.y - 30,
-        duration: 150,
-        ease: "Sine.easeOut",
-        onComplete: () => {
-          if (!this.scene.isActive()) return;
-          attacker.play(this.getAnimKey("gohan", transLevel, "attack"));
-
-          if (this.cache.audio.exists("sfx_attack"))
-            this.sound.play("sfx_attack", { volume: 1.2 });
-          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
-          this.takeDamage(
-            !isPlayer,
-            Math.floor(
-              (isComboFinisher ? 20 : 12) *
-                this.getDamageMultiplier(transLevel),
-            ),
-          );
-
-          this.time.delayedCall(150, () => {
-            if (!this.scene.isActive()) return;
-            this.tweens.add({
-              targets: attacker,
-              x: startX,
-              y: startY,
-              duration: 200,
-              ease: "Sine.easeIn",
-              onComplete: () => {
-                attacker.play(this.getAnimKey("gohan", transLevel, "idle"));
-                this.setActionState(isPlayer, false);
-              },
-            });
-          });
-        },
-      });
-    } else {
-      // Gohan Ki: Quick Masenko blast
-      attacker.play(this.getAnimKey("gohan", transLevel, "attack"));
-      this.time.delayedCall(100, () => {
-        if (!this.scene.isActive()) return;
-        if (this.cache.audio.exists("sfx_beam"))
-          this.sound.play("sfx_beam", { volume: 1.0 });
-
-        const hand = this.getHandPosition(isPlayer);
-        const blast = this.add.circle(hand.x, hand.y, 12, 0xffff00).setDepth(5);
-        const core = this.add.circle(blast.x, blast.y, 6, 0xffffff).setDepth(6);
-
-        this.tweens.add({
-          targets: [blast, core],
-          x: target.x,
-          duration: 120,
-          onComplete: () => {
-            blast.destroy();
-            core.destroy();
-            if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y + 120, 0xffff00);
-            this.takeDamage(
-              !isPlayer,
-              Math.floor(
-                (isComboFinisher ? 18 : 10) *
-                  this.getDamageMultiplier(transLevel),
-              ),
-            );
-          },
-        });
-
-        this.time.delayedCall(250, () => {
-          if (!this.scene.isActive()) return;
-          attacker.play(this.getAnimKey("gohan", transLevel, "idle"));
-          this.setActionState(isPlayer, false);
-        });
-      });
-    }
-  }
-
   performLeonardoAttack(
     isPlayer: boolean,
     attackType: "melee" | "ki",
@@ -4627,38 +4564,30 @@ export default class BattleScene extends Phaser.Scene {
               else fighter.performSpecial({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
               break;
             }
-            case "gohan":
-              if (isSuper) this.specialFatherSonKamehameha(isPlayer);
-              else
-                this.specialBeam(
-                  isPlayer,
-                  false,
-                  0xffff00,
-                  true,
-                  false,
-                  "masenko",
-                );
+            case "gohan": {
+              const fighter = getFighter("gohan");
+              if (isSuper) fighter.performSuper({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
+              else fighter.performSpecial({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
               break;
-            case "piccolo":
-              if (isSuper) this.specialHellzoneGrenade(isPlayer);
-              else this.specialMakanko(isPlayer, false);
+            }
+            case "piccolo": {
+              const fighter = getFighter("piccolo");
+              if (isSuper) fighter.performSuper({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
+              else fighter.performSpecial({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
               break;
-            case "cell":
-              if (isSuper) this.specialSolarKamehameha(isPlayer);
-              else
-                this.specialBeam(
-                  isPlayer,
-                  false,
-                  0x00ff00,
-                  true,
-                  false,
-                  "kamehameha",
-                );
+            }
+            case "cell": {
+              const fighter = getFighter("cell");
+              if (isSuper) fighter.performSuper({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
+              else fighter.performSpecial({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
               break;
-            case "leonardo":
-              if (isSuper) this.specialNinjaBarrage(isPlayer);
-              else this.specialSlash(isPlayer, false);
+            }
+            case "leonardo": {
+              const fighter = getFighter("leonardo");
+              if (isSuper) fighter.performSuper({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
+              else fighter.performSpecial({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
               break;
+            }
             case "frieren":
               if (isSuper) this.specialBlackHole(isPlayer);
               else this.specialZoltraak(isPlayer, false);
@@ -4703,10 +4632,12 @@ export default class BattleScene extends Phaser.Scene {
               if (isSuper) this.specialOraOraOra(isPlayer);
               else this.specialStarFinger(isPlayer);
               break;
-            case "madara":
-              if (isSuper) this.specialTengaiShinsei(isPlayer);
-              else this.specialMajesticDestroyerFlame(isPlayer);
+            case "madara": {
+              const fighter = getFighter("madara");
+              if (isSuper) fighter.performSuper({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
+              else fighter.performSpecial({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
               break;
+            }
             case "saitama":
               if (isSuper) this.specialSupremeHeadbutt(isPlayer);
               else this.specialSeriousPunch(isPlayer);
@@ -6255,144 +6186,6 @@ export default class BattleScene extends Phaser.Scene {
 
 
 
-
-  private specialFatherSonKamehameha(isP: boolean) {
-    const attacker = isP ? this.player : this.enemy;
-    const target = isP ? this.enemy : this.player;
-    const transLevel = isP
-      ? this.playerTransformLevel
-      : this.enemyTransformLevel;
-    const dmg = Math.floor(115 * this.getDamageMultiplier(transLevel));
-    const hand = this.getHandPosition(isP);
-
-    this.log("FATHER-SON KAMEHAMEHA!");
-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
-
-    // Ghost Goku (Visual representation)
-    const ghost = this.add
-      .sprite(attacker.x + (attacker.x < target.x ? -40 : 40), attacker.y - 60, "goku_ssj")
-      .setOrigin(0.5, 0.5)
-      .setAlpha(0)
-      .setScale(3.5)
-      .setDepth(2); // In front of Gohan to be clearly visible
-    ghost.setFlipX(!isP);
-    if (this.anims.exists("goku_ssj_attack")) {
-      ghost.play("goku_ssj_attack");
-    }
-    this.tweens.add({ targets: ghost, alpha: 0.85, duration: 500 });
-
-    // Charge Effect
-    const chargeCore = this.add
-      .circle(hand.x, hand.y, 2, 0xffffff)
-      .setDepth(16);
-    const chargeGlow = this.add
-      .circle(hand.x, hand.y, 5, 0x00ffff)
-      .setDepth(15)
-      .setBlendMode(Phaser.BlendModes.ADD);
-
-    this.cameras.main.shake(800, 0.01);
-
-    // Gathering particles
-    const gatherParticles = this.add
-      .particles(0, 0, "particle", {
-        x: hand.x,
-        y: hand.y,
-        speed: { min: -250, max: 250 },
-        scale: { start: 1.2, end: 0 },
-        blendMode: "ADD",
-        lifespan: 500,
-        tint: 0x00ffff,
-        gravityY: 0,
-      })
-      .setDepth(14);
-
-    this.tweens.add({
-      targets: [chargeCore, chargeGlow],
-      scale: 30,
-      alpha: { start: 1, end: 0.8 },
-      duration: 800,
-      yoyo: true,
-      repeat: 0,
-      onComplete: () => {
-        if (!this.scene.isActive()) return;
-        chargeCore.destroy();
-        chargeGlow.destroy();
-        gatherParticles.destroy();
-
-        this.createScreenFlash(0x00ffff, 500, 0.9);
-        this.cameras.main.shake(1200, 0.08);
-
-        // Massive Beam using the new texture
-        const beam = this.add
-          .sprite(hand.x, hand.y, "massive_beam")
-          .setOrigin(0, 0.5)
-          .setDepth(5)
-          .setAlpha(0.9)
-          .setBlendMode(Phaser.BlendModes.ADD);
-        beam.scaleX = isP ? 0.1 : -0.1;
-        beam.scaleY = 0.5;
-
-        const distance = Math.abs(target.x - hand.x) + 200;
-        const targetScaleX = (isP ? distance : -distance) / 128; // 128 is the width of massive_beam
-
-        // Muzzle Flash
-        const muzzle = this.add
-          .circle(hand.x, hand.y, 80, 0x00ffff)
-          .setDepth(6);
-        muzzle.setBlendMode(Phaser.BlendModes.ADD);
-        this.tweens.add({
-          targets: muzzle,
-          scale: 0,
-          alpha: 0,
-          duration: 400,
-          onComplete: () => muzzle.destroy(),
-        });
-
-        this.tweens.add({
-          targets: beam,
-          scaleX: targetScaleX,
-          scaleY: 4.5,
-          duration: 200,
-          ease: "Power2",
-          onComplete: () => {
-            if (!this.scene.isActive()) return;
-            this.createImpactEffect(target.x, target.y + 120, 0x00ffff, "beam");
-            this.takeDamage(!isP, dmg);
-
-            // Massive Shockwave rings
-            for (let i = 0; i < 6; i++) {
-              const ring = this.add
-                .circle(target.x, target.y + 120, 40, 0x00ffff)
-                .setStrokeStyle(10, 0x00ffff)
-                .setDepth(20)
-                .setAlpha(0)
-                .setBlendMode(Phaser.BlendModes.ADD);
-              ring.isFilled = false;
-              this.tweens.add({
-                targets: ring,
-                scale: 10 + i * 4,
-                alpha: { start: 1, end: 0 },
-                duration: 400 + i * 120,
-                ease: "Cubic.easeOut",
-                onComplete: () => ring.destroy(),
-              });
-            }
-
-            this.tweens.add({
-              targets: [beam, ghost],
-              alpha: 0,
-              duration: 600,
-              onComplete: () => {
-                beam.destroy();
-                ghost.destroy();
-                this.onSpecialComplete(isP);
-              },
-            });
-          },
-        });
-      },
-    });
-  }
 
   private specialHellzoneGrenade(isP: boolean) {
     const attacker = isP ? this.player : this.enemy;

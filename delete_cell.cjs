@@ -1,0 +1,1 @@
+const fs = require('fs'); let c = fs.readFileSync('game/scenes/BattleScene.ts', 'utf8'); c = c.replace(/  performCellAttack\([\s\S]*?^  \}\n\n  performLeonardoAttack\(/m, '  performLeonardoAttack('); fs.writeFileSync('game/scenes/BattleScene.ts', c);

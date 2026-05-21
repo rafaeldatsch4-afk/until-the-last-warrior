@@ -1,0 +1,1 @@
+const fs = require('fs'); let c = fs.readFileSync('game/scenes/BattleScene.ts', 'utf8'); c = c.replace(/  private specialMajesticDestroyerFlame\([\s\S]*?^  \}\n\n  private specialTengaiShinsei\(/m, '  private specialTengaiShinsei('); fs.writeFileSync('game/scenes/BattleScene.ts', c);
