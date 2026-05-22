@@ -568,9 +568,40 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  // Safety timers for action unstuck
+  private p1ActionTimeout: Phaser.Time.TimerEvent | null = null;
+  private p2ActionTimeout: Phaser.Time.TimerEvent | null = null;
+
   setActionState(isPlayer: boolean, isActive: boolean) {
-    if (isPlayer) this.p1ActionActive = isActive;
-    else this.p2ActionActive = isActive;
+    if (isPlayer) {
+      this.p1ActionActive = isActive;
+      if (isActive) {
+         if (this.p1ActionTimeout) this.p1ActionTimeout.remove();
+         this.p1ActionTimeout = this.time.delayedCall(6000, () => {
+             if (this.p1ActionActive && !this.isBattleOver) {
+                 console.warn("Failsafe triggered for Player 1 action state.");
+                 this.p1ActionActive = false;
+                 this.player.play(this.getAnimKey(this.playerData.key, this.playerTransformLevel, "idle"));
+             }
+         });
+      } else {
+         if (this.p1ActionTimeout) { this.p1ActionTimeout.remove(); this.p1ActionTimeout = null; }
+      }
+    } else {
+      this.p2ActionActive = isActive;
+      if (isActive) {
+         if (this.p2ActionTimeout) this.p2ActionTimeout.remove();
+         this.p2ActionTimeout = this.time.delayedCall(6000, () => {
+             if (this.p2ActionActive && !this.isBattleOver) {
+                 console.warn("Failsafe triggered for Player 2 action state.");
+                 this.p2ActionActive = false;
+                 this.enemy.play(this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "idle"));
+             }
+         });
+      } else {
+         if (this.p2ActionTimeout) { this.p2ActionTimeout.remove(); this.p2ActionTimeout = null; }
+      }
+    }
   }
 
   performContinuousCharge(isPlayer: boolean, delta: number) {
@@ -4485,7 +4516,12 @@ export default class BattleScene extends Phaser.Scene {
         });
 
         // FIRE IMMEDIATELY
-        onFireCallback();
+        try {
+          onFireCallback();
+        } catch (e) {
+          console.error("Error evaluating special attack!", e);
+          this.onSpecialComplete(isPlayer);
+        }
 
         // 2. HOLD (Stay in pose)
         this.time.delayedCall(500, () => {

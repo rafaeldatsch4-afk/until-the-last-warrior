@@ -169,6 +169,7 @@ export class GokuFighter extends Fighter {
                   attacker.play(
                     bs.getAnimKey("goku", transformLevel, "idle"),
                   );
+                  bs.onSpecialComplete(isPlayer);
                 }
               },
             });
@@ -260,6 +261,7 @@ export class GokuFighter extends Fighter {
                 bombGlow.destroy();
                 if (bs.scene.isActive()) {
                   attacker.play(bs.getAnimKey("goku", transformLevel, "idle"));
+                  bs.onSpecialComplete(isPlayer);
                 }
               },
             });
