@@ -34,21 +34,26 @@ export default class BootScene extends Phaser.Scene {
           const parsed = JSON.parse(savedData);
           console.log('Found save data:', parsed);
           
-          // Restore basic stats
-          if (parsed.coins !== undefined && !isNaN(parsed.coins)) defaultState.coins = parsed.coins;
-          if (parsed.difficulty !== undefined) defaultState.difficulty = parsed.difficulty;
-          if (parsed.gameMode) defaultState.gameMode = parsed.gameMode;
-          if (parsed.p1CharacterId !== undefined) defaultState.p1CharacterId = parsed.p1CharacterId;
-          if (parsed.p2CharacterId !== undefined) defaultState.p2CharacterId = parsed.p2CharacterId;
+          // Restore basic stats safely
+          if (typeof parsed.coins === 'number' && !isNaN(parsed.coins)) defaultState.coins = parsed.coins;
+          if (typeof parsed.difficulty === 'number' && !isNaN(parsed.difficulty)) defaultState.difficulty = parsed.difficulty;
+          if (typeof parsed.gameMode === 'string') defaultState.gameMode = parsed.gameMode;
+          if (typeof parsed.p1CharacterId === 'number' && !isNaN(parsed.p1CharacterId)) defaultState.p1CharacterId = parsed.p1CharacterId;
+          if (typeof parsed.p2CharacterId === 'number' && !isNaN(parsed.p2CharacterId)) defaultState.p2CharacterId = parsed.p2CharacterId;
 
           // Restore unlocked characters safely
           if (parsed && Array.isArray(parsed.characters)) {
             parsed.characters.forEach((savedChar: any) => {
               if(!savedChar) return;
               const match = defaultState.characters.find(c => c.id === savedChar.id);
-              if (match && savedChar.unlocked) {
-                match.unlocked = true;
-                console.log(`Restored unlocked char: ${match.name}`);
+              if (match && typeof savedChar.unlocked === 'boolean') {
+                // We only persist the unlock if it is true, or if it explicitly matches our logic.
+                // However, since we want to persist *lock* states if needed, we'll simply assign it if true.
+                // It's safer to only unlock if saved as unlocked, so default free chars remain free.
+                if (savedChar.unlocked === true) {
+                    match.unlocked = true;
+                    console.log(`Restored unlocked char: ${match.name}`);
+                }
               }
             });
           }

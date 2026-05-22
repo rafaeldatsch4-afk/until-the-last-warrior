@@ -10397,11 +10397,68 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  playVictorySound() {
+    const soundManager = this.sound as any;
+    if (!soundManager || !soundManager.context) return;
+    const ctx = soundManager.context as AudioContext;
+    
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    
+    const sampleRate = ctx.sampleRate;
+    const length = sampleRate * 1.5; // 1.5 seconds
+    const buffer = ctx.createBuffer(1, length, sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    // Notes: C5(523.25), E5(659.25), G5(783.99), C6(1046.50)
+    const notes = [
+      { freq: 523.25, time: 0, duration: 0.15 },
+      { freq: 659.25, time: 0.15, duration: 0.15 },
+      { freq: 783.99, time: 0.3, duration: 0.15 },
+      { freq: 1046.50, time: 0.45, duration: 0.8 }
+    ];
+    
+    for (let i = 0; i < length; i++) {
+        const t = i / sampleRate;
+        let sample = 0;
+        
+        for (const note of notes) {
+            if (t >= note.time && t < note.time + note.duration) {
+                // Generate a simple square wave mix
+                const phase = (t - note.time) * note.freq * 2 * Math.PI;
+                const wave = Math.sin(phase) > 0 ? 0.3 : -0.3;
+                
+                // AR envelope
+                const localT = t - note.time;
+                let env = 1;
+                if (localT < 0.05) {
+                    env = localT / 0.05; // Attack
+                } else {
+                    env = Math.max(0, 1 - Math.pow((localT - 0.05) / (note.duration - 0.05), 2)); // Decay/Release
+                }
+                
+                sample += wave * env;
+            }
+        }
+        data[i] = sample * 0.5; // Master volume
+    }
+    
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start();
+  }
+
   endBattle(win: boolean) {
     if (this.isBattleOver) return; // Prevent double call
     this.isBattleOver = true;
     if (this.turnTimer) this.turnTimer.remove();
     if (this.regenTimer) this.regenTimer.remove();
+
+    if (win) {
+      this.playVictorySound();
+    }
 
     this.mobileControls.forEach((c) => c.destroy());
     this.cameras.main.setZoom(1);
