@@ -91,39 +91,33 @@ export default class PreloadScene extends Phaser.Scene {
   create() {
     this.createAudioAssets();
     this.createFXAssets();
-
-    // Load Characters
-    const currentState = window.UTLW?.state;
-    const chars =
-      currentState && currentState.characters
-        ? currentState.characters
-        : INITIAL_CHARACTERS;
-
-    // Ensure Goku is generated if Gohan is present (for Father-Son Kamehameha)
-    const hasGohan = chars.some((c) => c.key === "gohan");
-    const hasGoku = chars.some((c) => c.key === "goku");
-
-    const charsToGenerate = [...chars];
-    if (hasGohan && !hasGoku) {
-      const gokuData = INITIAL_CHARACTERS.find((c) => c.key === "goku");
-      if (gokuData) charsToGenerate.push(gokuData);
-    }
-
     generateAllSprites(this);
-    charsToGenerate.forEach((c) => {
-      this.createAnimsFor(c.key);
+
+    // Aguarda o renderer processar todas as texturas antes de criar animações
+    this.renderer.once('render', () => {
+      const currentState = window.UTLW?.state;
+      const chars = currentState?.characters ?? INITIAL_CHARACTERS;
+
+      const charsToGenerate = [...chars];
+      const hasGohan = chars.some((c) => c.key === 'gohan');
+      const hasGoku = chars.some((c) => c.key === 'goku');
+      if (hasGohan && !hasGoku) {
+        const gokuData = INITIAL_CHARACTERS.find((c) => c.key === 'goku');
+        if (gokuData) charsToGenerate.push(gokuData);
+      }
+
+      charsToGenerate.forEach((c) => this.createAnimsFor(c.key));
+
+      if (!this.textures.exists('dummy')) {
+        const g = this.make.graphics({ x: 0, y: 0 });
+        g.fillStyle(0x555555);
+        g.fillRect(0, 0, 32, 32);
+        g.generateTexture('dummy', 32, 32);
+        g.destroy();
+      }
+
+      this.scene.start('MenuScene');
     });
-
-    // DUMMY Fallback for potential missing assets
-    if (!this.textures.exists("dummy")) {
-      const g = this.make.graphics({ x: 0, y: 0 });
-      g.fillStyle(0x555555);
-      g.fillRect(0, 0, 32, 32);
-      g.generateTexture("dummy", 32, 32);
-      g.destroy();
-    }
-
-    this.scene.start("MenuScene");
   }
 
   createAnimsFor(key: string) {
