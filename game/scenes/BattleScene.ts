@@ -73,10 +73,12 @@ export default class BattleScene extends Phaser.Scene {
   public p1ActionActive: boolean = false;
   public lastP1LeftTime: number = 0;
   public lastP1RightTime: number = 0;
+  public p1DashCooldown: boolean = false;
   public isP1Jumping: boolean = false;
   public p2ActionActive: boolean = false;
   public lastP2LeftTime: number = 0;
   public lastP2RightTime: number = 0;
+  public p2DashCooldown: boolean = false;
   public isP2Jumping: boolean = false;
   public p2BufferedAttack: boolean = false;
   public p2BufferedKiBlast: boolean = false;
@@ -613,11 +615,17 @@ export default class BattleScene extends Phaser.Scene {
   public p2ActionTimeout: Phaser.Time.TimerEvent | null = null;
 
   performDash(isPlayer: boolean, direction: number) {
+    if (isPlayer && this.p1DashCooldown) return;
+    if (!isPlayer && this.p2DashCooldown) return;
+
     const sprite = isPlayer ? this.player : this.enemy;
     const bounds = { minX: 50, maxX: 1950, minY: 100, maxY: 440 };
 
     this.setActionState(isPlayer, true);
     
+    if (isPlayer) this.p1DashCooldown = true;
+    else this.p2DashCooldown = true;
+
     // Simple dash dust effect
     this.createImpactEffect(sprite.x, sprite.y + 60, 0xecf0f1, "block");
     if (this.cache.audio.exists("sfx_step")) this.sound.play("sfx_step", { volume: 1.5, rate: 1.5 });
@@ -638,6 +646,9 @@ export default class BattleScene extends Phaser.Scene {
     sprite.play(this.getAnimKey(isPlayer ? this.playerData.key : this.enemyData.key, isPlayer ? this.playerTransformLevel : this.enemyTransformLevel, "walk"), true);
     sprite.setFlipX(direction === -1);
     
+    const fighterData = getFighter(isPlayer ? this.playerData.key : this.enemyData.key);
+    const color = fighterData.specialColor;
+
     // Create ghost trail effect
     const ghostTimer = this.time.addEvent({
         delay: 30,
@@ -646,13 +657,14 @@ export default class BattleScene extends Phaser.Scene {
             if (!this.scene.isActive() || !sprite.active) return;
             const ghost = this.add.sprite(sprite.x, sprite.y, sprite.texture.key, sprite.frame.name)
                 .setFlipX(sprite.flipX)
-                .setTint(0x00ffff)
+                .setTintFill(color)
                 .setAlpha(0.5)
                 .setDepth(sprite.depth - 1);
                 
             this.tweens.add({
                 targets: ghost,
                 alpha: 0,
+                scale: 1.2,
                 duration: 300,
                 onComplete: () => ghost.destroy()
             });
@@ -667,6 +679,31 @@ export default class BattleScene extends Phaser.Scene {
        onComplete: () => {
            this.setActionState(isPlayer, false);
            sprite.play(this.getAnimKey(isPlayer ? this.playerData.key : this.enemyData.key, isPlayer ? this.playerTransformLevel : this.enemyTransformLevel, "idle"), true);
+           
+           // Manage Cooldown and UI Ring
+           const ring = this.add.graphics();
+           ring.setDepth(sprite.depth + 1);
+           const cooldownDuration = 500;
+           let progress = { val: 0 };
+           
+           this.tweens.add({
+               targets: progress,
+               val: 1,
+               duration: cooldownDuration,
+               onUpdate: () => {
+                   if (!this.scene.isActive() || !sprite.active) return;
+                   ring.clear();
+                   ring.lineStyle(4, color, 0.7);
+                   ring.beginPath();
+                   ring.arc(sprite.x, sprite.y, 40, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * progress.val), false);
+                   ring.strokePath();
+               },
+               onComplete: () => {
+                   ring.destroy();
+                   if (isPlayer) this.p1DashCooldown = false;
+                   else this.p2DashCooldown = false;
+               }
+           });
        }
     });
   }
