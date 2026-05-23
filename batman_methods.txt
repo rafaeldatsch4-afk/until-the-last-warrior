@@ -1,0 +1,113 @@
+performBatmanAttack(
+    isPlayer: boolean,
+    attackType: "melee" | "ki",
+    comboCount: number,
+    isComboFinisher: boolean,
+  ) {
+    const attacker = isPlayer ? this.player : this.enemy;
+    const target = isPlayer ? this.enemy : this.player;
+    const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
+    const startY = attacker ? attacker.y : (isPlayer ? this.player.y : this.enemy.y);
+    const transLevel = isPlayer
+      ? this.playerTransformLevel
+      : this.enemyTransformLevel;
+
+    if (attackType === "melee") {
+      // Batman Melee: Slide kick
+      attacker.play(this.getAnimKey("batman", transLevel, "attack"));
+      this.tweens.add({
+        targets: attacker,
+        x: target.x + (attacker.x < target.x ? -40 : 40),
+        y: target.y + 20,
+        rotation: isPlayer ? 0.5 : -0.5,
+        duration: 150,
+        onComplete: () => {
+          if (!this.scene.isActive()) return;
+          if (this.cache.audio.exists("sfx_attack"))
+            this.sound.play("sfx_attack", { volume: 1.0 });
+          this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+          this.takeDamage(
+            !isPlayer,
+            Math.floor(
+              (isComboFinisher ? 18 : 10) *
+                this.getDamageMultiplier(transLevel),
+            ),
+          );
+          target.y -= 20; // Knock up slightly
+          this.tweens.add({
+            targets: target,
+            y: target.y + 20,
+            duration: 100,
+            ease: "Bounce.easeOut",
+          });
+
+          this.time.delayedCall(200, () => {
+            if (!this.scene.isActive()) return;
+            this.tweens.add({
+              targets: attacker,
+              x: startX,
+              y: startY,
+              rotation: 0,
+              duration: 150,
+              onComplete: () => {
+                attacker.play(this.getAnimKey("batman", transLevel, "idle"));
+                this.setActionState(isPlayer, false);
+              },
+            });
+          });
+        },
+      });
+    } else {
+      // Batman Ki: Batarang throw
+      attacker.play(this.getAnimKey("batman", transLevel, "attack"));
+      this.time.delayedCall(100, () => {
+        if (!this.scene.isActive()) return;
+        if (this.cache.audio.exists("sfx_beam"))
+          this.sound.play("sfx_beam", { volume: 0.8 });
+
+        const hand = this.getHandPosition(isPlayer);
+        const batarang = this.add
+          .triangle(
+            hand.x,
+            hand.y,
+            0,
+            -5,
+            0,
+            5,
+            attacker.x < target.x ? 15 : -15,
+            0,
+            0x333333,
+          )
+          .setDepth(5);
+        this.tweens.add({
+          targets: batarang,
+          rotation: isPlayer ? Math.PI * 4 : -Math.PI * 4,
+          duration: 200,
+        });
+
+        this.tweens.add({
+          targets: batarang,
+          x: target.x,
+          duration: 200,
+          onComplete: () => {
+            batarang.destroy();
+            if (!this.scene.isActive()) return;
+            this.createImpactEffect(target.x, target.y + 120, 0x333333);
+            this.takeDamage(
+              !isPlayer,
+              Math.floor(
+                (isComboFinisher ? 15 : 8) *
+                  this.getDamageMultiplier(transLevel),
+              ),
+            );
+          },
+        });
+
+        this.time.delayedCall(300, () => {
+          if (!this.scene.isActive()) return;
+          attacker.play(this.getAnimKey("batman", transLevel, "idle"));
+          this.setActionState(isPlayer, false);
+        });
+      });
+    }
+  }\n\n=====\n\n\n\n=====\n\n

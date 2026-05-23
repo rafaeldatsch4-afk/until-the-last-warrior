@@ -1,0 +1,220 @@
+private specialBatarang(isP: boolean) {
+    const attacker = isP ? this.player : this.enemy;
+    const target = isP ? this.enemy : this.player;
+    const transLevel = isP
+      ? this.playerTransformLevel
+      : this.enemyTransformLevel;
+    const dmg = Math.floor(35 * this.getDamageMultiplier(transLevel));
+
+    this.log("BATARANG!");
+    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+
+    const hand = this.getHandPosition(isP);
+
+    // Throw 5 batarangs
+    for (let i = 0; i < 5; i++) {
+      this.time.delayedCall(i * 100, () => {
+        if (!this.scene.isActive()) return;
+
+        const batarangGlow = this.add
+          .sprite(hand.x, hand.y, "batarang")
+          .setOrigin(0.5, 0.5)
+          .setDepth(14)
+          .setTint(0x00eaff)
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setAlpha(0.6)
+          .setScale(1.5);
+
+        const batarang = this.add
+          .sprite(hand.x, hand.y, "batarang")
+          .setOrigin(0.5, 0.5)
+          .setDepth(15);
+
+        // Trail
+        const trail = this.add
+          .particles(0, 0, "particle", {
+            follow: batarang,
+            scale: { start: 1, end: 0 },
+            lifespan: 200,
+            tint: 0x00eaff,
+            blendMode: "ADD",
+          })
+          .setDepth(13);
+
+        // Spin animation
+        this.tweens.add({
+          targets: [batarang, batarangGlow],
+          angle: 360 * 6,
+          duration: 300,
+          ease: "Linear",
+        });
+
+        // Move to target
+        this.tweens.add({
+          targets: [batarang, batarangGlow],
+          x: target.x,
+          y: target.y + 120 + Phaser.Math.Between(-40, 40),
+          duration: 300,
+          ease: "Power1",
+          onComplete: () => {
+            if (!this.scene.isActive()) return;
+
+            this.createImpactEffect(batarang.x, batarang.y, 0x00eaff);
+            if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
+
+            // Shockwave ring
+            const ring = this.add
+              .circle(batarang.x, batarang.y, 10, 0x00eaff)
+              .setStrokeStyle(3, 0x00eaff)
+              .setDepth(20)
+              .setAlpha(0)
+              .setBlendMode(Phaser.BlendModes.ADD);
+            ring.isFilled = false;
+            this.tweens.add({
+              targets: ring,
+              scale: 4,
+              alpha: { start: 1, end: 0 },
+              duration: 200,
+              ease: "Cubic.easeOut",
+              onComplete: () => ring.destroy(),
+            });
+
+            // Small explosion
+            const exp = this.add
+              .circle(batarang.x, batarang.y, 10, 0x00eaff)
+              .setDepth(16)
+              .setBlendMode(Phaser.BlendModes.ADD);
+            this.tweens.add({
+              targets: exp,
+              scale: 3,
+              alpha: 0,
+              duration: 200,
+              onComplete: () => exp.destroy(),
+            });
+
+            batarang.destroy();
+            batarangGlow.destroy();
+            trail.stop();
+            this.time.delayedCall(200, () => trail.destroy());
+
+            if (i === 4) {
+              this.cameras.main.shake(300, 0.02);
+              this.takeDamage(!isP, dmg);
+              this.onSpecialComplete(isP);
+            }
+          },
+        });
+      });
+    }
+  }\n\n=====\n\nprivate specialTheDarkKnight(isP: boolean) {
+    const attacker = isP ? this.player : this.enemy;
+    const target = isP ? this.enemy : this.player;
+    const transLevel = isP
+      ? this.playerTransformLevel
+      : this.enemyTransformLevel;
+    const dmg = Math.floor(100 * this.getDamageMultiplier(transLevel));
+    const startX = attacker.x;
+
+    this.log("THE DARK KNIGHT!");
+    if (this.cache.audio.exists("sfx_attack")) this.sound.play("sfx_attack");
+
+    // Screen goes dark
+    const darkOverlay = this.add
+      .rectangle(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2,
+        this.cameras.main.width,
+        this.cameras.main.height,
+        0x000000,
+        0,
+      )
+      .setDepth(10);
+
+    this.tweens.add({
+      targets: darkOverlay,
+      fillAlpha: 0.9,
+      duration: 300,
+      onComplete: () => {
+        if (!this.scene.isActive()) return;
+
+        // Teleport behind target
+        attacker.x = target.x + (isP ? 60 : -60);
+
+        // Multiple strikes in the dark
+        for (let i = 0; i < 12; i++) {
+          this.time.delayedCall(i * 80, () => {
+            if (!this.scene.isActive()) return;
+            const cx = target.x + Phaser.Math.Between(-40, 40);
+            const cy = target.y + 120 + Phaser.Math.Between(-40, 40);
+
+            // Slash effect
+            const slash = this.add
+              .graphics()
+              .setDepth(15)
+              .setBlendMode(Phaser.BlendModes.ADD);
+            slash.lineStyle(4, 0xffffff);
+            const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+            const len = 60;
+            slash.lineBetween(
+              cx - Math.cos(angle) * len,
+              cy - Math.sin(angle) * len,
+              cx + Math.cos(angle) * len,
+              cy + Math.sin(angle) * len,
+            );
+            this.tweens.add({
+              targets: slash,
+              alpha: 0,
+              duration: 100,
+              onComplete: () => slash.destroy(),
+            });
+
+            this.createImpactEffect(cx, cy, 0xffffff);
+            if (i % 3 === 0) this.cameras.main.shake(50, 0.01);
+            if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
+          });
+        }
+
+        this.time.delayedCall(1000, () => {
+          if (!this.scene.isActive()) return;
+
+          // Final explosive strike
+          this.createScreenFlash(0xf1c40f, 500, 1);
+          this.cameras.main.shake(1000, 0.1);
+
+          // Shockwave rings
+          for (let i = 0; i < 5; i++) {
+            const ring = this.add
+              .circle(target.x, target.y + 120, 40, 0xf1c40f)
+              .setStrokeStyle(12, 0xf1c40f)
+              .setDepth(20)
+              .setAlpha(0)
+              .setBlendMode(Phaser.BlendModes.ADD);
+            ring.isFilled = false;
+            this.tweens.add({
+              targets: ring,
+              scale: 12 + i * 6,
+              alpha: { start: 1, end: 0 },
+              duration: 500 + i * 150,
+              ease: "Cubic.easeOut",
+              onComplete: () => ring.destroy(),
+            });
+          }
+
+          this.createImpactEffect(target.x, target.y + 120, 0xf1c40f, "beam");
+          this.takeDamage(!isP, dmg);
+
+          // Fade out darkness and return
+          this.tweens.add({
+            targets: darkOverlay,
+            fillAlpha: 0,
+            duration: 400,
+            onComplete: () => {
+              darkOverlay.destroy();
+              attacker.x = startX;
+              this.onSpecialComplete(isP);
+            },
+          });
+        });
+      },
+    });
+  }
