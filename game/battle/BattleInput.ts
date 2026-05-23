@@ -54,6 +54,7 @@ export class BattleInput {
     this.scene.input.keyboard.removeAllKeys();
 
     this.keys = this.scene.input.keyboard.addKeys({
+
       p1_up: Phaser.Input.Keyboard.KeyCodes.W,
       p1_down: Phaser.Input.Keyboard.KeyCodes.S,
       p1_left: Phaser.Input.Keyboard.KeyCodes.A,
@@ -76,7 +77,7 @@ export class BattleInput {
       p2_transform: Phaser.Input.Keyboard.KeyCodes.NUMPAD_FIVE,
 
       pause: Phaser.Input.Keyboard.KeyCodes.ESC,
-    });
+    }) as unknown as BattleKeys;
 
     // Pause handler
     this.scene.input.keyboard.on("keydown-ESC", () => {

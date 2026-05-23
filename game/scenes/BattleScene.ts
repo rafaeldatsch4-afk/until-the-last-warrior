@@ -1,3 +1,4 @@
+import { BattleCamera } from '../battle/BattleCamera';
 import { BattleReward } from '../battle/BattleReward';
 import { BattleInput } from '../battle/BattleInput';
 import { BattleUI } from '../battle/BattleUI';
@@ -7,6 +8,31 @@ import { CharacterData, GameState } from "../types";
 import { getFighter } from '../characters/FighterRegistry';
 
 export default class BattleScene extends Phaser.Scene {
+  public trnBtnGroup?: Phaser.GameObjects.Container;
+
+  public battleUI!: BattleUI;
+  
+    public battleAI!: BattleAI;
+  public battleReward!: BattleReward;
+  public battleCamera!: BattleCamera;
+  public battleInput!: BattleInput;
+  public get keys() { return this.battleInput?.keys; }
+  public get mobileJoystickVector() { return this.battleInput?.mobileJoystickVector || {x:0, y:0}; }
+  public get mobileP1Attack() { return this.battleInput?.mobileP1Attack; }
+  public get mobileP1KiBlast() { return this.battleInput?.mobileP1KiBlast; }
+  public get mobileP1Defend() { return this.battleInput?.mobileP1Defend; }
+  public get mobileP1Charge() { return this.battleInput?.mobileP1Charge; }
+  public get mobileP1Special() { return this.battleInput?.mobileP1Special; }
+  public get mobileP1Transform() { return this.battleInput?.mobileP1Transform; }
+  public get mobileP1SpecialJustUp() { return this.battleInput?.mobileP1SpecialJustUp; }
+  public set mobileP1Attack(v) { if(this.battleInput) this.battleInput.mobileP1Attack = v; }
+  public set mobileP1KiBlast(v) { if(this.battleInput) this.battleInput.mobileP1KiBlast = v; }
+  public set mobileP1Defend(v) { if(this.battleInput) this.battleInput.mobileP1Defend = v; }
+  public set mobileP1Charge(v) { if(this.battleInput) this.battleInput.mobileP1Charge = v; }
+  public set mobileP1Special(v) { if(this.battleInput) this.battleInput.mobileP1Special = v; }
+  public set mobileP1Transform(v) { if(this.battleInput) this.battleInput.mobileP1Transform = v; }
+  public set mobileP1SpecialJustUp(v) { if(this.battleInput) this.battleInput.mobileP1SpecialJustUp = v; }
+
   declare sound:
     | Phaser.Sound.NoAudioSoundManager
     | Phaser.Sound.HTML5AudioSoundManager
@@ -27,76 +53,74 @@ export default class BattleScene extends Phaser.Scene {
   declare make: Phaser.GameObjects.GameObjectCreator;
   declare events: Phaser.Events.EventEmitter;
 
-  private player!: Phaser.GameObjects.Sprite;
-  private enemy!: Phaser.GameObjects.Sprite;
+  public player!: Phaser.GameObjects.Sprite;
+  public enemy!: Phaser.GameObjects.Sprite;
 
-  private playerData!: CharacterData;
-  private enemyData!: CharacterData;
+  public playerData!: CharacterData;
+  public enemyData!: CharacterData;
 
-  private playerHp: number = 0;
-  private enemyHp: number = 0;
-  private playerKi: number = 0;
-  private enemyKi: number = 0;
+  public playerHp: number = 0;
+  public enemyHp: number = 0;
+  public playerKi: number = 0;
+  public enemyKi: number = 0;
 
-  private playerTransformLevel: number = 0;
-  private enemyTransformLevel: number = 0;
-  private playerDefending: boolean = false;
-  private enemyDefending: boolean = false;
+  public playerTransformLevel: number = 0;
+  public enemyTransformLevel: number = 0;
+  public playerDefending: boolean = false;
+  public enemyDefending: boolean = false;
 
   // Action Flags to prevent spamming
-  private p1ActionActive: boolean = false;
-  private isP1Jumping: boolean = false;
-  private p2ActionActive: boolean = false;
-  private isP2Jumping: boolean = false;
-  private p2BufferedAttack: boolean = false;
-  private p2BufferedKiBlast: boolean = false;
-  private p2BufferedTransform: boolean = false;
+  public p1ActionActive: boolean = false;
+  public isP1Jumping: boolean = false;
+  public p2ActionActive: boolean = false;
+  public isP2Jumping: boolean = false;
+  public p2BufferedAttack: boolean = false;
+  public p2BufferedKiBlast: boolean = false;
+  public p2BufferedTransform: boolean = false;
 
-  private p1AttackBuffer: number = 0;
-  private p1KiBlastBuffer: number = 0;
-  private p1TransformBuffer: number = 0;
-  private p2AttackBuffer: number = 0;
-  private p2KiBlastBuffer: number = 0;
-  private p2TransformBuffer: number = 0;
-  private readonly BUFFER_MS = 250;
+  public p1AttackBuffer: number = 0;
+  public p1KiBlastBuffer: number = 0;
+  public p1TransformBuffer: number = 0;
+  public p2AttackBuffer: number = 0;
+  public p2KiBlastBuffer: number = 0;
+  public p2TransformBuffer: number = 0;
+  public readonly BUFFER_MS = 250;
 
-  private p1Shadow!: Phaser.GameObjects.Ellipse;
-  private p2Shadow!: Phaser.GameObjects.Ellipse;
-  private p1Aura!: Phaser.GameObjects.Shape;
-  private p2Aura!: Phaser.GameObjects.Shape;
-  private p1Shield!: Phaser.GameObjects.Arc;
-  private p2Shield!: Phaser.GameObjects.Arc;
+  public p1Shadow!: Phaser.GameObjects.Ellipse;
+  public p2Shadow!: Phaser.GameObjects.Ellipse;
+  public p1Aura!: Phaser.GameObjects.Shape;
+  public p2Aura!: Phaser.GameObjects.Shape;
+  public p1Shield!: Phaser.GameObjects.Arc;
+  public p2Shield!: Phaser.GameObjects.Arc;
 
-  private p1SpecialHoldTime: number = 0;
-  private p2SpecialHoldTime: number = 0;
-  private readonly SUPER_THRESHOLD_MS = 600; // 0.6 second hold for super
-  private p1ChargeIndicator!: Phaser.GameObjects.Arc;
-  private p2ChargeIndicator!: Phaser.GameObjects.Arc;
+  public p1SpecialHoldTime: number = 0;
+  public p2SpecialHoldTime: number = 0;
+  public readonly SUPER_THRESHOLD_MS = 600; // 0.6 second hold for super
+  public p1ChargeIndicator!: Phaser.GameObjects.Arc;
+  public p2ChargeIndicator!: Phaser.GameObjects.Arc;
 
             
-  private p1ComboCount: number = 0;
-  private p1LastAttackTime: number = 0;
-  private p2ComboCount: number = 0;
-  private p2LastAttackTime: number = 0;
+  public p1ComboCount: number = 0;
+  public p1LastAttackTime: number = 0;
+  public p2ComboCount: number = 0;
+  public p2LastAttackTime: number = 0;
 
-  private isBattleOver: boolean = false;
-  private turnTimer?: Phaser.Time.TimerEvent;
-  private regenTimer?: Phaser.Time.TimerEvent;
-  private aiMoveDir: number = 0;
-    private gameState!: GameState;
+  public isBattleOver: boolean = false;
+  public turnTimer?: Phaser.Time.TimerEvent;
+  public regenTimer?: Phaser.Time.TimerEvent;
+  public aiMoveDir: number = 0;
+    public gameState!: GameState;
 
   // Position tuned for 64px tall sprites (scaled 3x)
   // Center Y at 280 ensures feet land around Y=460 (Ground Level)
-  private readonly p1StartPos = { x: 200, y: 280 };
-  private readonly p2StartPos = { x: 760, y: 280 };
+  public readonly p1StartPos = { x: 200, y: 280 };
+  public readonly p2StartPos = { x: 760, y: 280 };
 
   constructor() {
     super("BattleScene");
   }
 
-  public battleUI: BattleUI;
-  public battleAI: BattleAI;
-  create() {
+      create() {
     this.battleAI = new BattleAI(this);
     this.gameState = this.registry.get("gameState") as GameState;
     this.isBattleOver = false;
@@ -160,14 +184,8 @@ export default class BattleScene extends Phaser.Scene {
         bgImage.postFX.addBlur(0.3, 0.3, 0.3, 1); 
     }
       
-    // Set bounds such that camera can zoom out, removing restrictive Y bounds
-    this.cameras.main.setBounds(-500, -500, mapWidth + 1000, 1500);
-      
-    // Cinematic Camera Effects - keep very subtle to NOT alter characters
-    if (this.cameras.main.postFX) {
-        // Add a cinematic vignette for dramatic effect
-        this.cameras.main.postFX.addVignette(0.5, 0.5, 0.9, 0.3);
-    }
+    this.battleCamera = new BattleCamera(this);
+    this.battleCamera.setupCamera(mapWidth);
 
     if (this.cache.audio.exists("bgm_menu")) this.sound.stopByKey("bgm_menu");
     if (this.cache.audio.exists("bgm_battle")) {
@@ -561,8 +579,8 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Safety timers for action unstuck
-  private p1ActionTimeout: Phaser.Time.TimerEvent | null = null;
-  private p2ActionTimeout: Phaser.Time.TimerEvent | null = null;
+  public p1ActionTimeout: Phaser.Time.TimerEvent | null = null;
+  public p2ActionTimeout: Phaser.Time.TimerEvent | null = null;
 
   setActionState(isPlayer: boolean, isActive: boolean) {
     if (isPlayer) {
@@ -1386,7 +1404,7 @@ export default class BattleScene extends Phaser.Scene {
               this.modifyKi(isPlayer, 5);
 
               // Visual Impact
-              this.cameras.main.shake(
+              if(this.battleCamera) this.battleCamera.shake(
                 isComboFinisher ? 200 : 100,
                 isComboFinisher ? 0.02 : 0.01,
               );
@@ -1790,7 +1808,7 @@ export default class BattleScene extends Phaser.Scene {
         });
         darkAuraElements.push(darkParticle);
       }
-      this.cameras.main.shake(800, 0.01);
+      if(this.battleCamera) this.battleCamera.shake(800, 0.01);
     }
 
     // Gathering energy particles
@@ -1856,7 +1874,7 @@ export default class BattleScene extends Phaser.Scene {
             // Big Flash & Shake
             if (data.key === "thukuna") {
               // Invert colors momentarily for an "impact frame" feel
-              this.cameras.main.flash(800, 255, 0, 0, true);
+              if(this.battleCamera) this.battleCamera.flash(800, 255, 0, 0, true);
 
               // Thukuna specific slash effects - make them sharper and cleaner
               for (let i = 0; i < 8; i++) {
@@ -1922,10 +1940,10 @@ export default class BattleScene extends Phaser.Scene {
                 onComplete: () => redBurst.destroy(),
               });
             } else {
-              this.cameras.main.flash(800, 255, 255, 255, true);
+              if(this.battleCamera) this.battleCamera.flash(800, 255, 255, 255, true);
             }
 
-            this.cameras.main.shake(1000, 0.05);
+            if(this.battleCamera) this.battleCamera.shake(1000, 0.05);
             if (this.cache.audio.exists("sfx_transform"))
               this.sound.play("sfx_transform", { volume: 1.5 });
 
@@ -2095,7 +2113,7 @@ export default class BattleScene extends Phaser.Scene {
         attacker.setTint(0xffffff);
 
         // Flash screen slightly to indicate power
-        this.cameras.main.flash(100, 255, 255, 255, false);
+        if(this.battleCamera) this.battleCamera.flash(100, 255, 255, 255, false);
 
         // Snap forward
         this.tweens.add({
@@ -2319,7 +2337,7 @@ export default class BattleScene extends Phaser.Scene {
       );
   }
 
-  private onSpecialComplete(isPlayer: boolean) {
+  public onSpecialComplete(isPlayer: boolean) {
     const data = isPlayer ? this.playerData : this.enemyData;
     const transLevel = isPlayer
       ? this.playerTransformLevel
@@ -2334,7 +2352,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Helper to calculate damage multiplier based on transformation level
-  private getDamageMultiplier(transLevel: number): number {
+  public getDamageMultiplier(transLevel: number): number {
     if (transLevel === 1) return 1.25; // 25% stronger
     if (transLevel === 2) return 1.5; // 50% stronger
     return 1.0;
@@ -2354,7 +2372,7 @@ export default class BattleScene extends Phaser.Scene {
   // =========================================================================
 
   // 1. BEAM ENGINE (KAMEHAMEHA, GALICK GUN, MASENKO)
-  private specialBeam(
+  public specialBeam(
     isP: boolean,
     isS: boolean,
     col: number,
@@ -2393,7 +2411,7 @@ export default class BattleScene extends Phaser.Scene {
       .setDepth(15)
       .setBlendMode(Phaser.BlendModes.ADD);
 
-    this.cameras.main.shake(400, 0.01);
+    if(this.battleCamera) this.battleCamera.shake(400, 0.01);
 
     // Gathering particles
     const gatherParticles = this.add
@@ -2423,7 +2441,7 @@ export default class BattleScene extends Phaser.Scene {
         gatherParticles.destroy();
 
         this.createScreenFlash(col, 200, 0.6);
-        this.cameras.main.shake(300, 0.03);
+        if(this.battleCamera) this.battleCamera.shake(300, 0.03);
 
         // The Beam Structure
         const originX = 0;
@@ -2734,14 +2752,14 @@ export default class BattleScene extends Phaser.Scene {
       });
 
       // Beam specific screen flash and shake
-      this.cameras.main.flash(150, 255, 255, 255, true);
-      this.cameras.main.shake(300, 0.05);
+      if(this.battleCamera) this.battleCamera.flash(150, 255, 255, 255, true);
+      if(this.battleCamera) this.battleCamera.shake(300, 0.05);
     } else if (isBlock) {
       // Block specific shake
-      this.cameras.main.shake(100, 0.01);
+      if(this.battleCamera) this.battleCamera.shake(100, 0.01);
     } else {
       // Melee specific shake
-      this.cameras.main.shake(150, 0.02);
+      if(this.battleCamera) this.battleCamera.shake(150, 0.02);
     }
   }
 
@@ -2804,9 +2822,11 @@ export default class BattleScene extends Phaser.Scene {
       this.createImpactEffect(target.x, target.y + 120, 0x3498db, "block"); // Blue shield spark
       if (this.cache.audio.exists("sfx_block")) this.sound.play("sfx_block");
     } else {
-      isCritical = dmg > 25; // threshold for critical visual
+            isCritical = dmg > 25; // threshold for critical visual
       if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
-      // Removed global hitstop to fix "travado" stutter bug
+      // Add requested screen-shake and particle burst
+      if(this.battleCamera) this.battleCamera.shake(150, 0.02);
+      this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee");
     }
     
     // Spawn floating damage number
@@ -2822,7 +2842,7 @@ export default class BattleScene extends Phaser.Scene {
 
     if (target.active) {
       target.setTintFill(0xffffff); // Initial white flash
-      this.cameras.main.flash(50, 255, 255, 255, true); // QUICK Flash for every hit
+      if(this.battleCamera) this.battleCamera.flash(50, 255, 255, 255, true); // QUICK Flash for every hit
       
       this.time.delayedCall(40, () => {
         if (target.active) target.setTint(0xff0000); // Then red
@@ -2877,6 +2897,10 @@ export default class BattleScene extends Phaser.Scene {
     if(this.battleUI) this.battleUI.updateBars(this.playerHp/this.playerData.maxHp, this.enemyHp/this.enemyData.maxHp, this.playerKi/100, this.enemyKi/100);
     if (this.playerHp <= 0 || this.enemyHp <= 0)
       if(this.battleReward) this.battleReward.endBattle(this.playerHp > 0);
+  }
+
+  log(msg: string) {
+    if (this.battleUI) this.battleUI.showLog(msg);
   }
 
   modifyKi(isP: boolean, amt: number) {
