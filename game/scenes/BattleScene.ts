@@ -1,3 +1,4 @@
+import { BattleInput } from '../battle/BattleInput';
 import { BattleUI } from '../battle/BattleUI';
 import { BattleAI } from '../battle/BattleAI';
 import Phaser from "phaser";
@@ -15,18 +16,7 @@ export default class BattleScene extends Phaser.Scene {
   declare input: Phaser.Input.InputPlugin;
 
   // Mobile Controls Flags
-  mobileP1Attack = false;
-  mobileP1KiBlast = false;
-  mobileP1Defend = false;
-  mobileP1Charge = false;
-  mobileP1Special = false;
-  mobileP1Transform = false;
-  mobileP1SpecialJustUp = false;
-  mobileJoystickVector = { x: 0, y: 0 };
-  mobileJoystickPointerId: number | null = null;
-  private mobileControls: Phaser.GameObjects.GameObject[] = [];
-  private trnBtnGroup?: Phaser.GameObjects.Container;
-  declare tweens: Phaser.Tweens.TweenManager;
+                        declare tweens: Phaser.Tweens.TweenManager;
   declare cameras: Phaser.Cameras.Scene2D.CameraManager;
   declare children: Phaser.GameObjects.DisplayList;
   declare scene: Phaser.Scenes.ScenePlugin;
@@ -92,8 +82,7 @@ export default class BattleScene extends Phaser.Scene {
   private turnTimer?: Phaser.Time.TimerEvent;
   private regenTimer?: Phaser.Time.TimerEvent;
   private aiMoveDir: number = 0;
-  private keys!: any;
-  private gameState!: GameState;
+    private gameState!: GameState;
 
   // Position tuned for 64px tall sprites (scaled 3x)
   // Center Y at 280 ensures feet land around Y=460 (Ground Level)
@@ -193,7 +182,9 @@ export default class BattleScene extends Phaser.Scene {
 
     this.battleUI = new BattleUI(this);
     this.battleUI.createUI(this.playerData, this.enemyData, this.gameState.gameMode, this.gameState.arcadeRound);
-    this.createInputs();
+    this.battleInput = new BattleInput(this);
+    this.battleInput.createInputs();
+    this.battleInput.createMobileControls();
 
     this.time.delayedCall(1000, () => {
       if (!this.scene.isActive()) return;
@@ -422,7 +413,7 @@ export default class BattleScene extends Phaser.Scene {
       this.playerDefending = false;
       this.p1SpecialHoldTime = 0;
       this.clearChargeIndicator(true);
-      this.mobileP1SpecialJustUp = false;
+      this.mobileP1Attack = false;
     } else {
       // Defend / Charge
       if (this.keys.p1_defend.isDown || this.mobileP1Defend) {
@@ -504,7 +495,6 @@ export default class BattleScene extends Phaser.Scene {
 
     // Reset mobile special flag
     this.mobileP1SpecialJustUp = false;
-
     // --- PLAYER 2 CONTROLS (Local PvP) ---
     if (this.gameState.gameMode === "local_pvp") {
       if (this.p2ActionActive) {
@@ -854,292 +844,11 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
-  createInputs() {
-    if (!this.input.keyboard) return;
-
-    // Clean up old keys if any (defensive)
-    this.input.keyboard.removeAllKeys();
-
-    this.keys = this.input.keyboard.addKeys({
-      p1_up: Phaser.Input.Keyboard.KeyCodes.W,
-      p1_down: Phaser.Input.Keyboard.KeyCodes.S,
-      p1_left: Phaser.Input.Keyboard.KeyCodes.A,
-      p1_right: Phaser.Input.Keyboard.KeyCodes.D,
-      p1_attack: Phaser.Input.Keyboard.KeyCodes.J,
-      p1_kiblast: Phaser.Input.Keyboard.KeyCodes.K,
-      p1_defend: Phaser.Input.Keyboard.KeyCodes.U,
-      p1_charge: Phaser.Input.Keyboard.KeyCodes.O,
-      p1_special: Phaser.Input.Keyboard.KeyCodes.L,
-      p1_transform: Phaser.Input.Keyboard.KeyCodes.I,
-      
-      p2_up: Phaser.Input.Keyboard.KeyCodes.UP,
-      p2_down: Phaser.Input.Keyboard.KeyCodes.DOWN,
-      p2_left: Phaser.Input.Keyboard.KeyCodes.LEFT,
-      p2_right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
-      p2_attack: Phaser.Input.Keyboard.KeyCodes.NUMPAD_ONE,
-      p2_kiblast: Phaser.Input.Keyboard.KeyCodes.NUMPAD_TWO,
-      p2_defend: Phaser.Input.Keyboard.KeyCodes.NUMPAD_FOUR,
-      p2_special: Phaser.Input.Keyboard.KeyCodes.NUMPAD_THREE,
-      p2_transform: Phaser.Input.Keyboard.KeyCodes.NUMPAD_FIVE,
-
-      pause: Phaser.Input.Keyboard.KeyCodes.ESC,
-    });
-
-    // Pause handler
-    this.input.keyboard.on("keydown-ESC", () => {
-      if (!this.isBattleOver) {
-        this.scene.pause();
-        this.scene.launch("PauseScene");
-      }
-    });
-  }
+  
 
   
 
-  createMobileControls() {
-    // Ensure accurate isMobile check
-    const isMobile = this.sys.game.device.input.touch || 
-                     (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
-                     
-    if (!isMobile) return;
-
-    const gw = this.cameras.main.width;
-    const gh = this.cameras.main.height;
-
-    const createBtn = (
-      x: number,
-      y: number,
-      text: string,
-      color: number,
-      radius: number,
-      onDown: () => void,
-      onUp?: () => void,
-    ) => {
-      // Modern Glassy Button Setup
-      const btnGroup = this.add.container(x, y).setScrollFactor(0).setDepth(100);
-      
-      const outerBtn = this.add.circle(0, 0, radius, color, 0.4).setStrokeStyle(3, 0xffffff, 0.5);
-      const innerBtn = this.add.circle(0, 0, radius * 0.85, 0x000000, 0.3);
-      
-      const txt = this.add.text(0, 0, text, {
-        fontFamily: "Impact, sans-serif",
-        fontSize: radius > 40 ? "24px" : "18px",
-        color: "#ffffff",
-        stroke: "#000",
-        strokeThickness: 3
-      }).setOrigin(0.5);
-
-      btnGroup.add([outerBtn, innerBtn, txt]);
-      
-      this.mobileControls.push(btnGroup);
-      if (this.battleUI?.uiContainer) {
-          this.battleUI?.uiContainer.add(btnGroup);
-      }
-
-      let isPressed = false;
-
-      const press = () => {
-        if (isPressed) return;
-        isPressed = true;
-        outerBtn.setAlpha(0.8);
-        outerBtn.setScale(0.9);
-        innerBtn.setScale(0.9);
-        txt.setScale(0.9);
-        onDown();
-      };
-
-      const release = () => {
-        if (!isPressed) return;
-        isPressed = false;
-        outerBtn.setAlpha(0.4);
-        outerBtn.setScale(1);
-        innerBtn.setScale(1);
-        txt.setScale(1);
-        if (onUp) onUp();
-      };
-
-      const hitArea = new Phaser.Geom.Circle(0, 0, radius * 1.5);
-      btnGroup.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
-      
-      btnGroup.on("pointerdown", () => {
-          press();
-      });
-
-      btnGroup.on("pointerup", () => {
-          release();
-      });
-
-      btnGroup.on("pointerout", () => {
-          release();
-      });
-      
-      return btnGroup;
-    };
-
-    // --- Virtual Joystick ---
-    const defaultJoyX = 140;
-    const defaultJoyY = gh - 100;
-    let joyRootX = defaultJoyX;
-    let joyRootY = defaultJoyY;
-    
-    const joyContainer = this.add.container(joyRootX, joyRootY).setScrollFactor(0).setDepth(100);
-    const joyBase = this.add.circle(0, 0, 75, 0x000000, 0.4).setStrokeStyle(3, 0xffffff, 0.3);
-    const joyThumb = this.add.circle(0, 0, 35, 0xffffff, 0.6).setStrokeStyle(2, 0x000000, 0.5);
-    
-    joyContainer.add([joyBase, joyThumb]);
-    this.mobileControls.push(joyContainer);
-    
-    // Large invisible hit area on the bottom-left quadrant for the FLOATING joystick
-    // We remove the old rectangle hit area and use global checking for this too.
-    if (this.battleUI?.uiContainer) {
-        this.battleUI?.uiContainer.add(joyContainer);
-    }
-
-    const getLocalPnt = (pointer: Phaser.Input.Pointer) => {
-        return { x: pointer.x, y: pointer.y };
-    };
-
-    const handleJoystick = (pointer: Phaser.Input.Pointer) => {
-        if (this.mobileJoystickPointerId !== pointer.id) return;
-        
-        const loc = getLocalPnt(pointer);
-        
-        let dx = loc.x - joyRootX;
-        let dy = loc.y - joyRootY;
-        const maxDist = 75;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        
-        if (dist > maxDist) {
-            dx = (dx / dist) * maxDist;
-            dy = (dy / dist) * maxDist;
-        }
-        
-        joyThumb.setPosition(dx, dy);
-        
-        this.mobileJoystickVector = { x: dx / maxDist, y: dy / maxDist };
-        
-        // Instant response with very small deadzone (360-like responsiveness)
-        this.keys.p1_up.isDown = dy < -10;
-        this.keys.p1_left.isDown = dx < -10;
-        this.keys.p1_right.isDown = dx > 10;
-    };
-
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-        const loc = getLocalPnt(pointer);
-        // Only trigger joystick if the pointer is on the left half of the screen
-        if (loc.x < gw / 2 && loc.y > gh / 2 - 50) {
-            if (this.mobileJoystickPointerId === null) {
-                this.mobileJoystickPointerId = pointer.id;
-                
-                // Standard Floating Joystick Behavior
-                joyRootX = loc.x;
-                joyRootY = loc.y;
-                joyContainer.setPosition(joyRootX, joyRootY);
-                joyBase.setAlpha(0.7);
-                
-                handleJoystick(pointer);
-            }
-        }
-    });
-
-    this.input.on('pointermove', handleJoystick);
-
-    const releaseJoystick = (pointer: Phaser.Input.Pointer) => {
-        if (this.mobileJoystickPointerId === pointer.id) {
-            this.mobileJoystickPointerId = null;
-            
-            joyRootX = defaultJoyX;
-            joyRootY = defaultJoyY;
-            joyContainer.setPosition(joyRootX, joyRootY);
-            
-            joyBase.setAlpha(0.4);
-            joyThumb.setPosition(0, 0);
-            this.mobileJoystickVector = { x: 0, y: 0 };
-            
-            this.keys.p1_up.isDown = false;
-            this.keys.p1_left.isDown = false;
-            this.keys.p1_right.isDown = false;
-        }
-    };
-
-    this.input.on('pointerup', releaseJoystick);
-    this.input.on('pointerout', releaseJoystick);
-    // --- End Virtual Joystick ---
-
-    // Right side (Attacks)
-    createBtn(gw - 100, gh - 100, "ATK", 0xe74c3c, 60, () => {
-      this.mobileP1Attack = true;
-      this.p1AttackBuffer = this.BUFFER_MS;
-    });
-
-    // SPC (Special)
-    createBtn(
-      gw - 100,
-      gh - 240,
-      "SPC",
-      0xf1c40f,
-      45,
-      () => {
-        this.mobileP1Special = true;
-      },
-      () => {
-        this.mobileP1Special = false;
-        this.mobileP1SpecialJustUp = true;
-      },
-    );
-
-    // DEF/CHARGE
-    createBtn(
-      gw - 240,
-      gh - 100,
-      "DEF/\nCHG",
-      0x3498db,
-      45,
-      () => {
-        this.mobileP1Defend = true;
-      },
-      () => {
-        this.mobileP1Defend = false;
-      },
-    );
-
-    // KI BLAST
-    createBtn(gw - 240, gh - 240, "KI", 0x00ffff, 45, () => {
-      this.mobileP1KiBlast = true;
-      this.p1KiBlastBuffer = this.BUFFER_MS;
-    });
-
-    // TRN (Transform)
-    if (this.playerData.transformAvailable) {
-      this.trnBtnGroup = createBtn(140, 200, "TRN", 0x9b59b6, 50, () => {
-        this.mobileP1Transform = true;
-        this.p1TransformBuffer = this.BUFFER_MS;
-      });
-    }
-
-    // Pause Button (Top Center)
-    const pauseBtn = this.add
-      .circle(480, 40, 30, 0x333333, 0.6)
-      .setInteractive()
-      .setScrollFactor(0)
-      .setDepth(100);
-    const pauseTxt = this.add
-      .text(480, 40, "||", { fontSize: "24px", fontStyle: "bold" })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(101);
-    this.mobileControls.push(pauseBtn, pauseTxt);
-
-    pauseBtn.on("pointerdown", () => {
-      pauseBtn.setAlpha(0.9);
-      if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-      this.scene.pause();
-      this.scene.launch("PauseScene");
-    });
-
-    pauseBtn.on("pointerup", () => pauseBtn.setAlpha(0.6));
-    pauseBtn.on("pointerout", () => pauseBtn.setAlpha(0.6));
-  }
+  
 
   getAnimKey(baseKey: string, transLevel: number, animType: string): string {
     let texKey = baseKey;
