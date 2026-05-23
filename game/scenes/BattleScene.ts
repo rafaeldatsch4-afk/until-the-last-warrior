@@ -1,3 +1,4 @@
+import { BattleAI } from '../battle/BattleAI';
 import Phaser from "phaser";
 import { CharacterData, GameState } from "../types";
 import { getFighter } from '../characters/FighterRegistry';
@@ -108,7 +109,9 @@ export default class BattleScene extends Phaser.Scene {
     super("BattleScene");
   }
 
+  public battleAI: BattleAI;
   create() {
+    this.battleAI = new BattleAI(this);
     this.gameState = this.registry.get("gameState") as GameState;
     this.isBattleOver = false;
     this.input.addPointer(3); // Support up to 4 touches (1 default + 3 added)
@@ -202,7 +205,7 @@ export default class BattleScene extends Phaser.Scene {
         this.gameState.gameMode !== "local_pvp" &&
         this.gameState.gameMode !== "training"
       )
-        this.startAILoop();
+        if (this.battleAI) this.battleAI.startAILoop();
     });
 
     // Passive Ki regeneration
@@ -3348,182 +3351,9 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
-  startAILoop() {
-    const diff = this.gameState.difficulty; // 0: Easy, 1: Normal, 2: Hard
-    let delay = 1500;
-    if (diff === 0) delay = 2000;
-    else if (diff === 1) delay = 1200;
-    else if (diff === 2) delay = 700; // Much faster on Hard
+  
 
-    this.turnTimer = this.time.addEvent({
-      delay: delay,
-      loop: true,
-      callback: () => this.enemyDecide(),
-    });
-
-    // AI Movement Loop
-    this.time.addEvent({
-      delay: 300,
-      loop: true,
-      callback: () => {
-        if (this.isBattleOver || !this.scene.isActive()) return;
-        if (this.p2ActionActive || this.enemyDefending) {
-           this.aiMoveDir = 0;
-           return;
-        }
-        
-        const dist = Math.abs(this.enemy.x - this.player.x);
-        const isLeftOfPlayer = this.enemy.x < this.player.x;
-        
-        let targetDir = 0; // -1 for Left, 1 for Right, 0 for stop
-        
-        // Dynamic behavior based on state
-        if (this.enemyKi < 30) {
-            // Needs Ki. If too close, retreat! If far enough, stay and charge.
-            if (dist < 400) {
-                targetDir = isLeftOfPlayer ? -1 : 1; // back away
-            } else {
-                targetDir = 0; // stop and charge
-            }
-        } else {
-            // Has Ki, ready to attack. If far, approach!
-            if (dist > 300) {
-                targetDir = isLeftOfPlayer ? 1 : -1; // approach
-            } else if (dist < 150) {
-                // very close, jitter a bit
-                targetDir = Math.random() < 0.3 ? (isLeftOfPlayer ? -1 : 1) : 0;
-            } else {
-                // sweet spot for attack, stay still or approach
-                targetDir = Math.random() < 0.6 ? (isLeftOfPlayer ? 1 : -1) : 0;
-            }
-        }
-        
-        // Prevent corner trapping
-        if (this.enemy.x <= 150) targetDir = 1;
-        if (this.enemy.x >= 1850) targetDir = -1;
-        
-        this.aiMoveDir = targetDir;
-      }
-    });
-  }
-
-  enemyDecide() {
-    if (this.isBattleOver || this.p2ActionActive || !this.scene.isActive())
-      return;
-
-    const r = Math.random();
-    const playerHpPct = this.playerHp / this.playerData.maxHp;
-    const enemyHpPct = this.enemyHp / this.enemyData.maxHp;
-    const dist = Math.abs(this.player.x - this.enemy.x);
-
-    // SMARTER AI: Check player state
-    const playerIsAttacking = this.p1ActionActive;
-
-    // 1. Reactive Guard: If player is attacking and close, HIGH chance to block
-    if (playerIsAttacking && dist < 300 && r < 0.7) {
-      this.enemyDefending = true;
-      this.p2Aura.setVisible(true).setAlpha(0.4).setScale(1.1);
-      this.time.delayedCall(800, () => {
-        if (this.scene.isActive()) {
-          this.enemyDefending = false;
-          this.p2Aura.setVisible(false);
-        }
-      });
-      return;
-    }
-
-    // 2. Transform if available and have enough Ki
-    let maxLevel = 1;
-    if (
-      this.enemyData.key === "goku" ||
-      this.enemyData.key === "vegeta" ||
-      this.enemyData.key === "naruto"
-    )
-      maxLevel = 2;
-
-    if (
-      this.enemyKi >= 100 &&
-      this.enemyTransformLevel < maxLevel &&
-      this.enemyData.transformAvailable
-    ) {
-      this.performTransform(false);
-      return;
-    }
-
-    // 2. If player is low on HP, prioritize finishing them off
-    if (playerHpPct <= 0.3) {
-      if (this.enemyKi >= 80 && r < 0.8) {
-        this.performSpecial(false, true);
-      } else if (this.enemyKi >= 40 && r < 0.7) {
-        this.performSpecial(false, false);
-      } else if (r < 0.6) {
-        this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
-      } else {
-        this.performCharge(false);
-      }
-      return;
-    }
-
-    // 3. If enemy is low on HP, play aggressively with specials or charge to get them
-    if (enemyHpPct <= 0.4) {
-      if (this.enemyKi >= 80) {
-        this.performSpecial(false, true);
-      } else if (this.enemyKi >= 40 && r < 0.6) {
-        this.performSpecial(false, false);
-      } else if (this.enemyKi < 40 && r < 0.8) {
-        this.performCharge(false);
-      } else {
-        this.performAttack(false, Math.random() > 0.5 ? "melee" : "ki");
-      }
-      return;
-    }
-
-    // 4. If player has high Ki, try to interrupt them or defend
-    if (this.playerKi >= 80) {
-      if (r < 0.4) {
-        // Defend for 1.2 seconds against potential super
-        this.enemyDefending = true;
-        this.p2Aura.setVisible(true).setAlpha(0.6).setScale(1.2);
-        this.time.delayedCall(1200, () => {
-          if (this.scene.isActive()) {
-            this.enemyDefending = false;
-            this.p2Aura.setVisible(false);
-          }
-        });
-        return;
-      } else if (this.enemyKi >= 40 && r < 0.6) {
-        this.performSpecial(false, false);
-        return;
-      } else if (r < 0.8) {
-        this.performAttack(false, dist < 200 ? "melee" : "ki");
-        return;
-      } else {
-        this.performCharge(false);
-        return;
-      }
-    }
-
-    // 5. Standard tactical decisions based on Ki and Distance
-    if (this.enemyKi >= 80) {
-      // High Ki: Favor Super or Strategic Attack
-      if (r < 0.5) {
-        if (dist < 400 || r < 0.3) this.performSpecial(false, true);
-        else this.performCharge(false);
-      }
-      else if (r < 0.8) this.performSpecial(false, false);
-      else this.performAttack(false, dist < 150 ? "melee" : "ki");
-    } else if (this.enemyKi >= 40) {
-      // Medium Ki: Mix of Special, Attack, and Charge
-      if (r < 0.4) this.performSpecial(false, false);
-      else if (r < 0.7)
-        this.performAttack(false, dist < 150 ? "melee" : "ki");
-      else this.performCharge(false);
-    } else {
-      // Low Ki: Favor Charging or distancing
-      if (r < 0.7) this.performCharge(false);
-      else this.performAttack(false, dist < 150 ? "melee" : "ki");
-    }
-  }
+  
 
   playVictorySound() {
     const soundManager = this.sound as any;
