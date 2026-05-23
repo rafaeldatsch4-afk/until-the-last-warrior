@@ -71,8 +71,12 @@ export default class BattleScene extends Phaser.Scene {
 
   // Action Flags to prevent spamming
   public p1ActionActive: boolean = false;
+  public lastP1LeftTime: number = 0;
+  public lastP1RightTime: number = 0;
   public isP1Jumping: boolean = false;
   public p2ActionActive: boolean = false;
+  public lastP2LeftTime: number = 0;
+  public lastP2RightTime: number = 0;
   public isP2Jumping: boolean = false;
   public p2BufferedAttack: boolean = false;
   public p2BufferedKiBlast: boolean = false;
@@ -245,6 +249,18 @@ export default class BattleScene extends Phaser.Scene {
 
     if (this.player && this.player.active && this.enemy && this.enemy.active) {
         if (!this.p1ActionActive && !this.tweens.isTweening(this.player) && !this.isP1Jumping) {
+            if (Phaser.Input.Keyboard.JustDown(this.keys.p1_left)) {
+                if (time - this.lastP1LeftTime < 300) {
+                    this.performDash(true, -1);
+                }
+                this.lastP1LeftTime = time;
+            } else if (Phaser.Input.Keyboard.JustDown(this.keys.p1_right)) {
+                if (time - this.lastP1RightTime < 300) {
+                    this.performDash(true, 1);
+                }
+                this.lastP1RightTime = time;
+            }
+
             const moveSpeed = 6;
             let isMoving = false;
             if (this.keys.p1_left.isDown || this.mobileJoystickVector.x < -0.3) {
@@ -292,6 +308,20 @@ export default class BattleScene extends Phaser.Scene {
         }
     
         if (!this.p2ActionActive && !this.tweens.isTweening(this.enemy) && !this.isP2Jumping) {
+            if (this.gameState.gameMode === "local_pvp" || this.gameState.gameMode === "training") {
+                if (Phaser.Input.Keyboard.JustDown(this.keys.p2_left)) {
+                    if (time - this.lastP2LeftTime < 300) {
+                        this.performDash(false, -1);
+                    }
+                    this.lastP2LeftTime = time;
+                } else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_right)) {
+                    if (time - this.lastP2RightTime < 300) {
+                        this.performDash(false, 1);
+                    }
+                    this.lastP2RightTime = time;
+                }
+            }
+
             const moveSpeed = 6;
             let isMoving = false;
             let moveL = this.keys.p2_left.isDown;
@@ -581,6 +611,65 @@ export default class BattleScene extends Phaser.Scene {
   // Safety timers for action unstuck
   public p1ActionTimeout: Phaser.Time.TimerEvent | null = null;
   public p2ActionTimeout: Phaser.Time.TimerEvent | null = null;
+
+  performDash(isPlayer: boolean, direction: number) {
+    const sprite = isPlayer ? this.player : this.enemy;
+    const bounds = { minX: 50, maxX: 1950, minY: 100, maxY: 440 };
+
+    this.setActionState(isPlayer, true);
+    
+    // Simple dash dust effect
+    this.createImpactEffect(sprite.x, sprite.y + 60, 0xecf0f1, "block");
+    if (this.cache.audio.exists("sfx_step")) this.sound.play("sfx_step", { volume: 1.5, rate: 1.5 });
+
+    const dashDistance = 300 * direction;
+    let targetX = sprite.x + dashDistance;
+    
+    // Bounds check
+    if (isPlayer) {
+       if (targetX <= this.enemy.x) targetX = Math.min(targetX, this.enemy.x - 40);
+       else targetX = Math.max(targetX, this.enemy.x + 40);
+    } else {
+       if (targetX <= this.player.x) targetX = Math.min(targetX, this.player.x - 40);
+       else targetX = Math.max(targetX, this.player.x + 40);
+    }
+    targetX = Phaser.Math.Clamp(targetX, bounds.minX, bounds.maxX);
+
+    sprite.play(this.getAnimKey(isPlayer ? this.playerData.key : this.enemyData.key, isPlayer ? this.playerTransformLevel : this.enemyTransformLevel, "walk"), true);
+    sprite.setFlipX(direction === -1);
+    
+    // Create ghost trail effect
+    const ghostTimer = this.time.addEvent({
+        delay: 30,
+        repeat: 6,
+        callback: () => {
+            if (!this.scene.isActive() || !sprite.active) return;
+            const ghost = this.add.sprite(sprite.x, sprite.y, sprite.texture.key, sprite.frame.name)
+                .setFlipX(sprite.flipX)
+                .setTint(0x00ffff)
+                .setAlpha(0.5)
+                .setDepth(sprite.depth - 1);
+                
+            this.tweens.add({
+                targets: ghost,
+                alpha: 0,
+                duration: 300,
+                onComplete: () => ghost.destroy()
+            });
+        }
+    });
+
+    this.tweens.add({
+       targets: sprite,
+       x: targetX,
+       duration: 200,
+       ease: 'Power2',
+       onComplete: () => {
+           this.setActionState(isPlayer, false);
+           sprite.play(this.getAnimKey(isPlayer ? this.playerData.key : this.enemyData.key, isPlayer ? this.playerTransformLevel : this.enemyTransformLevel, "idle"), true);
+       }
+    });
+  }
 
   setActionState(isPlayer: boolean, isActive: boolean) {
     if (isPlayer) {
