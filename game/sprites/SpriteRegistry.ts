@@ -1,0 +1,48 @@
+import Phaser from "phaser";
+import { generateGokuSprite } from "./GokuSprite";
+import { generateVegetaSprite } from "./VegetaSprite";
+import { generatePiccoloSprite } from "./PiccoloSprite";
+import { generateGohanSprite } from "./GohanSprite";
+import { generateMadaraSprite } from "./MadaraSprite";
+import { generateCellSprite } from "./CellSprite";
+import { generateMinipekkaSprite } from "./MinipekkaSprite";
+import { generateCyberninjaSprite } from "./CyberninjaSprite";
+import { generateLeonardoSprite } from "./LeonardoSprite";
+import { generateFrierenSprite } from "./FrierenSprite";
+import { generateOptimusSprite } from "./OptimusSprite";
+import { generateNarutoSprite } from "./NarutoSprite";
+import { generateChapolimSprite } from "./ChapolimSprite";
+import { generateBatmanSprite } from "./BatmanSprite";
+import { generateThukunaSprite } from "./ThukunaSprite";
+import { generateGojoSprite } from "./GojoSprite";
+import { generateItachiSprite } from "./ItachiSprite";
+import { generateJotaroSprite } from "./JotaroSprite";
+import { generateObitoSprite } from "./ObitoSprite";
+import { generateSpidermanSprite } from "./SpidermanSprite";
+import { generateSaitamaSprite } from "./SaitamaSprite";
+import { generateStaticSprite } from "./StaticSprite";
+
+export function generateAllSprites(scene: Phaser.Scene): void {
+    generateGokuSprite(scene);
+    generateVegetaSprite(scene);
+    generatePiccoloSprite(scene);
+    generateGohanSprite(scene);
+    generateMadaraSprite(scene);
+    generateCellSprite(scene);
+    generateMinipekkaSprite(scene);
+    generateCyberninjaSprite(scene);
+    generateLeonardoSprite(scene);
+    generateFrierenSprite(scene);
+    generateOptimusSprite(scene);
+    generateNarutoSprite(scene);
+    generateChapolimSprite(scene);
+    generateBatmanSprite(scene);
+    generateThukunaSprite(scene);
+    generateGojoSprite(scene);
+    generateItachiSprite(scene);
+    generateJotaroSprite(scene);
+    generateObitoSprite(scene);
+    generateSpidermanSprite(scene);
+    generateSaitamaSprite(scene);
+    generateStaticSprite(scene);
+}
