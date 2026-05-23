@@ -1,3 +1,4 @@
+import { BattleUI } from '../battle/BattleUI';
 import { BattleAI } from '../battle/BattleAI';
 import Phaser from "phaser";
 import { CharacterData, GameState } from "../types";
@@ -81,13 +82,7 @@ export default class BattleScene extends Phaser.Scene {
   private p1ChargeIndicator!: Phaser.GameObjects.Arc;
   private p2ChargeIndicator!: Phaser.GameObjects.Arc;
 
-  private p1HpBar!: Phaser.GameObjects.Rectangle;
-  private p2HpBar!: Phaser.GameObjects.Rectangle;
-  private p1KiBar!: Phaser.GameObjects.Rectangle;
-  private p2KiBar!: Phaser.GameObjects.Rectangle;
-  private uiContainer!: Phaser.GameObjects.Container;
-  private logText!: Phaser.GameObjects.Text;
-
+            
   private p1ComboCount: number = 0;
   private p1LastAttackTime: number = 0;
   private p2ComboCount: number = 0;
@@ -109,6 +104,7 @@ export default class BattleScene extends Phaser.Scene {
     super("BattleScene");
   }
 
+  public battleUI: BattleUI;
   public battleAI: BattleAI;
   create() {
     this.battleAI = new BattleAI(this);
@@ -195,12 +191,13 @@ export default class BattleScene extends Phaser.Scene {
     this.playerKi = 0;
     this.enemyKi = 0;
 
-    this.createUI();
+    this.battleUI = new BattleUI(this);
+    this.battleUI.createUI(this.playerData, this.enemyData, this.gameState.gameMode, this.gameState.arcadeRound);
     this.createInputs();
 
     this.time.delayedCall(1000, () => {
       if (!this.scene.isActive()) return;
-      this.log("FIGHT START!");
+      if(this.battleUI) this.battleUI.showLog("FIGHT START!");
       if (
         this.gameState.gameMode !== "local_pvp" &&
         this.gameState.gameMode !== "training"
@@ -353,9 +350,9 @@ export default class BattleScene extends Phaser.Scene {
         this.cameras.main.setZoom(Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, 0.1));
         this.cameras.main.centerOnX(Phaser.Math.Linear(this.cameras.main.midPoint.x, midX, 0.1));
         
-        if (this.uiContainer) {
-            this.uiContainer.setScale(1 / this.cameras.main.zoom);
-            this.uiContainer.setPosition(
+        if (this.battleUI?.uiContainer) {
+            this.battleUI?.uiContainer.setScale(1 / this.cameras.main.zoom);
+            this.battleUI?.uiContainer.setPosition(
                 (960 - 960 / this.cameras.main.zoom) / 2,
                 (540 - 540 / this.cameras.main.zoom) / 2
             );
@@ -897,110 +894,7 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
-  createUI() {
-    this.uiContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(10);
-    
-    // Player 1 HP/Ki Backgrounds
-    const p1HpBg = this.add.rectangle(150, 50, 250, 22, 0x111111).setStrokeStyle(3, 0xffffff, 0.8);
-    const p1KiBg = this.add.rectangle(150, 80, 250, 12, 0x111111).setStrokeStyle(2, 0xaaaaaa, 0.6);
-    this.uiContainer.add([p1HpBg, p1KiBg]);
-
-    // Player 2 HP/Ki Backgrounds
-    const p2HpBg = this.add.rectangle(810, 50, 250, 22, 0x111111).setStrokeStyle(3, 0xffffff, 0.8);
-    const p2KiBg = this.add.rectangle(810, 80, 250, 12, 0x111111).setStrokeStyle(2, 0xaaaaaa, 0.6);
-    this.uiContainer.add([p2HpBg, p2KiBg]);
-
-    this.p1HpBar = this.add
-      .rectangle(25, 50, 250, 22, 0x2ecc71)
-      .setOrigin(0, 0.5);
-    this.uiContainer.add(this.p1HpBar);
-
-    this.p1KiBar = this.add
-      .rectangle(25, 80, 250, 12, 0x3498db)
-      .setOrigin(0, 0.5);
-    this.uiContainer.add(this.p1KiBar);
-    this.p1KiBar.scaleX = 0; // Starts with 0 Ki
-
-    this.p2HpBar = this.add
-      .rectangle(685, 50, 250, 22, 0xe74c3c)
-      .setOrigin(0, 0.5);
-    this.uiContainer.add(this.p2HpBar);
-
-    this.p2KiBar = this.add
-      .rectangle(685, 80, 250, 12, 0xf1c40f)
-      .setOrigin(0, 0.5);
-    this.uiContainer.add(this.p2KiBar);
-    this.p2KiBar.scaleX = 0; // Starts with 0 Ki
-
-    // Player 1 Name
-    const p1NameTxt = this.add
-      .text(25, 15, this.playerData.name, {
-        fontSize: "22px",
-        fontFamily: "Impact, sans-serif",
-        color: "#fff",
-        stroke: "#000",
-        strokeThickness: 4,
-        shadow: { color: "#3498db", blur: 4, fill: true }
-      });
-    this.uiContainer.add(p1NameTxt);
-      
-    // Player 2 Name
-    const p2NameTxt = this.add
-      .text(935, 15, this.enemyData.name, {
-        fontSize: "22px",
-        fontFamily: "Impact, sans-serif",
-        color: "#fff",
-        stroke: "#000",
-        strokeThickness: 4,
-        shadow: { color: "#e74c3c", blur: 4, fill: true }
-      })
-      .setOrigin(1, 0);
-    this.uiContainer.add(p2NameTxt);
-      
-    this.logText = this.add
-      .text(480, 120, "", {
-        fontSize: "26px",
-        color: "#fff",
-        fontFamily: "Impact, sans-serif",
-        stroke: "#000",
-        strokeThickness: 5,
-        shadow: { color: "#000", blur: 4, offsetX: 2, offsetY: 2, fill: true }
-      })
-      .setOrigin(0.5);
-    this.uiContainer.add(this.logText);
-
-    if (this.gameState.gameMode === "arcade") {
-      this.add
-        .text(480, 25, `ARCADE: ROUND ${this.gameState.arcadeRound || 1} / 5`, {
-          fontSize: "22px",
-          color: "#f1c40f",
-          fontFamily: "Impact, sans-serif",
-          stroke: "#000",
-          strokeThickness: 4,
-          shadow: { color: "#000", blur: 4, fill: true }
-        })
-        .setOrigin(0.5)
-        .setDepth(12);
-    } else if (this.gameState.gameMode === "tournament") {
-      let roundName = "QUARTAS DE FINAL";
-      if (this.gameState.tournamentCurrentRoundIndex === 1)
-        roundName = "SEMIFINAL";
-      if (this.gameState.tournamentCurrentRoundIndex === 2) roundName = "FINAL";
-      this.add
-        .text(480, 25, `TORNEIO: ${roundName}`, {
-          fontSize: "22px",
-          color: "#f1c40f",
-          fontFamily: "Impact, sans-serif",
-          stroke: "#000",
-          strokeThickness: 4,
-          shadow: { color: "#000", blur: 4, fill: true }
-        })
-        .setOrigin(0.5)
-        .setDepth(12);
-    }
-
-    this.createMobileControls();
-  }
+  
 
   createMobileControls() {
     // Ensure accurate isMobile check
@@ -1038,8 +932,8 @@ export default class BattleScene extends Phaser.Scene {
       btnGroup.add([outerBtn, innerBtn, txt]);
       
       this.mobileControls.push(btnGroup);
-      if (this.uiContainer) {
-          this.uiContainer.add(btnGroup);
+      if (this.battleUI?.uiContainer) {
+          this.battleUI?.uiContainer.add(btnGroup);
       }
 
       let isPressed = false;
@@ -1097,8 +991,8 @@ export default class BattleScene extends Phaser.Scene {
     
     // Large invisible hit area on the bottom-left quadrant for the FLOATING joystick
     // We remove the old rectangle hit area and use global checking for this too.
-    if (this.uiContainer) {
-        this.uiContainer.add(joyContainer);
+    if (this.battleUI?.uiContainer) {
+        this.battleUI?.uiContainer.add(joyContainer);
     }
 
     const getLocalPnt = (pointer: Phaser.Input.Pointer) => {
@@ -1787,21 +1681,7 @@ export default class BattleScene extends Phaser.Scene {
               );
 
               if (isComboFinisher) {
-                const comboText = this.add
-                  .text(target.x, target.y - 100, "COMBO FINISH!", {
-                    fontSize: "24px",
-                    color: "#ff0000",
-                    fontStyle: "bold",
-                  })
-                  .setOrigin(0.5)
-                  .setDepth(20);
-                this.tweens.add({
-                  targets: comboText,
-                  y: target.y - 150,
-                  alpha: 0,
-                  duration: 1000,
-                  onComplete: () => comboText.destroy(),
-                });
+                if (this.battleUI) this.battleUI.showCombo(target.x, target.y - 100);
               }
 
               this.createImpactEffect(target.x, target.y + 120, 0xffffff);
@@ -2469,7 +2349,7 @@ export default class BattleScene extends Phaser.Scene {
           onComplete: () => textObj.destroy(),
         });
 
-        this.log(transformText);
+        if(this.battleUI) this.battleUI.showLog(transformText);
       },
     });
   }
@@ -2555,7 +2435,7 @@ export default class BattleScene extends Phaser.Scene {
     const sprite = isPlayer ? this.player : this.enemy;
 
     if (ki < cost) {
-      if (isPlayer) this.log(`Need ${cost} Ki!`);
+      if (isPlayer) if(this.battleUI) this.battleUI.showLog(`Need ${cost} Ki!`);
       return;
     }
 
@@ -2790,7 +2670,7 @@ export default class BattleScene extends Phaser.Scene {
     const endX = target.x;
     const distance = Math.abs(endX - hand.x) + 50;
 
-    this.log(isS ? "SUPER ATTACK!" : type.toUpperCase() + "!");
+    if(this.battleUI) this.battleUI.showLog(isS ? "SUPER ATTACK!" : type.toUpperCase() + "!");
     if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
 
     // Charge Effect
@@ -3283,7 +3163,7 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
 
-    this.updateUI();
+    if(this.battleUI) this.battleUI.updateBars(this.playerHp/this.playerData.maxHp, this.enemyHp/this.enemyData.maxHp, this.playerKi/100, this.enemyKi/100);
     if (this.playerHp <= 0 || this.enemyHp <= 0)
       this.endBattle(this.playerHp > 0);
   }
@@ -3293,63 +3173,13 @@ export default class BattleScene extends Phaser.Scene {
     if (isP) this.playerKi = Phaser.Math.Clamp(this.playerKi + amt, 0, 100);
     else this.enemyKi = Phaser.Math.Clamp(this.enemyKi + amt, 0, 100);
     if (oldKi !== (isP ? this.playerKi : this.enemyKi)) {
-        this.updateUI();
+        if(this.battleUI) this.battleUI.updateBars(this.playerHp/this.playerData.maxHp, this.enemyHp/this.enemyData.maxHp, this.playerKi/100, this.enemyKi/100);
     }
   }
 
-  updateUI() {
-    const p1p = this.playerHp / this.playerData.maxHp;
-    const p2p = this.enemyHp / this.enemyData.maxHp;
+  
 
-    if (this.p1HpBar && this.p1HpBar.active) {
-      // Liquid HP Bars
-      this.tweens.add({
-        targets: this.p1HpBar,
-        scaleX: Math.max(0, p1p),
-        duration: 300,
-        ease: "Cubic.easeOut",
-        overwrite: true,
-      });
-      this.tweens.add({
-        targets: this.p2HpBar,
-        scaleX: Math.max(0, p2p),
-        duration: 300,
-        ease: "Cubic.easeOut",
-        overwrite: true,
-      });
-      // Liquid Ki Bars
-      this.p1KiBar.scaleX = Math.max(0, this.playerKi / 100);
-      this.p2KiBar.scaleX = Math.max(0, this.enemyKi / 100);
-    }
-    
-    // Hide Transform Button if max level reached
-    if (this.trnBtnGroup && this.playerData) {
-        let maxLevel = 1;
-        if (this.playerData.key === "goku" || this.playerData.key === "vegeta" || this.playerData.key === "naruto") {
-          maxLevel = 2;
-        }
-        if (this.playerTransformLevel >= maxLevel) {
-            this.trnBtnGroup.setVisible(false);
-            // Disable interaction
-            this.trnBtnGroup.each((child: any) => {
-               if (child.disableInteractive) child.disableInteractive(); 
-            });
-            this.trnBtnGroup = undefined; // prevent running this block again
-        }
-    }
-  }
-
-  log(m: string) {
-    if (!this.logText.active) return;
-    this.tweens.killTweensOf(this.logText);
-    this.logText.setText(m).setAlpha(1);
-    this.tweens.add({
-      targets: this.logText,
-      alpha: 0,
-      delay: 1000,
-      duration: 500,
-    });
-  }
+  
 
   
 

@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Scripts de migração descartáveis
+*.cjs
+delete_*.js
+remove_*.js
+*_methods.txt
+output.txt
+circles.txt
+arenas.txt
