@@ -438,12 +438,7 @@ export function generateMadaraSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("madara")) { scene.textures.remove("madara"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("madara_ssj")) { scene.textures.remove("madara_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("madara_ui")) { scene.textures.remove("madara_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("madara")) { generateForm(0); }
+    if (!scene.textures.exists("madara_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("madara_ui")) { generateForm(2); }
 }

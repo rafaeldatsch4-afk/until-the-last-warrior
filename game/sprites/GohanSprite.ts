@@ -431,12 +431,7 @@ export function generateGohanSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("gohan")) { scene.textures.remove("gohan"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("gohan_ssj")) { scene.textures.remove("gohan_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("gohan_ui")) { scene.textures.remove("gohan_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("gohan")) { generateForm(0); }
+    if (!scene.textures.exists("gohan_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("gohan_ui")) { generateForm(2); }
 }

@@ -93,8 +93,7 @@ export default class PreloadScene extends Phaser.Scene {
     this.createFXAssets();
     generateAllSprites(this);
 
-    // Aguarda o renderer processar todas as texturas antes de criar animações
-    this.renderer.once('render', () => {
+    this.time.delayedCall(100, () => {
       const currentState = window.UTLW?.state;
       const chars = currentState?.characters ?? INITIAL_CHARACTERS;
 

@@ -10,6 +10,9 @@ const GameCanvas: React.FC = () => {
     if (gameRef.current) return;
 
     if (containerRef.current) {
+      // Clean up any stray canvases that might cause flickering and overlaps
+      containerRef.current.innerHTML = '';
+
       const config = {
         ...gameConfig,
         parent: containerRef.current
@@ -17,22 +20,20 @@ const GameCanvas: React.FC = () => {
 
       gameRef.current = new Phaser.Game(config);
 
+      let resizeTimeout: ReturnType<typeof setTimeout>;
       const handleResize = () => {
-        if (gameRef.current && containerRef.current) {
-          gameRef.current.scale.refresh();
-        }
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          if (gameRef.current && containerRef.current) {
+            gameRef.current.scale.refresh();
+          }
+        }, 100);
       };
 
-      const resizeObserver = new ResizeObserver(() => {
-        handleResize();
-      });
-      
-      resizeObserver.observe(containerRef.current);
       window.addEventListener('resize', handleResize);
       setTimeout(handleResize, 100); // Initial resize
       
       return () => {
-        resizeObserver.disconnect();
         window.removeEventListener('resize', handleResize);
         if (gameRef.current) {
           if (gameRef.current.sound) {

@@ -371,12 +371,7 @@ export function generatePiccoloSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("piccolo")) { scene.textures.remove("piccolo"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("piccolo_ssj")) { scene.textures.remove("piccolo_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("piccolo_ui")) { scene.textures.remove("piccolo_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("piccolo")) { generateForm(0); }
+    if (!scene.textures.exists("piccolo_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("piccolo_ui")) { generateForm(2); }
 }

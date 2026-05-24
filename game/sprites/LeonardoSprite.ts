@@ -250,12 +250,7 @@ export function generateLeonardoSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("leonardo")) { scene.textures.remove("leonardo"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("leonardo_ssj")) { scene.textures.remove("leonardo_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("leonardo_ui")) { scene.textures.remove("leonardo_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("leonardo")) { generateForm(0); }
+    if (!scene.textures.exists("leonardo_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("leonardo_ui")) { generateForm(2); }
 }

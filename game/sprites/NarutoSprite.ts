@@ -390,12 +390,7 @@ export function generateNarutoSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("naruto")) { scene.textures.remove("naruto"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("naruto_ssj")) { scene.textures.remove("naruto_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("naruto_ui")) { scene.textures.remove("naruto_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("naruto")) { generateForm(0); }
+    if (!scene.textures.exists("naruto_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("naruto_ui")) { generateForm(2); }
 }

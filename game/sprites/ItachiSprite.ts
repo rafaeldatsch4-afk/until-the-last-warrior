@@ -354,12 +354,7 @@ export function generateItachiSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("itachi")) { scene.textures.remove("itachi"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("itachi_ssj")) { scene.textures.remove("itachi_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("itachi_ui")) { scene.textures.remove("itachi_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("itachi")) { generateForm(0); }
+    if (!scene.textures.exists("itachi_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("itachi_ui")) { generateForm(2); }
 }

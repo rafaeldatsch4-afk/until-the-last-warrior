@@ -263,12 +263,7 @@ export function generateFrierenSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("frieren")) { scene.textures.remove("frieren"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("frieren_ssj")) { scene.textures.remove("frieren_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("frieren_ui")) { scene.textures.remove("frieren_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("frieren")) { generateForm(0); }
+    if (!scene.textures.exists("frieren_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("frieren_ui")) { generateForm(2); }
 }

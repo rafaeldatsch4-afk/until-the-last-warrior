@@ -380,12 +380,7 @@ export function generateSpidermanSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("spiderman")) { scene.textures.remove("spiderman"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("spiderman_ssj")) { scene.textures.remove("spiderman_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("spiderman_ui")) { scene.textures.remove("spiderman_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("spiderman")) { generateForm(0); }
+    if (!scene.textures.exists("spiderman_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("spiderman_ui")) { generateForm(2); }
 }

@@ -369,12 +369,7 @@ export function generateThukunaSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("thukuna")) { scene.textures.remove("thukuna"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("thukuna_ssj")) { scene.textures.remove("thukuna_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("thukuna_ui")) { scene.textures.remove("thukuna_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("thukuna")) { generateForm(0); }
+    if (!scene.textures.exists("thukuna_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("thukuna_ui")) { generateForm(2); }
 }

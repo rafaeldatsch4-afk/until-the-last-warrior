@@ -238,12 +238,7 @@ export function generateMinipekkaSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("minipekka")) { scene.textures.remove("minipekka"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("minipekka_ssj")) { scene.textures.remove("minipekka_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("minipekka_ui")) { scene.textures.remove("minipekka_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("minipekka")) { generateForm(0); }
+    if (!scene.textures.exists("minipekka_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("minipekka_ui")) { generateForm(2); }
 }

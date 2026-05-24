@@ -339,12 +339,7 @@ export function generateChapolimSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("chapolim")) { scene.textures.remove("chapolim"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("chapolim_ssj")) { scene.textures.remove("chapolim_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("chapolim_ui")) { scene.textures.remove("chapolim_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("chapolim")) { generateForm(0); }
+    if (!scene.textures.exists("chapolim_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("chapolim_ui")) { generateForm(2); }
 }

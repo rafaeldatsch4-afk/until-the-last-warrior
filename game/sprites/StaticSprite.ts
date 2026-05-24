@@ -469,12 +469,7 @@ export function generateStaticSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("static")) { scene.textures.remove("static"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("static_ssj")) { scene.textures.remove("static_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("static_ui")) { scene.textures.remove("static_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("static")) { generateForm(0); }
+    if (!scene.textures.exists("static_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("static_ui")) { generateForm(2); }
 }

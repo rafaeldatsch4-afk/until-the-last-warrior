@@ -441,12 +441,7 @@ export function generateObitoSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("obito")) { scene.textures.remove("obito"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("obito_ssj")) { scene.textures.remove("obito_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("obito_ui")) { scene.textures.remove("obito_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("obito")) { generateForm(0); }
+    if (!scene.textures.exists("obito_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("obito_ui")) { generateForm(2); }
 }

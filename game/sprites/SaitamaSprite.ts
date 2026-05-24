@@ -298,12 +298,7 @@ export function generateSaitamaSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("saitama")) { scene.textures.remove("saitama"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("saitama_ssj")) { scene.textures.remove("saitama_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("saitama_ui")) { scene.textures.remove("saitama_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("saitama")) { generateForm(0); }
+    if (!scene.textures.exists("saitama_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("saitama_ui")) { generateForm(2); }
 }

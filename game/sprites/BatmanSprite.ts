@@ -278,12 +278,7 @@ export function generateBatmanSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("batman")) { scene.textures.remove("batman"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("batman_ssj")) { scene.textures.remove("batman_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("batman_ui")) { scene.textures.remove("batman_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("batman")) { generateForm(0); }
+    if (!scene.textures.exists("batman_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("batman_ui")) { generateForm(2); }
 }

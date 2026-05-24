@@ -324,12 +324,7 @@ export function generateOptimusSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("optimus")) { scene.textures.remove("optimus"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("optimus_ssj")) { scene.textures.remove("optimus_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("optimus_ui")) { scene.textures.remove("optimus_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("optimus")) { generateForm(0); }
+    if (!scene.textures.exists("optimus_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("optimus_ui")) { generateForm(2); }
 }

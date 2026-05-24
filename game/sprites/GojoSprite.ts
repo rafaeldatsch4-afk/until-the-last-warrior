@@ -287,12 +287,7 @@ export function generateGojoSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("gojo")) { scene.textures.remove("gojo"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("gojo_ssj")) { scene.textures.remove("gojo_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("gojo_ui")) { scene.textures.remove("gojo_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("gojo")) { generateForm(0); }
+    if (!scene.textures.exists("gojo_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("gojo_ui")) { generateForm(2); }
 }

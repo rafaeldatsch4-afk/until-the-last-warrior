@@ -338,12 +338,7 @@ export function generateCellSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("cell")) { scene.textures.remove("cell"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("cell_ssj")) { scene.textures.remove("cell_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("cell_ui")) { scene.textures.remove("cell_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("cell")) { generateForm(0); }
+    if (!scene.textures.exists("cell_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("cell_ui")) { generateForm(2); }
 }

@@ -525,12 +525,7 @@ export function generateJotaroSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("jotaro")) { scene.textures.remove("jotaro"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("jotaro_ssj")) { scene.textures.remove("jotaro_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("jotaro_ui")) { scene.textures.remove("jotaro_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("jotaro")) { generateForm(0); }
+    if (!scene.textures.exists("jotaro_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("jotaro_ui")) { generateForm(2); }
 }

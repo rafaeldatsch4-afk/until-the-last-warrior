@@ -433,12 +433,7 @@ export function generateGokuSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("goku")) { scene.textures.remove("goku"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("goku_ssj")) { scene.textures.remove("goku_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("goku_ui")) { scene.textures.remove("goku_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("goku")) { generateForm(0); }
+    if (!scene.textures.exists("goku_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("goku_ui")) { generateForm(2); }
 }

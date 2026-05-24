@@ -43,6 +43,9 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     width: 960,
     height: 540,
   },
+  fps: {
+    target: 60,
+  },
   input: {
     activePointers: 5
   }

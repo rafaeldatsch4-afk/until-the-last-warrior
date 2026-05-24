@@ -262,12 +262,7 @@ export function generateCyberninjaSprite(scene: Phaser.Scene) {
 
     canvas.destroy();    };
 
-    if (scene.textures.exists("cyberninja")) { scene.textures.remove("cyberninja"); }
-    generateForm(0);
-    
-    if (scene.textures.exists("cyberninja_ssj")) { scene.textures.remove("cyberninja_ssj"); }
-    generateForm(1);
-    
-    if (scene.textures.exists("cyberninja_ui")) { scene.textures.remove("cyberninja_ui"); }
-    generateForm(2);
+    if (!scene.textures.exists("cyberninja")) { generateForm(0); }
+    if (!scene.textures.exists("cyberninja_ssj")) { generateForm(1); }
+    if (!scene.textures.exists("cyberninja_ui")) { generateForm(2); }
 }
