@@ -71,11 +71,13 @@ export default class BattleScene extends Phaser.Scene {
 
   // Action Flags to prevent spamming
   public p1ActionActive: boolean = false;
+  public p1SuperActive: boolean = false;
   public lastP1LeftTime: number = 0;
   public lastP1RightTime: number = 0;
   public p1DashCooldown: boolean = false;
   public isP1Jumping: boolean = false;
   public p2ActionActive: boolean = false;
+  public p2SuperActive: boolean = false;
   public lastP2LeftTime: number = 0;
   public lastP2RightTime: number = 0;
   public p2DashCooldown: boolean = false;
@@ -2295,6 +2297,10 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     this.setActionState(isPlayer, true);
+    if (isSuper) {
+      if (isPlayer) this.p1SuperActive = true;
+      else this.p2SuperActive = true;
+    }
     this.modifyKi(isPlayer, -cost);
 
     if (isPlayer) {
@@ -2470,6 +2476,9 @@ export default class BattleScene extends Phaser.Scene {
       : this.enemyTransformLevel;
     const animKeyIdle = this.getAnimKey(data.key, transLevel, "idle");
     const attacker = isPlayer ? this.player : this.enemy;
+
+    if (isPlayer) this.p1SuperActive = false;
+    else this.p2SuperActive = false;
 
     if (this.scene.isActive()) {
       attacker.play(animKeyIdle);
@@ -2802,51 +2811,54 @@ export default class BattleScene extends Phaser.Scene {
     x: number,
     y: number,
     color: number,
-    type: "melee" | "beam" | "block" = "melee",
+    type: "melee" | "beam" | "block" | "super" = "melee",
   ) {
-    const isBeam = type === "beam";
+    const isSuperMode = type === "super" || this.p1SuperActive || this.p2SuperActive;
+    const isBeam = type === "beam" || (isSuperMode && type !== "block");
     const isBlock = type === "block";
 
     // Main Flash - Make it bigger and punchier
+    const boomRadius = isSuperMode ? 60 : (isBeam ? 40 : (isBlock ? 15 : 20));
     const boom = this.add
-      .circle(x, y, isBeam ? 40 : isBlock ? 15 : 20, color)
+      .circle(x, y, boomRadius, color)
       .setDepth(20);
     this.tweens.add({
       targets: boom,
-      scale: isBeam ? 8 : isBlock ? 3 : 6,
+      scale: isSuperMode ? 12 : (isBeam ? 8 : (isBlock ? 3 : 6)),
       alpha: 0,
-      duration: isBeam ? 350 : 250,
+      duration: isSuperMode ? 500 : (isBeam ? 350 : 250),
       ease: "Cubic.easeOut",
       onComplete: () => boom.destroy(),
     });
 
     // Add an inner white core for more impact
-    const core = this.add.circle(x, y, isBeam ? 20 : 10, 0xffffff).setDepth(21);
+    const coreRadius = isSuperMode ? 35 : (isBeam ? 20 : 10);
+    const core = this.add.circle(x, y, coreRadius, 0xffffff).setDepth(21);
     this.tweens.add({
       targets: core,
-      scale: isBeam ? 6 : 4,
+      scale: isSuperMode ? 8 : (isBeam ? 6 : 4),
       alpha: 0,
-      duration: isBeam ? 200 : 150,
+      duration: isSuperMode ? 300 : (isBeam ? 200 : 150),
       ease: "Cubic.easeOut",
       onComplete: () => core.destroy(),
     });
 
     // Debris / Sparks - Faster and more dynamic
-    const particleCount = isBeam ? 32 : isBlock ? 12 : 20;
+    const particleCount = isSuperMode ? 60 : (isBeam ? 32 : (isBlock ? 12 : 20));
     for (let i = 0; i < particleCount; i++) {
       const p = this.add
         .rectangle(
           x,
           y,
-          isBeam ? 10 : 6,
-          isBeam ? 2 : 6, // Elongated sparks for beams
+          isSuperMode ? 14 : (isBeam ? 10 : 6),
+          isSuperMode ? 3 : (isBeam ? 2 : 6), // Elongated sparks for beams
           isBlock ? 0x3498db : (Math.random() > 0.5 ? 0xffffff : color),
         )
         .setDepth(20);
       const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-      const dist = isBeam
-        ? Phaser.Math.Between(150, 350)
-        : Phaser.Math.Between(80, 200);
+      const dist = isSuperMode
+        ? Phaser.Math.Between(250, 550)
+        : (isBeam ? Phaser.Math.Between(150, 350) : Phaser.Math.Between(80, 200));
 
       this.tweens.add({
         targets: p,
@@ -2854,38 +2866,49 @@ export default class BattleScene extends Phaser.Scene {
         y: y + Math.sin(angle) * dist,
         alpha: 0,
         scaleY: 0.1,
-        scaleX: isBeam ? 2 : 0.1,
+        scaleX: isSuperMode ? 3 : (isBeam ? 2 : 0.1),
         rotation: angle, // Align rotation to travel direction
-        duration: Phaser.Math.Between(400, 800),
+        duration: Phaser.Math.Between(isSuperMode ? 600 : 400, isSuperMode ? 1200 : 800),
         ease: "Expo.easeOut",
         onComplete: () => p.destroy(),
       });
     }
 
-    // Extra ring for beams
-    if (isBeam) {
-      const ring = this.add
-        .circle(x, y, 30)
-        .setStrokeStyle(4, color)
-        .setDepth(19);
-      this.tweens.add({
-        targets: ring,
-        scale: 5,
-        alpha: 0,
-        duration: 400,
-        ease: "Cubic.easeOut",
-        onComplete: () => ring.destroy(),
-      });
+    // Extra ring for beams or super
+    if (isSuperMode || isBeam) {
+      const ringCount = isSuperMode ? 3 : 1;
+      for (let r = 0; r < ringCount; r++) {
+        const ring = this.add
+          .circle(x, y, 30 + r * 15)
+          .setStrokeStyle(isSuperMode ? 6 : 4, color)
+          .setDepth(19);
+        this.tweens.add({
+          targets: ring,
+          scale: isSuperMode ? 8 + r * 2 : 5,
+          alpha: 0,
+          delay: r * 80,
+          duration: isSuperMode ? 600 : 400,
+          ease: "Cubic.easeOut",
+          onComplete: () => ring.destroy(),
+        });
+      }
 
-      // Beam specific screen flash and shake
-      if(this.battleCamera) this.battleCamera.flash(150, 255, 255, 255, true);
-      if(this.battleCamera) this.battleCamera.shake(300, 0.05);
+      // Camera shake and screen flash
+      if (isSuperMode) {
+        if (this.battleCamera) {
+          this.battleCamera.flash(300, 255, 255, 255, true);
+          this.battleCamera.shake(500, 0.08); // Trigger a stronger camera shake effect
+        }
+      } else {
+        if (this.battleCamera) this.battleCamera.flash(150, 255, 255, 255, true);
+        if (this.battleCamera) this.battleCamera.shake(300, 0.05);
+      }
     } else if (isBlock) {
       // Block specific shake
-      if(this.battleCamera) this.battleCamera.shake(100, 0.01);
+      if (this.battleCamera) this.battleCamera.shake(100, 0.01);
     } else {
       // Melee specific shake
-      if(this.battleCamera) this.battleCamera.shake(150, 0.02);
+      if (this.battleCamera) this.battleCamera.shake(150, 0.02);
     }
   }
 
@@ -2968,7 +2991,7 @@ export default class BattleScene extends Phaser.Scene {
 
     if (target.active) {
       target.setTintFill(0xffffff); // Initial white flash
-      if(this.battleCamera) this.battleCamera.flash(50, 255, 255, 255, true); // QUICK Flash for every hit
+      if (this.battleCamera && isCritical) this.battleCamera.flash(50, 255, 255, 255, false); // Quick camera flash only on critical hits, non-forcing
       
       this.time.delayedCall(40, () => {
         if (target.active) target.setTint(0xff0000); // Then red

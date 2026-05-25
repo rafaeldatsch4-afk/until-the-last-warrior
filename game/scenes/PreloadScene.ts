@@ -93,7 +93,8 @@ export default class PreloadScene extends Phaser.Scene {
     this.createFXAssets();
     generateAllSprites(this);
 
-    this.time.delayedCall(100, () => {
+    // Aguarda o renderer processar todas as texturas antes de criar animações
+    this.renderer.once('render', () => {
       const currentState = window.UTLW?.state;
       const chars = currentState?.characters ?? INITIAL_CHARACTERS;
 
@@ -160,6 +161,10 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   createFXAssets() {
+    if (this.textures.exists("particle")) {
+      console.log("FX Assets already constructed. Skipping.");
+      return;
+    }
     // Energy Ball
     const p = this.make.graphics({ x: 0, y: 0 });
     p.fillStyle(0xffffff, 1);
@@ -222,6 +227,10 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   createAudioAssets() {
+    if (this.cache.audio.exists("sfx_select")) {
+      console.log("Audio Assets already synthesized. Skipping.");
+      return;
+    }
     // Check if sound manager is unlocked/available before creating context-dependent audio
     const soundManager = this.sound as Phaser.Sound.WebAudioSoundManager;
     if (!soundManager.context) return;
