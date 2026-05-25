@@ -130,20 +130,20 @@ export default class PreloadScene extends Phaser.Scene {
       repeat: number = -1,
     ) => {
       if (!this.textures.exists(texture)) return;
-      if (!this.anims.exists(animKey)) {
-        this.anims.create({
-          key: animKey,
-          frames: this.anims.generateFrameNumbers(texture, {
-            start: start,
-            end: end,
-          }),
-          frameRate: frameRate,
-          repeat: repeat,
-        });
+      if (this.anims.exists(animKey)) return;
+      const frames: Phaser.Types.Animations.AnimationFrame[] = [];
+      for (let i = start; i <= end; i++) {
+        frames.push({ key: texture, frame: i.toString() });
       }
+      this.anims.create({
+        key: animKey,
+        frames: frames,
+        frameRate: frameRate,
+        repeat: repeat,
+      });
     };
 
-        const createAllForTex = (baseKey: string, texKey: string) => {
+    const createAllForTex = (baseKey: string, texKey: string) => {
       createAnim(`${baseKey}_idle`, texKey, 0, 3, 10);
       createAnim(`${baseKey}_walk`, texKey, 4, 7, 12);
       createAnim(`${baseKey}_attack`, texKey, 8, 9, 16, 0);
@@ -155,7 +155,7 @@ export default class PreloadScene extends Phaser.Scene {
     createAllForTex(key, key);
     createAllForTex(`${key}_ssj`, `${key}_ssj`);
 
-    if (key === "goku" || key === "vegeta" || key === "naruto") {
+    if (key === 'goku' || key === 'vegeta' || key === 'naruto') {
       createAllForTex(`${key}_ui`, `${key}_ui`);
     }
   }
