@@ -63,8 +63,7 @@ export class BattleReward {
 
   endBattle(win: boolean) {
     const s = this.scene;
-    if (s.isBattleOver) return; // Prevent double call
-    s.isBattleOver = true;
+    // We remove the s.isBattleOver check because BattleScene.ts sets it to true before the delay to prevent double firing.
     if (s.turnTimer) s.turnTimer.remove();
     if (s.regenTimer) s.regenTimer.remove();
 

@@ -179,6 +179,44 @@ export class DailyChallenges {
       return false;
     }
   }
+
+  static async claimAllRewards(): Promise<number> {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return 0;
+    
+    try {
+      const dateStr = this.getTodayDateStr();
+      const docRef = doc(db, 'users', uid, 'dailyChallenges', dateStr);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) return 0;
+      
+      let currentData = snap.data() as Record<string, ChallengeProgress>;
+      let totalReward = 0;
+      let claimedCount = 0;
+
+      for (const challenge of CHALLENGES) {
+        const p = currentData[challenge.id];
+        if (p && p.current >= challenge.target && !p.claimed) {
+          p.claimed = true;
+          totalReward += challenge.reward;
+          claimedCount++;
+        }
+      }
+
+      if (claimedCount > 0) {
+        await setDoc(docRef, currentData, { merge: true });
+        
+        if (window.UTLW && window.UTLW.state) {
+            window.UTLW.state.coins += totalReward;
+            if(window.UTLW.save) window.UTLW.save();
+        }
+      }
+      return totalReward;
+    } catch (e) {
+      console.warn("Failed to claim all rewards", e);
+      return 0;
+    }
+  }
 }
 
 if (typeof window !== 'undefined') {

@@ -221,6 +221,12 @@ export default class MenuScene extends Phaser.Scene {
 
       const progress = await DailyChallenges.getProgress();
       
+      let claimableCount = 0;
+      CHALLENGES.forEach(challenge => {
+          const p = progress[challenge.id] || { current: 0, claimed: false };
+          if (p.current >= challenge.target && !p.claimed) claimableCount++;
+      });
+      
       let startY = -90;
       CHALLENGES.forEach(challenge => {
           const p = progress[challenge.id] || { current: 0, claimed: false };
@@ -251,6 +257,13 @@ export default class MenuScene extends Phaser.Scene {
                       const claimedText = this.add.text(190, startY + 5, 'COLETADO', { fontSize: '16px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0);
                       popupCard.add(claimedText);
                       if (this.coinText) this.coinText.setText(`${window.UTLW.state.coins}`);
+                      
+                      // Refresh if collect all was visible
+                      if (claimableCount > 1) {
+                        popupOverlay.destroy();
+                        popupCard.destroy();
+                        this.showChallengesPopup();
+                      }
                   }
               });
               popupCard.add([claimBtnBox, claimBtnTxt]);
@@ -258,6 +271,22 @@ export default class MenuScene extends Phaser.Scene {
           
           startY += 90;
       });
+
+      if (claimableCount > 1) {
+          const collectAllBox = this.add.rectangle(0, 160, 180, 40, 0x2ecc71).setInteractive({ useHandCursor: true });
+          const collectAllTxt = this.add.text(0, 160, 'COLETAR TUDO', { fontSize: '16px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+          
+          collectAllBox.on('pointerdown', async () => {
+              const total = await DailyChallenges.claimAllRewards();
+              if (total > 0) {
+                  if (this.coinText) this.coinText.setText(`${window.UTLW.state.coins}`);
+                  popupOverlay.destroy();
+                  popupCard.destroy();
+                  this.showChallengesPopup();
+              }
+          });
+          popupCard.add([collectAllBox, collectAllTxt]);
+      }
 
       popupCard.setScale(0.8).setAlpha(0);
       this.tweens.add({ targets: popupCard, scale: 1, alpha: 1, duration: 200, ease: 'Back.easeOut' });

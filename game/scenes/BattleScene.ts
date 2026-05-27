@@ -3012,6 +3012,9 @@ export default class BattleScene extends Phaser.Scene {
       
       this.time.delayedCall(40, () => {
         if (target.active) target.setTint(0xff0000); // Then red
+        this.time.delayedCall(200, () => {
+          if (target && target.active) target.clearTint();
+        });
       });
 
       const isTargetActing = isP ? this.p1ActionActive : this.p2ActionActive;
@@ -3067,8 +3070,11 @@ export default class BattleScene extends Phaser.Scene {
       if (this.battleCamera) this.battleCamera.shake(600, 0.003);
       else this.cameras.main.shake(600, 0.003);
 
-      this.time.delayedCall(600, () => {
+      this.time.delayedCall(105, () => {
         this.time.timeScale = 1;
+        if (this.battleCamera) this.battleCamera.camera.resetFX();
+        else this.cameras.main.resetFX();
+        
         if(this.battleReward) this.battleReward.endBattle(this.playerHp > 0);
       });
     }
