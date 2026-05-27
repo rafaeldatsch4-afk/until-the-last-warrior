@@ -6,6 +6,7 @@ import { BattleAI } from '../battle/BattleAI';
 import Phaser from "phaser";
 import { CharacterData, GameState } from "../types";
 import { getFighter } from '../characters/FighterRegistry';
+import { DailyChallenges } from '../systems/DailyChallenges';
 
 export default class BattleScene extends Phaser.Scene {
   public trnBtnGroup?: Phaser.GameObjects.Container;
@@ -2309,6 +2310,10 @@ export default class BattleScene extends Phaser.Scene {
       else this.p2SuperActive = true;
     }
     this.modifyKi(isPlayer, -cost);
+    
+    if (isPlayer && this.gameState && this.gameState.gameMode !== 'training') {
+        DailyChallenges.addProgress('use_special_5_times', 1);
+    }
 
     const moveName = isSuper ? data.superName : data.specialName;
     if (moveName && moveName !== "") {

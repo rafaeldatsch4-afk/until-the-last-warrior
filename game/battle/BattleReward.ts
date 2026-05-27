@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { DailyChallenges } from '../systems/DailyChallenges';
 
 export class BattleReward {
   scene: any; // Type as BattleScene
@@ -68,6 +69,12 @@ export class BattleReward {
     if (s.regenTimer) s.regenTimer.remove();
 
     if (win) {
+      if (s.gameState && s.gameState.gameMode !== 'training') {
+        DailyChallenges.addProgress('win_3_battles', 1);
+        if (s.playerHp && s.playerData && s.playerHp === s.playerData.maxHp) {
+            DailyChallenges.addProgress('win_no_damage', 1);
+        }
+      }
       this.playVictorySound();
     }
 

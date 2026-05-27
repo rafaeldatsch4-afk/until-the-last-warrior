@@ -1,6 +1,7 @@
 
 import Phaser from 'phaser';
 import { GameState } from '../types';
+import { DailyChallenges, CHALLENGES } from '../systems/DailyChallenges';
 
 export default class MenuScene extends Phaser.Scene {
   declare registry: Phaser.Data.DataManager;
@@ -12,6 +13,7 @@ export default class MenuScene extends Phaser.Scene {
   declare cache: Phaser.Cache.CacheManager;
 
   private state!: GameState;
+  private coinText!: Phaser.GameObjects.Text;
 
   constructor() {
     super('MenuScene');
@@ -129,13 +131,13 @@ export default class MenuScene extends Phaser.Scene {
     const coinDisplay = this.add.container(width - 120, 40);
     const coinBg = this.add.rectangle(0, 0, 160, 40, 0x000000, 0.6).setStrokeStyle(2, 0xf1c40f).setOrigin(0.5);
     const coinIcon = this.add.circle(-55, 0, 12, 0xf1c40f).setStrokeStyle(2, 0xffffff);
-    const coinText = this.add.text(-35, 0, `${this.state.coins || 0}`, {
+    this.coinText = this.add.text(-35, 0, `${this.state.coins || 0}`, {
         fontSize: '22px',
         color: '#f1c40f',
         fontStyle: 'bold',
         fontFamily: 'Impact'
     }).setOrigin(0, 0.5);
-    coinDisplay.add([coinBg, coinIcon, this.add.text(-55, 0, '$', { fontSize: '14px', color:'#000', fontStyle:'bold' }).setOrigin(0.5), coinText]);
+    coinDisplay.add([coinBg, coinIcon, this.add.text(-55, 0, '$', { fontSize: '14px', color:'#000', fontStyle:'bold' }).setOrigin(0.5), this.coinText]);
 
     // Botões Centralizados
     const buttonY = 280;
@@ -158,6 +160,107 @@ export default class MenuScene extends Phaser.Scene {
         if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
         this.scene.start('SettingsScene');
     }, 0x95a5a6);
+
+    this.createDailyChallengesCard();
+  }
+
+  createDailyChallengesCard() {
+      const { height } = this.cameras.main;
+      const cardContainer = this.add.container(140, height - 60);
+
+      const bg = this.add.rectangle(0, 0, 220, 60, 0x111625, 0.8).setStrokeStyle(2, 0xf1c40f).setOrigin(0.5);
+      const text = this.add.text(0, 0, 'Desafios do Dia 🏆', {
+          fontSize: '18px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+      }).setOrigin(0.5);
+
+      cardContainer.add([bg, text]);
+
+      // Hover Effect
+      bg.setInteractive({ useHandCursor: true });
+      bg.on('pointerover', () => {
+          bg.setFillStyle(0xf1c40f);
+          text.setColor('#000000');
+          this.tweens.add({ targets: cardContainer, scale: 1.05, duration: 100 });
+      });
+      bg.on('pointerout', () => {
+          bg.setFillStyle(0x111625, 0.8);
+          text.setColor('#ffffff');
+          this.tweens.add({ targets: cardContainer, scale: 1, duration: 100 });
+      });
+
+      bg.on('pointerdown', () => {
+          this.resumeAudioContext();
+          if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
+          this.showChallengesPopup();
+      });
+  }
+
+  async showChallengesPopup() {
+      const { width, height } = this.cameras.main;
+      
+      const popupOverlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.7).setInteractive();
+      const popupCard = this.add.container(width/2, height/2);
+      
+      const popupBg = this.add.rectangle(0, 0, 500, 400, 0x111625).setStrokeStyle(4, 0xf1c40f).setOrigin(0.5);
+      const popupTitle = this.add.text(0, -160, 'DESAFIOS DO DIA', {
+          fontSize: '28px',
+          fontFamily: 'Impact',
+          color: '#f1c40f',
+      }).setOrigin(0.5);
+
+      const closeBtn = this.add.text(220, -170, 'X', { fontSize: '24px', color: '#ff0000', fontStyle: 'bold' })
+        .setOrigin(0.5).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => {
+          popupOverlay.destroy();
+          popupCard.destroy();
+        });
+
+      popupCard.add([popupBg, popupTitle, closeBtn]);
+
+      const progress = await DailyChallenges.getProgress();
+      
+      let startY = -90;
+      CHALLENGES.forEach(challenge => {
+          const p = progress[challenge.id] || { current: 0, claimed: false };
+          
+          const chCard = this.add.rectangle(0, startY, 440, 70, 0x000000, 0.5).setStrokeStyle(1, 0x555555);
+          const chTitle = this.add.text(-200, startY - 15, challenge.title, { fontSize: '18px', color: '#ffffff' });
+          const chReward = this.add.text(-200, startY + 10, `Recompensa: ${challenge.reward} 🪙`, { fontSize: '14px', color: '#f1c40f' });
+          
+          const chProgressText = this.add.text(120, startY - 15, `${Math.min(p.current, challenge.target)} / ${challenge.target}`, {
+              fontSize: '18px', 
+              fontStyle: 'bold',
+              color: p.current >= challenge.target ? '#2ecc71' : '#ffffff'
+          }).setOrigin(1, 0);
+
+          popupCard.add([chCard, chTitle, chReward, chProgressText]);
+
+          if (p.claimed) {
+              const claimedText = this.add.text(190, startY + 5, 'COLETADO', { fontSize: '16px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0);
+              popupCard.add(claimedText);
+          } else if (p.current >= challenge.target) {
+              const claimBtnBox = this.add.rectangle(150, startY + 10, 100, 30, 0xf1c40f).setInteractive({ useHandCursor: true });
+              const claimBtnTxt = this.add.text(150, startY + 10, 'COLETAR', { fontSize: '14px', color: '#000000', fontStyle: 'bold' }).setOrigin(0.5);
+              
+              claimBtnBox.on('pointerdown', async () => {
+                  if (await DailyChallenges.claimReward(challenge.id)) {
+                      claimBtnBox.destroy();
+                      claimBtnTxt.destroy();
+                      const claimedText = this.add.text(190, startY + 5, 'COLETADO', { fontSize: '16px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0);
+                      popupCard.add(claimedText);
+                      if (this.coinText) this.coinText.setText(`${window.UTLW.state.coins}`);
+                  }
+              });
+              popupCard.add([claimBtnBox, claimBtnTxt]);
+          }
+          
+          startY += 90;
+      });
+
+      popupCard.setScale(0.8).setAlpha(0);
+      this.tweens.add({ targets: popupCard, scale: 1, alpha: 1, duration: 200, ease: 'Back.easeOut' });
   }
 
   resumeAudioContext() {
@@ -174,7 +277,6 @@ export default class MenuScene extends Phaser.Scene {
 
       const shadow = this.add.rectangle(6, 6, width, height, 0x000000, 0.6).setOrigin(0.5);
       
-      // We can use a path or polygon for slanted buttons, but simple rectangles with glowing borders look nice too.
       const hoverGlow = this.add.rectangle(0, 0, width + 10, height + 10, color, 0.5).setOrigin(0.5).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
       const bg = this.add.rectangle(0, 0, width, height, 0x111625).setStrokeStyle(4, color).setOrigin(0.5);
       const innerBg = this.add.rectangle(0, 0, width - 8, height - 8, 0x000000, 0.5).setOrigin(0.5);
@@ -212,3 +314,4 @@ export default class MenuScene extends Phaser.Scene {
       });
   }
 }
+
