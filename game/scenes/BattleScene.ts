@@ -267,7 +267,11 @@ export default class BattleScene extends Phaser.Scene {
 
             const moveSpeed = 6;
             let isMoving = false;
-            if (this.keys.p1_left.isDown || this.mobileJoystickVector.x < -0.3) {
+            
+            if (this.playerDefending) {
+                // Cannot move while defending/charging
+                this.player.setFlipX(this.player.x > this.enemy.x);
+            } else if (this.keys.p1_left.isDown || this.mobileJoystickVector.x < -0.3) {
                 this.player.x -= moveSpeed;
                 this.player.setFlipX(true);
                 isMoving = true;
@@ -279,7 +283,7 @@ export default class BattleScene extends Phaser.Scene {
                 this.player.setFlipX(this.player.x > this.enemy.x);
             }
             
-            if (isMoving) {
+            if (isMoving && !this.playerDefending) {
                 const walkAnim = this.getAnimKey(this.playerData.key, this.playerTransformLevel, "walk");
                 if (this.player.anims.currentAnim?.key !== walkAnim) {
                     this.player.play(walkAnim, true);
@@ -296,7 +300,7 @@ export default class BattleScene extends Phaser.Scene {
                 this.player.y = Phaser.Math.Linear(this.player.y, this.p1StartPos.y, 0.2);
             }
             
-            if (this.keys.p1_up.isDown && !this.isP1Jumping) {
+            if (!this.playerDefending && this.keys.p1_up.isDown && !this.isP1Jumping) {
                 this.performJump(true);
             }
             
@@ -340,7 +344,10 @@ export default class BattleScene extends Phaser.Scene {
                 if (moveR && this.enemy.x > this.player.x && distToPlayer > 600) moveR = false;
             }
 
-            if (moveL) {
+            if (this.enemyDefending) {
+                // Cannot move while defending/charging
+                this.enemy.setFlipX(this.enemy.x > this.player.x);
+            } else if (moveL) {
                 this.enemy.x -= moveSpeed;
                 this.enemy.setFlipX(true);
                 isMoving = true;
@@ -352,7 +359,7 @@ export default class BattleScene extends Phaser.Scene {
                 this.enemy.setFlipX(this.enemy.x > this.player.x);
             }
             
-            if (isMoving) {
+            if (isMoving && !this.enemyDefending) {
                 const walkAnim = this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "walk");
                 if (this.enemy.anims.currentAnim?.key !== walkAnim) {
                     this.enemy.play(walkAnim, true);
@@ -368,7 +375,7 @@ export default class BattleScene extends Phaser.Scene {
                 this.enemy.y = Phaser.Math.Linear(this.enemy.y, this.p2StartPos.y, 0.2);
             }
             
-            if (this.keys.p2_up.isDown && !this.isP2Jumping) {
+            if (!this.enemyDefending && this.keys.p2_up.isDown && !this.isP2Jumping) {
                 this.performJump(false);
             }
             
