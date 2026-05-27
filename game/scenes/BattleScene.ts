@@ -2310,6 +2310,11 @@ export default class BattleScene extends Phaser.Scene {
     }
     this.modifyKi(isPlayer, -cost);
 
+    const moveName = isSuper ? data.superName : data.specialName;
+    if (moveName && moveName !== "") {
+      this.showMoveName(moveName);
+    }
+
     if (isPlayer) {
       this.p1ComboCount = 0;
     } else {
@@ -3051,8 +3056,55 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     if(this.battleUI) this.battleUI.updateBars(this.playerHp/this.playerData.maxHp, this.enemyHp/this.enemyData.maxHp, this.playerKi/100, this.enemyKi/100);
-    if (this.playerHp <= 0 || this.enemyHp <= 0)
-      if(this.battleReward) this.battleReward.endBattle(this.playerHp > 0);
+    if (!this.isBattleOver && (this.playerHp <= 0 || this.enemyHp <= 0)) {
+      this.isBattleOver = true;
+      this.time.timeScale = 0.15;
+      if (this.battleCamera) this.battleCamera.shake(600, 0.003);
+      else this.cameras.main.shake(600, 0.003);
+
+      this.time.delayedCall(600, () => {
+        this.time.timeScale = 1;
+        if(this.battleReward) this.battleReward.endBattle(this.playerHp > 0);
+      });
+    }
+  }
+
+  showMoveName(name: string) {
+    // Determine screen center. Assuming resolution 960x540.
+    const text = this.add.text(480, 270, name, {
+      fontSize: "48px",
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 8,
+      fontFamily: "Arial",
+      fontStyle: "bold"
+    }).setOrigin(0.5).setDepth(200);
+
+    text.setScale(0.5);
+    
+    this.tweens.add({
+      targets: text,
+      scale: 1.2,
+      duration: 300,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        this.tweens.add({
+          targets: text,
+          scale: 1,
+          duration: 200,
+          onComplete: () => {
+            this.time.delayedCall(500, () => {
+              this.tweens.add({
+                targets: text,
+                alpha: 0,
+                duration: 200,
+                onComplete: () => text.destroy()
+              });
+            });
+          }
+        });
+      }
+    });
   }
 
   log(msg: string) {
