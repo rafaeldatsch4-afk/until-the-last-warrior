@@ -255,7 +255,6 @@ export function generateBatmanSprite(scene: Phaser.Scene) {
           // Bat Ears
           headBox(11, 2, 2, 4, BLACK);
           headBox(19, 2, 2, 4, BLACK);
-          break;
         }
     } // End Switch Equivalent
 

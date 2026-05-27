@@ -316,7 +316,6 @@ export function generateChapolimSprite(scene: Phaser.Scene) {
           
           headBox(18 + jiggle, -2, 3, 3, YELLOW_MD); // R Pompom
           headDot(19 + jiggle, -2, YELLOW_LT); // R highlight
-          break;
         }
     } // End Switch Equivalent
 

@@ -301,7 +301,6 @@ export function generateOptimusSprite(scene: Phaser.Scene) {
             headDot(14, 7, 0x00ffff);
             headDot(17, 7, 0x00ffff); // Eyes
           }
-          break;
         }
     } // End Switch Equivalent
 

@@ -315,7 +315,6 @@ export function generateCellSprite(scene: Phaser.Scene) {
           // Mouth
           headBox(15, 12, 2, 1, BLACK_S);
 
-          break;
         }
     } // End Switch Equivalent
 

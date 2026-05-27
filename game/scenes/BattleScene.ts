@@ -287,7 +287,7 @@ export default class BattleScene extends Phaser.Scene {
                 // Dynamic walk effect: slight tilt forward and bobbing
                 this.player.setRotation(this.player.flipX ? -0.1 : 0.1);
                 this.player.y = this.p1StartPos.y + Math.sin(time * 0.02) * 8;
-            } else {
+            } else if (!this.p1ActionActive && !this.playerDefending) {
                 const idleAnim = this.getAnimKey(this.playerData.key, this.playerTransformLevel, "idle");
                 if (this.player.anims.currentAnim?.key !== idleAnim) {
                     this.player.play(idleAnim, true);
@@ -359,7 +359,7 @@ export default class BattleScene extends Phaser.Scene {
                 }
                 this.enemy.setRotation(this.enemy.flipX ? -0.1 : 0.1);
                 this.enemy.y = this.p2StartPos.y + Math.sin(time * 0.02) * 8;
-            } else {
+            } else if (!this.p2ActionActive && !this.enemyDefending) {
                 const idleAnim = this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "idle");
                 if (this.enemy.anims.currentAnim?.key !== idleAnim) {
                     this.enemy.play(idleAnim, true);
@@ -778,9 +778,9 @@ export default class BattleScene extends Phaser.Scene {
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
-    const defendAnim = this.getAnimKey(data.key, transLevel, "defend");
-    if (sprite.anims.currentAnim?.key !== defendAnim) {
-      sprite.play(defendAnim);
+    const chargeAnim = this.getAnimKey(data.key, transLevel, "charge");
+    if (sprite.anims.currentAnim?.key !== chargeAnim) {
+      sprite.play(chargeAnim);
     }
   }
 
@@ -795,10 +795,10 @@ export default class BattleScene extends Phaser.Scene {
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
-    const defendAnim = this.getAnimKey(data.key, transLevel, "defend");
+    const chargeAnim = this.getAnimKey(data.key, transLevel, "charge");
     const idleAnim = this.getAnimKey(data.key, transLevel, "idle");
 
-    if (sprite.anims.currentAnim?.key === defendAnim) {
+    if (sprite.anims.currentAnim?.key === chargeAnim) {
       sprite.play(idleAnim);
     }
   }
@@ -852,7 +852,7 @@ export default class BattleScene extends Phaser.Scene {
   createFighterSprites() {
     // Player 1
     this.player = this.add
-      .sprite(this.p1StartPos.x, this.p1StartPos.y, this.playerData.key)
+      .sprite(this.p1StartPos.x, this.p1StartPos.y, this.playerData.key, "0")
       .setOrigin(0.5, 0.5)
       .setScale(3) // Scaled down from 4 to fit screen better (Texture height 128 * 3 = 384px)
       .setDepth(1);
@@ -860,7 +860,7 @@ export default class BattleScene extends Phaser.Scene {
     
     // Add cool graphical effects to the sprite
     if (this.player.postFX) {
-        this.player.postFX.addShadow(0, 0, 0.05, 1, 0x000000, 4, 1);
+        // Shadow FX removed due to pipeline flickering on animation frames
     }
 
     // Shadows (offset +180 relative to sprite center Y to land at Y=460)
@@ -897,7 +897,7 @@ export default class BattleScene extends Phaser.Scene {
 
     // Player 2
     this.enemy = this.add
-      .sprite(this.p2StartPos.x, this.p2StartPos.y, this.enemyData.key)
+      .sprite(this.p2StartPos.x, this.p2StartPos.y, this.enemyData.key, "0")
       .setOrigin(0.5, 0.5)
       .setScale(3)
       .setFlipX(true)
@@ -906,7 +906,7 @@ export default class BattleScene extends Phaser.Scene {
     
     // Add cool graphical effects to the sprite
     if (this.enemy.postFX) {
-        this.enemy.postFX.addShadow(0, 0, 0.05, 1, 0x000000, 4, 1);
+        // Shadow FX removed due to pipeline flickering on animation frames
     }
     
     this.p2Shadow = this.add
@@ -1994,7 +1994,7 @@ export default class BattleScene extends Phaser.Scene {
             if (isUI || isUE || isKuramaMode) texKey = `${data.key}_ui`;
 
             if (this.textures.exists(texKey)) {
-              sprite.setTexture(texKey);
+              sprite.setTexture(texKey, "0");
               const animKeyIdle = this.getAnimKey(data.key, nextLevel, "idle");
               if (this.anims.exists(animKeyIdle)) sprite.play(animKeyIdle);
             }

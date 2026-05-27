@@ -275,7 +275,6 @@ export function generateSaitamaSprite(scene: Phaser.Scene) {
           headDot(15, 7, 0xffffff);
           headDot(13, 8, 0xffffff);
 
-          break;
         }
     } // End Switch Equivalent
 

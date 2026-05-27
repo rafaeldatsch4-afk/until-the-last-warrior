@@ -418,7 +418,6 @@ export function generateObitoSprite(scene: Phaser.Scene) {
             headBox(10, 0 + hairFloat, 2, 5, HAIR_SHADOW);
             headBox(20, 0 + hairFloat, 2, 5, HAIR_SHADOW);
           }
-          break;
         }
     } // End Switch Equivalent
 

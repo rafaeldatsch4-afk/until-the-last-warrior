@@ -264,7 +264,6 @@ export function generateGojoSprite(scene: Phaser.Scene) {
             // Smile
             headBox(15, 12, 2, 1, SKIN_SHADOW);
           }
-          break;
         }
     } // End Switch Equivalent
 

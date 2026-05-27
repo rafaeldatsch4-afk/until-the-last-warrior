@@ -327,7 +327,7 @@ export default class StoreScene extends Phaser.Scene {
         
         // Fix: Position at -70 to offset the bottom-heavy sprite drawing
         // Use frame 0 explicitly to ensure correct render
-        const sprite = this.add.sprite(-80, -70, char.key, 0).setScale(2);
+        const sprite = this.add.sprite(-80, -70, char.key, "0").setScale(2);
         
         if (this.anims.exists(`${char.key}_idle`)) {
             sprite.play(`${char.key}_idle`, true);

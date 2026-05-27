@@ -502,7 +502,6 @@ export function generateJotaroSprite(scene: Phaser.Scene) {
               box(jX + 8,  14, 4, 8, COAT_DK); 
           }
           
-          break;
         }
     } // End Switch Equivalent
 

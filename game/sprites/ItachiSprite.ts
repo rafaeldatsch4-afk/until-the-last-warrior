@@ -331,7 +331,6 @@ export function generateItachiSprite(scene: Phaser.Scene) {
             box(18, 9, 1, 2, 0x444444);
           }
 
-          break;
         }
     } // End Switch Equivalent
 

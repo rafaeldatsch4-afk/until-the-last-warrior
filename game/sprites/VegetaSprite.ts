@@ -451,7 +451,6 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
             headBox(9, -6, 1, 8, hairShadowC);
             headBox(22, -6, 1, 8, hairShadowC);
           }
-          break;
         }
     } // End Switch Equivalent
 

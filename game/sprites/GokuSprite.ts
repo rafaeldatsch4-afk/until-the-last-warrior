@@ -410,7 +410,6 @@ export function generateGokuSprite(scene: Phaser.Scene) {
             headBox(18, 6, 1, 1, hairColor); // Small side bang
           }
 
-          break;
         }
     } // End Switch Equivalent
 

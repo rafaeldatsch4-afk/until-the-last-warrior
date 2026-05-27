@@ -415,7 +415,6 @@ export function generateMadaraSprite(scene: Phaser.Scene) {
             headBox(11, 5, 2, 6, HAIR);
             headBox(12, 5, 1, 4, HAIR_SHADE);
           }
-          break;
         }
     } // End Switch Equivalent
 

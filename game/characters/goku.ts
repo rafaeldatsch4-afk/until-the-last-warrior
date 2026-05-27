@@ -187,7 +187,7 @@ export class GokuFighter extends Fighter {
     const dmg = Math.floor(120 * bs.getDamageMultiplier(transformLevel));
 
     // Raise hands
-    attacker.play(`${attacker.getData('charKey')}_charge`);
+    attacker.play(bs.getAnimKey("goku", transformLevel, "charge"));
 
     // Create giant spirit bomb
     const bomb = bs.add
@@ -235,7 +235,7 @@ export class GokuFighter extends Fighter {
       ease: "Sine.easeInOut",
       onComplete: () => {
         if (!bs.scene.isActive()) return;
-        attacker.play(`${attacker.getData('charKey')}_attack`); // Throw forward
+        attacker.play(bs.getAnimKey("goku", transformLevel, "attack")); // Throw forward
 
         bs.cameras.main.shake(300, 0.02);
 

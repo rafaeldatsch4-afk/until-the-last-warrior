@@ -239,7 +239,6 @@ export function generateCyberninjaSprite(scene: Phaser.Scene) {
 
           // Katana Handle on back (left side since facing right)
           headBox(9, 4, 2, 6, 0x555555);
-          break;
         }
     } // End Switch Equivalent
 

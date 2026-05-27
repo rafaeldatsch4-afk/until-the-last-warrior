@@ -227,7 +227,6 @@ export function generateLeonardoSprite(scene: Phaser.Scene) {
           headBox(10, 10, 1, 4, 0x2980b9); // Knot tail shadow
           headDot(13, 9, WHITE);
           headDot(17, 9, WHITE); // Eyes
-          break;
         }
     } // End Switch Equivalent
 

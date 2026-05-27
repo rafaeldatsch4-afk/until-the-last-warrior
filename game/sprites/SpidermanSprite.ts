@@ -357,7 +357,6 @@ export function generateSpidermanSprite(scene: Phaser.Scene) {
           headBox(17, 8 + bob, 3, 4, EYE_RIM);
           headBox(17, 9 + bob, 2, 2, EYE_GLOW);
 
-          break;
         }
     } // End Switch Equivalent
 

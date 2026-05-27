@@ -367,7 +367,6 @@ export function generateNarutoSprite(scene: Phaser.Scene) {
             headBox(11, 5, 1, 3, hairColor);
             headBox(20, 5, 1, 3, hairColor);
           }
-          break;
         }
     } // End Switch Equivalent
 

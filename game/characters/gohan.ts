@@ -116,7 +116,7 @@ export class GohanFighter extends Fighter {
 
     // Ghost Goku (Visual representation)
     const ghost = bs.add
-      .sprite(attacker.x + (attacker.x < target.x ? -40 : 40), attacker.y - 60, "goku_ssj")
+      .sprite(attacker.x + (attacker.x < target.x ? -40 : 40), attacker.y - 60, "goku_ssj", "0")
       .setOrigin(0.5, 0.5)
       .setAlpha(0)
       .setScale(3.5)

@@ -408,7 +408,6 @@ export function generateGohanSprite(scene: Phaser.Scene) {
             headBox(15, -4, 1, 5, hairShadow); // Middle spike shadow
             headBox(14, 6, 1, 3, hairShadow); // Bang shadow
           }
-          break;
         }
     } // End Switch Equivalent
 

@@ -446,7 +446,6 @@ export function generateStaticSprite(scene: Phaser.Scene) {
               alphaBox(20, 7, eyeTrailLength, 4, ELECTRIC_GLOW, 0.4);
           }
 
-          break;
         }
     } // End Switch Equivalent
 

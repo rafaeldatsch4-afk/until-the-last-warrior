@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { CharacterData } from "../types";
 import { INITIAL_CHARACTERS } from "../data";
-import { generateAllSprites } from "../sprites/SpriteRegistry";
+import { generateAllSprites, SPRITE_GENERATORS } from "../sprites/SpriteRegistry";
 
 export default class PreloadScene extends Phaser.Scene {
   declare cameras: Phaser.Cameras.Scene2D.CameraManager;
@@ -17,6 +17,11 @@ export default class PreloadScene extends Phaser.Scene {
   declare cache: Phaser.Cache.CacheManager;
   declare anims: Phaser.Animations.AnimationManager;
 
+  progressBar!: Phaser.GameObjects.Graphics;
+  progressBox!: Phaser.GameObjects.Graphics;
+  loadingText!: Phaser.GameObjects.Text;
+  preloadBg!: Phaser.GameObjects.Rectangle;
+
   constructor() {
     super("PreloadScene");
   }
@@ -26,7 +31,7 @@ export default class PreloadScene extends Phaser.Scene {
     const height = this.cameras.main.height;
 
     // --- Loading UI ---
-    const bg = this.add.rectangle(
+    this.preloadBg = this.add.rectangle(
       width / 2,
       height / 2,
       width,
@@ -34,12 +39,12 @@ export default class PreloadScene extends Phaser.Scene {
       0x0f172a,
     );
 
-    const progressBar = this.add.graphics();
-    const progressBox = this.add.graphics();
-    progressBox.fillStyle(0x1e293b, 1);
-    progressBox.fillRect(width / 2 - 160, height / 2 - 25, 320, 50);
+    this.progressBar = this.add.graphics();
+    this.progressBox = this.add.graphics();
+    this.progressBox.fillStyle(0x1e293b, 1);
+    this.progressBox.fillRect(width / 2 - 160, height / 2 - 25, 320, 50);
 
-    const loadingText = this.add
+    this.loadingText = this.add
       .text(width / 2, height / 2 - 60, "Desenhando Guerreiros...", {
         fontFamily: "Arial",
         fontSize: "20px",
@@ -49,7 +54,7 @@ export default class PreloadScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
 
     this.tweens.add({
-      targets: loadingText,
+      targets: this.loadingText,
       alpha: 0.3,
       duration: 500,
       yoyo: true,
@@ -57,16 +62,15 @@ export default class PreloadScene extends Phaser.Scene {
     });
 
     this.load.on("progress", (value: number) => {
-      progressBar.clear();
-      progressBar.fillStyle(0xf59e0b, 1);
-      progressBar.fillRect(width / 2 - 150, height / 2 - 15, 300 * value, 30);
+      this.progressBar.clear();
+      this.progressBar.fillStyle(0xf59e0b, 1);
+      // Carregamento de imagens ocupa os primeiros 10% da barra
+      const ratio = value * 0.1;
+      this.progressBar.fillRect(width / 2 - 150, height / 2 - 15, 300 * ratio, 30);
     });
 
     this.load.on("complete", () => {
-      progressBar.destroy();
-      progressBox.destroy();
-      loadingText.destroy();
-      bg.destroy();
+      // Deixamos a limpeza da UI para ser feita no final do processo em finishPreload()
     });
 
     this.load.image("arena", "https://labs.phaser.io/assets/skies/space3.png");
@@ -91,30 +95,80 @@ export default class PreloadScene extends Phaser.Scene {
   create() {
     this.createAudioAssets();
     this.createFXAssets();
-    generateAllSprites(this);
 
-    // Aguarda o renderer processar todas as texturas antes de criar animações
-    this.renderer.once('render', () => {
-      const currentState = window.UTLW?.state;
-      const chars = currentState?.characters ?? INITIAL_CHARACTERS;
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
 
-      const charsToGenerate = [...chars];
-      const hasGohan = chars.some((c) => c.key === 'gohan');
-      const hasGoku = chars.some((c) => c.key === 'goku');
-      if (hasGohan && !hasGoku) {
-        const gokuData = INITIAL_CHARACTERS.find((c) => c.key === 'goku');
-        if (gokuData) charsToGenerate.push(gokuData);
+    // Se as texturas do goku já existirem, finaliza o preload imediatamente.
+    if (this.textures.exists("goku")) {
+      this.finishPreload();
+      return;
+    }
+
+    let currentGeneratorIndex = 0;
+
+    const generateNext = () => {
+      if (currentGeneratorIndex >= SPRITE_GENERATORS.length) {
+         this.finishPreload();
+         return;
       }
 
-      charsToGenerate.forEach((c) => this.createAnimsFor(c.key));
-
-      if (!this.textures.exists('dummy')) {
-        const g = this.make.graphics({ x: 0, y: 0 });
-        g.fillStyle(0x555555);
-        g.fillRect(0, 0, 32, 32);
-        g.generateTexture('dummy', 32, 32);
-        g.destroy();
+      const item = SPRITE_GENERATORS[currentGeneratorIndex];
+      if (this.loadingText && this.loadingText.active) {
+         this.loadingText.setText(`Desenho: ${item.name} (${currentGeneratorIndex + 1}/${SPRITE_GENERATORS.length})`);
       }
+
+      // Progresso: 10% fixo para imagens + 90% proporcional dos guerreiros renderizados
+      const ratio = 0.1 + (currentGeneratorIndex / SPRITE_GENERATORS.length) * 0.9;
+      if (this.progressBar && this.progressBar.active) {
+         this.progressBar.clear();
+         this.progressBar.fillStyle(0xf59e0b, 1);
+         this.progressBar.fillRect(width / 2 - 150, height / 2 - 15, 300 * ratio, 30);
+      }
+
+      // Yield de 20ms para permitir que o navegador atualize a UI de progresso
+      this.time.delayedCall(20, () => {
+         try {
+           item.fn(this);
+         } catch (e) {
+           console.error(`Erro ao gerar ${item.name}:`, e);
+         }
+         currentGeneratorIndex++;
+         generateNext();
+      });
+    };
+
+    generateNext();
+  }
+
+  finishPreload() {
+    const currentState = window.UTLW?.state;
+    const chars = currentState?.characters ?? INITIAL_CHARACTERS;
+
+    const charsToGenerate = [...chars];
+    const hasGohan = chars.some((c) => c.key === 'gohan');
+    const hasGoku = chars.some((c) => c.key === 'goku');
+    if (hasGohan && !hasGoku) {
+      const gokuData = INITIAL_CHARACTERS.find((c) => c.key === 'goku');
+      if (gokuData) charsToGenerate.push(gokuData);
+    }
+
+    charsToGenerate.forEach((c) => this.createAnimsFor(c.key));
+
+    if (!this.textures.exists('dummy')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false } as any);
+      g.fillStyle(0x555555);
+      g.fillRect(0, 0, 32, 32);
+      g.generateTexture('dummy', 32, 32);
+      g.destroy();
+    }
+
+    // Wait 150ms to allow WebGL rendering pipeline to completely compile textures
+    this.time.delayedCall(150, () => {
+      if (this.progressBar) this.progressBar.destroy();
+      if (this.progressBox) this.progressBox.destroy();
+      if (this.loadingText) this.loadingText.destroy();
+      if (this.preloadBg) this.preloadBg.destroy();
 
       this.scene.start('MenuScene');
     });
@@ -129,11 +183,22 @@ export default class PreloadScene extends Phaser.Scene {
       frameRate: number,
       repeat: number = -1,
     ) => {
-      if (!this.textures.exists(texture)) return;
+      if (!this.textures.exists(texture)) {
+        console.warn(`[PreloadScene] Texture missing: ${texture}`);
+        return;
+      }
       if (this.anims.exists(animKey)) return;
+      
+      const tex = this.textures.get(texture);
       const frames: Phaser.Types.Animations.AnimationFrame[] = [];
       for (let i = start; i <= end; i++) {
-        frames.push({ key: texture, frame: i.toString() });
+        if (!tex.has(i.toString())) {
+           console.warn(`[PreloadScene] Missing frame ${i} for texture ${texture}`);
+           // Fallback to frame "0" or bypass to prevent crash, though it will still cause flickering if this fails
+           frames.push({ key: texture, frame: "0" });
+        } else {
+           frames.push({ key: texture, frame: i.toString() });
+        }
       }
       this.anims.create({
         key: animKey,
@@ -150,6 +215,7 @@ export default class PreloadScene extends Phaser.Scene {
       createAnim(`${baseKey}_special`, texKey, 8, 9, 12, -1);
       createAnim(`${baseKey}_defend`, texKey, 10, 10, 10, -1);
       createAnim(`${baseKey}_transform`, texKey, 0, 3, 24, -1);
+      createAnim(`${baseKey}_charge`, texKey, 11, 11, 10, -1);
     };
 
     createAllForTex(key, key);

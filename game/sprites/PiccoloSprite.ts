@@ -348,7 +348,6 @@ export function generatePiccoloSprite(scene: Phaser.Scene) {
             box(15, 14, 2, 2, CAPE_SHADOW);
             box(19, 14, 1, 2, CAPE_SHADOW);
           }
-          break;
         }
     } // End Switch Equivalent
 

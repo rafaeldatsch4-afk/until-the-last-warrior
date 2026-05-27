@@ -240,7 +240,6 @@ export function generateFrierenSprite(scene: Phaser.Scene) {
           headDot(17, 9, 0x27ae60); // Eyes
           headDot(13, 8, HAIR_SHADOW);
           headDot(18, 8, HAIR_SHADOW); // Eyebrows
-          break;
         }
     } // End Switch Equivalent
 

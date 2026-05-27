@@ -346,7 +346,6 @@ export function generateThukunaSprite(scene: Phaser.Scene) {
             headBox(13, 8, 1, 1, 0xff0000);
             headBox(18, 8, 1, 1, 0xff0000); // Red pupils
           }
-          break;
         }
     } // End Switch Equivalent
 

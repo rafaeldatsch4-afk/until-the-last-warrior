@@ -215,7 +215,6 @@ export function generateMinipekkaSprite(scene: Phaser.Scene) {
           headBox(20, 6 + offY, 1, 7, METAL_DARK);
           headBox(9, 5 + offY, 1, 4, 0x111111);
           headBox(22, 5 + offY, 1, 4, 0x111111);
-          break;
         }
     } // End Switch Equivalent
 
