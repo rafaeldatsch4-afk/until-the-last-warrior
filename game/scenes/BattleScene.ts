@@ -3,6 +3,7 @@ import { BattleReward } from '../battle/BattleReward';
 import { BattleInput } from '../battle/BattleInput';
 import { BattleUI } from '../battle/BattleUI';
 import { BattleAI } from '../battle/BattleAI';
+import { BattleEnvironment } from '../battle/BattleEnvironment';
 import Phaser from "phaser";
 import { CharacterData, GameState } from "../types";
 import { getFighter } from '../characters/FighterRegistry';
@@ -14,6 +15,7 @@ export default class BattleScene extends Phaser.Scene {
   public trnBtnGroup?: Phaser.GameObjects.Container;
 
   public battleUI!: BattleUI;
+  public battleEnvironment!: BattleEnvironment;
   
   public battleAI!: BattleAI;
   public battleReward!: BattleReward;
@@ -199,6 +201,8 @@ export default class BattleScene extends Phaser.Scene {
         bgImage.postFX.addBlur(0.3, 0.3, 0.3, 1); 
     }
       
+    this.battleEnvironment = new BattleEnvironment(this, bgImage, randomArena);
+      
     this.battleCamera = new BattleCamera(this);
     this.battleCamera.setupCamera(mapWidth);
 
@@ -340,6 +344,7 @@ export default class BattleScene extends Phaser.Scene {
     this.events.on("shutdown", () => {
       if (this.turnTimer) this.turnTimer.remove();
       if (this.regenTimer) this.regenTimer.remove();
+      if (this.battleEnvironment) this.battleEnvironment.destroy();
       this.sound.stopByKey("bgm_battle");
       this.input.keyboard?.removeAllKeys();
       this.input.keyboard?.removeAllListeners();
@@ -350,6 +355,8 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
+    if (this.battleEnvironment) this.battleEnvironment.update(time, delta);
+    
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
     
     // Network state stream sync
