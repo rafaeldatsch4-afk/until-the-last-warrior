@@ -9,6 +9,7 @@ import BattleScene from './scenes/BattleScene';
 import StoreScene from './scenes/StoreScene';
 import SettingsScene from './scenes/SettingsScene';
 import PauseScene from './scenes/PauseScene';
+import MultiplayerLobbyScene from './scenes/MultiplayerLobbyScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -28,7 +29,8 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     BattleScene,
     StoreScene,
     SettingsScene,
-    PauseScene
+    PauseScene,
+    MultiplayerLobbyScene
   ],
   physics: {
     default: 'arcade',

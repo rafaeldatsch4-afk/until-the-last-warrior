@@ -29,7 +29,7 @@ export interface TournamentRound {
 export interface GameState {
   coins: number;
   difficulty: number; // 0: Easy, 1: Normal, 2: Hard
-  gameMode: 'single' | 'local_pvp' | 'arcade' | 'tournament' | 'training'; 
+  gameMode: 'single' | 'local_pvp' | 'arcade' | 'tournament' | 'training' | 'online_pvp'; 
   selectedCharacterId: number; // Legacy/Default P1
   p1CharacterId: number;
   p2CharacterId: number;

@@ -196,6 +196,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
           this.state.tournamentCurrentRoundIndex = 0;
           this.registry.set('gameState', this.state);
           this.scene.start('TournamentScene');
+      } else if (this.state.gameMode === 'online_pvp') {
+          this.scene.start('MultiplayerLobbyScene');
       } else {
           this.scene.start('BattleScene');
       }

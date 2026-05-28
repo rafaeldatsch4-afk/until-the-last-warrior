@@ -78,12 +78,13 @@ export default class ModeSelectScene extends Phaser.Scene {
       isMobile 
         ? { text: 'TREINAMENTO', mode: 'training', color: 0x27ae60, desc: 'Pratique livremente contra CPU inativa' }
         : { text: '1 VS 1 (LOCAL)', mode: 'local_pvp', color: 0xe74c3c, desc: 'Jogue contra um amigo no mesmo teclado' },
+      { text: 'ONLINE PVP ⚡', mode: 'online_pvp', color: 0x27ae60, desc: 'Enfrente outros lutadores online em tempo real' },
       { text: 'ARCADE', mode: 'arcade', color: 0x9b59b6, desc: 'Enfrente uma série de oponentes' },
       { text: 'TORNEIO', mode: 'tournament', color: 0xf1c40f, desc: 'Chaveamento de 8 lutadores' }
     ];
 
     modes.forEach((m, index) => {
-      const yPos = 180 + (index * 85);
+      const yPos = 145 + (index * 76);
       this.createBtn(480, yPos, m.text, m.desc, () => {
         this.gameState.gameMode = m.mode as any;
         
@@ -106,17 +107,17 @@ export default class ModeSelectScene extends Phaser.Scene {
     const container = this.add.container(x, y);
     
     // Button background with gradient/shadow effect
-    const shadow = this.add.rectangle(4, 4, 400, 70, 0x000000, 0.5).setOrigin(0.5);
-    const bg = this.add.rectangle(0, 0, 400, 70, color).setOrigin(0.5);
-    const innerBg = this.add.rectangle(0, 0, 392, 62, 0x000000, 0.3).setOrigin(0.5); // Darker inner area
+    const shadow = this.add.rectangle(4, 4, 400, 60, 0x000000, 0.5).setOrigin(0.5);
+    const bg = this.add.rectangle(0, 0, 400, 60, color).setOrigin(0.5);
+    const innerBg = this.add.rectangle(0, 0, 392, 52, 0x000000, 0.3).setOrigin(0.5); // Darker inner area
     
-    const txt = this.add.text(0, -10, text, { fontSize: '28px', color: '#ffffff', fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
-    const descTxt = this.add.text(0, 15, desc, { fontSize: '14px', color: '#dddddd', fontStyle: 'italic' }).setOrigin(0.5);
+    const txt = this.add.text(0, -8, text, { fontSize: '24px', color: '#ffffff', fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
+    const descTxt = this.add.text(0, 13, desc, { fontSize: '13px', color: '#dddddd', fontStyle: 'italic' }).setOrigin(0.5);
 
     container.add([shadow, bg, innerBg, txt, descTxt]);
     
     // Hit area
-    const hitArea = this.add.rectangle(0, 0, 400, 70, 0x000000, 0).setInteractive({ useHandCursor: true });
+    const hitArea = this.add.rectangle(0, 0, 400, 60, 0x000000, 0).setInteractive({ useHandCursor: true });
     container.add(hitArea);
 
     hitArea.on('pointerover', () => {

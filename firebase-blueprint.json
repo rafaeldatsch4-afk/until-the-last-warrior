@@ -12,12 +12,26 @@
         "achievements": { "type": "array", "items": { "type": "string" } },
         "lastLogin": { "type": "string", "format": "date-time" }
       }
+    },
+    "DailyStreak": {
+      "title": "DailyStreak",
+      "description": "Information about consecutive days logged in",
+      "type": "object",
+      "properties": {
+        "currentStreak": { "type": "number" },
+        "lastLoginDate": { "type": "string" },
+        "lastClaimedDate": { "type": "string" }
+      }
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/User" },
       "description": "User profile data."
+    },
+    "/users/{userId}/dailyStreak/info": {
+      "schema": { "$ref": "#/entities/DailyStreak" },
+      "description": "Daily streak progress schema."
     }
   }
 }

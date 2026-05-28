@@ -203,14 +203,14 @@ export default class MenuScene extends Phaser.Scene {
       const popupOverlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.7).setInteractive();
       const popupCard = this.add.container(width/2, height/2);
       
-      const popupBg = this.add.rectangle(0, 0, 500, 400, 0x111625).setStrokeStyle(4, 0xf1c40f).setOrigin(0.5);
-      const popupTitle = this.add.text(0, -160, 'DESAFIOS DO DIA', {
+      const popupBg = this.add.rectangle(0, 0, 500, 520, 0x111625).setStrokeStyle(4, 0xf1c40f).setOrigin(0.5);
+      const popupTitle = this.add.text(0, -225, 'DESAFIOS DO DIA', {
           fontSize: '28px',
           fontFamily: 'Impact',
           color: '#f1c40f',
       }).setOrigin(0.5);
 
-      const closeBtn = this.add.text(220, -170, 'X', { fontSize: '24px', color: '#ff0000', fontStyle: 'bold' })
+      const closeBtn = this.add.text(220, -235, 'X', { fontSize: '24px', color: '#ff0000', fontStyle: 'bold' })
         .setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => {
           popupOverlay.destroy();
@@ -219,6 +219,58 @@ export default class MenuScene extends Phaser.Scene {
 
       popupCard.add([popupBg, popupTitle, closeBtn]);
 
+      // Daily Streak Section
+      const streakInfo = await DailyChallenges.getStreakInfo();
+      const currentToday = DailyChallenges.getTodayDateStr();
+      const hasClaimedStreakToday = (streakInfo.lastClaimedDate === currentToday);
+      const currentStreakCoins = DailyChallenges.getStreakReward(streakInfo.currentStreak);
+
+      const streakBg = this.add.rectangle(0, -145, 440, 90, 0x0c0f1d).setStrokeStyle(2, 0xe74c3c).setOrigin(0.5);
+      const streakTitleText = this.add.text(-200, -175, `Sequência Diária: ${streakInfo.currentStreak} Dias 🔥`, {
+          fontSize: '20px',
+          fontFamily: 'Impact, sans-serif',
+          color: '#e74c3c'
+      });
+      const streakDetailText = this.add.text(-200, -145, `Recompensa de Hoje: ${currentStreakCoins} 🪙\nBônus de login diário consecutivo ativo!`, {
+          fontSize: '13px',
+          color: '#ffffff'
+      });
+
+      popupCard.add([streakBg, streakTitleText, streakDetailText]);
+
+      if (hasClaimedStreakToday) {
+          const claimedStreakText = this.add.text(190, -150, 'CONCLUÍDO ✓', {
+              fontSize: '16px',
+              color: '#2ecc71',
+              fontStyle: 'bold'
+          }).setOrigin(1, 0.5);
+          popupCard.add(claimedStreakText);
+      } else {
+          const claimStreakBox = this.add.rectangle(140, -150, 100, 32, 0x2ecc71).setInteractive({ useHandCursor: true });
+          const claimStreakTxt = this.add.text(140, -150, 'COLETAR', {
+              fontSize: '13px',
+              color: '#ffffff',
+              fontStyle: 'bold'
+          }).setOrigin(0.5);
+
+          claimStreakBox.on('pointerdown', async () => {
+              const res = await DailyChallenges.claimStreakReward();
+              if (res.success) {
+                  claimStreakBox.destroy();
+                  claimStreakTxt.destroy();
+                  const claimedStreakText = this.add.text(190, -150, 'COLETADO ✓', {
+                      fontSize: '16px',
+                      color: '#2ecc71',
+                      fontStyle: 'bold'
+                  }).setOrigin(1, 0.5);
+                  popupCard.add(claimedStreakText);
+                  if (this.coinText) this.coinText.setText(`${window.UTLW.state.coins}`);
+              }
+          });
+          popupCard.add([claimStreakBox, claimStreakTxt]);
+      }
+
+      // Challenges Progress Section
       const progress = await DailyChallenges.getProgress();
       
       let claimableCount = 0;
@@ -227,16 +279,16 @@ export default class MenuScene extends Phaser.Scene {
           if (p.current >= challenge.target && !p.claimed) claimableCount++;
       });
       
-      let startY = -90;
+      let startY = -40;
       CHALLENGES.forEach(challenge => {
           const p = progress[challenge.id] || { current: 0, claimed: false };
           
-          const chCard = this.add.rectangle(0, startY, 440, 70, 0x000000, 0.5).setStrokeStyle(1, 0x555555);
-          const chTitle = this.add.text(-200, startY - 15, challenge.title, { fontSize: '18px', color: '#ffffff' });
-          const chReward = this.add.text(-200, startY + 10, `Recompensa: ${challenge.reward} 🪙`, { fontSize: '14px', color: '#f1c40f' });
+          const chCard = this.add.rectangle(0, startY, 440, 64, 0x000000, 0.5).setStrokeStyle(1, 0x555555);
+          const chTitle = this.add.text(-200, startY - 14, challenge.title, { fontSize: '16px', color: '#ffffff' });
+          const chReward = this.add.text(-200, startY + 10, `Recompensa: ${challenge.reward} 🪙`, { fontSize: '13px', color: '#f1c40f' });
           
-          const chProgressText = this.add.text(120, startY - 15, `${Math.min(p.current, challenge.target)} / ${challenge.target}`, {
-              fontSize: '18px', 
+          const chProgressText = this.add.text(120, startY - 14, `${Math.min(p.current, challenge.target)} / ${challenge.target}`, {
+              fontSize: '16px', 
               fontStyle: 'bold',
               color: p.current >= challenge.target ? '#2ecc71' : '#ffffff'
           }).setOrigin(1, 0);
@@ -244,37 +296,37 @@ export default class MenuScene extends Phaser.Scene {
           popupCard.add([chCard, chTitle, chReward, chProgressText]);
 
           if (p.claimed) {
-              const claimedText = this.add.text(190, startY + 5, 'COLETADO', { fontSize: '16px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0);
-              popupCard.add(claimedText);
+               const claimedText = this.add.text(190, startY + 5, 'COLETADO', { fontSize: '15px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0);
+               popupCard.add(claimedText);
           } else if (p.current >= challenge.target) {
-              const claimBtnBox = this.add.rectangle(150, startY + 10, 100, 30, 0xf1c40f).setInteractive({ useHandCursor: true });
-              const claimBtnTxt = this.add.text(150, startY + 10, 'COLETAR', { fontSize: '14px', color: '#000000', fontStyle: 'bold' }).setOrigin(0.5);
-              
-              claimBtnBox.on('pointerdown', async () => {
-                  if (await DailyChallenges.claimReward(challenge.id)) {
-                      claimBtnBox.destroy();
-                      claimBtnTxt.destroy();
-                      const claimedText = this.add.text(190, startY + 5, 'COLETADO', { fontSize: '16px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0);
-                      popupCard.add(claimedText);
-                      if (this.coinText) this.coinText.setText(`${window.UTLW.state.coins}`);
-                      
-                      // Refresh if collect all was visible
-                      if (claimableCount > 1) {
-                        popupOverlay.destroy();
-                        popupCard.destroy();
-                        this.showChallengesPopup();
-                      }
-                  }
-              });
-              popupCard.add([claimBtnBox, claimBtnTxt]);
+               const claimBtnBox = this.add.rectangle(150, startY + 10, 100, 28, 0xf1c40f).setInteractive({ useHandCursor: true });
+               const claimBtnTxt = this.add.text(150, startY + 10, 'COLETAR', { fontSize: '13px', color: '#000000', fontStyle: 'bold' }).setOrigin(0.5);
+               
+               claimBtnBox.on('pointerdown', async () => {
+                   if (await DailyChallenges.claimReward(challenge.id)) {
+                       claimBtnBox.destroy();
+                       claimBtnTxt.destroy();
+                       const claimedText = this.add.text(190, startY + 5, 'COLETADO', { fontSize: '15px', color: '#2ecc71', fontStyle: 'bold' }).setOrigin(1, 0);
+                       popupCard.add(claimedText);
+                       if (this.coinText) this.coinText.setText(`${window.UTLW.state.coins}`);
+                       
+                       // Refresh if collect all was visible
+                       if (claimableCount > 1) {
+                         popupOverlay.destroy();
+                         popupCard.destroy();
+                         this.showChallengesPopup();
+                       }
+                   }
+               });
+               popupCard.add([claimBtnBox, claimBtnTxt]);
           }
           
-          startY += 90;
+          startY += 78;
       });
 
       if (claimableCount > 1) {
-          const collectAllBox = this.add.rectangle(0, 160, 180, 40, 0x2ecc71).setInteractive({ useHandCursor: true });
-          const collectAllTxt = this.add.text(0, 160, 'COLETAR TUDO', { fontSize: '16px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+          const collectAllBox = this.add.rectangle(0, 215, 180, 36, 0x2ecc71).setInteractive({ useHandCursor: true });
+          const collectAllTxt = this.add.text(0, 215, 'COLETAR TUDO', { fontSize: '15px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
           
           collectAllBox.on('pointerdown', async () => {
               const total = await DailyChallenges.claimAllRewards();

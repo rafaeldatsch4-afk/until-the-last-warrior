@@ -7,17 +7,23 @@ import Phaser from "phaser";
 import { CharacterData, GameState } from "../types";
 import { getFighter } from '../characters/FighterRegistry';
 import { DailyChallenges } from '../systems/DailyChallenges';
+import { auth } from '../../firebase/init';
+import { MultiplayerManager } from '../systems/MultiplayerManager';
 
 export default class BattleScene extends Phaser.Scene {
   public trnBtnGroup?: Phaser.GameObjects.Container;
 
   public battleUI!: BattleUI;
   
-    public battleAI!: BattleAI;
+  public battleAI!: BattleAI;
   public battleReward!: BattleReward;
   public battleCamera!: BattleCamera;
   public battleInput!: BattleInput;
   public get keys() { return this.battleInput?.keys; }
+  
+  public isIncomingNetworkAction: boolean = false;
+  public localPlayerIndex: 1 | 2 = 1;
+  private netSyncTimer: number = 0;
   public get mobileJoystickVector() { return this.battleInput?.mobileJoystickVector || {x:0, y:0}; }
   public get mobileP1Attack() { return this.battleInput?.mobileP1Attack; }
   public get mobileP1KiBlast() { return this.battleInput?.mobileP1KiBlast; }
@@ -215,14 +221,108 @@ export default class BattleScene extends Phaser.Scene {
     this.battleInput.createInputs();
     this.battleInput.createMobileControls();
 
+    this.localPlayerIndex = this.registry.get("localPlayerIndex") || 1;
+    this.isIncomingNetworkAction = false;
+    this.netSyncTimer = 0;
+
+    if (this.gameState.gameMode === "online_pvp") {
+      const mm = MultiplayerManager.getInstance();
+      
+      this.time.delayedCall(100, () => {
+        if (!this.scene.isActive() || !this.battleUI) return;
+        const p2Name = this.registry.get("p2Name") || "Inimigo";
+        if (this.localPlayerIndex === 2) {
+          if (this.battleUI.p1NameText) this.battleUI.p1NameText.setText(p2Name.toUpperCase());
+          if (this.battleUI.p2NameText) this.battleUI.p2NameText.setText(this.getPlayerName().toUpperCase());
+        } else {
+          if (this.battleUI.p2NameText) this.battleUI.p2NameText.setText(p2Name.toUpperCase());
+        }
+      });
+
+      mm.onRemoteStateCallback = (state: any) => {
+        const target = this.localPlayerIndex === 1 ? this.enemy : this.player;
+        if (target && target.active) {
+          target.x = state.x;
+          target.y = state.y;
+          target.setFlipX(state.flipX);
+          target.setRotation(state.rotation);
+          
+          if (target.anims && state.anim && target.anims.currentAnim?.key !== state.anim) {
+            target.play(state.anim, true);
+          }
+
+          if (this.localPlayerIndex === 1) {
+            this.enemyHp = state.hp;
+            this.enemyKi = state.ki;
+            this.p2ActionActive = state.actionActive;
+            this.enemyTransformLevel = state.transformLevel;
+            this.enemyDefending = state.defending;
+            this.isP2Jumping = state.isJumping;
+            this.p2SuperActive = state.superActive;
+          } else {
+            this.playerHp = state.hp;
+            this.playerKi = state.ki;
+            this.p1ActionActive = state.actionActive;
+            this.playerTransformLevel = state.transformLevel;
+            this.playerDefending = state.defending;
+            this.isP1Jumping = state.isJumping;
+            this.p1SuperActive = state.superActive;
+          }
+        }
+      };
+
+      mm.onRemoteActionCallback = (action: any) => {
+        this.isIncomingNetworkAction = true;
+        try {
+          switch (action.type) {
+            case "dash":
+              this.performDash(action.isPlayer, action.dir);
+              break;
+            case "jump":
+              this.performJump(action.isPlayer);
+              break;
+            case "attack":
+              this.performAttack(action.isPlayer, action.attackType);
+              break;
+            case "special":
+              this.performSpecial(action.isPlayer, action.isSuper);
+              break;
+            case "transform":
+              this.performTransform(action.isPlayer);
+              break;
+            case "takeDamage":
+              this.takeDamage(action.isPlayer, action.dmg);
+              break;
+          }
+        } catch (e) {
+          console.error("Error executing remote action", e);
+        } finally {
+          this.isIncomingNetworkAction = false;
+        }
+      };
+
+      mm.onOpponentLeftCallback = () => {
+        if (this.isBattleOver) return;
+        if (this.battleUI) this.battleUI.showLog("OPONENTE SAIU! VITORIA!");
+        this.isBattleOver = true;
+        
+        this.time.delayedCall(3000, () => {
+          mm.disconnect();
+          this.scene.start("MenuScene");
+        });
+      };
+    }
+
     this.time.delayedCall(1000, () => {
       if (!this.scene.isActive()) return;
       if(this.battleUI) this.battleUI.showLog("FIGHT START!");
       if (
         this.gameState.gameMode !== "local_pvp" &&
-        this.gameState.gameMode !== "training"
-      )
+        this.gameState.gameMode !== "training" &&
+        this.gameState.gameMode !== "online_pvp"
+      ) {
         if (this.battleAI) this.battleAI.startAILoop();
+      }
     });
 
     // Passive Ki regeneration
@@ -243,17 +343,51 @@ export default class BattleScene extends Phaser.Scene {
       this.sound.stopByKey("bgm_battle");
       this.input.keyboard?.removeAllKeys();
       this.input.keyboard?.removeAllListeners();
+      if (this.gameState.gameMode === "online_pvp") {
+        MultiplayerManager.getInstance().disconnect();
+      }
     });
   }
 
   update(time: number, delta: number) {
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
     
+    // Network state stream sync
+    if (this.gameState.gameMode === "online_pvp") {
+      this.netSyncTimer += delta;
+      if (this.netSyncTimer >= 50) {
+        this.netSyncTimer = 0;
+        const localIdx = this.localPlayerIndex;
+        const activeObj = localIdx === 1 ? this.player : this.enemy;
+        if (activeObj && activeObj.active) {
+          const stateData = {
+            x: activeObj.x,
+            y: activeObj.y,
+            flipX: activeObj.flipX,
+            rotation: activeObj.rotation,
+            anim: activeObj.anims.currentAnim?.key || "",
+            hp: localIdx === 1 ? this.playerHp : this.enemyHp,
+            ki: localIdx === 1 ? this.playerKi : this.enemyKi,
+            actionActive: localIdx === 1 ? this.p1ActionActive : this.p2ActionActive,
+            transformLevel: localIdx === 1 ? this.playerTransformLevel : this.enemyTransformLevel,
+            defending: localIdx === 1 ? this.playerDefending : this.enemyDefending,
+            isJumping: localIdx === 1 ? this.isP1Jumping : this.isP2Jumping,
+            superActive: localIdx === 1 ? this.p1SuperActive : this.p2SuperActive
+          };
+          MultiplayerManager.getInstance().emitState(stateData);
+        }
+      }
+    }
+    
     // Auto-heal character positions (prevent getting stuck outside bounds)
     const bounds = { minX: 50, maxX: 1950, minY: 100, maxY: 440 };
 
     if (this.player && this.player.active && this.enemy && this.enemy.active) {
-        if (!this.p1ActionActive && !this.tweens.isTweening(this.player) && !this.isP1Jumping) {
+        
+        // --- PLAYER 1 (LEFT FIGHTER) MOVEMENT CONTROL ---
+        const isP1Local = (this.gameState.gameMode !== "online_pvp" || this.localPlayerIndex === 1);
+        
+        if (isP1Local && !this.p1ActionActive && !this.tweens.isTweening(this.player) && !this.isP1Jumping) {
             if (Phaser.Input.Keyboard.JustDown(this.keys.p1_left)) {
                 if (time - this.lastP1LeftTime < 300) {
                     this.performDash(true, -1);
@@ -315,9 +449,26 @@ export default class BattleScene extends Phaser.Scene {
             }
             this.player.y = Phaser.Math.Clamp(this.player.y, bounds.minY, bounds.maxY);
         }
-    
-        if (!this.p2ActionActive && !this.tweens.isTweening(this.enemy) && !this.isP2Jumping) {
-            if (this.gameState.gameMode === "local_pvp" || this.gameState.gameMode === "training") {
+
+        // --- PLAYER 2 (RIGHT FIGHTER) MOVEMENT CONTROL ---
+        const isP2Local = (this.gameState.gameMode === "local_pvp" || this.gameState.gameMode === "training" || (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2));
+        const isAIScene = (this.gameState.gameMode !== "local_pvp" && this.gameState.gameMode !== "training" && this.gameState.gameMode !== "online_pvp");
+
+        if (isP2Local && !this.p2ActionActive && !this.tweens.isTweening(this.enemy) && !this.isP2Jumping) {
+            // Check double-tap dash
+            if (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2) {
+                if (Phaser.Input.Keyboard.JustDown(this.keys.p1_left)) {
+                    if (time - this.lastP2LeftTime < 300) {
+                        this.performDash(false, -1);
+                    }
+                    this.lastP2LeftTime = time;
+                } else if (Phaser.Input.Keyboard.JustDown(this.keys.p1_right)) {
+                    if (time - this.lastP2RightTime < 300) {
+                        this.performDash(false, 1);
+                    }
+                    this.lastP2RightTime = time;
+                }
+            } else {
                 if (Phaser.Input.Keyboard.JustDown(this.keys.p2_left)) {
                     if (time - this.lastP2LeftTime < 300) {
                         this.performDash(false, -1);
@@ -333,20 +484,77 @@ export default class BattleScene extends Phaser.Scene {
 
             const moveSpeed = 6;
             let isMoving = false;
-            let moveL = this.keys.p2_left.isDown;
-            let moveR = this.keys.p2_right.isDown;
+            let moveL = false;
+            let moveR = false;
 
-            if (this.gameState.gameMode !== "local_pvp" && this.gameState.gameMode !== "training") {
-                moveL = this.aiMoveDir === -1;
-                moveR = this.aiMoveDir === 1;
-                
-                const distToPlayer = Math.abs(this.enemy.x - this.player.x);
-                if (moveL && this.enemy.x < this.player.x && distToPlayer > 600) moveL = false;
-                if (moveR && this.enemy.x > this.player.x && distToPlayer > 600) moveR = false;
+            if (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2) {
+                moveL = this.keys.p1_left.isDown || this.mobileJoystickVector.x < -0.3;
+                moveR = this.keys.p1_right.isDown || this.mobileJoystickVector.x > 0.3;
+            } else {
+                moveL = this.keys.p2_left.isDown;
+                moveR = this.keys.p2_right.isDown;
             }
 
             if (this.enemyDefending) {
-                // Cannot move while defending/charging
+                this.enemy.setFlipX(this.enemy.x > this.player.x);
+            } else if (moveL) {
+                this.enemy.x -= moveSpeed;
+                this.enemy.setFlipX(true);
+                isMoving = true;
+            } else if (moveR) {
+                this.enemy.x += moveSpeed;
+                this.enemy.setFlipX(false);
+                isMoving = true;
+            } else {
+                this.enemy.setFlipX(this.enemy.x > this.player.x);
+            }
+            
+            if (isMoving && !this.enemyDefending) {
+                const walkAnim = this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "walk");
+                if (this.enemy.anims.currentAnim?.key !== walkAnim) {
+                    this.enemy.play(walkAnim, true);
+                }
+                this.enemy.setRotation(this.enemy.flipX ? -0.1 : 0.1);
+                this.enemy.y = this.p2StartPos.y + Math.sin(time * 0.02) * 8;
+            } else if (!this.p2ActionActive && !this.enemyDefending) {
+                const idleAnim = this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "idle");
+                if (this.enemy.anims.currentAnim?.key !== idleAnim) {
+                    this.enemy.play(idleAnim, true);
+                }
+                this.enemy.setRotation(0);
+                this.enemy.y = Phaser.Math.Linear(this.enemy.y, this.p2StartPos.y, 0.2);
+            }
+            
+            const isJumpPressed = (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2)
+                ? this.keys.p1_up.isDown
+                : this.keys.p2_up.isDown;
+
+            if (!this.enemyDefending && isJumpPressed && !this.isP2Jumping) {
+                this.performJump(false);
+            }
+            
+            // Cannot cross the player
+            if (this.enemy.x >= this.player.x) {
+                this.enemy.x = Math.max(this.enemy.x, this.player.x + 40);
+                this.enemy.x = Math.min(this.enemy.x, bounds.maxX);
+            } else {
+                this.enemy.x = Math.min(this.enemy.x, this.player.x - 40);
+                this.enemy.x = Math.max(this.enemy.x, bounds.minX);
+            }
+            this.enemy.y = Phaser.Math.Clamp(this.enemy.y, bounds.minY, bounds.maxY);
+        } else if (isAIScene && !this.p2ActionActive && !this.tweens.isTweening(this.enemy) && !this.isP2Jumping) {
+            // Artificial Intelligence controls movement
+            let moveL = this.aiMoveDir === -1;
+            let moveR = this.aiMoveDir === 1;
+            
+            const distToPlayer = Math.abs(this.enemy.x - this.player.x);
+            if (moveL && this.enemy.x < this.player.x && distToPlayer > 600) moveL = false;
+            if (moveR && this.enemy.x > this.player.x && distToPlayer > 600) moveR = false;
+
+            const moveSpeed = 6;
+            let isMoving = false;
+
+            if (this.enemyDefending) {
                 this.enemy.setFlipX(this.enemy.x > this.player.x);
             } else if (moveL) {
                 this.enemy.x -= moveSpeed;
@@ -470,86 +678,89 @@ export default class BattleScene extends Phaser.Scene {
 
     // Keep training mode infinite HP but let them charge Ki normally
     // --- PLAYER 1 CONTROLS ---
-    if (this.p1ActionActive) {
-      this.stopContinuousCharge(true);
-      this.playerDefending = false;
-      this.p1SpecialHoldTime = 0;
-      this.clearChargeIndicator(true);
-      this.mobileP1Attack = false;
-    } else {
-      // Defend / Charge
-      if (this.keys.p1_defend.isDown || this.mobileP1Defend) {
-        this.playerDefending = true;
-        this.performContinuousCharge(true, delta);
+    const isP1Local = (this.gameState.gameMode !== "online_pvp" || this.localPlayerIndex === 1);
+    if (isP1Local) {
+      if (this.p1ActionActive) {
+        this.stopContinuousCharge(true);
+        this.playerDefending = false;
         this.p1SpecialHoldTime = 0;
         this.clearChargeIndicator(true);
-        
-        // Anti-Ghosting: If they hold DEF, clear any buffered attacks so they don't fire when DEF is released
         this.mobileP1Attack = false;
-        this.mobileP1KiBlast = false;
-        this.p1AttackBuffer = 0;
-        this.p1KiBlastBuffer = 0;
       } else {
-        this.playerDefending = false;
-        this.stopContinuousCharge(true);
-      }
-
-      if (!this.playerDefending) {
-        // Attack
-        if (
-          Phaser.Input.Keyboard.JustDown(this.keys.p1_attack) ||
-          this.mobileP1Attack
-        ) {
-          this.performAttack(true, "melee");
-          this.mobileP1Attack = false; // Reset flag
+        // Defend / Charge
+        if (this.keys.p1_defend.isDown || this.mobileP1Defend) {
+          this.playerDefending = true;
+          this.performContinuousCharge(true, delta);
+          this.p1SpecialHoldTime = 0;
+          this.clearChargeIndicator(true);
+          
+          // Anti-Ghosting: If they hold DEF, clear any buffered attacks so they don't fire when DEF is released
+          this.mobileP1Attack = false;
+          this.mobileP1KiBlast = false;
           this.p1AttackBuffer = 0;
-        }
-        // Ki Blast
-        else if (
-          Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast) ||
-          this.mobileP1KiBlast
-        ) {
-          this.performAttack(true, "ki");
-          this.mobileP1KiBlast = false; // Reset flag
           this.p1KiBlastBuffer = 0;
-        }
-        // Transform
-        else if (
-          Phaser.Input.Keyboard.JustDown(this.keys.p1_transform) ||
-          this.mobileP1Transform
-        ) {
-          this.performTransform(true);
-          this.mobileP1Transform = false; // Reset flag
-          this.p1TransformBuffer = 0;
+        } else {
+          this.playerDefending = false;
+          this.stopContinuousCharge(true);
         }
 
-        // Special
-        if (!this.p1ActionActive) {
-          if (this.keys.p1_special.isDown || this.mobileP1Special) {
-            this.p1SpecialHoldTime += delta;
-            this.updateChargeIndicator(true, this.p1SpecialHoldTime);
-          } else if (
-            (this.p1SpecialHoldTime > 0 && this.mobileP1SpecialJustUp) ||
-            (this.p1SpecialHoldTime > 0 && Phaser.Input.Keyboard.JustUp(this.keys.p1_special)) ||
-            // Ensure a minimum tap time isn't required if they just tap it
-            (Phaser.Input.Keyboard.JustUp(this.keys.p1_special) && this.p1SpecialHoldTime === 0)
+        if (!this.playerDefending) {
+          // Attack
+          if (
+            Phaser.Input.Keyboard.JustDown(this.keys.p1_attack) ||
+            this.mobileP1Attack
           ) {
-            // Fire the special
-            this.performSpecial(
-              true,
-              this.p1SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
-            );
-            this.p1SpecialHoldTime = 0;
-            this.clearChargeIndicator(true);
-            this.mobileP1SpecialJustUp = false; // Reset flag
-          } else if (this.mobileP1SpecialJustUp || this.p1SpecialHoldTime > 0) {
-              // Just clear the flag if hold time was 0 and nothing triggered
-              if (this.p1SpecialHoldTime > 0) {
-                 this.performSpecial(true, this.p1SpecialHoldTime >= this.SUPER_THRESHOLD_MS);
-              }
+            this.performAttack(true, "melee");
+            this.mobileP1Attack = false; // Reset flag
+            this.p1AttackBuffer = 0;
+          }
+          // Ki Blast
+          else if (
+            Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast) ||
+            this.mobileP1KiBlast
+          ) {
+            this.performAttack(true, "ki");
+            this.mobileP1KiBlast = false; // Reset flag
+            this.p1KiBlastBuffer = 0;
+          }
+          // Transform
+          else if (
+            Phaser.Input.Keyboard.JustDown(this.keys.p1_transform) ||
+            this.mobileP1Transform
+          ) {
+            this.performTransform(true);
+            this.mobileP1Transform = false; // Reset flag
+            this.p1TransformBuffer = 0;
+          }
+
+          // Special
+          if (!this.p1ActionActive) {
+            if (this.keys.p1_special.isDown || this.mobileP1Special) {
+              this.p1SpecialHoldTime += delta;
+              this.updateChargeIndicator(true, this.p1SpecialHoldTime);
+            } else if (
+              (this.p1SpecialHoldTime > 0 && this.mobileP1SpecialJustUp) ||
+              (this.p1SpecialHoldTime > 0 && Phaser.Input.Keyboard.JustUp(this.keys.p1_special)) ||
+              // Ensure a minimum tap time isn't required if they just tap it
+              (Phaser.Input.Keyboard.JustUp(this.keys.p1_special) && this.p1SpecialHoldTime === 0)
+            ) {
+              // Fire the special
+              this.performSpecial(
+                true,
+                this.p1SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
+              );
               this.p1SpecialHoldTime = 0;
               this.clearChargeIndicator(true);
-              this.mobileP1SpecialJustUp = false;
+              this.mobileP1SpecialJustUp = false; // Reset flag
+            } else if (this.mobileP1SpecialJustUp || this.p1SpecialHoldTime > 0) {
+                // Just clear the flag if hold time was 0 and nothing triggered
+                if (this.p1SpecialHoldTime > 0) {
+                   this.performSpecial(true, this.p1SpecialHoldTime >= this.SUPER_THRESHOLD_MS);
+                }
+                this.p1SpecialHoldTime = 0;
+                this.clearChargeIndicator(true);
+                this.mobileP1SpecialJustUp = false;
+            }
           }
         }
       }
@@ -557,17 +768,21 @@ export default class BattleScene extends Phaser.Scene {
 
     // Reset mobile special flag
     this.mobileP1SpecialJustUp = false;
-    // --- PLAYER 2 CONTROLS (Local PvP) ---
-    if (this.gameState.gameMode === "local_pvp") {
+    
+    // --- PLAYER 2 CONTROLS (Local PvP or Online Guest) ---
+    const isP2Local = (this.gameState.gameMode === "local_pvp" || (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2));
+    if (isP2Local) {
       if (this.p2ActionActive) {
         this.stopContinuousCharge(false);
         this.enemyDefending = false;
         this.p2SpecialHoldTime = 0;
         this.clearChargeIndicator(false);
       } else {
-        let isDefending = this.keys.p2_defend.isDown;
-        if (this.gameState.gameMode !== "local_pvp" && this.gameState.gameMode !== "training") {
-           // If AI, it sets its own enemyDefending state in enemyDecide.
+        let isDefending = (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2)
+            ? (this.keys.p1_defend.isDown || this.mobileP1Defend)
+            : this.keys.p2_defend.isDown;
+
+        if (this.gameState.gameMode === "training") {
            isDefending = this.enemyDefending;
         }
 
@@ -576,28 +791,67 @@ export default class BattleScene extends Phaser.Scene {
           this.performContinuousCharge(false, delta);
           this.p2SpecialHoldTime = 0;
           this.clearChargeIndicator(false);
+          
+          if (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2) {
+            this.mobileP1Attack = false;
+            this.mobileP1KiBlast = false;
+            this.p1AttackBuffer = 0;
+            this.p1KiBlastBuffer = 0;
+          }
         } else {
           this.enemyDefending = false;
           this.stopContinuousCharge(false);
 
-          if (Phaser.Input.Keyboard.JustDown(this.keys.p2_attack) || this.p2BufferedAttack) {
+          const isAttack = (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2)
+              ? (Phaser.Input.Keyboard.JustDown(this.keys.p1_attack) || this.mobileP1Attack)
+              : (Phaser.Input.Keyboard.JustDown(this.keys.p2_attack) || this.p2BufferedAttack);
+
+          const isKiBlast = (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2)
+              ? (Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast) || this.mobileP1KiBlast)
+              : (Phaser.Input.Keyboard.JustDown(this.keys.p2_kiblast) || this.p2BufferedKiBlast);
+
+          const isTransform = (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2)
+              ? (Phaser.Input.Keyboard.JustDown(this.keys.p1_transform) || this.mobileP1Transform)
+              : (Phaser.Input.Keyboard.JustDown(this.keys.p2_transform) || this.p2BufferedTransform);
+
+          if (isAttack) {
             this.performAttack(false, "melee");
-            this.p2BufferedAttack = false;
-          } else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_kiblast) || this.p2BufferedKiBlast) {
+            if (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2) {
+              this.mobileP1Attack = false;
+            } else {
+              this.p2BufferedAttack = false;
+            }
+          } else if (isKiBlast) {
             this.performAttack(false, "ki");
-            this.p2BufferedKiBlast = false;
-          } else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_transform) || this.p2BufferedTransform) {
+            if (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2) {
+              this.mobileP1KiBlast = false;
+            } else {
+              this.p2BufferedKiBlast = false;
+            }
+          } else if (isTransform) {
             this.performTransform(false);
-            this.p2BufferedTransform = false;
+            if (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2) {
+              this.mobileP1Transform = false;
+            } else {
+              this.p2BufferedTransform = false;
+            }
           }
 
           if (!this.p2ActionActive) {
-            if (this.keys.p2_special.isDown) {
+            const isSpecialDown = (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2)
+                ? (this.keys.p1_special.isDown || this.mobileP1Special)
+                : this.keys.p2_special.isDown;
+
+            const isSpecialJustUp = (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2)
+                ? (this.mobileP1SpecialJustUp || Phaser.Input.Keyboard.JustUp(this.keys.p1_special))
+                : Phaser.Input.Keyboard.JustUp(this.keys.p2_special);
+
+            if (isSpecialDown) {
               this.p2SpecialHoldTime += delta;
               this.updateChargeIndicator(false, this.p2SpecialHoldTime);
             } else if (
-              (this.p2SpecialHoldTime > 0 && Phaser.Input.Keyboard.JustUp(this.keys.p2_special)) ||
-              (Phaser.Input.Keyboard.JustUp(this.keys.p2_special) && this.p2SpecialHoldTime === 0)
+              (this.p2SpecialHoldTime > 0 && isSpecialJustUp) ||
+              (isSpecialJustUp && this.p2SpecialHoldTime === 0)
             ) {
               this.performSpecial(
                 false,
@@ -605,14 +859,15 @@ export default class BattleScene extends Phaser.Scene {
               );
               this.p2SpecialHoldTime = 0;
               this.clearChargeIndicator(false);
+              this.mobileP1SpecialJustUp = false;
             } else if (this.p2SpecialHoldTime > 0) {
-              // Failsafe in case JustUp was missed but key is no longer down
               this.performSpecial(
                 false,
                 this.p2SpecialHoldTime >= this.SUPER_THRESHOLD_MS,
               );
               this.p2SpecialHoldTime = 0;
               this.clearChargeIndicator(false);
+              this.mobileP1SpecialJustUp = false;
             }
           }
         }
@@ -627,6 +882,11 @@ export default class BattleScene extends Phaser.Scene {
   performDash(isPlayer: boolean, direction: number) {
     if (isPlayer && this.p1DashCooldown) return;
     if (!isPlayer && this.p2DashCooldown) return;
+
+    const isLocal = (isPlayer === (this.localPlayerIndex === 1));
+    if (isLocal) {
+      this.emitNetworkAction({ type: "dash", isPlayer, dir: direction });
+    }
 
     const sprite = isPlayer ? this.player : this.enemy;
     const bounds = { minX: 50, maxX: 1950, minY: 100, maxY: 440 };
@@ -948,6 +1208,11 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   performJump(isP: boolean) {
+    const isLocal = (isP === (this.localPlayerIndex === 1));
+    if (isLocal) {
+      this.emitNetworkAction({ type: "jump", isPlayer: isP });
+    }
+
     const player = isP ? this.player : this.enemy;
     if (!player || !player.active) return;
     
@@ -1044,6 +1309,12 @@ export default class BattleScene extends Phaser.Scene {
 
   performAttack(isPlayer: boolean, attackType: "melee" | "ki") {
     if (this.isBattleOver) return;
+
+    const isLocal = (isPlayer === (this.localPlayerIndex === 1));
+    if (isLocal) {
+      this.emitNetworkAction({ type: "attack", isPlayer, attackType });
+    }
+
     const attacker = isPlayer ? this.player : this.enemy;
     const target = isPlayer ? this.enemy : this.player;
     const startX = attacker ? attacker.x : (isPlayer ? this.player.x : this.enemy.x);
@@ -1809,7 +2080,6 @@ export default class BattleScene extends Phaser.Scene {
     const currentLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
-    const sprite = isPlayer ? this.player : this.enemy;
 
     // Check max transformation level
     let maxLevel = 1;
@@ -1818,6 +2088,13 @@ export default class BattleScene extends Phaser.Scene {
 
     if (!data.transformAvailable || currentLevel >= maxLevel || ki < 100)
       return;
+
+    const isLocal = (isPlayer === (this.localPlayerIndex === 1));
+    if (isLocal) {
+      this.emitNetworkAction({ type: "transform", isPlayer });
+    }
+
+    const sprite = isPlayer ? this.player : this.enemy;
 
     this.setActionState(isPlayer, true);
     this.modifyKi(isPlayer, -100);
@@ -2295,14 +2572,20 @@ export default class BattleScene extends Phaser.Scene {
   performSpecial(isPlayer: boolean, isSuper: boolean) {
     if (this.isBattleOver) return;
     const ki = isPlayer ? this.playerKi : this.enemyKi;
-    const data = isPlayer ? this.playerData : this.enemyData;
     const cost = isSuper ? 100 : 50;
-    const sprite = isPlayer ? this.player : this.enemy;
 
     if (ki < cost) {
       if (isPlayer) if(this.battleUI) this.battleUI.showLog(`Need ${cost} Ki!`);
       return;
     }
+
+    const isLocal = (isPlayer === (this.localPlayerIndex === 1));
+    if (isLocal) {
+      this.emitNetworkAction({ type: "special", isPlayer, isSuper });
+    }
+
+    const data = isPlayer ? this.playerData : this.enemyData;
+    const sprite = isPlayer ? this.player : this.enemy;
 
     this.setActionState(isPlayer, true);
     if (isSuper) {
@@ -2968,6 +3251,11 @@ export default class BattleScene extends Phaser.Scene {
   takeDamage(isP: boolean, dmg: number) {
     if (this.isBattleOver || !this.scene.isActive()) return;
 
+    const isLocal = (isP === (this.localPlayerIndex === 1));
+    if (isLocal) {
+      this.emitNetworkAction({ type: "takeDamage", isPlayer: isP, dmg });
+    }
+
     if (isP) this.isP1Jumping = false;
     else this.isP2Jumping = false;
 
@@ -3072,11 +3360,52 @@ export default class BattleScene extends Phaser.Scene {
 
       this.time.delayedCall(105, () => {
         this.time.timeScale = 1;
-        if (this.battleCamera) this.battleCamera.camera.resetFX();
-        else this.cameras.main.resetFX();
-        
-        if(this.battleReward) this.battleReward.endBattle(this.playerHp > 0);
+        this.cleanupAndShowVictory(this.playerHp > 0);
       });
+    }
+  }
+
+  public cleanupAndShowVictory(win: boolean) {
+    if (this.battleInput && this.battleInput.mobileControls) {
+      this.battleInput.mobileControls.forEach((c: any) => {
+        try {
+          c.destroy();
+        } catch (e) {
+          console.warn("Error destroying mobile control:", e);
+        }
+      });
+      this.battleInput.mobileControls = [];
+    }
+
+    if (this.battleUI && this.battleUI.uiContainer) {
+      this.battleUI.uiContainer.setAlpha(0);
+    }
+
+    if (this.battleCamera) this.battleCamera.camera.resetFX();
+    else this.cameras.main.resetFX();
+
+    this.cameras.main.setZoom(1);
+    this.cameras.main.centerOn(480, 270);
+
+    if (this.battleReward) {
+      this.battleReward.endBattle(win);
+    }
+  }
+
+  getPlayerName(): string {
+    const authUser = auth.currentUser;
+    if (authUser?.displayName) {
+      return authUser.displayName;
+    }
+    if (authUser?.email) {
+      return authUser.email.split("@")[0];
+    }
+    return "Guerreiro";
+  }
+
+  emitNetworkAction(actionData: any) {
+    if (this.gameState.gameMode === "online_pvp" && !this.isIncomingNetworkAction) {
+      MultiplayerManager.getInstance().emitAction(actionData);
     }
   }
 

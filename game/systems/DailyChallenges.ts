@@ -20,6 +20,12 @@ export interface ChallengeProgress {
   claimed: boolean;
 }
 
+export interface DailyStreakInfo {
+  currentStreak: number;
+  lastLoginDate: string; // YYYY-MM-DD
+  lastClaimedDate: string; // YYYY-MM-DD
+}
+
 export class DailyChallenges {
   static getTodayDateStr(): string {
     const d = new Date();
@@ -216,6 +222,121 @@ export class DailyChallenges {
       console.warn("Failed to claim all rewards", e);
       return 0;
     }
+  }
+
+  static getLocalStreakInfo(): DailyStreakInfo {
+    try {
+      const stored = localStorage.getItem('utlw_daily_streak');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return { currentStreak: 0, lastLoginDate: '', lastClaimedDate: '' };
+  }
+
+  static saveLocalStreakInfo(info: DailyStreakInfo) {
+    try {
+      localStorage.setItem('utlw_daily_streak', JSON.stringify(info));
+    } catch {}
+  }
+
+  static async getStreakInfo(): Promise<DailyStreakInfo> {
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      return this.getLocalStreakInfo();
+    }
+
+    const today = this.getTodayDateStr();
+    let localInfo = this.getLocalStreakInfo();
+
+    try {
+      if (navigator.onLine) {
+        const docRef = doc(db, 'users', uid, 'dailyStreak', 'info');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const dbInfo = snap.data() as DailyStreakInfo;
+          // Merge local and DB (prefer DB or latest)
+          if (!localInfo.lastLoginDate || dbInfo.lastLoginDate >= localInfo.lastLoginDate) {
+            localInfo = dbInfo;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch streak from Firestore", e);
+    }
+
+    // Process/update streak count based on current date
+    if (localInfo.lastLoginDate === '') {
+      localInfo.currentStreak = 1;
+      localInfo.lastLoginDate = today;
+    } else if (localInfo.lastLoginDate !== today) {
+      // Check if yesterday
+      const last = new Date(localInfo.lastLoginDate + 'T00:00:00');
+      const curr = new Date(today + 'T00:00:00');
+      const diffTime = curr.getTime() - last.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        localInfo.currentStreak += 1;
+      } else if (diffDays > 1) {
+        localInfo.currentStreak = 1;
+      }
+      localInfo.lastLoginDate = today;
+    }
+
+    this.saveLocalStreakInfo(localInfo);
+
+    if (uid && navigator.onLine) {
+      try {
+        const docRef = doc(db, 'users', uid, 'dailyStreak', 'info');
+        await setDoc(docRef, localInfo, { merge: true });
+      } catch (e) {
+        console.warn("Could not save streak to Firestore", e);
+      }
+    }
+
+    return localInfo;
+  }
+
+  static getStreakReward(streak: number): number {
+    if (streak <= 1) return 15;
+    if (streak === 2) return 25;
+    if (streak === 3) return 40;
+    if (streak === 4) return 60;
+    if (streak === 5) return 80;
+    if (streak === 6) return 100;
+    return 150; // Day 7 and onwards
+  }
+
+  static async claimStreakReward(): Promise<{ success: boolean; reward: number }> {
+    const uid = auth.currentUser?.uid;
+    const today = this.getTodayDateStr();
+    const info = await this.getStreakInfo();
+
+    if (info.lastClaimedDate === today) {
+      return { success: false, reward: 0 };
+    }
+
+    const rewardCoins = this.getStreakReward(info.currentStreak);
+    info.lastClaimedDate = today;
+
+    // Save update
+    this.saveLocalStreakInfo(info);
+
+    if (uid && navigator.onLine) {
+      try {
+        const docRef = doc(db, 'users', uid, 'dailyStreak', 'info');
+        await setDoc(docRef, info, { merge: true });
+      } catch (e) {
+        console.warn("Failed to update streak claimed status on Firestore", e);
+      }
+    }
+
+    // Add coins
+    if (typeof window !== 'undefined' && window.UTLW && window.UTLW.state) {
+      window.UTLW.state.coins += rewardCoins;
+      if (window.UTLW.save) window.UTLW.save();
+    }
+
+    return { success: true, reward: rewardCoins };
   }
 }
 

@@ -83,7 +83,7 @@ export class BattleReward {
     s.cameras.main.setZoom(1);
     s.cameras.main.centerOn(480, 270);
 
-    const bg = s.add.rectangle(480, 270, 20000, 20000, 0x000000, 0.8).setDepth(20).setScrollFactor(0);
+    const bg = s.add.rectangle(480, 270, 20000, 20000, 0x000000, 0.8).setDepth(3000).setScrollFactor(0);
 
     let titleMessage = "DEFEAT...";
     let subtitleMessage = "";
@@ -148,7 +148,7 @@ export class BattleReward {
         strokeThickness: 8,
       })
       .setOrigin(0.5)
-      .setDepth(21).setScrollFactor(0);
+      .setDepth(3001).setScrollFactor(0);
 
     s.tweens.add({
       targets: titleText,
@@ -168,7 +168,7 @@ export class BattleReward {
           strokeThickness: 6,
         })
         .setOrigin(0.5)
-        .setDepth(21)
+        .setDepth(3001)
         .setAlpha(0)
         .setScale(0.5).setScrollFactor(0);
 
@@ -193,7 +193,7 @@ export class BattleReward {
           strokeThickness: 6,
         })
         .setOrigin(0.5)
-        .setDepth(21)
+        .setDepth(3001)
         .setAlpha(0).setScrollFactor(0);
 
       s.tweens.add({
@@ -215,7 +215,7 @@ export class BattleReward {
         padding: { x: 20, y: 10 },
       })
       .setOrigin(0.5)
-      .setDepth(21)
+      .setDepth(3001)
       .setInteractive({ useHandCursor: true })
       .setAlpha(0).setScrollFactor(0);
 

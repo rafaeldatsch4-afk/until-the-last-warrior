@@ -6,6 +6,10 @@ export class BattleUI {
   p2HpBar!: Phaser.GameObjects.Rectangle;
   p2KiBar!: Phaser.GameObjects.Rectangle;
   logText!: Phaser.GameObjects.Text;
+  p1KiPulseTween?: Phaser.Tweens.Tween;
+  p2KiPulseTween?: Phaser.Tweens.Tween;
+  p1NameText!: Phaser.GameObjects.Text;
+  p2NameText!: Phaser.GameObjects.Text;
 
   constructor(scene: any) {
     this.scene = scene;
@@ -48,7 +52,7 @@ export class BattleUI {
     this.p2KiBar.scaleX = 0; // Starts with 0 Ki
 
     // Player 1 Name
-    const p1NameTxt = bs.add
+    this.p1NameText = bs.add
       .text(25, 15, playerData.name, {
         fontSize: "22px",
         fontFamily: "Impact, sans-serif",
@@ -57,10 +61,10 @@ export class BattleUI {
         strokeThickness: 4,
         shadow: { color: "#3498db", blur: 4, fill: true }
       });
-    this.uiContainer.add(p1NameTxt);
+    this.uiContainer.add(this.p1NameText);
       
     // Player 2 Name
-    const p2NameTxt = bs.add
+    this.p2NameText = bs.add
       .text(935, 15, enemyData.name, {
         fontSize: "22px",
         fontFamily: "Impact, sans-serif",
@@ -70,7 +74,7 @@ export class BattleUI {
         shadow: { color: "#e74c3c", blur: 4, fill: true }
       })
       .setOrigin(1, 0);
-    this.uiContainer.add(p2NameTxt);
+    this.uiContainer.add(this.p2NameText);
       
     this.logText = bs.add
       .text(480, 120, "", {
@@ -120,6 +124,46 @@ export class BattleUI {
       // Liquid Ki Bars
       this.p1KiBar.scaleX = Math.max(0, p1KiP);
       this.p2KiBar.scaleX = Math.max(0, p2KiP);
+
+      // Pulse Player 1 Ki Bar at 100% (p1KiP >= 1.0)
+      if (p1KiP >= 1) {
+        if (!this.p1KiPulseTween) {
+          this.p1KiPulseTween = this.scene.tweens.add({
+            targets: this.p1KiBar,
+            alpha: { from: 1, to: 0.4 },
+            duration: 350,
+            yoyo: true,
+            repeat: -1,
+            ease: "Sine.easeInOut"
+          });
+        }
+      } else {
+        if (this.p1KiPulseTween) {
+          this.p1KiPulseTween.stop();
+          this.p1KiPulseTween = undefined;
+          this.p1KiBar.setAlpha(1);
+        }
+      }
+
+      // Pulse Player 2 Ki Bar at 100% (p2KiP >= 1.0)
+      if (p2KiP >= 1) {
+        if (!this.p2KiPulseTween) {
+          this.p2KiPulseTween = this.scene.tweens.add({
+            targets: this.p2KiBar,
+            alpha: { from: 1, to: 0.4 },
+            duration: 350,
+            yoyo: true,
+            repeat: -1,
+            ease: "Sine.easeInOut"
+          });
+        }
+      } else {
+        if (this.p2KiPulseTween) {
+          this.p2KiPulseTween.stop();
+          this.p2KiPulseTween = undefined;
+          this.p2KiBar.setAlpha(1);
+        }
+      }
     }
   }
 
