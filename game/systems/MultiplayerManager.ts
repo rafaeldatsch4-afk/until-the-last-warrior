@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { io, Socket } from "socket.io-client";
 
 export interface MatchStartData {
@@ -38,7 +39,7 @@ export class MultiplayerManager {
     if (this.socket) return;
 
     // Use current window location to connect directly to the Express server
-    const url = import.meta.env.VITE_MULTIPLAYER_URL || window.location.origin;
+    const url = import.meta.env.VITE_MULTIPLAYER_URL ?? "https://until-the-last-warrior-production.up.railway.app";
     
     console.log(`Connecting to Multiplayer server at ${url}...`);
     this.socket = io(url, {
