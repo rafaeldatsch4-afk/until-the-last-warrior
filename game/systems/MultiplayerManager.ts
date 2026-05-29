@@ -38,15 +38,26 @@ export class MultiplayerManager {
     if (this.socket) return;
 
     // Use current window location to connect directly to the Express server
-    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
-    const url = `${protocol}//${window.location.host}`;
+    const url = import.meta.env.VITE_MULTIPLAYER_URL || window.location.origin;
     
     console.log(`Connecting to Multiplayer server at ${url}...`);
     this.socket = io(url, {
       autoConnect: true,
       reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      transports: ["websocket", "polling"]
+    });
+
+    this.socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err);
+      if (this.onErrorCallback) {
+        this.onErrorCallback("Erro de Conexão com o Servidor PvP. Tentando novamente...");
+      }
+    });
+
+    this.socket.on("connect_timeout", () => {
+      console.warn("Socket connection timeout");
     });
 
     this.socket.on("connect", () => {

@@ -161,49 +161,99 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     this.currentMode = "typing";
     this.typedCode = "";
 
-    const cardBg = this.add.rectangle(0, 0, 560, 320, 0x111625, 0.8)
+    const cardBg = this.add.rectangle(0, 0, 560, 480, 0x111625, 0.8)
       .setStrokeStyle(3, 0x8e44ad)
       .setOrigin(0.5);
 
-    const titleText = this.add.text(0, -100, "ENTRAR EM SALA PRIVADA", {
+    const titleText = this.add.text(0, -210, "ENTRAR EM SALA PRIVADA", {
       fontSize: "20px",
       fontFamily: "Impact, sans-serif",
       color: "#f1c40f"
     }).setOrigin(0.5);
 
-    const promptText = this.add.text(0, -60, "Digite um código de 6 caracteres no seu teclado:", {
+    const promptText = this.add.text(0, -170, "Digite um código de 6 caracteres:", {
       fontSize: "14px",
       color: "#aaaaaa"
     }).setOrigin(0.5);
 
     // Virtual passcode box display
-    const inputBoxImg = this.add.rectangle(0, -10, 260, 50, 0x070911)
+    const inputBoxImg = this.add.rectangle(0, -120, 260, 50, 0x070911)
       .setStrokeStyle(2, 0xffffff, 0.5)
       .setOrigin(0.5);
 
-    this.typingTextObj = this.add.text(0, -10, "_ _ _ _ _ _", {
+    this.typingTextObj = this.add.text(0, -120, "_ _ _ _ _ _", {
       fontSize: "26px",
       fontFamily: "monospace",
       color: "#2ecc71",
       fontStyle: "bold",
       letterSpacing: 8
     }).setOrigin(0.5);
+    
+    // Keypad layout
+    const keys = [
+      "1","2","3","4","5","6","7","8","9","0",
+      "Q","W","E","R","T","Y","U","I","O","P",
+      "A","S","D","F","G","H","J","K","L","<",
+      "Z","X","C","V","B","N","M"
+    ];
 
-    const btnConfirm = this.createInteractiveButton(0, 60, 260, 40, "CONFIRMAR ENTRADA", 0x27ae60, () => {
+    let startX = -195;
+    let startY = -60;
+    
+    const keyWidth = 35;
+    const keyHeight = 35;
+    const spacing = 8;
+    
+    let kx = startX;
+    let ky = startY;
+    let col = 0;
+
+    const keyboardBtns: Phaser.GameObjects.Container[] = [];
+    
+    keys.forEach(k => {
+      const isBksp = k === "<";
+      const bw = isBksp ? keyWidth * 1.5 : keyWidth;
+      const bColor = isBksp ? 0xc0392b : 0x34495e;
+      
+      const btn = this.createInteractiveButton(kx + (bw/2) - (keyWidth/2), ky, bw, keyHeight, k, bColor, () => {
+        this.sound.play("sfx_select", { volume: 0.5 });
+        if (isBksp) {
+          this.typedCode = this.typedCode.slice(0, -1);
+        } else {
+          if (this.typedCode.length < 6) {
+            this.typedCode += k;
+          }
+        }
+        this.updateTypedCodeDisplay();
+      });
+      
+      keyboardBtns.push(btn);
+      
+      col++;
+      kx += (isBksp ? bw : keyWidth) + spacing;
+      
+      if (col === 10 || col === 20 || col === 30) {
+        ky += keyHeight + spacing;
+        kx = startX + (col === 20 ? 15 : col === 30 ? 30 : 0);
+      }
+    });
+
+    const btnConfirm = this.createInteractiveButton(0, 130, 260, 40, "CONFIRMAR ENTRADA", 0x27ae60, () => {
       if (this.typedCode.length < 3) {
-        this.statusText?.setText("O código deve ter pelo menos 3 dígitos.");
+        promptText.setText("O código deve ter pelo menos 3 dígitos.");
+        promptText.setColor("#e74c3c");
         return;
       }
       this.startJoinPrivate(this.typedCode);
     });
 
-    const btnBack = this.createInteractiveButton(0, 115, 260, 40, "CANCELAR", 0xc0392b, () => {
+    const btnBack = this.createInteractiveButton(0, 185, 260, 40, "CANCELAR", 0xc0392b, () => {
       this.drawMainMenu();
     });
 
-    this.lobbyCard.add([cardBg, titleText, promptText, inputBoxImg, this.typingTextObj, btnConfirm, btnBack]);
+    this.lobbyCard.add([cardBg, titleText, promptText, inputBoxImg, this.typingTextObj, btnConfirm, btnBack, ...keyboardBtns]);
 
-    // Setup input keyboard keybind listener for typing codes
+    // Setup input keyboard keybind listener for physical typing codes
     this.input.keyboard?.off("keydown");
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (this.currentMode !== "typing") return;
@@ -230,11 +280,15 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     if (this.typedCode === "") {
       this.typingTextObj.setText("_ _ _ _ _ _");
     } else {
-      let disp = this.typedCode;
-      while (disp.length < 6) {
-        disp += " _";
+      let disp = "";
+      for (let i = 0; i < 6; i++) {
+        if (i < this.typedCode.length) {
+          disp += this.typedCode[i] + " ";
+        } else {
+          disp += "_ ";
+        }
       }
-      this.typingTextObj.setText(disp);
+      this.typingTextObj.setText(disp.trim());
     }
   }
 
@@ -322,6 +376,24 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     };
 
     mm.onErrorCallback = (err) => {
+      // In-game error instead of window.alert() which is blocked in iframes
+      const errBox = this.add.container(480, 270).setDepth(100);
+      const errBg = this.add.rectangle(0, 0, 400, 150, 0x000000, 0.9).setStrokeStyle(2, 0xe74c3c);
+      const errTitle = this.add.text(0, -40, "ERRO NO SERVIDOR", { fontSize: "20px", color: "#e74c3c", fontStyle: "bold" }).setOrigin(0.5);
+      const errMsg = this.add.text(0, 0, err, { fontSize: "16px", color: "#ffffff", wordWrap: { width: 360, useAdvancedWrap: true } }).setOrigin(0.5);
+      
+      const btnOk = this.add.rectangle(0, 50, 100, 30, 0x333333).setStrokeStyle(1, 0xffffff).setInteractive({useHandCursor:true});
+      const btnOkTxt = this.add.text(0, 50, "OK", { fontSize: "16px", color: "#ffffff", fontStyle: "bold" }).setOrigin(0.5);
+      
+      errBox.add([errBg, errTitle, errMsg, btnOk, btnOkTxt]);
+      
+      btnOk.on("pointerdown", () => {
+        errBox.destroy();
+        if (this.currentMode !== "typing") {
+          this.drawMainMenu();
+        }
+      });
+
       if (this.currentMode === "typing") {
         this.roomCodeText?.setText("");
         // Shake lobby box
@@ -332,10 +404,9 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
           yoyo: true,
           repeat: 3
         });
-        alert(err);
       } else {
-        alert(err);
-        this.drawMainMenu();
+        // Switch out of waiting state
+        this.lobbyCard.removeAll(true);
       }
     };
   }

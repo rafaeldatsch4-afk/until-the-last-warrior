@@ -26,6 +26,10 @@ export default class BattleScene extends Phaser.Scene {
   public isIncomingNetworkAction: boolean = false;
   public localPlayerIndex: 1 | 2 = 1;
   private netSyncTimer: number = 0;
+  private remoteTargetX: number = 0;
+  private remoteTargetY: number = 0;
+  private hasInitialRemotePosition: boolean = false;
+  
   public get mobileJoystickVector() { return this.battleInput?.mobileJoystickVector || {x:0, y:0}; }
   public get mobileP1Attack() { return this.battleInput?.mobileP1Attack; }
   public get mobileP1KiBlast() { return this.battleInput?.mobileP1KiBlast; }
@@ -228,6 +232,7 @@ export default class BattleScene extends Phaser.Scene {
     this.localPlayerIndex = this.registry.get("localPlayerIndex") || 1;
     this.isIncomingNetworkAction = false;
     this.netSyncTimer = 0;
+    this.hasInitialRemotePosition = false;
 
     if (this.gameState.gameMode === "online_pvp") {
       const mm = MultiplayerManager.getInstance();
@@ -246,31 +251,51 @@ export default class BattleScene extends Phaser.Scene {
       mm.onRemoteStateCallback = (state: any) => {
         const target = this.localPlayerIndex === 1 ? this.enemy : this.player;
         if (target && target.active) {
-          target.x = state.x;
-          target.y = state.y;
-          target.setFlipX(state.flipX);
-          target.setRotation(state.rotation);
+          // Decompress state
+          const s_x = state.x;
+          const s_y = state.y;
+          const s_flipX = state.f === 1;
+          const s_rotation = state.r;
+          const s_anim = state.a;
+          const s_hp = state.h;
+          const s_ki = state.k;
+          const s_actionActive = state.aa === 1;
+          const s_transformLevel = state.tl;
+          const s_defending = state.d === 1;
+          const s_isJumping = state.j === 1;
+          const s_superActive = state.s === 1;
+
+          if (!this.hasInitialRemotePosition) {
+             target.x = s_x;
+             target.y = s_y;
+             this.hasInitialRemotePosition = true;
+          }
+          this.remoteTargetX = s_x;
+          this.remoteTargetY = s_y;
           
-          if (target.anims && state.anim && target.anims.currentAnim?.key !== state.anim) {
-            target.play(state.anim, true);
+          target.setFlipX(s_flipX);
+          target.setRotation(s_rotation);
+          
+          if (target.anims && s_anim && target.anims.currentAnim?.key !== s_anim) {
+            target.play(s_anim, true);
           }
 
           if (this.localPlayerIndex === 1) {
-            this.enemyHp = state.hp;
-            this.enemyKi = state.ki;
-            this.p2ActionActive = state.actionActive;
-            this.enemyTransformLevel = state.transformLevel;
-            this.enemyDefending = state.defending;
-            this.isP2Jumping = state.isJumping;
-            this.p2SuperActive = state.superActive;
+            this.enemyHp = s_hp;
+            this.enemyKi = s_ki;
+            this.p2ActionActive = s_actionActive;
+            this.enemyTransformLevel = s_transformLevel;
+            this.enemyDefending = s_defending;
+            this.isP2Jumping = s_isJumping;
+            this.p2SuperActive = s_superActive;
           } else {
-            this.playerHp = state.hp;
-            this.playerKi = state.ki;
-            this.p1ActionActive = state.actionActive;
-            this.playerTransformLevel = state.transformLevel;
-            this.playerDefending = state.defending;
-            this.isP1Jumping = state.isJumping;
-            this.p1SuperActive = state.superActive;
+            this.playerHp = s_hp;
+            this.playerKi = s_ki;
+            this.p1ActionActive = s_actionActive;
+            this.playerTransformLevel = s_transformLevel;
+            this.playerDefending = s_defending;
+            this.isP1Jumping = s_isJumping;
+            this.p1SuperActive = s_superActive;
           }
         }
       };
@@ -361,25 +386,34 @@ export default class BattleScene extends Phaser.Scene {
     
     // Network state stream sync
     if (this.gameState.gameMode === "online_pvp") {
+      // Interpolate remote player
+      if (this.hasInitialRemotePosition) {
+         const target = this.localPlayerIndex === 1 ? this.enemy : this.player;
+         if (target && target.active) {
+            target.x += (this.remoteTargetX - target.x) * 0.4;
+            target.y += (this.remoteTargetY - target.y) * 0.4;
+         }
+      }
+
       this.netSyncTimer += delta;
-      if (this.netSyncTimer >= 50) {
+      if (this.netSyncTimer >= 80) { // Throttle to ~12.5 Hz to save bandwidth on weak connection
         this.netSyncTimer = 0;
         const localIdx = this.localPlayerIndex;
         const activeObj = localIdx === 1 ? this.player : this.enemy;
         if (activeObj && activeObj.active) {
           const stateData = {
-            x: activeObj.x,
-            y: activeObj.y,
-            flipX: activeObj.flipX,
-            rotation: activeObj.rotation,
-            anim: activeObj.anims.currentAnim?.key || "",
-            hp: localIdx === 1 ? this.playerHp : this.enemyHp,
-            ki: localIdx === 1 ? this.playerKi : this.enemyKi,
-            actionActive: localIdx === 1 ? this.p1ActionActive : this.p2ActionActive,
-            transformLevel: localIdx === 1 ? this.playerTransformLevel : this.enemyTransformLevel,
-            defending: localIdx === 1 ? this.playerDefending : this.enemyDefending,
-            isJumping: localIdx === 1 ? this.isP1Jumping : this.isP2Jumping,
-            superActive: localIdx === 1 ? this.p1SuperActive : this.p2SuperActive
+            x: Math.round(activeObj.x),
+            y: Math.round(activeObj.y),
+            f: activeObj.flipX ? 1 : 0,
+            r: Math.round(activeObj.rotation * 10) / 10,
+            a: activeObj.anims.currentAnim?.key || "",
+            h: Math.round(localIdx === 1 ? this.playerHp : this.enemyHp),
+            k: Math.round(localIdx === 1 ? this.playerKi : this.enemyKi),
+            aa: (localIdx === 1 ? this.p1ActionActive : this.p2ActionActive) ? 1 : 0,
+            tl: localIdx === 1 ? this.playerTransformLevel : this.enemyTransformLevel,
+            d: (localIdx === 1 ? this.playerDefending : this.enemyDefending) ? 1 : 0,
+            j: (localIdx === 1 ? this.isP1Jumping : this.isP2Jumping) ? 1 : 0,
+            s: (localIdx === 1 ? this.p1SuperActive : this.p2SuperActive) ? 1 : 0
           };
           MultiplayerManager.getInstance().emitState(stateData);
         }
@@ -3269,13 +3303,6 @@ export default class BattleScene extends Phaser.Scene {
     const def = isP ? this.playerDefending : this.enemyDefending;
     const target = isP ? this.player : this.enemy;
 
-    // Reset combo count when hit
-    if (isP) {
-      this.p1ComboCount = 0;
-    } else {
-      this.p2ComboCount = 0;
-    }
-
     let isCritical = false;
     if (def) {
       dmg = Math.floor(dmg * 0.3);
@@ -3283,13 +3310,29 @@ export default class BattleScene extends Phaser.Scene {
       this.createImpactEffect(target.x, target.y + 120, 0x3498db, "block"); // Blue shield spark
       if (this.cache.audio.exists("sfx_block")) this.sound.play("sfx_block");
     } else {
-            isCritical = dmg > 25; // threshold for critical visual
+      isCritical = dmg > 25; // threshold for critical visual
       if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
       // Add requested screen-shake and particle burst
       if(this.battleCamera) this.battleCamera.shake(150, 0.02);
       this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee");
+
+      // Update combo counter
+      if (this.battleUI) {
+        if (isP && this.p2ComboCount > 1) {
+          this.battleUI.updateCombo(this.p2ComboCount, false);
+        } else if (!isP && this.p1ComboCount > 1) {
+          this.battleUI.updateCombo(this.p1ComboCount, true);
+        }
+      }
     }
     
+    // Reset combo count when hit
+    if (isP) {
+      this.p1ComboCount = 0;
+    } else {
+      this.p2ComboCount = 0;
+    }
+
     // Spawn floating damage number
     this.createFloatingDamage(target.x, target.y + 60, dmg, isCritical, def);
 

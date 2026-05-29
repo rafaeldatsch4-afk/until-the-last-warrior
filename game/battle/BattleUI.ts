@@ -11,6 +11,11 @@ export class BattleUI {
   p1NameText!: Phaser.GameObjects.Text;
   p2NameText!: Phaser.GameObjects.Text;
 
+  p1ComboText!: Phaser.GameObjects.Text;
+  p2ComboText!: Phaser.GameObjects.Text;
+  p1ComboHideTimer?: Phaser.Time.TimerEvent;
+  p2ComboHideTimer?: Phaser.Time.TimerEvent;
+
   constructor(scene: any) {
     this.scene = scene;
   }
@@ -76,6 +81,32 @@ export class BattleUI {
       .setOrigin(1, 0);
     this.uiContainer.add(this.p2NameText);
       
+    this.p1ComboText = bs.add
+      .text(25, 110, "", {
+        fontSize: "36px",
+        fontFamily: "Impact, sans-serif",
+        color: "#ffaa00",
+        stroke: "#000",
+        strokeThickness: 5,
+        shadow: { color: "#ff0000", blur: 4, fill: true }
+      })
+      .setOrigin(0, 0.5)
+      .setAlpha(0);
+    this.uiContainer.add(this.p1ComboText);
+
+    this.p2ComboText = bs.add
+      .text(935, 110, "", {
+        fontSize: "36px",
+        fontFamily: "Impact, sans-serif",
+        color: "#ffaa00",
+        stroke: "#000",
+        strokeThickness: 5,
+        shadow: { color: "#ff0000", blur: 4, fill: true }
+      })
+      .setOrigin(1, 0.5)
+      .setAlpha(0);
+    this.uiContainer.add(this.p2ComboText);
+
     this.logText = bs.add
       .text(480, 120, "", {
         fontSize: "26px",
@@ -177,6 +208,57 @@ export class BattleUI {
       delay: 1000,
       duration: 500,
     });
+  }
+
+  updateCombo(comboCount: number, isP1: boolean) {
+    if (comboCount < 2) return;
+
+    const textObj = isP1 ? this.p1ComboText : this.p2ComboText;
+    if (!textObj || !textObj.active) return;
+    
+    textObj.setText(`${comboCount} HITS!`);
+    textObj.setAlpha(1);
+
+    const bonusScale = Math.min(0.5, (comboCount - 2) * 0.05);
+    const targetScale = 1 + bonusScale;
+
+    this.scene.tweens.killTweensOf(textObj);
+    textObj.setScale(targetScale * 1.5);
+    
+    const shakeIntensity = Math.min(10, comboCount);
+    const originalX = isP1 ? 25 : 935;
+    
+    this.scene.tweens.add({
+      targets: textObj,
+      scaleX: targetScale,
+      scaleY: targetScale,
+      duration: 150,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.scene.tweens.add({
+          targets: textObj,
+          x: originalX + shakeIntensity,
+          yoyo: true,
+          repeat: 3,
+          duration: 30,
+          onComplete: () => {
+            textObj.setX(originalX);
+          }
+        });
+      }
+    });
+
+    if (isP1) {
+      if (this.p1ComboHideTimer) this.p1ComboHideTimer.remove();
+      this.p1ComboHideTimer = this.scene.time.delayedCall(2000, () => {
+        this.scene.tweens.add({ targets: textObj, alpha: 0, duration: 300 });
+      });
+    } else {
+      if (this.p2ComboHideTimer) this.p2ComboHideTimer.remove();
+      this.p2ComboHideTimer = this.scene.time.delayedCall(2000, () => {
+        this.scene.tweens.add({ targets: textObj, alpha: 0, duration: 300 });
+      });
+    }
   }
 
   showCombo(x: number, y: number) {
