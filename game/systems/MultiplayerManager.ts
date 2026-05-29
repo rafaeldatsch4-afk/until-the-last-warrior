@@ -39,7 +39,10 @@ export class MultiplayerManager {
     if (this.socket) return;
 
     // Use current window location to connect directly to the Express server
-    const url = import.meta.env.VITE_MULTIPLAYER_URL ?? "https://until-the-last-warrior-production.up.railway.app";
+    const isDev = import.meta.env.DEV;
+    const railwayUrl = "https://until-the-last-warrior-production.up.railway.app";
+    const envUrl = import.meta.env.VITE_MULTIPLAYER_URL;
+    const url = envUrl || (isDev ? window.location.origin : railwayUrl);
     
     console.log(`Connecting to Multiplayer server at ${url}...`);
     this.socket = io(url, {
@@ -47,7 +50,7 @@ export class MultiplayerManager {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      transports: ["websocket", "polling"]
+      withCredentials: true // Required for AI Studio preview proxy authentication cookies
     });
 
     this.socket.on("connect_error", (err) => {
