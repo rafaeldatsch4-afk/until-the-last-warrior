@@ -390,13 +390,13 @@ export default class BattleScene extends Phaser.Scene {
       if (this.hasInitialRemotePosition) {
          const target = this.localPlayerIndex === 1 ? this.enemy : this.player;
          if (target && target.active) {
-            target.x += (this.remoteTargetX - target.x) * 0.4;
-            target.y += (this.remoteTargetY - target.y) * 0.4;
+            target.x += (this.remoteTargetX - target.x) * 0.7;
+            target.y += (this.remoteTargetY - target.y) * 0.7;
          }
       }
 
       this.netSyncTimer += delta;
-      if (this.netSyncTimer >= 80) { // Throttle to ~12.5 Hz to save bandwidth on weak connection
+      if (this.netSyncTimer >= 33) { // Throttle to ~30 Hz for snappier responsive fighting
         this.netSyncTimer = 0;
         const localIdx = this.localPlayerIndex;
         const activeObj = localIdx === 1 ? this.player : this.enemy;

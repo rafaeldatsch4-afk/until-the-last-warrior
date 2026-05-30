@@ -469,7 +469,7 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     this.drawWaitingScreen("CRIANDO SESSÃO", "Gerando novos portais de combate privado...");
 
     // Generate random room ID (digit-hex)
-    const code = "SALA-" + Phaser.Math.Between(1000, 9999);
+    const code = Phaser.Math.Between(100000, 999999).toString();
     MultiplayerManager.getInstance().createPrivateRoom(this.getPlayerName(), this.gameState.p1CharacterId, code);
   }
 

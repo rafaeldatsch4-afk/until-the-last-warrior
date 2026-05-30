@@ -1,8 +1,12 @@
 import express from "express";
 import http from "http";
-import path from "path";
+import path, { dirname, join } from "path";
+import { fileURLToPath } from "url";
 import { Server as SocketServer } from "socket.io";
 import { createServer as createViteServer } from "vite";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 interface Player {
   id: string;
@@ -27,7 +31,10 @@ async function startServer() {
     }
   });
 
-  const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+  // Port 3000 required for AI Studio dev environment, allow env port for production deploy (e.g. Railway)
+  const PORT = process.env.NODE_ENV === "production" && process.env.PORT 
+    ? Number(process.env.PORT) 
+    : 3000;
   
   // Game matchmaking rooms state
   const rooms: Map<string, Room> = new Map();
@@ -245,10 +252,9 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    app.use(express.static(join(__dirname, "../dist")));
     app.get("*all", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+      res.sendFile(join(__dirname, "../dist/index.html"));
     });
   }
 

@@ -39,12 +39,16 @@ export class MultiplayerManager {
     if (this.socket) return;
 
     // Use current window location to connect directly to the Express server
-    const isDev = import.meta.env.DEV;
     const railwayUrl = "https://until-the-last-warrior-production.up.railway.app";
     const envUrl = import.meta.env.VITE_MULTIPLAYER_URL;
-    const url = envUrl || (isDev ? window.location.origin : railwayUrl);
+    let url = envUrl || railwayUrl;
     
-    console.log(`Connecting to Multiplayer server at ${url}...`);
+    // Always connect to the local server in AI Studio preview or local dev
+    if (window.location.hostname.includes("run.app") || window.location.hostname === "localhost") {
+      url = "";
+    }
+    
+    console.log(`Connecting to Multiplayer server at ${url || "default host"}...`);
     this.socket = io(url, {
       autoConnect: true,
       reconnection: true,
@@ -53,8 +57,8 @@ export class MultiplayerManager {
       withCredentials: true // Required for AI Studio preview proxy authentication cookies
     });
 
-    this.socket.on("connect_error", (err) => {
-      console.error("Socket connection error:", err);
+    this.socket.on("connect_error", (err: any) => {
+      console.error("Socket connection error:", err.message, err.description, err.context);
       if (this.onErrorCallback) {
         this.onErrorCallback("Erro de Conexão com o Servidor PvP. Tentando novamente...");
       }
