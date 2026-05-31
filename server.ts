@@ -1,12 +1,8 @@
 import express from "express";
 import http from "http";
-import path, { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import path, { join } from "path";
 import { Server as SocketServer } from "socket.io";
 import { createServer as createViteServer } from "vite";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 interface Player {
   id: string;
@@ -252,9 +248,10 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    app.use(express.static(join(__dirname, "../dist")));
+    const distPath = join(process.cwd(), "dist");
+    app.use(express.static(distPath));
     app.get("*all", (req, res) => {
-      res.sendFile(join(__dirname, "../dist/index.html"));
+      res.sendFile(join(distPath, "index.html"));
     });
   }
 
