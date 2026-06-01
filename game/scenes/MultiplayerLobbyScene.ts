@@ -361,10 +361,17 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
       this.sound.play("sfx_select");
 
       // Set matched player characters and details
-      this.gameState.p1CharacterId = mm.localPlayerIndex === 1 ? this.gameState.p1CharacterId : data.opponentCharacterId;
-      this.gameState.p2CharacterId = mm.localPlayerIndex === 2 ? this.gameState.p1CharacterId : data.opponentCharacterId;
+      const localCharId = this.gameState.p1CharacterId;
+      if (mm.localPlayerIndex === 1) {
+        this.gameState.p1CharacterId = localCharId;
+        this.gameState.p2CharacterId = data.opponentCharacterId;
+      } else {
+        this.gameState.p1CharacterId = data.opponentCharacterId; // Host character is P1
+        this.gameState.p2CharacterId = localCharId; // Guest character is P2
+      }
       
       this.registry.set("p2Name", data.opponentName);
+      this.registry.set("localPlayerIndex", mm.localPlayerIndex);
       this.registry.set("gameState", this.gameState);
 
       // Play matchup alert and delay start

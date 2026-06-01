@@ -3,8 +3,14 @@ import Phaser from 'phaser';
 export default class PauseScene extends Phaser.Scene {
   declare sound: Phaser.Sound.NoAudioSoundManager | Phaser.Sound.HTML5AudioSoundManager | Phaser.Sound.WebAudioSoundManager;
 
+  isOnline: boolean = false;
+
   constructor() {
     super('PauseScene');
+  }
+
+  init(data: { online?: boolean }) {
+    this.isOnline = data?.online || false;
   }
 
   create() {
@@ -35,7 +41,9 @@ export default class PauseScene extends Phaser.Scene {
     resumeBtn.on('pointerout', () => resumeBtn.setColor('#2ecc71'));
     resumeBtn.on('pointerdown', () => {
       this.sound.play('sfx_select');
-      this.scene.resume('BattleScene');
+      if (!this.isOnline) {
+        this.scene.resume('BattleScene');
+      }
       this.scene.stop();
     });
 
@@ -51,13 +59,29 @@ export default class PauseScene extends Phaser.Scene {
     quitBtn.on('pointerout', () => quitBtn.setColor('#e74c3c'));
     quitBtn.on('pointerdown', () => {
       this.sound.play('sfx_select');
+      if (this.isOnline) {
+        // We'll need to disconnect from multiplayer if online, but BattleScene does it on exit
+      }
       this.scene.stop('BattleScene');
       this.scene.start('MenuScene');
     });
 
+    if (this.isOnline) {
+      this.add.text(width / 2, height / 2 + 160, '* PARTIDAS ONLINE NÃO PAUSAM O COMBATE! *', {
+        fontSize: '16px',
+        color: '#f1c40f',
+        fontStyle: 'bold',
+        fontFamily: 'Arial',
+        stroke: '#000000',
+        strokeThickness: 3
+      }).setOrigin(0.5);
+    }
+
     // Listen for ESC to resume
     const escListener = () => {
-      this.scene.resume('BattleScene');
+      if (!this.isOnline) {
+        this.scene.resume('BattleScene');
+      }
       this.scene.stop();
     };
     this.input.keyboard?.on('keydown-ESC', escListener);

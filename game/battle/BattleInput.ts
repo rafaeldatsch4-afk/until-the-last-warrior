@@ -82,8 +82,12 @@ export class BattleInput {
     // Pause handler
     this.scene.input.keyboard.on("keydown-ESC", () => {
       if (!this.scene.isBattleOver) {
-        this.scene.scene.pause();
-        this.scene.scene.launch("PauseScene");
+        if (this.scene.gameState.gameMode === "online_pvp") {
+          this.scene.scene.launch("PauseScene", { online: true });
+        } else {
+          this.scene.scene.pause();
+          this.scene.scene.launch("PauseScene", { online: false });
+        }
       }
     });
   }
@@ -325,8 +329,13 @@ export class BattleInput {
     pauseBtn.on("pointerdown", () => {
       pauseBtn.setAlpha(0.9);
       if (this.scene.cache.audio.exists("sfx_select")) this.scene.sound.play("sfx_select");
-      this.scene.scene.pause();
-      this.scene.scene.launch("PauseScene");
+      
+      if (this.scene.gameState.gameMode === "online_pvp") {
+        this.scene.scene.launch("PauseScene", { online: true });
+      } else {
+        this.scene.scene.pause();
+        this.scene.scene.launch("PauseScene", { online: false });
+      }
     });
 
     pauseBtn.on("pointerup", () => pauseBtn.setAlpha(0.6));

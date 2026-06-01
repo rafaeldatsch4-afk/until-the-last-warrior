@@ -174,7 +174,8 @@ export default class BattleScene extends Phaser.Scene {
 
     if (
       this.gameState.gameMode === "local_pvp" ||
-      this.gameState.gameMode === "tournament"
+      this.gameState.gameMode === "tournament" ||
+      this.gameState.gameMode === "online_pvp"
     ) {
       this.enemyData =
         chars.find((c) => c.id === this.gameState.p2CharacterId) || chars[1];
@@ -319,9 +320,6 @@ export default class BattleScene extends Phaser.Scene {
             case "transform":
               this.performTransform(action.isPlayer);
               break;
-            case "takeDamage":
-              this.takeDamage(action.isPlayer, action.dmg);
-              break;
           }
         } catch (e) {
           console.error("Error executing remote action", e);
@@ -383,6 +381,21 @@ export default class BattleScene extends Phaser.Scene {
     if (this.battleEnvironment) this.battleEnvironment.update(time, delta);
     
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
+
+    if (this.battleUI) this.battleUI.updateBars(this.playerHp / this.playerData.maxHp, this.enemyHp / this.enemyData.maxHp, this.playerKi / 100, this.enemyKi / 100);
+
+    if (this.playerHp <= 0 || this.enemyHp <= 0) {
+      this.isBattleOver = true;
+      this.time.timeScale = 0.15;
+      if (this.battleCamera) this.battleCamera.shake(600, 0.003);
+      else this.cameras.main.shake(600, 0.003);
+
+      this.time.delayedCall(105, () => {
+        this.time.timeScale = 1;
+        this.cleanupAndShowVictory(this.playerHp > 0);
+      });
+      return;
+    }
     
     // Network state stream sync
     if (this.gameState.gameMode === "online_pvp") {
@@ -390,13 +403,13 @@ export default class BattleScene extends Phaser.Scene {
       if (this.hasInitialRemotePosition) {
          const target = this.localPlayerIndex === 1 ? this.enemy : this.player;
          if (target && target.active) {
-            target.x += (this.remoteTargetX - target.x) * 0.7;
-            target.y += (this.remoteTargetY - target.y) * 0.7;
+            target.x += (this.remoteTargetX - target.x) * 0.85;
+            target.y += (this.remoteTargetY - target.y) * 0.85;
          }
       }
 
       this.netSyncTimer += delta;
-      if (this.netSyncTimer >= 33) { // Throttle to ~30 Hz for snappier responsive fighting
+      if (this.netSyncTimer >= 16) { // Throttle to ~60 Hz (every frame) for extremely snappy, real-time responsive fighting
         this.netSyncTimer = 0;
         const localIdx = this.localPlayerIndex;
         const activeObj = localIdx === 1 ? this.player : this.enemy;
@@ -3292,11 +3305,6 @@ export default class BattleScene extends Phaser.Scene {
   takeDamage(isP: boolean, dmg: number) {
     if (this.isBattleOver || !this.scene.isActive()) return;
 
-    const isLocal = (isP === (this.localPlayerIndex === 1));
-    if (isLocal) {
-      this.emitNetworkAction({ type: "takeDamage", isPlayer: isP, dmg });
-    }
-
     if (isP) this.isP1Jumping = false;
     else this.isP2Jumping = false;
 
@@ -3401,18 +3409,6 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
 
-    if(this.battleUI) this.battleUI.updateBars(this.playerHp/this.playerData.maxHp, this.enemyHp/this.enemyData.maxHp, this.playerKi/100, this.enemyKi/100);
-    if (!this.isBattleOver && (this.playerHp <= 0 || this.enemyHp <= 0)) {
-      this.isBattleOver = true;
-      this.time.timeScale = 0.15;
-      if (this.battleCamera) this.battleCamera.shake(600, 0.003);
-      else this.cameras.main.shake(600, 0.003);
-
-      this.time.delayedCall(105, () => {
-        this.time.timeScale = 1;
-        this.cleanupAndShowVictory(this.playerHp > 0);
-      });
-    }
   }
 
   public cleanupAndShowVictory(win: boolean) {
