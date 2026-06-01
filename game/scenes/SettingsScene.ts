@@ -159,11 +159,11 @@ export default class SettingsScene extends Phaser.Scene {
       const p1Title = this.add.text(260, 160, 'PLAYER 1', { fontSize: '22px', fontStyle: 'bold', color: '#3498db' }).setOrigin(0.5);
       const p1Controls = this.add.text(260, 260, 
         'Move: W, A, S, D\n\n' +
-        'Attack: J\n' +
-        'Ki Blast: K\n' +
-        'Defend: U\n' +
-        'Special: L\n' +
-        'Transform: I', 
+        'Attack: E\n' +
+        'Ki Blast: C\n' +
+        'Defend/Ki: Q\n' +
+        'Special: V\n' +
+        'Transform: X', 
         { fontSize: '18px', align: 'center' }
       ).setOrigin(0.5);
 
@@ -171,11 +171,11 @@ export default class SettingsScene extends Phaser.Scene {
       const p2Title = this.add.text(700, 160, 'PLAYER 2', { fontSize: '22px', fontStyle: 'bold', color: '#e74c3c' }).setOrigin(0.5);
       const p2Controls = this.add.text(700, 260, 
         'Move: Arrows\n\n' +
-        'Attack: Numpad 1\n' +
-        'Ki Blast: Numpad 2\n' +
-        'Defend: Numpad 4\n' +
-        'Special: Numpad 3\n' +
-        'Transform: Numpad 5', 
+        'Attack: I\n' +
+        'Ki Blast: L\n' +
+        'Defend/Ki: O\n' +
+        'Special: K\n' +
+        'Transform: P', 
         { fontSize: '18px', align: 'center' }
       ).setOrigin(0.5);
 

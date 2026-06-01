@@ -403,8 +403,8 @@ export default class BattleScene extends Phaser.Scene {
       if (this.hasInitialRemotePosition) {
          const target = this.localPlayerIndex === 1 ? this.enemy : this.player;
          if (target && target.active) {
-            target.x += (this.remoteTargetX - target.x) * 0.85;
-            target.y += (this.remoteTargetY - target.y) * 0.85;
+            target.x += (this.remoteTargetX - target.x) * 0.94;
+            target.y += (this.remoteTargetY - target.y) * 0.94;
          }
       }
 
@@ -717,8 +717,33 @@ export default class BattleScene extends Phaser.Scene {
       this.p1Shadow.setAlpha(Math.max(0.1, 0.5 - (yDist / 200)));
       this.p1Shadow.setScale(Math.max(0.2, 1 - (yDist / 200)));
       
-      if (this.p1Aura) { this.p1Aura.setX(this.player.x); this.p1Aura.setY(this.player.y + 80); }
-      if (this.p1Shield) { this.p1Shield.setX(this.player.x); this.p1Shield.setY(this.player.y + 80); }
+      if (this.p1Aura) { 
+        this.p1Aura.setX(this.player.x); 
+        this.p1Aura.setY(this.player.y + 80); 
+        if (this.playerTransformLevel > 0) {
+          this.p1Aura.setVisible(true);
+          const colors = this.getCharacterAuraColor(true);
+          (this.p1Aura as Phaser.GameObjects.Shape).setFillStyle(colors.auraColor, 0.3);
+          if (!this.playerDefending) {
+            this.p1Aura.setScale(0.95 + Math.sin(time * 0.012) * 0.12);
+            this.p1Aura.setAlpha(0.25 + Math.sin(time * 0.035) * 0.08);
+          }
+        } else if (!this.playerDefending) {
+          this.p1Aura.setVisible(false);
+        }
+      }
+      if (this.p1Shield) { 
+        this.p1Shield.setX(this.player.x); 
+        this.p1Shield.setY(this.player.y + 80); 
+        if (this.playerTransformLevel > 0 && !this.playerDefending) {
+          this.p1Shield.setVisible(true);
+          const colors = this.getCharacterAuraColor(true);
+          (this.p1Shield as Phaser.GameObjects.Arc).setStrokeStyle(2, colors.ringColor, 0.4);
+          this.p1Shield.setScale(0.85 + Math.sin(time * 0.024) * 0.05);
+        } else if (!this.playerDefending) {
+          this.p1Shield.setVisible(false);
+        }
+      }
     }
     if (this.p2Shadow && this.enemy) {
       this.p2Shadow.setX(this.enemy.x);
@@ -726,8 +751,33 @@ export default class BattleScene extends Phaser.Scene {
       this.p2Shadow.setAlpha(Math.max(0.1, 0.5 - (yDist / 200)));
       this.p2Shadow.setScale(Math.max(0.2, 1 - (yDist / 200)));
       
-      if (this.p2Aura) { this.p2Aura.setX(this.enemy.x); this.p2Aura.setY(this.enemy.y + 80); }
-      if (this.p2Shield) { this.p2Shield.setX(this.enemy.x); this.p2Shield.setY(this.enemy.y + 80); }
+      if (this.p2Aura) { 
+        this.p2Aura.setX(this.enemy.x); 
+        this.p2Aura.setY(this.enemy.y + 80); 
+        if (this.enemyTransformLevel > 0) {
+          this.p2Aura.setVisible(true);
+          const colors = this.getCharacterAuraColor(false);
+          (this.p2Aura as Phaser.GameObjects.Shape).setFillStyle(colors.auraColor, 0.3);
+          if (!this.enemyDefending) {
+            this.p2Aura.setScale(0.95 + Math.sin(time * 0.012) * 0.12);
+            this.p2Aura.setAlpha(0.25 + Math.sin(time * 0.035) * 0.08);
+          }
+        } else if (!this.enemyDefending) {
+          this.p2Aura.setVisible(false);
+        }
+      }
+      if (this.p2Shield) { 
+        this.p2Shield.setX(this.enemy.x); 
+        this.p2Shield.setY(this.enemy.y + 80); 
+        if (this.enemyTransformLevel > 0 && !this.enemyDefending) {
+          this.p2Shield.setVisible(true);
+          const colors = this.getCharacterAuraColor(false);
+          (this.p2Shield as Phaser.GameObjects.Arc).setStrokeStyle(2, colors.ringColor, 0.4);
+          this.p2Shield.setScale(0.85 + Math.sin(time * 0.024) * 0.05);
+        } else if (!this.enemyDefending) {
+          this.p2Shield.setVisible(false);
+        }
+      }
     }
 
     // Keep training mode infinite HP but let them charge Ki normally
@@ -1064,34 +1114,107 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  getCharacterAuraColor(isPlayer: boolean): { auraColor: number, ringColor: number } {
+    const data = isPlayer ? this.playerData : this.enemyData;
+    const level = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
+    
+    // Default base form colors
+    let auraColor = data.specialColor || (isPlayer ? 0x3498db : 0xe74c3c);
+    let ringColor = auraColor;
+
+    if (level > 0) {
+      // Transformed forms
+      const isUI = data.key === "goku" && level === 2;
+      const isUE = data.key === "vegeta" && level === 2;
+      const isSageMode = data.key === "naruto" && level === 1;
+      const isKuramaMode = data.key === "naruto" && level === 2;
+
+      auraColor = 0xffd700; // SSJ Gold
+      ringColor = 0xffff00;
+
+      if (isUI) {
+        auraColor = 0xffffff;
+        ringColor = 0x00ffff;
+      } else if (isUE) {
+        auraColor = 0x9b59b6;
+        ringColor = 0xff00ff;
+      } else if (data.key === "gohan") {
+        auraColor = 0x8a2be2;
+        ringColor = 0xff00ff;
+      } else if (data.key === "piccolo") {
+        auraColor = 0xff8800;
+        ringColor = 0xffaa00;
+      } else if (data.key === "cell") {
+        auraColor = 0x00ff00;
+        ringColor = 0x00aa00;
+      } else if (data.key === "optimus") {
+        auraColor = 0x3498db;
+        ringColor = 0x2980b9;
+      } else if (data.key === "minipekka") {
+        auraColor = 0xff0000;
+        ringColor = 0xaa0000;
+      } else if (data.key === "cyberninja") {
+        auraColor = 0x00eaff;
+        ringColor = 0x0088ff;
+      } else if (isSageMode) {
+        auraColor = 0xffaa00;
+        ringColor = 0xff4400;
+      } else if (isKuramaMode) {
+        auraColor = 0xffff00;
+        ringColor = 0xffaa00;
+      } else if (data.key === "thukuna") {
+        auraColor = 0x8b0000;
+        ringColor = 0x000000;
+      } else if (data.key === "gojo") {
+        auraColor = 0x00ffff;
+        ringColor = 0xffffff;
+      } else if (data.key === "saitama") {
+        auraColor = 0xffffff;
+        ringColor = 0xff0000;
+      }
+    }
+
+    return { auraColor, ringColor };
+  }
+
   performContinuousCharge(isPlayer: boolean, delta: number) {
     if (this.isBattleOver) return;
     const chargeRate = 0.04 * delta; // Slightly faster charge
     this.modifyKi(isPlayer, chargeRate);
+    
+    const colors = this.getCharacterAuraColor(isPlayer);
     const aura = isPlayer ? this.p1Aura : this.p2Aura;
     const shield = isPlayer ? this.p1Shield : this.p2Shield;
+    
     if (aura && aura.active) {
       aura.setVisible(true);
-      aura.setScale(1 + Math.sin(this.time.now * 0.02) * 0.3);
-      aura.setAlpha(0.6 + Math.sin(this.time.now * 0.05) * 0.2);
+      (aura as Phaser.GameObjects.Shape).setFillStyle(colors.auraColor, 0.4);
+      aura.setScale(1.2 + Math.sin(this.time.now * 0.03) * 0.4);
+      aura.setAlpha(0.5 + Math.sin(this.time.now * 0.06) * 0.25);
     }
+    
     if (shield && shield.active) {
       shield.setVisible(true);
-      shield.setScale(1 + Math.sin(this.time.now * 0.08) * 0.1);
+      (shield as Phaser.GameObjects.Arc).setStrokeStyle(4, colors.ringColor, 0.8);
+      shield.setScale(1.1 + Math.sin(this.time.now * 0.08) * 0.15);
     }
 
     // Ki Charge Particles Effect
     const sprite = isPlayer ? this.player : this.enemy;
-    if (Math.random() > 0.6) {
-        const px = sprite.x + Phaser.Math.Between(-60, 60);
-        const py = sprite.y + 120 + Phaser.Math.Between(-20, 20);
-        const p = this.add.circle(px, py, 4, isPlayer ? 0x3498db : 0xe74c3c).setDepth(2);
+    if (Math.random() > 0.4) {
+        const px = sprite.x + Phaser.Math.Between(-55, 55);
+        const py = sprite.y + 100 + Phaser.Math.Between(-15, 10);
+        const size = Phaser.Math.Between(3, 7);
+        const p = this.add.circle(px, py, size, colors.auraColor).setDepth(sprite.depth - 1);
+        p.setBlendMode(Phaser.BlendModes.ADD);
+        
         this.tweens.add({
             targets: p,
-            y: py - 150,
+            x: px + Phaser.Math.Between(-30, 30),
+            y: py - 180,
             alpha: 0,
-            scale: 2,
-            duration: 600,
+            scale: 2.2,
+            duration: 500,
             onComplete: () => p.destroy()
         });
     }
@@ -1109,14 +1232,13 @@ export default class BattleScene extends Phaser.Scene {
   stopContinuousCharge(isPlayer: boolean) {
     const aura = isPlayer ? this.p1Aura : this.p2Aura;
     const shield = isPlayer ? this.p1Shield : this.p2Shield;
-    if (aura && aura.active) aura.setVisible(false);
-    if (shield && shield.active) shield.setVisible(false);
+    const transLevel = isPlayer ? this.playerTransformLevel : this.enemyTransformLevel;
+    
+    if (aura && aura.active && transLevel === 0) aura.setVisible(false);
+    if (shield && shield.active && transLevel === 0) shield.setVisible(false);
 
     const sprite = isPlayer ? this.player : this.enemy;
     const data = isPlayer ? this.playerData : this.enemyData;
-    const transLevel = isPlayer
-      ? this.playerTransformLevel
-      : this.enemyTransformLevel;
     const chargeAnim = this.getAnimKey(data.key, transLevel, "charge");
     const idleAnim = this.getAnimKey(data.key, transLevel, "idle");
 
