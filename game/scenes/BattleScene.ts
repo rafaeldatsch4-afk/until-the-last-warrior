@@ -480,6 +480,12 @@ export default class BattleScene extends Phaser.Scene {
                 // Dynamic walk effect: slight tilt forward and bobbing
                 this.player.setRotation(this.player.flipX ? -0.1 : 0.1);
                 this.player.y = this.p1StartPos.y + Math.sin(time * 0.02) * 8;
+                
+                // Continuous dust clouds from feet
+                if (Math.random() > 0.82) {
+                    const walkDirection = this.player.flipX ? 1 : -1;
+                    this.createDustEffect(this.player.x, this.p1StartPos.y + 180, 2, true, walkDirection);
+                }
             } else if (!this.p1ActionActive && !this.playerDefending) {
                 const idleAnim = this.getAnimKey(this.playerData.key, this.playerTransformLevel, "idle");
                 if (this.player.anims.currentAnim?.key !== idleAnim) {
@@ -570,6 +576,12 @@ export default class BattleScene extends Phaser.Scene {
                 }
                 this.enemy.setRotation(this.enemy.flipX ? -0.1 : 0.1);
                 this.enemy.y = this.p2StartPos.y + Math.sin(time * 0.02) * 8;
+                
+                // Continuous dust clouds from feet
+                if (Math.random() > 0.82) {
+                    const walkDirection = this.enemy.flipX ? 1 : -1;
+                    this.createDustEffect(this.enemy.x, this.p2StartPos.y + 180, 2, true, walkDirection);
+                }
             } else if (!this.p2ActionActive && !this.enemyDefending) {
                 const idleAnim = this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "idle");
                 if (this.enemy.anims.currentAnim?.key !== idleAnim) {
@@ -629,6 +641,12 @@ export default class BattleScene extends Phaser.Scene {
                 }
                 this.enemy.setRotation(this.enemy.flipX ? -0.1 : 0.1);
                 this.enemy.y = this.p2StartPos.y + Math.sin(time * 0.02) * 8;
+                
+                // Continuous dust clouds from feet
+                if (Math.random() > 0.82) {
+                    const walkDirection = this.enemy.flipX ? 1 : -1;
+                    this.createDustEffect(this.enemy.x, this.p2StartPos.y + 180, 2, true, walkDirection);
+                }
             } else if (!this.p2ActionActive && !this.enemyDefending) {
                 const idleAnim = this.getAnimKey(this.enemyData.key, this.enemyTransformLevel, "idle");
                 if (this.enemy.anims.currentAnim?.key !== idleAnim) {
@@ -789,7 +807,6 @@ export default class BattleScene extends Phaser.Scene {
         this.playerDefending = false;
         this.p1SpecialHoldTime = 0;
         this.clearChargeIndicator(true);
-        this.mobileP1Attack = false;
       } else {
         // Defend / Charge
         if (this.keys.p1_defend.isDown || this.mobileP1Defend) {
@@ -1002,6 +1019,7 @@ export default class BattleScene extends Phaser.Scene {
 
     // Simple dash dust effect
     this.createImpactEffect(sprite.x, sprite.y + 60, 0xecf0f1, "block");
+    this.createDustEffect(sprite.x, (isPlayer ? this.p1StartPos.y : this.p2StartPos.y) + 180, 14, true, direction);
     if (this.cache.audio.exists("sfx_step")) this.sound.play("sfx_step", { volume: 1.5, rate: 1.5 });
 
     const dashDistance = 300 * direction;
@@ -1096,6 +1114,24 @@ export default class BattleScene extends Phaser.Scene {
          });
       } else {
          if (this.p1ActionTimeout) { this.p1ActionTimeout.remove(); this.p1ActionTimeout = null; }
+         
+         // Zero-latency instant continuation of buffered actions
+         const isP1Local = (this.gameState.gameMode !== "online_pvp" || this.localPlayerIndex === 1);
+         if (isP1Local && !this.playerDefending && !this.isBattleOver && !this.isP1Jumping) {
+           if (this.p1TransformBuffer > 0 || this.mobileP1Transform) {
+             this.p1TransformBuffer = 0;
+             this.mobileP1Transform = false;
+             this.performTransform(true);
+           } else if (this.p1AttackBuffer > 0 || this.mobileP1Attack) {
+             this.p1AttackBuffer = 0;
+             this.mobileP1Attack = false;
+             this.performAttack(true, "melee");
+           } else if (this.p1KiBlastBuffer > 0 || this.mobileP1KiBlast) {
+             this.p1KiBlastBuffer = 0;
+             this.mobileP1KiBlast = false;
+             this.performAttack(true, "ki");
+           }
+         }
       }
     } else {
       this.p2ActionActive = isActive;
@@ -1110,6 +1146,49 @@ export default class BattleScene extends Phaser.Scene {
          });
       } else {
          if (this.p2ActionTimeout) { this.p2ActionTimeout.remove(); this.p2ActionTimeout = null; }
+         
+         // Zero-latency instant continuation of buffered actions for P2 / Opponent
+         const isP2Local = (this.gameState.gameMode === "local_pvp" || (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2));
+         if (isP2Local && !this.enemyDefending && !this.isBattleOver && !this.isP2Jumping) {
+           const isP1Attack = (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2)
+               ? (this.p1AttackBuffer > 0 || this.mobileP1Attack)
+               : (this.p2AttackBuffer > 0 || this.p2BufferedAttack);
+           const isP1KiBlast = (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2)
+               ? (this.p1KiBlastBuffer > 0 || this.mobileP1KiBlast)
+               : (this.p2KiBlastBuffer > 0 || this.p2BufferedKiBlast);
+           const isP1Transform = (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2)
+               ? (this.p1TransformBuffer > 0 || this.mobileP1Transform)
+               : (this.p2TransformBuffer > 0 || this.p2BufferedTransform);
+
+           if (isP1Transform) {
+             if (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2) {
+               this.p1TransformBuffer = 0;
+               this.mobileP1Transform = false;
+             } else {
+               this.p2TransformBuffer = 0;
+               this.p2BufferedTransform = false;
+             }
+             this.performTransform(false);
+           } else if (isP1Attack) {
+             if (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2) {
+               this.p1AttackBuffer = 0;
+               this.mobileP1Attack = false;
+             } else {
+               this.p2AttackBuffer = 0;
+               this.p2BufferedAttack = false;
+             }
+             this.performAttack(false, "melee");
+           } else if (isP1KiBlast) {
+             if (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2) {
+               this.p1KiBlastBuffer = 0;
+               this.mobileP1KiBlast = false;
+             } else {
+               this.p2KiBlastBuffer = 0;
+               this.p2BufferedKiBlast = false;
+             }
+             this.performAttack(false, "ki");
+           }
+         }
       }
     }
   }
@@ -1431,6 +1510,7 @@ export default class BattleScene extends Phaser.Scene {
             
             // Landing dust
             this.createImpactEffect(player.x, startY + 80, 0xecf0f1, "block");
+            this.createDustEffect(player.x, startY + 180, 16);
             
             if (this.cache.audio.exists("sfx_step")) {
                 this.sound.play("sfx_step", { volume: 0.5 });
@@ -3385,6 +3465,51 @@ export default class BattleScene extends Phaser.Scene {
     } else {
       // Melee specific shake
       if (this.battleCamera) this.battleCamera.shake(150, 0.02);
+    }
+  }
+
+  createDustEffect(x: number, y: number, count: number = 10, isDash: boolean = false, direction: number = 0) {
+    if (!this.scene.isActive()) return;
+
+    for (let i = 0; i < count; i++) {
+      const size = Phaser.Math.Between(4, 12);
+      // Colors representing soil/dust (translucent desert sandy and grey tones)
+      const dustColors = [0xdad7cd, 0xa3b19b, 0xededed, 0xdbd5c9, 0xc0b299];
+      const color = Phaser.Utils.Array.GetRandom(dustColors);
+      
+      const p = this.add.circle(
+        x + Phaser.Math.Between(-25, 25),
+        y + Phaser.Math.Between(-8, 8),
+        size,
+        color,
+        Phaser.Math.FloatBetween(0.25, 0.55)
+      ).setDepth(1); // Set depth above or on level with shadow but below character typically
+
+      let targetX = x;
+      let targetY = y - Phaser.Math.Between(15, 65);
+
+      if (isDash && direction !== 0) {
+        // Dust blows backwards away from quick motion
+        targetX = x - (direction * Phaser.Math.Between(70, 180)) + Phaser.Math.Between(-15, 15);
+        targetY = y - Phaser.Math.Between(5, 30);
+      } else {
+        // Landing dust expands outwards
+        const angle = Phaser.Math.FloatBetween(Math.PI, Math.PI * 2); // semi-circle upwards
+        const dist = Phaser.Math.Between(30, 130);
+        targetX = x + Math.cos(angle) * dist;
+        targetY = y + Math.sin(angle) * dist * 0.25 - Phaser.Math.Between(10, 35);
+      }
+
+      this.tweens.add({
+        targets: p,
+        x: targetX,
+        y: targetY,
+        alpha: 0,
+        scale: Phaser.Math.FloatBetween(1.6, 2.8),
+        duration: Phaser.Math.Between(350, 750),
+        ease: "Cubic.easeOut",
+        onComplete: () => p.destroy()
+      });
     }
   }
 
