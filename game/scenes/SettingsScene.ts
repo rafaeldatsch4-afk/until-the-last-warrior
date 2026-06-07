@@ -28,7 +28,7 @@ export default class SettingsScene extends Phaser.Scene {
     // Back Button (Top Left)
     const backContainer = this.add.container(80, 40);
     const backBtn = this.add.rectangle(0, 0, 100, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
-    const backTxt = this.add.text(0, 0, 'BACK', { fontSize: '18px', fontStyle: 'bold', fontFamily: 'Arial' }).setOrigin(0.5);
+    const backTxt = this.add.text(0, 0, 'BACK', { fontSize: '18px', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
     backContainer.add([backBtn, backTxt]);
     
     backBtn.setInteractive({ useHandCursor: true })
@@ -37,16 +37,18 @@ export default class SettingsScene extends Phaser.Scene {
       .on('pointerdown', () => this.scene.start('MenuScene'));
 
     // Title
-    this.add.text(480, 50, 'SETTINGS', { fontSize: '32px', fontStyle: 'bold' }).setOrigin(0.5);
+    this.add.text(480, 50, 'SETTINGS', { fontSize: '32px', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif", resolution: 2 }).setOrigin(0.5);
 
     // --- AUDIO SETTING ---
-    this.add.text(480, 100, 'AUDIO', { fontSize: '20px', color: '#aaa' }).setOrigin(0.5);
+    this.add.text(480, 100, 'AUDIO', { fontSize: '20px', color: '#aaa', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
     
     const isMuted = this.sound.mute;
     const soundText = this.add.text(480, 130, isMuted ? 'SOUND: OFF' : 'SOUND: ON', {
         fontSize: '24px',
         color: isMuted ? '#e74c3c' : '#2ecc71', // Red if OFF, Green if ON
-        fontStyle: 'bold'
+        fontStyle: 'bold',
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        resolution: 2
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
     soundText.on('pointerdown', () => {
@@ -69,18 +71,18 @@ export default class SettingsScene extends Phaser.Scene {
     });
 
     // --- DIFFICULTY ---
-    this.add.text(480, 180, 'DIFFICULTY (AI Only)', { fontSize: '20px', color: '#aaa' }).setOrigin(0.5);
+    this.add.text(480, 180, 'DIFFICULTY (AI Only)', { fontSize: '20px', color: '#aaa', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
 
     const difficulties = ['Easy', 'Normal', 'Hard'];
     difficulties.forEach((diff, i) => {
         const isSelected = state.difficulty === i;
         const color = isSelected ? '#ffd54a' : '#666';
         const y = 220 + (i * 40); // Compacted slightly
-        const t = this.add.text(480, y, diff, { fontSize: '24px', color: color, fontStyle: isSelected ? 'bold' : 'normal' }).setOrigin(0.5);
+        const t = this.add.text(480, y, diff, { fontSize: '24px', color: color, fontStyle: isSelected ? 'bold' : 'normal', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
         
         // Marker
         if (isSelected) {
-            this.add.text(380, y, '►', { fontSize: '24px', color: '#ffd54a' }).setOrigin(0.5);
+            this.add.text(380, y, '►', { fontSize: '24px', color: '#ffd54a', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
         }
 
         t.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
@@ -91,7 +93,7 @@ export default class SettingsScene extends Phaser.Scene {
 
     // --- CONTROLS ---
     const controlsBtn = this.add.rectangle(850, 40, 180, 40, 0x9b59b6).setStrokeStyle(2, 0xffffff);
-    const controlsTxt = this.add.text(850, 40, 'PC CONTROLS', { fontSize: '18px', fontStyle: 'bold' }).setOrigin(0.5);
+    const controlsTxt = this.add.text(850, 40, 'PC CONTROLS', { fontSize: '18px', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
     
     controlsBtn.setInteractive({ useHandCursor: true })
         .on('pointerover', () => controlsBtn.setFillStyle(0x8e44ad))
@@ -99,11 +101,11 @@ export default class SettingsScene extends Phaser.Scene {
         .on('pointerdown', () => this.showControlsOverlay());
 
     // --- DATA MANAGEMENT (SAVE/LOAD) ---
-    this.add.text(480, 350, 'DATA MANAGEMENT', { fontSize: '20px', color: '#aaa' }).setOrigin(0.5);
+    this.add.text(480, 350, 'DATA MANAGEMENT', { fontSize: '20px', color: '#aaa', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
 
     // Export Button
     const exportBtn = this.add.rectangle(380, 390, 180, 40, 0x3498db).setStrokeStyle(2, 0xffffff);
-    const exportTxt = this.add.text(380, 390, 'DOWNLOAD SAVE', { fontSize: '16px', fontStyle: 'bold' }).setOrigin(0.5);
+    const exportTxt = this.add.text(380, 390, 'DOWNLOAD SAVE', { fontSize: '16px', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
     
     exportBtn.setInteractive({ useHandCursor: true })
         .on('pointerover', () => exportBtn.setFillStyle(0x2980b9))
@@ -112,7 +114,7 @@ export default class SettingsScene extends Phaser.Scene {
 
     // Import Button
     const importBtn = this.add.rectangle(580, 390, 180, 40, 0xe67e22).setStrokeStyle(2, 0xffffff);
-    const importTxt = this.add.text(580, 390, 'UPLOAD SAVE', { fontSize: '16px', fontStyle: 'bold' }).setOrigin(0.5);
+    const importTxt = this.add.text(580, 390, 'UPLOAD SAVE', { fontSize: '16px', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
 
     importBtn.setInteractive({ useHandCursor: true })
         .on('pointerover', () => importBtn.setFillStyle(0xd35400))
@@ -122,7 +124,7 @@ export default class SettingsScene extends Phaser.Scene {
     // --- APP INSTALLATION ---
     if ((window as any).deferredPWAInstallPrompt) {
         const installBtn = this.add.rectangle(480, 480, 250, 50, 0xf1c40f).setStrokeStyle(3, 0xffffff);
-        const installTxt = this.add.text(480, 480, 'INSTALL OFFLINE GAME', { fontSize: '18px', color: '#000', fontStyle: 'bold' }).setOrigin(0.5);
+        const installTxt = this.add.text(480, 480, 'INSTALL OFFLINE GAME', { fontSize: '18px', color: '#000', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
         
         // Add a pulsing effect to grab attention
         this.tweens.add({ targets: installBtn, scaleX: 1.05, scaleY: 1.05, duration: 800, yoyo: true, repeat: -1 });
@@ -153,10 +155,10 @@ export default class SettingsScene extends Phaser.Scene {
       // Modal Background
       const modal = this.add.rectangle(480, 270, 700, 400, 0x1f1f1f).setStrokeStyle(4, 0xffd54a);
       
-      const title = this.add.text(480, 110, 'PC CONTROLS', { fontSize: '28px', fontStyle: 'bold', color: '#ffd54a' }).setOrigin(0.5);
+      const title = this.add.text(480, 110, 'PC CONTROLS', { fontSize: '28px', fontStyle: 'bold', color: '#ffd54a', fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif", resolution: 2 }).setOrigin(0.5);
 
       // Player 1 Controls
-      const p1Title = this.add.text(260, 160, 'PLAYER 1', { fontSize: '22px', fontStyle: 'bold', color: '#3498db' }).setOrigin(0.5);
+      const p1Title = this.add.text(260, 160, 'PLAYER 1', { fontSize: '22px', fontStyle: 'bold', color: '#3498db', fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif", resolution: 2 }).setOrigin(0.5);
       const p1Controls = this.add.text(260, 260, 
         'Move: W, A, S, D\n\n' +
         'Attack: E\n' +
@@ -164,11 +166,11 @@ export default class SettingsScene extends Phaser.Scene {
         'Defend/Ki: Q\n' +
         'Special: V\n' +
         'Transform: X', 
-        { fontSize: '18px', align: 'center' }
+        { fontSize: '18px', align: 'center', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }
       ).setOrigin(0.5);
 
       // Player 2 Controls
-      const p2Title = this.add.text(700, 160, 'PLAYER 2', { fontSize: '22px', fontStyle: 'bold', color: '#e74c3c' }).setOrigin(0.5);
+      const p2Title = this.add.text(700, 160, 'PLAYER 2', { fontSize: '22px', fontStyle: 'bold', color: '#e74c3c', fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif", resolution: 2 }).setOrigin(0.5);
       const p2Controls = this.add.text(700, 260, 
         'Move: Arrows\n\n' +
         'Attack: I\n' +
@@ -176,7 +178,7 @@ export default class SettingsScene extends Phaser.Scene {
         'Defend/Ki: O\n' +
         'Special: K\n' +
         'Transform: P', 
-        { fontSize: '18px', align: 'center' }
+        { fontSize: '18px', align: 'center', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }
       ).setOrigin(0.5);
 
       // Divider
@@ -184,7 +186,7 @@ export default class SettingsScene extends Phaser.Scene {
 
       // Close Button
       const closeBtn = this.add.rectangle(480, 420, 150, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
-      const closeTxt = this.add.text(480, 420, 'CLOSE', { fontSize: '18px', fontStyle: 'bold' }).setOrigin(0.5);
+      const closeTxt = this.add.text(480, 420, 'CLOSE', { fontSize: '18px', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
       
       closeBtn.setInteractive({ useHandCursor: true })
         .on('pointerover', () => closeBtn.setFillStyle(0xc0392b))

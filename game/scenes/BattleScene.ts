@@ -2724,12 +2724,13 @@ export default class BattleScene extends Phaser.Scene {
 
         const textObj = this.add
           .text(480, 200, transformText, {
-            fontFamily: "Impact, sans-serif",
+            fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
             fontSize: "64px",
             color: textFill,
             stroke: textStroke,
             strokeThickness: 8,
             fontStyle: "italic",
+            resolution: 2
           })
           .setOrigin(0.5)
           .setDepth(10)
@@ -3524,12 +3525,13 @@ export default class BattleScene extends Phaser.Scene {
     const jitterY = Phaser.Math.Between(-10, 10);
     
     const text = this.add.text(x + jitterX, y + jitterY, `-${amount}`, {
-      fontFamily: "Impact, sans-serif",
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
       fontSize: fontSize,
       color: color,
       stroke: "#000000",
       strokeThickness: isCritical ? 6 : 4,
-      shadow: { color: "#000", blur: 4, offsetX: 2, offsetY: 2, fill: true }
+      shadow: { color: "#000", blur: 4, offsetX: 2, offsetY: 2, fill: true },
+      resolution: 2
     }).setOrigin(0.5).setDepth(100);
 
     // Critical hits get a slightly longer, more dramatic animation
@@ -3709,8 +3711,9 @@ export default class BattleScene extends Phaser.Scene {
       color: "#ffffff",
       stroke: "#000000",
       strokeThickness: 8,
-      fontFamily: "Arial",
-      fontStyle: "bold"
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      fontStyle: "bold",
+      resolution: 2
     }).setOrigin(0.5).setDepth(200);
 
     text.setScale(0.5);

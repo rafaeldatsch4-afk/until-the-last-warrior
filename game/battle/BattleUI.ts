@@ -60,11 +60,12 @@ export class BattleUI {
     this.p1NameText = bs.add
       .text(25, 15, playerData.name, {
         fontSize: "22px",
-        fontFamily: "Impact, sans-serif",
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         color: "#fff",
         stroke: "#000",
         strokeThickness: 4,
-        shadow: { color: "#3498db", blur: 4, fill: true }
+        shadow: { color: "#3498db", blur: 4, fill: true },
+        resolution: 2
       });
     this.uiContainer.add(this.p1NameText);
       
@@ -72,11 +73,12 @@ export class BattleUI {
     this.p2NameText = bs.add
       .text(935, 15, enemyData.name, {
         fontSize: "22px",
-        fontFamily: "Impact, sans-serif",
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         color: "#fff",
         stroke: "#000",
         strokeThickness: 4,
-        shadow: { color: "#e74c3c", blur: 4, fill: true }
+        shadow: { color: "#e74c3c", blur: 4, fill: true },
+        resolution: 2
       })
       .setOrigin(1, 0);
     this.uiContainer.add(this.p2NameText);
@@ -84,11 +86,12 @@ export class BattleUI {
     this.p1ComboText = bs.add
       .text(25, 110, "", {
         fontSize: "36px",
-        fontFamily: "Impact, sans-serif",
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         color: "#ffaa00",
         stroke: "#000",
         strokeThickness: 5,
-        shadow: { color: "#ff0000", blur: 4, fill: true }
+        shadow: { color: "#ff0000", blur: 4, fill: true },
+        resolution: 2
       })
       .setOrigin(0, 0.5)
       .setAlpha(0);
@@ -97,11 +100,12 @@ export class BattleUI {
     this.p2ComboText = bs.add
       .text(935, 110, "", {
         fontSize: "36px",
-        fontFamily: "Impact, sans-serif",
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         color: "#ffaa00",
         stroke: "#000",
         strokeThickness: 5,
-        shadow: { color: "#ff0000", blur: 4, fill: true }
+        shadow: { color: "#ff0000", blur: 4, fill: true },
+        resolution: 2
       })
       .setOrigin(1, 0.5)
       .setAlpha(0);
@@ -111,10 +115,11 @@ export class BattleUI {
       .text(480, 120, "", {
         fontSize: "26px",
         color: "#fff",
-        fontFamily: "Impact, sans-serif",
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         stroke: "#000",
         strokeThickness: 5,
-        shadow: { color: "#000", blur: 4, offsetX: 2, offsetY: 2, fill: true }
+        shadow: { color: "#000", blur: 4, offsetX: 2, offsetY: 2, fill: true },
+        resolution: 2
       })
       .setOrigin(0.5);
     this.uiContainer.add(this.logText);
@@ -124,10 +129,11 @@ export class BattleUI {
         .text(480, 25, `ARCADE: ROUND ${arcadeRound || 1} / 5`, {
           fontSize: "22px",
           color: "#f1c40f",
-          fontFamily: "Impact, sans-serif",
+          fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
           stroke: "#000",
           strokeThickness: 4,
-          shadow: { color: "#000", blur: 4, fill: true }
+          shadow: { color: "#000", blur: 4, fill: true },
+          resolution: 2
         })
         .setOrigin(0.5)
         .setScrollFactor(0)
@@ -267,6 +273,8 @@ export class BattleUI {
         fontSize: "24px",
         color: "#ff0000",
         fontStyle: "bold",
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        resolution: 2
       })
       .setOrigin(0.5)
       .setDepth(20);

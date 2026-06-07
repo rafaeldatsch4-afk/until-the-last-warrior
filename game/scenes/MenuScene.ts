@@ -95,8 +95,9 @@ export default class MenuScene extends Phaser.Scene {
       fontSize: '70px',
       color: '#000000',
       fontStyle: 'bold',
-      fontFamily: 'Impact',
-      shadow: { offsetX: 0, offsetY: 0, blur: 20, color: '#f1c40f' }
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      shadow: { offsetX: 0, offsetY: 0, blur: 20, color: '#f1c40f' },
+      resolution: 2
     }).setOrigin(0.5).setAlpha(0.5);
 
     const title = this.add.text(0, 0, 'UNTIL THE LAST WARRIOR', {
@@ -105,7 +106,8 @@ export default class MenuScene extends Phaser.Scene {
       fontStyle: 'bold',
       stroke: '#f39c12',
       strokeThickness: 10,
-      fontFamily: 'Impact',
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      resolution: 2
     }).setOrigin(0.5);
     
     const subtitle = this.add.text(0, 50, 'A BATALHA FINAL COMEÇA AQUI', {
@@ -113,7 +115,8 @@ export default class MenuScene extends Phaser.Scene {
       color: '#e0e0e0',
       fontStyle: 'bold',
       letterSpacing: 6,
-      fontFamily: 'Verdana, sans-serif'
+      fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+      resolution: 2
     }).setOrigin(0.5);
 
     titleContainer.add([titleShadow, title, subtitle]);
@@ -135,9 +138,10 @@ export default class MenuScene extends Phaser.Scene {
         fontSize: '22px',
         color: '#f1c40f',
         fontStyle: 'bold',
-        fontFamily: 'Impact'
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        resolution: 2
     }).setOrigin(0, 0.5);
-    coinDisplay.add([coinBg, coinIcon, this.add.text(-55, 0, '$', { fontSize: '14px', color:'#000', fontStyle:'bold' }).setOrigin(0.5), this.coinText]);
+    coinDisplay.add([coinBg, coinIcon, this.add.text(-55, 0, '$', { fontSize: '14px', color:'#000', fontStyle:'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5), this.coinText]);
 
     // Botões Centralizados
     const buttonY = 280;
@@ -173,6 +177,8 @@ export default class MenuScene extends Phaser.Scene {
           fontSize: '18px',
           fontStyle: 'bold',
           color: '#ffffff',
+          fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+          resolution: 2
       }).setOrigin(0.5);
 
       cardContainer.add([bg, text]);
@@ -206,11 +212,12 @@ export default class MenuScene extends Phaser.Scene {
       const popupBg = this.add.rectangle(0, 0, 500, 520, 0x111625).setStrokeStyle(4, 0xf1c40f).setOrigin(0.5);
       const popupTitle = this.add.text(0, -225, 'DESAFIOS DO DIA', {
           fontSize: '28px',
-          fontFamily: 'Impact',
+          fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
           color: '#f1c40f',
+          resolution: 2
       }).setOrigin(0.5);
 
-      const closeBtn = this.add.text(220, -235, 'X', { fontSize: '24px', color: '#ff0000', fontStyle: 'bold' })
+      const closeBtn = this.add.text(220, -235, 'X', { fontSize: '24px', color: '#ff0000', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 })
         .setOrigin(0.5).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => {
           popupOverlay.destroy();
@@ -228,12 +235,15 @@ export default class MenuScene extends Phaser.Scene {
       const streakBg = this.add.rectangle(0, -145, 440, 90, 0x0c0f1d).setStrokeStyle(2, 0xe74c3c).setOrigin(0.5);
       const streakTitleText = this.add.text(-200, -175, `Sequência Diária: ${streakInfo.currentStreak} Dias 🔥`, {
           fontSize: '20px',
-          fontFamily: 'Impact, sans-serif',
-          color: '#e74c3c'
+          fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+          color: '#e74c3c',
+          resolution: 2
       });
       const streakDetailText = this.add.text(-200, -145, `Recompensa de Hoje: ${currentStreakCoins} 🪙\nBônus de login diário consecutivo ativo!`, {
           fontSize: '13px',
-          color: '#ffffff'
+          color: '#ffffff',
+          fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+          resolution: 2
       });
 
       popupCard.add([streakBg, streakTitleText, streakDetailText]);
@@ -284,13 +294,15 @@ export default class MenuScene extends Phaser.Scene {
           const p = progress[challenge.id] || { current: 0, claimed: false };
           
           const chCard = this.add.rectangle(0, startY, 440, 64, 0x000000, 0.5).setStrokeStyle(1, 0x555555);
-          const chTitle = this.add.text(-200, startY - 14, challenge.title, { fontSize: '16px', color: '#ffffff' });
-          const chReward = this.add.text(-200, startY + 10, `Recompensa: ${challenge.reward} 🪙`, { fontSize: '13px', color: '#f1c40f' });
+          const chTitle = this.add.text(-200, startY - 14, challenge.title, { fontSize: '16px', color: '#ffffff', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 });
+          const chReward = this.add.text(-200, startY + 10, `Recompensa: ${challenge.reward} 🪙`, { fontSize: '13px', color: '#f1c40f', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 });
           
           const chProgressText = this.add.text(120, startY - 14, `${Math.min(p.current, challenge.target)} / ${challenge.target}`, {
               fontSize: '16px', 
               fontStyle: 'bold',
-              color: p.current >= challenge.target ? '#2ecc71' : '#ffffff'
+              color: p.current >= challenge.target ? '#2ecc71' : '#ffffff',
+              fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+              resolution: 2
           }).setOrigin(1, 0);
 
           popupCard.add([chCard, chTitle, chReward, chProgressText]);
@@ -365,12 +377,13 @@ export default class MenuScene extends Phaser.Scene {
       const txt = this.add.text(0, 0, text, { 
           fontSize: '30px', 
           fontStyle: 'italic bold',
-          fontFamily: 'Impact, sans-serif',
+          fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
           letterSpacing: 4,
           color: '#ffffff',
           stroke: '#000000',
           strokeThickness: 5,
-          shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 0, fill: true }
+          shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 0, fill: true },
+          resolution: 2
       }).setOrigin(0.5);
       
       container.add([hoverGlow, shadow, bg, innerBg, txt]);

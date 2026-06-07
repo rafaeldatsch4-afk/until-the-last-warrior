@@ -46,10 +46,11 @@ export default class PreloadScene extends Phaser.Scene {
 
     this.loadingText = this.add
       .text(width / 2, height / 2 - 60, "Desenhando Guerreiros...", {
-        fontFamily: "Arial",
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         fontSize: "20px",
         color: "#e2e8f0",
         fontStyle: "bold",
+        resolution: 2
       })
       .setOrigin(0.5, 0.5);
 

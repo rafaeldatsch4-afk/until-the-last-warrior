@@ -59,7 +59,9 @@ export default class ModeSelectScene extends Phaser.Scene {
       fontStyle: 'bold',
       stroke: '#000000',
       strokeThickness: 8,
-      shadow: { offsetX: 0, offsetY: 4, color: '#000000', blur: 4, stroke: true, fill: true }
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      shadow: { offsetX: 0, offsetY: 4, color: '#000000', blur: 4, stroke: true, fill: true },
+      resolution: 2
     }).setOrigin(0.5);
 
     this.tweens.add({
@@ -111,8 +113,8 @@ export default class ModeSelectScene extends Phaser.Scene {
     const bg = this.add.rectangle(0, 0, 400, 60, color).setOrigin(0.5);
     const innerBg = this.add.rectangle(0, 0, 392, 52, 0x000000, 0.3).setOrigin(0.5); // Darker inner area
     
-    const txt = this.add.text(0, -8, text, { fontSize: '24px', color: '#ffffff', fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
-    const descTxt = this.add.text(0, 13, desc, { fontSize: '13px', color: '#dddddd', fontStyle: 'italic' }).setOrigin(0.5);
+    const txt = this.add.text(0, -8, text, { fontSize: '24px', color: '#ffffff', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif", resolution: 2 }).setOrigin(0.5);
+    const descTxt = this.add.text(0, 13, desc, { fontSize: '13px', color: '#dddddd', fontStyle: 'italic', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
 
     container.add([shadow, bg, innerBg, txt, descTxt]);
     
@@ -144,7 +146,7 @@ export default class ModeSelectScene extends Phaser.Scene {
   createBackBtn(x: number, y: number, text: string, onClick: () => void) {
     const container = this.add.container(x, y);
     const bg = this.add.rectangle(0, 0, 120, 40, 0x555555).setStrokeStyle(2, 0xffffff);
-    const txt = this.add.text(0, 0, text, { fontSize: '18px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    const txt = this.add.text(0, 0, text, { fontSize: '18px', color: '#ffffff', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
     
     container.add([bg, txt]);
     

@@ -87,7 +87,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     // Botão Voltar
     const backBtnContainer = this.add.container(80, 40);
     const backBg = this.add.rectangle(0, 0, 120, 40, 0x333333).setStrokeStyle(2, 0xffffff);
-    const backTxt = this.add.text(0, 0, '← VOLTAR', { fontSize: '16px', fontStyle: 'bold', color: '#ffffff' }).setOrigin(0.5);
+    const backTxt = this.add.text(0, 0, '← VOLTAR', { fontSize: '16px', fontStyle: 'bold', color: '#ffffff', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
     backBtnContainer.add([backBg, backTxt]);
     
     const backHit = this.add.rectangle(0, 0, 120, 40, 0x000000, 0).setInteractive({ useHandCursor: true });
@@ -107,7 +107,9 @@ export default class CharacterSelectScene extends Phaser.Scene {
         fontStyle: 'bold',
         stroke: '#000',
         strokeThickness: 6,
-        shadow: { offsetX: 0, offsetY: 4, color: '#000000', blur: 4, stroke: true, fill: true }
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        shadow: { offsetX: 0, offsetY: 4, color: '#000000', blur: 4, stroke: true, fill: true },
+        resolution: 2
     }).setOrigin(0.5);
     
     this.tweens.add({
@@ -119,7 +121,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
         ease: 'Sine.easeInOut'
     });
 
-    this.charContainer = this.add.container(width / 2, 170);
+    this.charContainer = this.add.container(width / 2, 145);
     
     // Botão de Luta (Escondido até selecionar)
     this.createFightButton();
@@ -129,12 +131,15 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   createFightButton() {
     const { width, height } = this.cameras.main;
-    this.fightBtn = this.add.container(width / 2, height - 60).setVisible(false);
+    this.fightBtn = this.add.container(width / 2, height - 45).setVisible(false);
     
-    const shadow = this.add.rectangle(4, 4, 240, 60, 0x000000, 0.5).setOrigin(0.5);
-    const bg = this.add.rectangle(0, 0, 240, 60, 0x27ae60).setStrokeStyle(3, 0xffffff);
-    const innerBg = this.add.rectangle(0, 0, 232, 52, 0x000000, 0.2).setOrigin(0.5);
-    const txt = this.add.text(0, 0, 'LUTAR!', { fontSize: '28px', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 2, fill: true } }).setOrigin(0.5);
+    const btnW = 190;
+    const btnH = 46;
+    
+    const shadow = this.add.rectangle(3, 3, btnW, btnH, 0x000000, 0.5).setOrigin(0.5);
+    const bg = this.add.rectangle(0, 0, btnW, btnH, 0x27ae60).setStrokeStyle(2, 0xffffff);
+    const innerBg = this.add.rectangle(0, 0, btnW - 8, btnH - 8, 0x000000, 0.2).setOrigin(0.5);
+    const txt = this.add.text(0, 0, 'LUTAR!', { fontSize: '20px', fontStyle: 'bold', stroke: '#000', strokeThickness: 4, fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif", shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 2, fill: true }, resolution: 2 }).setOrigin(0.5);
     
     this.fightBtn.add([shadow, bg, innerBg, txt]);
     
@@ -148,7 +153,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
         ease: 'Sine.easeInOut'
     });
 
-    const hitArea = this.add.rectangle(0, 0, 240, 60, 0x000000, 0).setInteractive({ useHandCursor: true });
+    const hitArea = this.add.rectangle(0, 0, btnW, btnH, 0x000000, 0).setInteractive({ useHandCursor: true });
     this.fightBtn.add(hitArea);
 
     hitArea.on('pointerover', () => bg.setFillStyle(0x2ecc71))
@@ -233,9 +238,9 @@ export default class CharacterSelectScene extends Phaser.Scene {
       const unlockedChars = this.state.characters.filter(c => c.unlocked);
       
       const { width } = this.cameras.main;
-      const cardSize = width < 600 ? 70 : 100; // Responsive card size
+      const cardSize = width < 600 ? 70 : 92; // Responsive card size
       const gapX = 12;
-      const gapY = 24;
+      const gapY = 18;
       let itemsPerRow = Math.floor((width - 40) / (cardSize + gapX));
       if (itemsPerRow < 1) itemsPerRow = 1;
       
@@ -286,7 +291,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
           const innerBg = this.add.rectangle(0, 0, cardSize - 6, cardSize - 6, 0x000000, 0.2);
 
           // Character Sprite - ALIGNED AND SCALED TO FIT
-          const spriteScale = width < 600 ? 0.7 : 1.0;
+          const spriteScale = width < 600 ? 0.7 : 0.9;
           const sprite = this.add.sprite(0, -6, char.key, "0")
               .setOrigin(0.5, 0.75)
               .setScale(spriteScale);
@@ -301,8 +306,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
               fontSize: width < 600 ? '9px' : '11px',
               fontStyle: 'bold',
               color: isSelected ? '#fff' : '#ccc',
+              fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
               wordWrap: { width: cardSize - 6, useAdvancedWrap: true },
-              align: 'center'
+              align: 'center',
+              resolution: 2
           }).setOrigin(0.5);
 
           card.add([shadow, bg, innerBg, sprite, nameBg, nameTxt]);
@@ -314,12 +321,12 @@ export default class CharacterSelectScene extends Phaser.Scene {
           
           if (isP1) {
               const p1Badge = this.add.rectangle(p1BadgeX, -cardSize/2 - 12, 40 * badgeScale, 24 * badgeScale, 0x3498db).setStrokeStyle(2, 0xffffff);
-              const p1Txt = this.add.text(p1BadgeX, -cardSize/2 - 12, 'P1', { fontSize: width < 600 ? '10px' : '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+              const p1Txt = this.add.text(p1BadgeX, -cardSize/2 - 12, 'P1', { fontSize: width < 600 ? '10px' : '14px', color: '#ffffff', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
               card.add([p1Badge, p1Txt]);
           }
           if (isP2) {
               const p2Badge = this.add.rectangle(p2BadgeX, -cardSize/2 - 12, 40 * badgeScale, 24 * badgeScale, 0xe74c3c).setStrokeStyle(2, 0xffffff);
-              const p2Txt = this.add.text(p2BadgeX, -cardSize/2 - 12, 'P2', { fontSize: width < 600 ? '10px' : '14px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+              const p2Txt = this.add.text(p2BadgeX, -cardSize/2 - 12, 'P2', { fontSize: width < 600 ? '10px' : '14px', color: '#ffffff', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
               card.add([p2Badge, p2Txt]);
           }
 

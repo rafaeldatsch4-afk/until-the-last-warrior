@@ -52,7 +52,7 @@ export default class StoreScene extends Phaser.Scene {
     // Back Button (Top Left)
     const backContainer = this.add.container(80, 40);
     const backBtn = this.add.rectangle(0, 0, 100, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
-    const backTxt = this.add.text(0, 0, 'BACK', { fontSize: '18px', fontStyle: 'bold', fontFamily: 'Arial' }).setOrigin(0.5);
+    const backTxt = this.add.text(0, 0, 'BACK', { fontSize: '18px', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
     backContainer.add([backBtn, backTxt]);
     
     backBtn.setInteractive({ useHandCursor: true })
@@ -63,11 +63,11 @@ export default class StoreScene extends Phaser.Scene {
             this.scene.start('MenuScene');
         });
 
-    this.add.text(480, 40, 'WARRIOR STORE', { fontSize: '32px', color: '#ffffff', fontStyle: 'bold', fontFamily: 'Arial Black' }).setOrigin(0.5);
-    this.coinsText = this.add.text(920, 40, `COINS: ${state.coins}`, { fontSize: '24px', color: '#ffd54a', fontStyle: 'bold' }).setOrigin(1, 0.5);
+    this.add.text(480, 40, 'WARRIOR STORE', { fontSize: '32px', color: '#ffffff', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif", resolution: 2 }).setOrigin(0.5);
+    this.coinsText = this.add.text(920, 40, `COINS: ${state.coins}`, { fontSize: '24px', color: '#ffd54a', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif", resolution: 2 }).setOrigin(1, 0.5);
     
     // Info Text about controls
-    this.add.text(480, 85, 'Nav: WASD / Arrows | Buy: SPACE / ENTER', { fontSize: '14px', color: '#888888' }).setOrigin(0.5);
+    this.add.text(480, 85, 'Nav: WASD / Arrows | Buy: SPACE / ENTER', { fontSize: '14px', color: '#888888', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
 
     // --- Scrollable Content Setup ---
     this.listContainer = this.add.container(0, this.visibleArea.y);
@@ -333,19 +333,19 @@ export default class StoreScene extends Phaser.Scene {
             sprite.play(`${char.key}_idle`, true);
         }
         
-        const name = this.add.text(40, -35, char.name.toUpperCase(), { fontSize: '24px', fontStyle: 'bold', fontFamily: 'Arial Black' }).setOrigin(0.5);
+        const name = this.add.text(40, -35, char.name.toUpperCase(), { fontSize: '24px', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif", resolution: 2 }).setOrigin(0.5);
         
-        const special = this.add.text(40, -10, `50%: ${char.specialName}`, { fontSize: '12px', color: '#aaa', fontStyle: 'italic' }).setOrigin(0.5);
-        const superAttack = this.add.text(40, 5, `100%: ${char.superName}`, { fontSize: '12px', color: '#ffd700', fontStyle: 'italic' }).setOrigin(0.5);
+        const special = this.add.text(40, -10, `50%: ${char.specialName}`, { fontSize: '12px', color: '#aaa', fontStyle: 'italic', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
+        const superAttack = this.add.text(40, 5, `100%: ${char.superName}`, { fontSize: '12px', color: '#ffd700', fontStyle: 'italic', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
 
         container.add([bg, sprite, name, special, superAttack]);
 
         if (char.unlocked) {
-            const status = this.add.text(40, 30, 'OWNED', { fontSize: '20px', color: '#00ff00', fontStyle: 'bold' }).setOrigin(0.5);
+            const status = this.add.text(40, 30, 'OWNED', { fontSize: '20px', color: '#00ff00', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
             container.add(status);
         } else {
             const btnBg = this.add.rectangle(40, 30, 140, 40, 0xd35400);
-            const btnTxt = this.add.text(40, 30, `${char.price} G`, { fontSize: '20px', fontStyle: 'bold' }).setOrigin(0.5);
+            const btnTxt = this.add.text(40, 30, `${char.price} G`, { fontSize: '20px', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
             
             // Buy Button Interaction
             btnBg.setInteractive({ useHandCursor: true })
@@ -375,7 +375,7 @@ export default class StoreScene extends Phaser.Scene {
   }
 
   showSaveIndicator() {
-      const txt = this.add.text(920, 80, 'SAVED!', { fontSize: '16px', color: '#00ff00', fontStyle: 'bold' }).setOrigin(1, 0.5);
+      const txt = this.add.text(920, 80, 'SAVED!', { fontSize: '16px', color: '#00ff00', fontStyle: 'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(1, 0.5);
       this.tweens.add({
           targets: txt,
           y: 70,

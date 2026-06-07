@@ -65,11 +65,12 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     // Modern Header Title
     const title = this.add.text(width / 2, 70, "ARENA ONLINE", {
       fontSize: "46px",
-      fontFamily: "Impact, sans-serif",
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
       color: "#ffd54a",
       stroke: "#000000",
       strokeThickness: 8,
-      shadow: { color: "#e74c3c", blur: 10, fill: true }
+      shadow: { color: "#e74c3c", blur: 10, fill: true },
+      resolution: 2
     }).setOrigin(0.5);
 
     this.tweens.add({
@@ -122,7 +123,8 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
       fontSize: "14px",
       fontFamily: "monospace",
       color: "#2ecc71",
-      fontStyle: "bold"
+      fontStyle: "bold",
+      resolution: 2
     }).setOrigin(0.5);
 
     this.lobbyCard.add([cardBg, banner, bannerTxt]);
@@ -132,8 +134,9 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
 
     const characterText = this.add.text(0, -80, `Lutador Escolhido: ${fighterName.toUpperCase()}`, {
       fontSize: "18px",
-      fontFamily: "Impact, sans-serif",
-      color: "#ffffff"
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      color: "#ffffff",
+      resolution: 2
     }).setOrigin(0.5);
     this.lobbyCard.add(characterText);
 
@@ -167,13 +170,15 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
 
     const titleText = this.add.text(0, -210, "ENTRAR EM SALA PRIVADA", {
       fontSize: "20px",
-      fontFamily: "Impact, sans-serif",
-      color: "#f1c40f"
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      color: "#f1c40f",
+      resolution: 2
     }).setOrigin(0.5);
 
     const promptText = this.add.text(0, -170, "Digite um código de 6 caracteres:", {
       fontSize: "14px",
-      color: "#aaaaaa"
+      color: "#aaaaaa",
+      resolution: 2
     }).setOrigin(0.5);
 
     // Virtual passcode box display
@@ -186,7 +191,8 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
       fontFamily: "monospace",
       color: "#2ecc71",
       fontStyle: "bold",
-      letterSpacing: 8
+      letterSpacing: 8,
+      resolution: 2
     }).setOrigin(0.5);
     
     // Keypad layout
@@ -303,13 +309,15 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
 
     const heading = this.add.text(0, -80, mainHeading, {
       fontSize: "24px",
-      fontFamily: "Impact, sans-serif",
-      color: "#f1c40f"
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      color: "#f1c40f",
+      resolution: 2
     }).setOrigin(0.5);
 
     this.statusText = this.add.text(0, -30, subHeading, {
       fontSize: "16px",
-      color: "#ffffff"
+      color: "#ffffff",
+      resolution: 2
     }).setOrigin(0.5);
 
     this.roomCodeText = this.add.text(0, 30, "", {
@@ -317,7 +325,8 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
       fontFamily: "monospace",
       color: "#2ecc71",
       fontStyle: "bold",
-      shadow: { offsetY: 2, color: "#000", blur: 4, fill: true }
+      shadow: { offsetY: 2, color: "#000", blur: 4, fill: true },
+      resolution: 2
     }).setOrigin(0.5);
 
     if (showRoomCode) {
@@ -428,21 +437,24 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
 
     const txtMatched = this.add.text(0, -70, "PARTIDA ENCONTRADA! ⚔️", {
       fontSize: "30px",
-      fontFamily: "Impact, sans-serif",
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
       color: "#2ecc71",
-      shadow: { color: "#000", blur: 4, fill: true }
+      shadow: { color: "#000", blur: 4, fill: true },
+      resolution: 2
     }).setOrigin(0.5);
 
     const txtOpp = this.add.text(0, -10, `Inimigo: ${opponent.toUpperCase()}`, {
       fontSize: "22px",
-      fontFamily: "Impact, sans-serif",
-      color: "#ffffff"
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      color: "#ffffff",
+      resolution: 2
     }).setOrigin(0.5);
 
     const txtStarting = this.add.text(0, 50, "Entrando no combate agora...", {
       fontSize: "15px",
       fontStyle: "italic",
-      color: "#aaaaaa"
+      color: "#aaaaaa",
+      resolution: 2
     }).setOrigin(0.5);
 
     // Glowing impact rings
@@ -499,8 +511,9 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     const txt = this.add.text(0, 0, label, {
       fontSize: "16px",
       fontStyle: "bold",
-      fontFamily: "Impact, sans-serif",
-      color: "#ffffff"
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      color: "#ffffff",
+      resolution: 2
     }).setOrigin(0.5);
 
     container.add([shadow, bg, inner, txt]);
@@ -533,7 +546,7 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
   private createBackBtn(x: number, y: number, text: string, onClick: () => void) {
     const container = this.add.container(x, y);
     const bg = this.add.rectangle(0, 0, 120, 38, 0x333333).setStrokeStyle(2, 0xffffff);
-    const txt = this.add.text(0, 0, text, { fontSize: "16px", color: "#ffffff", fontStyle: "bold" }).setOrigin(0.5);
+    const txt = this.add.text(0, 0, text, { fontSize: "16px", color: "#ffffff", fontStyle: "bold", fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
     
     container.add([bg, txt]);
     

@@ -24,9 +24,10 @@ export default class PauseScene extends Phaser.Scene {
       fontSize: '64px',
       color: '#ffffff',
       fontStyle: 'bold',
-      fontFamily: 'Impact',
+      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
       stroke: '#000000',
-      strokeThickness: 6
+      strokeThickness: 6,
+      resolution: 2
     }).setOrigin(0.5);
 
     // Resume Button
@@ -34,7 +35,8 @@ export default class PauseScene extends Phaser.Scene {
       fontSize: '28px',
       color: '#2ecc71',
       fontStyle: 'bold',
-      fontFamily: 'Arial'
+      fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+      resolution: 2
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
     resumeBtn.on('pointerover', () => resumeBtn.setColor('#58d68d'));
@@ -52,7 +54,8 @@ export default class PauseScene extends Phaser.Scene {
       fontSize: '28px',
       color: '#e74c3c',
       fontStyle: 'bold',
-      fontFamily: 'Arial'
+      fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+      resolution: 2
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
     quitBtn.on('pointerover', () => quitBtn.setColor('#ff7979'));
@@ -71,9 +74,10 @@ export default class PauseScene extends Phaser.Scene {
         fontSize: '16px',
         color: '#f1c40f',
         fontStyle: 'bold',
-        fontFamily: 'Arial',
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         stroke: '#000000',
-        strokeThickness: 3
+        strokeThickness: 3,
+        resolution: 2
       }).setOrigin(0.5);
     }
 
