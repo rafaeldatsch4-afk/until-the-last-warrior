@@ -120,34 +120,37 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     // Coins Display (Top Right)
-    const coinDisplay = this.add.container(width - 150, 36);
+    const coinDisplay = this.add.container(width - 120, 32);
     
-    // Slanted polygon for coins background
-    const polyBg = this.add.polygon(0, 0, [
-      0, 36,
-      140, 36,
-      160, 0,
-      20, 0
-    ], 0x111625, 0.8).setOrigin(0.5).setStrokeStyle(2, 0xf1c40f);
+    // Premium pill background
+    const bgGraphics = this.add.graphics();
+    bgGraphics.fillStyle(0x000000, 0.6);
+    bgGraphics.fillRoundedRect(-60, -18, 120, 36, 18);
+    bgGraphics.lineStyle(2, 0xd4af37, 0.8);
+    bgGraphics.strokeRoundedRect(-60, -18, 120, 36, 18);
 
-    const coinIcon = this.add.circle(-50, 0, 14, 0xf1c40f).setStrokeStyle(2, 0xffffff);
-    const coinSymbol = this.add.text(-50, 0, '$', { fontSize: '18px', color:'#000', fontStyle:'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
+    // Coin Glow
+    const coinGlow = this.add.circle(-40, 0, 16, 0xffd700, 0.3);
+    const coinIcon = this.add.circle(-40, 0, 12, 0xffd700).setStrokeStyle(2, 0xffaa00);
+    const coinInner = this.add.circle(-40, 0, 8, 0xffea00);
+    const coinSymbol = this.add.text(-40, 0, '$', { fontSize: '14px', color:'#b8860b', fontStyle:'bold', fontFamily: "system-ui, -apple-system, sans-serif", resolution: 2 }).setOrigin(0.5);
     
-    this.coinText = this.add.text(-30, 0, `${this.state.coins || 0}`, {
-        fontSize: '24px',
-        color: '#f1c40f',
+    this.coinText = this.add.text(-20, 0, `${this.state.coins || 0}`, {
+        fontSize: '20px',
+        color: '#ffdf00',
         fontStyle: 'bold',
         stroke: '#000000',
-        strokeThickness: 4,
-        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        strokeThickness: 3,
+        fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, monospace",
         resolution: 2
     }).setOrigin(0, 0.5);
-    coinDisplay.add([polyBg, coinIcon, coinSymbol, this.coinText]);
+    
+    coinDisplay.add([bgGraphics, coinGlow, coinIcon, coinInner, coinSymbol, this.coinText]);
 
     // Botões Alinhados à Esquerda (Staggered Menu)
     const startX = 20;
     const startY = 180;
-    const spacing = 60;
+    const spacing = 50;
 
     this.createMenuButton(startX, startY, 'COMEÇAR', () => {
         this.resumeAudioContext();
@@ -338,11 +341,11 @@ export default class MenuScene extends Phaser.Scene {
       
       this.tweens.add({ targets: container, x: x, duration: 500, ease: 'Back.easeOut', delay: delayAnim });
       
-      const width = 280;
-      const height = 48;
+      const width = 220;
+      const height = 44;
 
       // Draw slanted polygon geometry for the menu button background
-      const d = 16; // Diagonal offset
+      const d = 14; // Diagonal offset
       const points = [
           0, height,
           width - d, height,
@@ -350,24 +353,24 @@ export default class MenuScene extends Phaser.Scene {
           d, 0
       ];
       
-      const polyShadow = this.add.polygon(6, 6, points, 0x000000, 0.5).setOrigin(0, 0);
+      const polyShadow = this.add.polygon(4, 4, points, 0x000000, 0.4).setOrigin(0, 0);
       const hoverGlow = this.add.polygon(0, 0, points, color, 0.8).setOrigin(0, 0).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
-      const polyMain = this.add.polygon(0, 0, points, 0x111625).setOrigin(0, 0).setStrokeStyle(3, color);
+      const polyMain = this.add.polygon(0, 0, points, 0x111625).setOrigin(0, 0).setStrokeStyle(2, color);
       
-      const txt = this.add.text(45, height / 2 - 2, text, { 
-          fontSize: '18px', 
+      const txt = this.add.text(35, height / 2 - 2, text, { 
+          fontSize: '16px', 
           fontStyle: 'italic bold',
-          fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-          letterSpacing: 2,
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          letterSpacing: 1,
           color: '#e2e8f0',
           stroke: '#000000',
-          strokeThickness: 4,
-          shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 0, fill: true },
+          strokeThickness: 3,
+          shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, fill: true },
           resolution: 2
       }).setOrigin(0, 0.5);
       
       // Right side arrow / accent
-      const accent = this.add.polygon(width - d - 10, height / 2, [0, 10, 8, 0, 0, -10, -4, -10, 4, 0, -4, 10], color, 1).setOrigin(0, 0).setAlpha(0.6);
+      const accent = this.add.polygon(width - d - 8, height / 2, [0, 8, 6, 0, 0, -8, -3, -8, 3, 0, -3, 8], color, 1).setOrigin(0, 0).setAlpha(0.6);
 
       
       container.add([polyShadow, hoverGlow, polyMain, txt, accent]);

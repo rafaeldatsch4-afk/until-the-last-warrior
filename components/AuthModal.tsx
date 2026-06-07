@@ -339,17 +339,17 @@ export const AuthButton: React.FC = () => {
       >
         <button
           onClick={() => setShowModal(true)}
-          className="group relative flex items-center justify-center w-12 h-12 bg-gradient-to-br from-gray-800 to-black rounded-md border border-yellow-500/50 hover:border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)] hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] transition-all duration-300"
+          className="group relative flex items-center justify-center w-10 h-10 bg-gray-900 rounded-sm border border-yellow-500/50 hover:border-yellow-500 hover:bg-black transition-all duration-300"
           title={user ? "Minha Conta / Perfil" : "Acessar Conta"}
           aria-label={user ? "Minha Conta" : "Acessar Conta"}
         >
           {user ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-yellow-400 group-hover:text-yellow-300">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-yellow-400 group-hover:text-yellow-300">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
           ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-gray-300 group-hover:text-white">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-gray-400 group-hover:text-white">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
