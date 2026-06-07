@@ -82,132 +82,103 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     // Title Section
-    const titleContainer = this.add.container(width / 2, 130);
+    const titleContainer = this.add.container(width - 340, height / 2 - 20); // Logo on the right side
     
     // Add postFX to main camera in Menu
     if (this.cameras.main.postFX) {
         this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
         const cm = this.cameras.main.postFX.addColorMatrix();
-        // saturation removed
     }
     
-    const titleShadow = this.add.text(0, 5, 'UNTIL THE LAST WARRIOR', {
-      fontSize: '70px',
-      color: '#000000',
-      fontStyle: 'bold',
-      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-      shadow: { offsetX: 0, offsetY: 0, blur: 20, color: '#f1c40f' },
-      resolution: 2
-    }).setOrigin(0.5).setAlpha(0.5);
-
-    const title = this.add.text(0, 0, 'UNTIL THE LAST WARRIOR', {
-      fontSize: '70px',
-      color: '#ffffff',
-      fontStyle: 'bold',
-      stroke: '#f39c12',
-      strokeThickness: 10,
-      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-      resolution: 2
-    }).setOrigin(0.5);
+    const logoImg = this.add.image(0, 0, 'utlw_logo');
+    logoImg.setScale(0.35); // Sharp rendering representing the game title and warrior
+    logoImg.setAlpha(0);
+    this.tweens.add({ targets: logoImg, alpha: 1, duration: 1500, ease: 'Power2' });
     
-    const subtitle = this.add.text(0, 50, 'A BATALHA FINAL COMEÇA AQUI', {
+    const subtitle = this.add.text(0, 190, 'A BATALHA FINAL COMEÇA AQUI', {
       fontSize: '20px',
-      color: '#e0e0e0',
+      color: '#ffd54a',
       fontStyle: 'bold',
-      letterSpacing: 6,
+      letterSpacing: 4,
       fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+      stroke: '#000000',
+      strokeThickness: 4,
+      shadow: { color: '#000000', blur: 4, fill: true },
       resolution: 2
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setAlpha(0);
+    this.tweens.add({ targets: subtitle, alpha: 1, duration: 1500, delay: 500, ease: 'Power2' });
 
-    titleContainer.add([titleShadow, title, subtitle]);
+    titleContainer.add([logoImg, subtitle]);
     
     this.tweens.add({
         targets: titleContainer,
-        y: 120,
-        duration: 2500,
+        y: titleContainer.y - 15,
+        duration: 3000,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
     });
 
-    // Coins Display
-    const coinDisplay = this.add.container(width - 120, 40);
-    const coinBg = this.add.rectangle(0, 0, 160, 40, 0x000000, 0.6).setStrokeStyle(2, 0xf1c40f).setOrigin(0.5);
-    const coinIcon = this.add.circle(-55, 0, 12, 0xf1c40f).setStrokeStyle(2, 0xffffff);
-    this.coinText = this.add.text(-35, 0, `${this.state.coins || 0}`, {
-        fontSize: '22px',
+    // Coins Display (Top Right)
+    const coinDisplay = this.add.container(width - 150, 36);
+    
+    // Slanted polygon for coins background
+    const polyBg = this.add.polygon(0, 0, [
+      0, 36,
+      140, 36,
+      160, 0,
+      20, 0
+    ], 0x111625, 0.8).setOrigin(0.5).setStrokeStyle(2, 0xf1c40f);
+
+    const coinIcon = this.add.circle(-50, 0, 14, 0xf1c40f).setStrokeStyle(2, 0xffffff);
+    const coinSymbol = this.add.text(-50, 0, '$', { fontSize: '18px', color:'#000', fontStyle:'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5);
+    
+    this.coinText = this.add.text(-30, 0, `${this.state.coins || 0}`, {
+        fontSize: '24px',
         color: '#f1c40f',
         fontStyle: 'bold',
+        stroke: '#000000',
+        strokeThickness: 4,
         fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         resolution: 2
     }).setOrigin(0, 0.5);
-    coinDisplay.add([coinBg, coinIcon, this.add.text(-55, 0, '$', { fontSize: '14px', color:'#000', fontStyle:'bold', fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif", resolution: 2 }).setOrigin(0.5), this.coinText]);
+    coinDisplay.add([polyBg, coinIcon, coinSymbol, this.coinText]);
 
-    // Botões Centralizados
-    const buttonY = 280;
-    const spacing = 80;
+    // Botões Alinhados à Esquerda (Staggered Menu)
+    const startX = 20;
+    const startY = 180;
+    const spacing = 60;
 
-    this.createMenuButton(width/2, buttonY, 'COMEÇAR', () => {
+    this.createMenuButton(startX, startY, 'COMEÇAR', () => {
         this.resumeAudioContext();
         if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
         this.scene.start('ModeSelectScene');
-    }, 0xe74c3c);
+    }, 0xe74c3c, 0);
 
-    this.createMenuButton(width/2, buttonY + spacing, 'LOJA', () => {
+    this.createMenuButton(startX + 20, startY + spacing, 'LOJA DE GUERREIROS', () => {
         this.resumeAudioContext();
         if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
         this.scene.start('StoreScene');
-    }, 0x3498db);
+    }, 0x3498db, 100);
 
-    this.createMenuButton(width/2, buttonY + spacing * 2, 'CONFIGURAÇÕES', () => {
+    this.createMenuButton(startX + 40, startY + spacing * 2, 'DESAFIOS DO DIA', () => {
+        this.resumeAudioContext();
+        if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
+        this.showChallengesPopup();
+    }, 0xf1c40f, 200);
+
+    this.createMenuButton(startX + 60, startY + spacing * 3, 'CONFIGURAÇÕES', () => {
         this.resumeAudioContext();
         if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
         this.scene.start('SettingsScene');
-    }, 0x95a5a6);
-
-    this.createDailyChallengesCard();
-  }
-
-  createDailyChallengesCard() {
-      const { height } = this.cameras.main;
-      const cardContainer = this.add.container(140, height - 60);
-
-      const bg = this.add.rectangle(0, 0, 220, 60, 0x111625, 0.8).setStrokeStyle(2, 0xf1c40f).setOrigin(0.5);
-      const text = this.add.text(0, 0, 'Desafios do Dia 🏆', {
-          fontSize: '18px',
-          fontStyle: 'bold',
-          color: '#ffffff',
-          fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-          resolution: 2
-      }).setOrigin(0.5);
-
-      cardContainer.add([bg, text]);
-
-      // Hover Effect
-      bg.setInteractive({ useHandCursor: true });
-      bg.on('pointerover', () => {
-          bg.setFillStyle(0xf1c40f);
-          text.setColor('#000000');
-          this.tweens.add({ targets: cardContainer, scale: 1.05, duration: 100 });
-      });
-      bg.on('pointerout', () => {
-          bg.setFillStyle(0x111625, 0.8);
-          text.setColor('#ffffff');
-          this.tweens.add({ targets: cardContainer, scale: 1, duration: 100 });
-      });
-
-      bg.on('pointerdown', () => {
-          this.resumeAudioContext();
-          if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
-          this.showChallengesPopup();
-      });
+    }, 0x95a5a6, 300);
   }
 
   async showChallengesPopup() {
       const { width, height } = this.cameras.main;
       
-      const popupOverlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.7).setInteractive();
-      const popupCard = this.add.container(width/2, height/2);
+      const popupOverlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.7).setInteractive().setDepth(100);
+      const popupCard = this.add.container(width/2, height/2).setDepth(100);
       
       const popupBg = this.add.rectangle(0, 0, 500, 520, 0x111625).setStrokeStyle(4, 0xf1c40f).setOrigin(0.5);
       const popupTitle = this.add.text(0, -225, 'DESAFIOS DO DIA', {
@@ -362,46 +333,64 @@ export default class MenuScene extends Phaser.Scene {
       }
   }
 
-  createMenuButton(x: number, y: number, text: string, callback: () => void, color: number) {
-      const container = this.add.container(x, y);
+  createMenuButton(x: number, y: number, text: string, callback: () => void, color: number, delayAnim: number = 0) {
+      const container = this.add.container(x - 500, y); // Starts offscreen
       
-      const width = 340;
-      const height = 65;
+      this.tweens.add({ targets: container, x: x, duration: 500, ease: 'Back.easeOut', delay: delayAnim });
+      
+      const width = 280;
+      const height = 48;
 
-      const shadow = this.add.rectangle(6, 6, width, height, 0x000000, 0.6).setOrigin(0.5);
+      // Draw slanted polygon geometry for the menu button background
+      const d = 16; // Diagonal offset
+      const points = [
+          0, height,
+          width - d, height,
+          width, 0,
+          d, 0
+      ];
       
-      const hoverGlow = this.add.rectangle(0, 0, width + 10, height + 10, color, 0.5).setOrigin(0.5).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
-      const bg = this.add.rectangle(0, 0, width, height, 0x111625).setStrokeStyle(4, color).setOrigin(0.5);
-      const innerBg = this.add.rectangle(0, 0, width - 8, height - 8, 0x000000, 0.5).setOrigin(0.5);
+      const polyShadow = this.add.polygon(6, 6, points, 0x000000, 0.5).setOrigin(0, 0);
+      const hoverGlow = this.add.polygon(0, 0, points, color, 0.8).setOrigin(0, 0).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+      const polyMain = this.add.polygon(0, 0, points, 0x111625).setOrigin(0, 0).setStrokeStyle(3, color);
       
-      const txt = this.add.text(0, 0, text, { 
-          fontSize: '30px', 
+      const txt = this.add.text(45, height / 2 - 2, text, { 
+          fontSize: '18px', 
           fontStyle: 'italic bold',
           fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-          letterSpacing: 4,
-          color: '#ffffff',
+          letterSpacing: 2,
+          color: '#e2e8f0',
           stroke: '#000000',
-          strokeThickness: 5,
+          strokeThickness: 4,
           shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 0, fill: true },
           resolution: 2
-      }).setOrigin(0.5);
+      }).setOrigin(0, 0.5);
       
-      container.add([hoverGlow, shadow, bg, innerBg, txt]);
+      // Right side arrow / accent
+      const accent = this.add.polygon(width - d - 10, height / 2, [0, 10, 8, 0, 0, -10, -4, -10, 4, 0, -4, 10], color, 1).setOrigin(0, 0).setAlpha(0.6);
+
       
-      const hitArea = this.add.rectangle(0, 0, width, height, 0x000000, 0).setInteractive({ useHandCursor: true });
+      container.add([polyShadow, hoverGlow, polyMain, txt, accent]);
+      
+      // Interactive hit area (we approximate with a rectangle covering the polygon)
+      const hitArea = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0).setInteractive({ useHandCursor: true });
       container.add(hitArea);
       
       hitArea.on('pointerover', () => { 
-          bg.setFillStyle(color); 
-          bg.setStrokeStyle(4, 0xffffff);
+          polyMain.setFillStyle(color); 
+          polyMain.setStrokeStyle(3, 0xffffff);
+          txt.setColor('#ffffff');
+          accent.setFillStyle(0xffffff).setAlpha(1);
           this.tweens.add({ targets: hoverGlow, alpha: 1, duration: 150 });
-          this.tweens.add({ targets: container, scale: 1.08, duration: 150, ease: 'Back.easeOut' }); 
+          this.tweens.add({ targets: container, x: x + 20, duration: 250, ease: 'Power2' }); 
       })
       .on('pointerout', () => { 
-          bg.setFillStyle(0x111625); 
-          bg.setStrokeStyle(4, color);
+          polyMain.setFillStyle(0x111625); 
+          polyMain.setStrokeStyle(3, color);
+          txt.setColor('#e2e8f0');
+          accent.setFillStyle(color).setAlpha(0.6);
           this.tweens.add({ targets: hoverGlow, alpha: 0, duration: 150 });
-          this.tweens.add({ targets: container, scale: 1, duration: 150, ease: 'Power2' }); 
+          this.tweens.add({ targets: container, x: x, duration: 250, ease: 'Power2' }); 
       })
       .on('pointerdown', () => {
           this.tweens.add({ targets: container, scale: 0.95, yoyo: true, duration: 50, onComplete: callback });
