@@ -27,8 +27,7 @@ async function startServer() {
     }
   });
 
-  // Port 3000 required for AI Studio dev environment, allow env port for production deploy (e.g. Railway)
-  const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+  const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
   
   // Game matchmaking rooms state
   const rooms: Map<string, Room> = new Map();
