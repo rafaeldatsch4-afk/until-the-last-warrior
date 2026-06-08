@@ -521,6 +521,7 @@ export function generateGohanSprite(scene: Phaser.Scene) {
         else if (isSSJ) textureName = `${key}_ssj`;
 
         canvas.generateTexture(textureName, sheetWidth, sheetHeight);
+        canvas.destroy();
 
         if (scene.textures.exists(textureName)) {
             const tex = scene.textures.get(textureName);
@@ -531,7 +532,7 @@ export function generateGohanSprite(scene: Phaser.Scene) {
             }
         }
 
-        canvas.destroy();    
+
     };
 
     if (!scene.textures.exists("gohan")) { generateForm(0); }

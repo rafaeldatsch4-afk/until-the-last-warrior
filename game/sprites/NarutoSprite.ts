@@ -376,6 +376,7 @@ export function generateNarutoSprite(scene: Phaser.Scene) {
     else if (isTransformed) textureName = `${key}_ssj`;
 
     canvas.generateTexture(textureName, sheetWidth, sheetHeight);
+    canvas.destroy();
 
     // Manually add frame data to the new texture so Phaser knows it's a spritesheet
     if (scene.textures.exists(textureName)) {
@@ -386,8 +387,7 @@ export function generateNarutoSprite(scene: Phaser.Scene) {
         tex.add(i.toString(), 0, i * fw, 0, fw, fh);
       }
     }
-
-    canvas.destroy();    };
+    };
 
     if (!scene.textures.exists("naruto")) { generateForm(0); }
     if (!scene.textures.exists("naruto_ssj")) { generateForm(1); }
