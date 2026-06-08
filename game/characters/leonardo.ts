@@ -101,14 +101,100 @@ export class LeonardoFighter extends Fighter {
   performSpecial(params: AttackParams): AttackResult {
     const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
     const bs = scene as any;
-    bs.specialSlash(isPlayer, false);
+    
+    bs.log("NINJA SLASH!");
+    if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack", { volume: 1.5 });
+    
+    const dmg = Math.floor(40 * bs.getDamageMultiplier(transformLevel));
+    
+    attacker.play(bs.getAnimKey("leonardo", transformLevel, "attack"));
+
+    // Quick dash past enemy
+    bs.tweens.add({
+      targets: attacker,
+      x: target.x + (isPlayer ? 100 : -100),
+      duration: 300,
+      ease: "Power2",
+      onComplete: () => {
+         // Slash effect
+         const slash = bs.add.graphics().setDepth(15);
+         slash.lineStyle(8, 0x00ff00, 1);
+         slash.lineBetween(target.x - 50, target.y - 50, target.x + 50, target.y + 120);
+         bs.tweens.add({ targets: slash, alpha: 0, duration: 200, onComplete: () => slash.destroy() });
+         
+         if (bs.cache.audio.exists("sfx_hit")) bs.sound.play("sfx_hit");
+         bs.createImpactEffect(target.x, target.y + 50, 0x00ff00);
+         bs.takeDamage(!isPlayer, dmg);
+         
+         bs.time.delayedCall(400, () => {
+           if (!bs.scene.isActive()) return;
+           attacker.x = isPlayer ? Math.min(target.x - 150, target.x) : Math.max(target.x + 150, target.x); 
+           attacker.play(bs.getAnimKey("leonardo", transformLevel, "idle"));
+           bs.onSpecialComplete(isPlayer);
+         });
+      }
+    });
+
     return null as any;
   }
 
   performSuper(params: AttackParams): AttackResult {
     const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
     const bs = scene as any;
-    bs.specialNinjaBarrage(isPlayer);
+    
+    bs.log("NINJA BARRAGE!");
+    bs.events.emit("super_activated", isPlayer);
+    
+    const dmg = Math.floor(80 * bs.getDamageMultiplier(transformLevel));
+
+    // Dark background
+    const overlay = bs.add.rectangle(0, 0, 960, 540, 0x000000, 0).setOrigin(0).setDepth(18);
+    bs.tweens.add({ targets: overlay, fillAlpha: 0.8, duration: 500 });
+    
+    attacker.play(bs.getAnimKey("leonardo", transformLevel, "attack"));
+    
+    let hits = 0;
+    const slashInterval = bs.time.addEvent({
+       delay: 100,
+       repeat: 9,
+       callback: () => {
+          if (!bs.scene.isActive()) return;
+          hits++;
+          attacker.x = target.x + (Math.random() - 0.5) * 200;
+          attacker.y = target.y - 50 + (Math.random() - 0.5) * 100;
+          
+          const slash = bs.add.graphics().setDepth(15);
+          slash.lineStyle(6, 0x00ff00, 1);
+          slash.lineBetween(target.x + (Math.random() - 0.5) * 150, target.y - 50 + (Math.random() - 0.5) * 150, target.x + (Math.random() - 0.5) * 150, target.y + 120 + (Math.random() - 0.5) * 50);
+          bs.tweens.add({ targets: slash, alpha: 0, duration: 150, onComplete: () => slash.destroy() });
+          
+          if (hits % 2 === 0) bs.cameras.main.shake(50, 0.01);
+          if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack", { volume: 0.5 });
+       }
+    });
+
+    bs.time.delayedCall(1200, () => {
+      if (!bs.scene.isActive()) return;
+      bs.cameras.main.shake(500, 0.05);
+      bs.createScreenFlash(0x00ff00, 500, 1);
+      if (bs.cache.audio.exists("sfx_explosion")) bs.sound.play("sfx_explosion");
+      bs.takeDamage(!isPlayer, dmg);
+      
+      bs.tweens.add({
+         targets: overlay,
+         fillAlpha: 0,
+         duration: 500,
+         onComplete: () => {
+             overlay.destroy();
+             const startPos = isPlayer ? bs.p1StartPos : bs.p2StartPos;
+             attacker.x = startPos.x;
+             attacker.y = startPos.y;
+             attacker.play(bs.getAnimKey("leonardo", transformLevel, "idle"));
+             bs.onSpecialComplete(isPlayer);
+         }
+      });
+    });
+
     return null as any;
   }
 

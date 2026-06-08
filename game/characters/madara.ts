@@ -216,10 +216,69 @@ export class MadaraFighter extends Fighter {
     const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
     const bs = scene as any;
     
-    // I could just call it locally to avoid massive text, or re-implement.
-    // For safety, let's keep it calling bs.specialTengaiShinsei(isPlayer) right now!
-    // Since I didn't delete it from BattleScene!
-    bs.specialTengaiShinsei(isPlayer);
+    const dmg = Math.floor(90 * bs.getDamageMultiplier(transformLevel));
+
+    bs.log("TENGAI SHINSEI!");
+    bs.events.emit("super_activated", isPlayer);
+
+    const overlay = bs.add.rectangle(0, 0, 960, 540, 0x000000, 0).setOrigin(0).setDepth(18);
+    bs.tweens.add({
+        targets: overlay,
+        fillAlpha: 0.8,
+        duration: 1000
+    });
+
+    if (bs.cache.audio.exists("sfx_charge")) bs.sound.play("sfx_charge", { volume: 1.5 });
+    
+    // Giant Meteor!
+    const meteorColor = 0x8b4513; // Brown
+    const meteor = bs.add.circle(target.x + (isPlayer ? 100 : -100), -300, 150, meteorColor).setDepth(20);
+    const meteorGlow = bs.add.circle(meteor.x, meteor.y, 180, 0xff4500, 0.8).setBlendMode(Phaser.BlendModes.ADD).setDepth(19);
+
+    bs.tweens.add({
+      targets: [meteor, meteorGlow],
+      y: target.y + 120,
+      x: target.x,
+      duration: 1500,
+      ease: "Cubic.easeIn",
+      onUpdate: () => {
+         bs.cameras.main.shake(100, 0.01); 
+      },
+      onComplete: () => {
+         meteor.destroy();
+         meteorGlow.destroy();
+         
+         if (!bs.scene.isActive()) return;
+         
+         bs.takeDamage(!isPlayer, dmg);
+         bs.createScreenFlash(0xffffff, 1000, 1);
+         bs.cameras.main.shake(1500, 0.2);
+         if (bs.cache.audio.exists("sfx_explosion")) bs.sound.play("sfx_explosion", { volume: 2.0 });
+         
+         for (let i = 0; i < 40; i++) {
+           const spark = bs.add.circle(target.x, target.y + 120, Math.random()*20+10, 0xff4500).setDepth(25);
+           bs.tweens.add({
+             targets: spark,
+             x: target.x + (Math.random() - 0.5) * 500,
+             y: target.y + 120 + (Math.random() - 0.5) * 300,
+             alpha: 0,
+             scale: 0,
+             duration: 600 + Math.random() * 600,
+             onComplete: () => spark.destroy()
+           });
+         }
+         
+         bs.tweens.add({
+             targets: overlay,
+             fillAlpha: 0,
+             duration: 1500,
+             onComplete: () => {
+                 overlay.destroy();
+                 bs.onSpecialComplete(isPlayer);
+             }
+         });
+      }
+    });
 
     return null as any;
   }

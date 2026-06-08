@@ -97,7 +97,9 @@ export class CellFighter extends Fighter {
   performSuper(params: AttackParams): AttackResult {
     const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
     const bs = scene as any;
-    bs.specialSolarKamehameha(isPlayer);
+    
+    bs.specialBeam(isPlayer, true, 0xffff00, true, true, "SOLAR KAMEHAMEHA!");
+
     return null as any;
   }
 
