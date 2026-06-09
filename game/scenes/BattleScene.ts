@@ -1217,9 +1217,12 @@ export default class BattleScene extends Phaser.Scene {
       } else if (isUE) {
         auraColor = 0x9b59b6;
         ringColor = 0xff00ff;
-      } else if (data.key === "gohan") {
+      } else if (data.key === "gohan" && level === 2) {
         auraColor = 0x8a2be2;
         ringColor = 0xff00ff;
+      } else if (data.key === "gohan" && level === 1) {
+        auraColor = 0xffd700;
+        ringColor = 0xffff00;
       } else if (data.key === "piccolo") {
         auraColor = 0xff8800;
         ringColor = 0xffaa00;
@@ -2339,8 +2342,8 @@ export default class BattleScene extends Phaser.Scene {
 
     // Check max transformation level
     let maxLevel = 1;
-    if (data.key === "goku" || data.key === "vegeta" || data.key === "naruto")
-      maxLevel = 2; // Goku, Vegeta, Naruto have 2 transformations
+    if (data.key === "goku" || data.key === "vegeta" || data.key === "naruto" || data.key === "gohan")
+      maxLevel = 2; // Goku, Vegeta, Naruto, Gohan have 2 transformations
 
     if (!data.transformAvailable || currentLevel >= maxLevel || ki < 100)
       return;
@@ -2354,6 +2357,7 @@ export default class BattleScene extends Phaser.Scene {
 
     this.setActionState(isPlayer, true);
     this.modifyKi(isPlayer, -100);
+    this.clearChargeIndicator(isPlayer);
 
     const nextLevel = currentLevel + 1;
     if (isPlayer) this.playerTransformLevel = nextLevel;
@@ -2376,10 +2380,14 @@ export default class BattleScene extends Phaser.Scene {
       auraColor = 0x9b59b6; // Purple
       ringColor = 0xff00ff; // Magenta
       transformText = "ULTRA EGO!";
-    } else if (data.key === "gohan") {
+    } else if (data.key === "gohan" && nextLevel === 2) {
       auraColor = 0x8a2be2; // Violet
       ringColor = 0xff00ff; // Magenta
       transformText = "BEAST FORM!";
+    } else if (data.key === "gohan" && nextLevel === 1) {
+      auraColor = 0xffd700;
+      ringColor = 0xffff00;
+      transformText = "SUPER SAIYAN!";
     } else if (data.key === "piccolo") {
       auraColor = 0xff8800; // Orange
       ringColor = 0xffaa00; // Light Orange
@@ -2532,7 +2540,7 @@ export default class BattleScene extends Phaser.Scene {
             if (!this.scene.isActive()) return;
 
             let texKey = `${data.key}_ssj`;
-            if (isUI || isUE || isKuramaMode) texKey = `${data.key}_ui`;
+            if (isUI || isUE || isKuramaMode || (data.key === "gohan" && nextLevel === 2)) texKey = `${data.key}_ui`;
 
             if (this.textures.exists(texKey)) {
               sprite.setTexture(texKey, "0");

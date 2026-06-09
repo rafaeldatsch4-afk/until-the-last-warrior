@@ -18,6 +18,7 @@ export function generateGohanSprite(scene: Phaser.Scene) {
         const sheetHeight = FRAME_HEIGHT * SCALE;
 
         const canvas = scene.make.graphics({ x: 0, y: 0 });
+        canvas.clear();
         const shiftX = 24;
 
         // Custom Teen Gohan Pixel Art (Cell Games Arc)
