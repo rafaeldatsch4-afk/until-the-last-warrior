@@ -109,6 +109,9 @@ export default class BattleScene extends Phaser.Scene {
 
   public p1Shadow!: Phaser.GameObjects.Ellipse;
   public p2Shadow!: Phaser.GameObjects.Ellipse;
+  public p1DebugCircle!: Phaser.GameObjects.Shape;
+  public p2DebugCircle!: Phaser.GameObjects.Shape;
+  public debugCirclesDestroyed: boolean = false;
   public p1Aura!: Phaser.GameObjects.Shape;
   public p2Aura!: Phaser.GameObjects.Shape;
   public p1Shield!: Phaser.GameObjects.Arc;
@@ -381,6 +384,12 @@ export default class BattleScene extends Phaser.Scene {
     if (this.battleEnvironment) this.battleEnvironment.update(time, delta);
     
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
+
+    if (!this.debugCirclesDestroyed) {
+      if (this.p1DebugCircle) this.p1DebugCircle.destroy();
+      if (this.p2DebugCircle) this.p2DebugCircle.destroy();
+      this.debugCirclesDestroyed = true;
+    }
 
     if (this.battleUI) this.battleUI.updateBars(this.playerHp / this.playerData.maxHp, this.enemyHp / this.enemyData.maxHp, this.playerKi / 100, this.enemyKi / 100);
 
@@ -1402,8 +1411,9 @@ export default class BattleScene extends Phaser.Scene {
       .setDepth(0);
 
     // FIX: Moved Aura down to +80 to center on body/chest (was +0, top of head)
+    this.p1DebugCircle = this.add.circle(this.p1StartPos.x, this.p1StartPos.y + 80, 50, 0x3498db, 0.5);
     this.p1Aura = this.add
-      .circle(this.p1StartPos.x, this.p1StartPos.y + 80, 50, 0x3498db, 0.5)
+      .circle(this.p1StartPos.x, this.p1StartPos.y + 80, 51, 0x3498db, 0.5)
       .setVisible(false)
       .setDepth(0);
     this.p1Shield = this.add
@@ -1445,8 +1455,9 @@ export default class BattleScene extends Phaser.Scene {
         0.5,
       )
       .setDepth(0);
+    this.p2DebugCircle = this.add.circle(this.p2StartPos.x, this.p2StartPos.y + 80, 50, 0xe74c3c, 0.5);
     this.p2Aura = this.add
-      .circle(this.p2StartPos.x, this.p2StartPos.y + 80, 50, 0xe74c3c, 0.5)
+      .circle(this.p2StartPos.x, this.p2StartPos.y + 80, 51, 0xe74c3c, 0.5)
       .setVisible(false)
       .setDepth(0);
     this.p2Shield = this.add
