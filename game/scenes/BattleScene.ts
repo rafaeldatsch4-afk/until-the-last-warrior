@@ -1411,7 +1411,7 @@ export default class BattleScene extends Phaser.Scene {
       .setDepth(0);
 
     // FIX: Moved Aura down to +80 to center on body/chest (was +0, top of head)
-    this.p1DebugCircle = this.add.circle(this.p1StartPos.x, this.p1StartPos.y + 80, 50, 0x3498db, 0.5);
+    this.p1DebugCircle = this.add.circle(this.p1StartPos.x, this.p1StartPos.y + 80, 50, 0x3498db, 0.5).setVisible(false);
     this.p1Aura = this.add
       .circle(this.p1StartPos.x, this.p1StartPos.y + 80, 51, 0x3498db, 0.5)
       .setVisible(false)
@@ -1455,7 +1455,7 @@ export default class BattleScene extends Phaser.Scene {
         0.5,
       )
       .setDepth(0);
-    this.p2DebugCircle = this.add.circle(this.p2StartPos.x, this.p2StartPos.y + 80, 50, 0xe74c3c, 0.5);
+    this.p2DebugCircle = this.add.circle(this.p2StartPos.x, this.p2StartPos.y + 80, 50, 0xe74c3c, 0.5).setVisible(false);
     this.p2Aura = this.add
       .circle(this.p2StartPos.x, this.p2StartPos.y + 80, 51, 0xe74c3c, 0.5)
       .setVisible(false)

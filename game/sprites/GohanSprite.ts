@@ -159,10 +159,11 @@ export function generateGohanSprite(scene: Phaser.Scene) {
           box(12, 15, 3, 4, GI_HIGHLIGHT);
           box(17, 15, 3, 4, GI_HIGHLIGHT);
 
-          box(14, 13, 4, 3, SKIN_TONE); // Neck
-          box(14, 15, 4, 1, SKIN_SHADOW);
-          box(15, 16, 2, 1, SKIN_TONE); 
-          box(15, 17, 2, 1, SKIN_SHADOW); // V-neck shadow
+          // Exposed Chest & Neck (V-neck)
+          box(13, 13, 6, 3, SKIN_TONE);
+          box(13, 13, 1, 3, SKIN_SHADOW);
+          box(18, 13, 1, 3, SKIN_SHADOW);
+          box(15, 14, 2, 2, SKIN_SHADOW); // Cleavage line
 
           // Chest definition
           box(15, 18, 2, 2, GI_SHADOW); // center line
