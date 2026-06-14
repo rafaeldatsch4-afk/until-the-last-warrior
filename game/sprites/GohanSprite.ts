@@ -264,63 +264,126 @@ export function generateGohanSprite(scene: Phaser.Scene) {
           canvas.fillStyle(hairColor, 1);
 
           if (isBeast) {
-            // Beast Gohan Hair - Massive silver upward spikes + gigantic front bang
-            headBox(11, -8, 10, 15, hairColor); 
-            headBox(9, -6, 2, 10, hairColor);
-            headBox(21, -6, 2, 10, hairColor);
-            // Giant top spikes
-            headBox(13, -12, 3, 5, hairColor); // Leftish tall
-            headBox(17, -14, 3, 7, hairColor); // Center mega tall
-            headBox(19, -10, 2, 4, hairColor); // Right tall
-            // Huge bang down face
-            headBox(16, 5, 2, 6, hairColor);
-            headBox(17, 11, 1, 1, hairColor); // bang end tip
+            // Beast Gohan Hair - Colossal silver swept-back spikes
+            // Core head wrap
+            headBox(10, -1, 12, 7, hairColor); 
             
-            // Shadows
-            headBox(11, -4, 1, 8, 0x9e9e9e);
-            headBox(20, -4, 1, 8, 0x9e9e9e);
-            headBox(15, -12, 1, 7, 0x9e9e9e); // Middle spike shadow
-            headBox(16, 6, 1, 5, 0x9e9e9e); // Bang shadow
-            // Highlights
-            headBox(13, -7, 1, 6, HAIR_BEAST_HIGHLIGHT);
-            headBox(18, -13, 1, 8, HAIR_BEAST_HIGHLIGHT);
+            // Outer flares
+            headBox(8, 2, 2, 5, hairColor);
+            headBox(22, 2, 2, 5, hairColor);
+            headBox(9, -4, 2, 6, hairColor);
+            headBox(21, -4, 2, 6, hairColor);
+
+            // Massive Spikes
+            headBox(11, -12, 3, 11, hairColor); // Left large spike
+            headBox(14, -18, 4, 17, hairColor); // Center MONUMENTAL spike
+            headBox(18, -12, 3, 11, hairColor); // Right large spike
+
+            // Connective volume for depth
+            headBox(13, -8, 2, 8, hairColor);
+            headBox(17, -8, 2, 8, hairColor);
+
+            // Side burns
+            headBox(10, 6, 2, 3, hairColor);
+            headBox(20, 6, 2, 3, hairColor);
+
+            // Classic Beast long bang (very thin, strictly between eyes)
+            headBox(15, 6, 1, 4, hairColor);
+            headBox(15, 10, 1, 3, hairColor);
+
+            // Dense Shadows
+            headBox(10, 3, 1, 3, 0x9e9e9e); 
+            headBox(21, 3, 1, 3, 0x9e9e9e); 
+            headBox(11, -9, 1, 9, 0x9e9e9e); 
+            headBox(14, -15, 1, 15, 0x9e9e9e); 
+            headBox(18, -9, 1, 9, 0x9e9e9e); 
+            headBox(15, 6, 1, 7, 0x9e9e9e); // Bang shadow
+
+            // Piercing bright silver highlights
+            headBox(13, -11, 1, 6, HAIR_BEAST_HIGHLIGHT);
+            headBox(17, -17, 1, 10, HAIR_BEAST_HIGHLIGHT);
+            headBox(20, -11, 1, 6, HAIR_BEAST_HIGHLIGHT);
+
           } else if (isTransformed) {
-            // SSJ2 Teen Gohan Hair - extremely spiky and upright with one long bang
-            headBox(11, -4, 10, 11, hairColor); // Main block
-            headBox(9, -2, 2, 6, hairColor);
-            headBox(21, -2, 2, 6, hairColor);
-            // Tall sharp top spikes
-            headBox(11, -8, 2, 6, hairColor); 
-            headBox(14, -10, 3, 8, hairColor); // Center top (tallest)
-            headBox(18, -7, 2, 5, hairColor); 
-            // One distinctive sharp bang falling on face
-            headBox(15, 6, 2, 5, hairColor);
-            
-            // Shadows
-            headBox(11, -5, 1, 8, 0xd4a000);
-            headBox(20, -5, 1, 8, 0xd4a000);
-            headBox(15, -10, 1, 8, 0xd4a000); // Middle spike shadow
-            headBox(15, 7, 1, 4, 0xd4a000); // Bang shadow
-            // Highlights
-            headBox(12, -7, 1, 5, HAIR_SSJ_HIGHLIGHT);
-            headBox(16, -9, 1, 6, HAIR_SSJ_HIGHLIGHT);
+            // SSJ2 Teen Gohan Hair - Straight, intense, highly vertical spikes
+            headBox(11, 0, 10, 6, hairColor); // Base block
+            headBox(10, 2, 1, 3, hairColor); // Small side ear fluff
+            headBox(21, 2, 1, 3, hairColor); 
+
+            // 5 iconic distinct vertical spikes (tightly kept above head)
+            headBox(11, -5, 2, 5, hairColor); // Far left spike
+            headBox(13, -9, 2, 9, hairColor); // Mid left spike (tall)
+            headBox(15, -13, 2, 13, hairColor); // Center tallest spike
+            headBox(17, -10, 2, 10, hairColor); // Mid right spike
+            headBox(19, -6, 2, 6, hairColor); // Far right spike
+
+            // Intermediate hair clusters smoothing the transition
+            headBox(12, -4, 1, 4, hairColor); 
+            headBox(14, -7, 1, 7, hairColor); 
+            headBox(16, -9, 1, 9, hairColor); 
+            headBox(18, -5, 1, 5, hairColor); 
+
+            // Side burns
+            headBox(11, 6, 1, 2, hairColor);
+            headBox(20, 6, 1, 2, hairColor);
+
+            // Signature thin SSJ bang down the middle
+            headBox(15, 6, 1, 3, hairColor); 
+            headBox(15, 9, 1, 2, hairColor); // Sharp tip
+
+            // Detailed Shadows keeping depth
+            headBox(11, 4, 1, 2, 0xd4a000); 
+            headBox(20, 4, 1, 2, 0xd4a000);
+            headBox(12, -4, 1, 4, 0xd4a000); 
+            headBox(14, -8, 1, 8, 0xd4a000); 
+            headBox(16, -12, 1, 12, 0xd4a000); 
+            headBox(18, -9, 1, 9, 0xd4a000); 
+            headBox(20, -5, 1, 5, 0xd4a000); 
+            headBox(15, 6, 1, 5, 0xd4a000); // Bang shadow
+
+            // Bright Golden Highlights
+            headBox(11, -4, 1, 3, HAIR_SSJ_HIGHLIGHT);
+            headBox(13, -8, 1, 6, HAIR_SSJ_HIGHLIGHT);
+            headBox(15, -12, 1, 8, HAIR_SSJ_HIGHLIGHT);
+            headBox(17, -9, 1, 5, HAIR_SSJ_HIGHLIGHT);
+            headBox(19, -5, 1, 4, HAIR_SSJ_HIGHLIGHT);
+
           } else {
-            // Base Gohan Hair - SSJ style shape but softer
-            headBox(11, 0, 10, 7, hairColor); 
-            headBox(13, -3, 3, 4, hairColor);
-            headBox(16, -2, 3, 3, hairColor);
-            headBox(9, 1, 2, 4, hairColor);
-            headBox(21, 1, 2, 4, hairColor);
-            // Thick bang
-            headBox(14, 6, 3, 4, hairColor); 
+            // Base Gohan Hair - Upright spiky layers (Ultimate form style)
+            headBox(11, 0, 10, 6, hairColor); // Base block
+            headBox(10, 1, 1, 4, hairColor);
+            headBox(21, 1, 1, 4, hairColor);
             
-            // Shadows
-            headBox(12, 2, 1, 4, 0x333333);
-            headBox(19, 2, 1, 4, 0x333333);
-            headBox(14, 7, 1, 3, 0x333333);
-            // Highlights
-            headBox(13, 0, 1, 4, HAIR_BLACK_HIGHLIGHT);
-            headBox(17, 1, 1, 3, HAIR_BLACK_HIGHLIGHT);
+            // Upright Spikes
+            headBox(11, -3, 2, 3, hairColor); // Far left
+            headBox(13, -5, 2, 5, hairColor); // Mid left
+            headBox(16, -6, 2, 6, hairColor); // Center tallest
+            headBox(19, -4, 2, 4, hairColor); // Right spike
+            
+            // Fill gaps between spikes
+            headBox(12, -1, 1, 1, hairColor); 
+            headBox(15, -3, 1, 3, hairColor); 
+            headBox(18, -2, 1, 2, hairColor); 
+            
+            // Side burns 
+            headBox(11, 6, 1, 3, hairColor);
+            headBox(20, 6, 1, 3, hairColor);
+            
+            // Bangs safely placed
+            headBox(15, 6, 1, 3, hairColor); // Center bang
+            headBox(13, 6, 1, 1, hairColor); // Subtle side piece
+            
+            // Depth Shadows
+            headBox(11, 4, 1, 2, 0x333333); 
+            headBox(20, 4, 1, 2, 0x333333);
+            headBox(13, -2, 1, 2, 0x333333); // Between spikes
+            headBox(18, -1, 1, 1, 0x333333); 
+            headBox(15, 6, 1, 3, 0x333333); // Bang shadow
+            
+            // Highlights (subtle black sheen)
+            headBox(13, -4, 1, 2, HAIR_BLACK_HIGHLIGHT);
+            headBox(16, -5, 1, 3, HAIR_BLACK_HIGHLIGHT);
+            headBox(19, -3, 1, 2, HAIR_BLACK_HIGHLIGHT);
           }
 
         }
