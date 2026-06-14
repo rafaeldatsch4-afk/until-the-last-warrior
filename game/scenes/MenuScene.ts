@@ -158,19 +158,19 @@ export default class MenuScene extends Phaser.Scene {
         this.scene.start('ModeSelectScene');
     }, 0xe74c3c, 0);
 
-    this.createMenuButton(startX + 20, startY + spacing, 'LOJA DE GUERREIROS', () => {
+    this.createMenuButton(startX, startY + spacing, 'LOJA DE GUERREIROS', () => {
         this.resumeAudioContext();
         if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
         this.scene.start('StoreScene');
     }, 0x3498db, 100);
 
-    this.createMenuButton(startX + 40, startY + spacing * 2, 'DESAFIOS DO DIA', () => {
+    this.createMenuButton(startX, startY + spacing * 2, 'DESAFIOS DO DIA', () => {
         this.resumeAudioContext();
         if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
         this.showChallengesPopup();
     }, 0xf1c40f, 200);
 
-    this.createMenuButton(startX + 60, startY + spacing * 3, 'CONFIGURAÇÕES', () => {
+    this.createMenuButton(startX, startY + spacing * 3, 'CONFIGURAÇÕES', () => {
         this.resumeAudioContext();
         if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
         this.scene.start('SettingsScene');
@@ -341,8 +341,21 @@ export default class MenuScene extends Phaser.Scene {
       
       this.tweens.add({ targets: container, x: x, duration: 500, ease: 'Back.easeOut', delay: delayAnim });
       
-      const width = 220;
       const height = 44;
+
+      const txt = this.add.text(35, height / 2 - 2, text, { 
+          fontSize: '16px', 
+          fontStyle: 'italic bold',
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          letterSpacing: 1,
+          color: '#e2e8f0',
+          stroke: '#000000',
+          strokeThickness: 3,
+          shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, fill: true },
+          resolution: 2
+      }).setOrigin(0, 0.5);
+
+      const width = Math.max(220, txt.width + 70);
 
       // Draw slanted polygon geometry for the menu button background
       const d = 14; // Diagonal offset
@@ -357,20 +370,9 @@ export default class MenuScene extends Phaser.Scene {
       const hoverGlow = this.add.polygon(0, 0, points, color, 0.8).setOrigin(0, 0).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
       const polyMain = this.add.polygon(0, 0, points, 0x111625).setOrigin(0, 0).setStrokeStyle(2, color);
       
-      const txt = this.add.text(35, height / 2 - 2, text, { 
-          fontSize: '16px', 
-          fontStyle: 'italic bold',
-          fontFamily: "system-ui, -apple-system, sans-serif",
-          letterSpacing: 1,
-          color: '#e2e8f0',
-          stroke: '#000000',
-          strokeThickness: 3,
-          shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, fill: true },
-          resolution: 2
-      }).setOrigin(0, 0.5);
-      
       // Right side arrow / accent
-      const accent = this.add.polygon(width - d - 8, height / 2, [0, 8, 6, 0, 0, -8, -3, -8, 3, 0, -3, 8], color, 1).setOrigin(0, 0).setAlpha(0.6);
+      const accentOriginX = width - d - 8;
+      const accent = this.add.polygon(accentOriginX, height / 2, [0, 8, 6, 0, 0, -8, -3, -8, 3, 0, -3, 8], color, 1).setAlpha(0.6);
 
       
       container.add([polyShadow, hoverGlow, polyMain, txt, accent]);

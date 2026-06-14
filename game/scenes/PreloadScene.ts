@@ -75,7 +75,7 @@ export default class PreloadScene extends Phaser.Scene {
     });
 
     this.load.image("arena", "https://labs.phaser.io/assets/skies/space3.png");
-    this.load.image("utlw_logo", "utlw_logo.png");
+    this.load.image("utlw_logo", "icon.png");
     this.load.image(
       "arena_namek",
       "https://labs.phaser.io/assets/skies/sky4.png",
