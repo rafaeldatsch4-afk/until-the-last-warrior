@@ -150,95 +150,155 @@ export function generateCyberninjaSprite(scene: Phaser.Scene) {
       const BLACK = 0x111111;
 
       {
-          const SUIT_MAIN = isTransformed ? 0x222222 : 0x2d3436; // Darker when transformed
-          const SUIT_DARK = 0x111111;
-          const SCARF = isTransformed ? 0xff0055 : 0x00d2d3; // Red vs Cyan
-          const VISOR = isTransformed ? 0xff0000 : 0x00eaff;
-          const SKIN_PALE = 0xffeebb;
+          let SUIT_MAIN = 0x2a3036;
+          let SUIT_DARK = 0x1a1d21;
+          let SUIT_LIGHT = 0x4a555e;
+          let NEON = 0x00eaff;
+          let SCARF = 0x00d2d3;
+          let METAL = 0x8a9ba8;
+          let METAL_DARK = 0x4e5a63;
 
-          // Legs (Baggy ninja pants)
-          box(10, 24, 4, 6, SUIT_MAIN);
-          box(18, 24, 4, 6, SUIT_MAIN);
-          box(10, 24, 1, 6, SUIT_DARK);
-          box(21, 24, 1, 6, SUIT_DARK); // Leg shadow
-          box(10, 30, 4, 2, SUIT_DARK);
-          box(18, 30, 4, 2, SUIT_DARK); // Boots
-          box(10, 31, 4, 1, 0x000000);
-          box(18, 31, 4, 1, 0x000000); // Boot shadow
+          if (isTransformed && !isUI) {
+             SUIT_MAIN = 0x1a1a24;
+             SUIT_DARK = 0x0d0d12;
+             SUIT_LIGHT = 0x3a3a4d;
+             NEON = 0xff0055;
+             SCARF = 0xff0055;
+             METAL = 0x747488;
+             METAL_DARK = 0x333344;
+          } else if (isUI) {
+             SUIT_MAIN = 0x222222;
+             SUIT_DARK = 0x000000;
+             SUIT_LIGHT = 0x666666;
+             NEON = 0xffffff;
+             SCARF = 0xffffff;
+             METAL = 0xdddddd;
+             METAL_DARK = 0x777777;
+          }
 
-          // Torso (Armor vest)
-          box(11, 14, 10, 10, SUIT_MAIN);
-          box(11, 14, 1, 10, SUIT_DARK);
-          box(20, 14, 1, 10, SUIT_DARK); // Torso shadow
-          box(12, 15, 8, 5, SUIT_DARK); // Chest plate
-          box(12, 15, 8, 1, 0x333333); // Chest highlight
+          // Cybernetic Legs
+          box(10, 23, 4, 4, SUIT_DARK); // Thighs
+          box(18, 23, 4, 4, SUIT_DARK);
+          box(11, 23, 1, 3, NEON); // Neon thigh strip
+          box(19, 23, 1, 3, NEON);
 
-          // Arms
+          box(9,  27, 5, 4, SUIT_MAIN); // Greaves
+          box(17, 27, 5, 4, SUIT_MAIN);
+          box(9,  27, 1, 4, SUIT_LIGHT); // Greave highlight
+          box(17, 27, 1, 4, SUIT_LIGHT);
+          
+          box(10, 31, 4, 1, METAL_DARK); // Ankles
+          box(18, 31, 4, 1, METAL_DARK);
+          
+          box(9, 32, 5, 2, SUIT_DARK); // Foot
+          box(17, 32, 5, 2, SUIT_DARK);
+          box(9, 32, 2, 1, METAL); // Toe cap
+          box(17, 32, 2, 1, METAL);
+
+          // Pelvis
+          box(11, 21, 10, 3, SUIT_DARK); 
+          box(14, 21, 4, 4, METAL_DARK); // Codpiece
+          box(15, 22, 2, 2, SUIT_DARK);
+          
+          // Torso Core
+          box(12, 14, 8, 7, SUIT_DARK); 
+          
+          // Chest Plate Armor
+          box(11, 12, 10, 5, SUIT_MAIN);
+          box(11, 12, 2, 5, SUIT_LIGHT); // Chest highlight
+          box(18, 12, 2, 5, SUIT_LIGHT);
+          
+          // Glowing Chest Core reactor
+          box(14, 14, 4, 3, NEON);
+          box(15, 14, 2, 2, 0xffffff); // core bright
+
+          // Scarf/Cape flow
+          let scarfWave = f % 2 === 0 ? 0 : 1;
+          if (isWalk) scarfWave = (f % 2) * 2;
+          let scarfLen = 12 + scarfWave;
+          let scarfX = Math.max(0, 11 - scarfLen);
+          
+          headBox(scarfX, 13, scarfLen, 2, SCARF);
+          headBox(scarfX+2, 15, scarfLen-3, 1, SCARF);
+          headBox(scarfX+4, 16, scarfLen-6, 1, SCARF);
+
+          // Scarf Collar
+          headBox(10, 11, 12, 3, SCARF);
+          headBox(11, 12, 10, 1, 0xffffff); // bright inner wrap
+
+          // Arms and Weapons
           if (isAttack) {
-            box(21, 14, 10, 3, SUIT_MAIN); // Right arm out
-            box(30, 14, 2, 3, SKIN_PALE); // bare lower arm
-            box(32, 14, 4, 4, SUIT_DARK); // Right glove/fist
-            box(32, 14, 2, 2, 0xaaaaaa); // Knuckle
-            box(6, 15, 3, 5, SUIT_MAIN); // Left arm pulled
-            box(6, 19, 3, 3, SUIT_DARK); // Left glove
+             box(20, 12, 4, 4, SUIT_MAIN); // Right shoulder
+             box(21, 13, 2, 2, NEON); // shoulder glowing bit
+             
+             // Dynamic Energy Blade Slash
+             box(24, 14, 6, 2, SUIT_DARK); // Right arm out
+             box(30, 13, 3, 4, METAL); // Metal hand
+
+             // The Energy Sword
+             box(33, 14, 20, 2, NEON); // Blade core
+             alphaBox(31, 12, 24, 6, NEON, 0.4); // Blade glow aura
+             box(51, 14, 2, 1, 0xffffff); // Tip bright spark
+             box(33, 14, 10, 1, 0xffffff); // Core bright
+
+             box(6, 12, 4, 4, SUIT_MAIN); // Left shoulder back
+             box(8, 16, 2, 5, SUIT_DARK); // Left arm pulled
+             box(7, 21, 3, 3, METAL); // Left metal hand
           } else {
-            box(8, 14, 3, 5, SUIT_MAIN);
-            box(21, 14, 3, 5, SUIT_MAIN);
-            box(8, 14, 1, 5, SUIT_DARK);
-            box(23, 14, 1, 5, SUIT_DARK); // Arm shadow
-            box(8, 19, 3, 4, SKIN_PALE);
-            box(21, 19, 3, 4, SKIN_PALE); // Bare arms/gloves
-            box(8, 19, 1, 4, 0xccbb99);
-            box(23, 19, 1, 4, 0xccbb99); // Skin shadow
-            box(8, 21, 3, 2, SUIT_DARK);
-            box(21, 21, 3, 2, SUIT_DARK); // Gloves
-            box(8, 22, 3, 1, 0x000000);
-            box(21, 22, 3, 1, 0x000000); // Glove shadow
+             box(8, 12, 4, 4, SUIT_MAIN); // Shoulders
+             box(20, 12, 4, 4, SUIT_MAIN); 
+             box(8, 12, 1, 4, SUIT_LIGHT); // Shoulder detail
+             box(20, 12, 1, 4, SUIT_LIGHT); 
+
+             box(9, 13, 2, 2, NEON); // Neon shoulder pads
+             box(21, 13, 2, 2, NEON);
+
+             box(9, 16, 2, 4, SUIT_DARK); // Upper arms
+             box(21, 16, 2, 4, SUIT_DARK);
+             
+             // Glowing neon lines on upper arms
+             box(9, 17, 1, 2, NEON);
+             box(21, 17, 1, 2, NEON);
+
+             // Cybernetic Gauntlets
+             box(8, 20, 4, 4, METAL); 
+             box(20, 20, 4, 4, METAL);
+             box(8, 20, 1, 4, 0xffffff); // gauntlet edge shine
+             box(20, 20, 1, 4, 0xffffff);
+
+             // Katana Hilt on back (sheathed)
+             headBox(8, 3, 2, 9, METAL_DARK); 
+             headBox(8, 2, 2, 1, NEON); // glowing pommel
           }
 
-          // Head
-          headBox(12, 6, 8, 8, SUIT_MAIN); // Hood
-          headBox(12, 6, 1, 8, SUIT_DARK);
-          headBox(19, 6, 1, 8, SUIT_DARK); // Hood shadow
-          headBox(13, 8, 6, 3, SKIN_PALE); // Face opening
-          headBox(13, 10, 6, 1, 0xccbb99); // Face shadow
-          headBox(13, 8, 6, 1, VISOR); // Visor eye
-          headBox(13, 8, 2, 1, 0xffffff); // Visor highlight
+          // Cyber Helm
+          headBox(12, 5, 8, 7, SUIT_MAIN); 
+          headBox(12, 5, 2, 7, SUIT_LIGHT); // Helm highlight
 
-          // Scarf Animation (Flowing in wind)
-          // Base position neck
-          headBox(11, 13, 10, 2, SCARF);
-          headBox(11, 14, 10, 1, 0x880022); // Scarf shadow
+          // Visor Faceplate
+          headBox(13, 7, 7, 3, SUIT_DARK);
+          headBox(13, 7, 6, 1, NEON); // Glowing slit
+          headBox(14, 8, 2, 1, NEON); // T-shape slit
+          headBox(18, 7, 1, 1, 0xffffff); // Bright lens flare
 
-          // Tail of scarf
-          let scarfLen = 0;
-          let scarfY = 0;
+          // Earpieces/Sensors
+          headBox(10, 6, 2, 4, METAL); 
+          headBox(20, 6, 2, 4, METAL); 
+          headBox(10, 7, 1, 2, NEON); // Neon ear tips
+          headBox(21, 7, 1, 2, NEON);
 
-          if (f === 0) {
-            scarfLen = 8;
-            scarfY = 13;
-          } else if (f === 1) {
-            scarfLen = 10;
-            scarfY = 12;
-          } else if (f === 2) {
-            scarfLen = 12;
-            scarfY = 14;
-          } else if (f === 3) {
-            scarfLen = 10;
-            scarfY = 13;
+          if (isTransformed) {
+             // Overdrive/UI: Energy Hair / Plume emissions
+             headBox(14, 1, 2, 4, NEON); 
+             headBox(13, 2, 4, 3, NEON);
+             headBox(15, -1, 2, 5, 0xffffff); // core spike
+             
+             alphaBox(11, -2, 8, 7, NEON, 0.4); // plume aura
+          } else {
+             // Standard base fin
+             headBox(15, 3, 2, 2, METAL);
+             headBox(16, 4, 2, 1, METAL_DARK);
           }
-
-          // Draw scarf tail to the left (wind blowing right to left conceptually, or just flow)
-          // Let's draw it flowing behind (left side of sprite)
-          // Ensure it doesn't go below x=0 to avoid bleeding into previous frame
-          const scarfStartX = Math.max(0, 11 - scarfLen);
-          const actualScarfLen = 11 - scarfStartX;
-          if (actualScarfLen > 0) {
-            headBox(scarfStartX, scarfY, actualScarfLen, 3, SCARF);
-          }
-
-          // Katana Handle on back (left side since facing right)
-          headBox(9, 4, 2, 6, 0x555555);
         }
     } // End Switch Equivalent
 

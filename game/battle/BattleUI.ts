@@ -6,6 +6,11 @@ export class BattleUI {
   p2HpBar!: Phaser.GameObjects.Rectangle;
   p2KiBar!: Phaser.GameObjects.Rectangle;
   logText!: Phaser.GameObjects.Text;
+  combatLogContainer!: Phaser.GameObjects.Container;
+  combatLogBg!: Phaser.GameObjects.Rectangle;
+  combatLogTexts: Phaser.GameObjects.Text[] = [];
+  combatLogHistory: {msg: string, color: string}[] = [];
+
   p1KiPulseTween?: Phaser.Tweens.Tween;
   p2KiPulseTween?: Phaser.Tweens.Tween;
   p1NameText!: Phaser.GameObjects.Text;
@@ -124,6 +129,25 @@ export class BattleUI {
       .setOrigin(0.5);
     this.uiContainer.add(this.logText);
 
+    // Combat Log Overlay
+    this.combatLogContainer = bs.add.container(25, 380).setScrollFactor(0).setDepth(15);
+    this.combatLogBg = bs.add.rectangle(0, 0, 350, 140, 0x000000, 0.6).setOrigin(0, 0).setStrokeStyle(1, 0x444444);
+    this.combatLogContainer.add(this.combatLogBg);
+    
+    for(let i=0; i<6; i++) {
+        const textObj = bs.add.text(10, 10 + i * 20, "", {
+            fontSize: "14px",
+            color: "#ffffff",
+            fontStyle: "bold",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            shadow: { color: "#000", blur: 2, fill: true },
+            resolution: 2 
+        });
+        this.combatLogTexts.push(textObj);
+        this.combatLogContainer.add(textObj);
+    }
+    this.combatLogContainer.setAlpha(0);
+
     if (gameMode === "arcade") {
       bs.add
         .text(480, 25, `ARCADE: ROUND ${arcadeRound || 1} / 5`, {
@@ -214,6 +238,32 @@ export class BattleUI {
       delay: 1000,
       duration: 500,
     });
+  }
+
+  addCombatLog(msg: string, color: string = "#ffffff") {
+      this.combatLogHistory.push({msg, color});
+      if (this.combatLogHistory.length > 6) {
+          this.combatLogHistory.shift();
+      }
+      for(let i=0; i<6; i++) {
+          if (i < this.combatLogHistory.length) {
+              const entry = this.combatLogHistory[i];
+              this.combatLogTexts[i].setText(entry.msg).setColor(entry.color);
+          } else {
+              this.combatLogTexts[i].setText("");
+          }
+      }
+      
+      if (this.scene && this.combatLogContainer) {
+          this.combatLogContainer.setAlpha(1);
+          this.scene.tweens.killTweensOf(this.combatLogContainer);
+          this.scene.tweens.add({
+              targets: this.combatLogContainer,
+              alpha: 0,
+              delay: 4000,
+              duration: 1000
+          });
+      }
   }
 
   updateCombo(comboCount: number, isP1: boolean) {

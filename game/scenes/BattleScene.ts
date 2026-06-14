@@ -1598,7 +1598,15 @@ export default class BattleScene extends Phaser.Scene {
     const yDist = Math.abs((attacker.y || 0) - (target.y || 0));
     if (attackType === "melee" && (dist > 250 || yDist > 100)) {
         this.performWhiffMelee(isPlayer);
+        if (this.battleUI) {
+          this.battleUI.addCombatLog(`${attackerData.name} misses melee!`, isPlayer ? "#3498db" : "#e74c3c");
+        }
         return;
+    }
+
+    if (this.battleUI) {
+      const typeStr = attackType === "melee" ? "Melee Attack" : "Ki Blast";
+      this.battleUI.addCombatLog(`${attackerData.name} uses ${typeStr}!`, isPlayer ? "#3498db" : "#e74c3c");
     }
 
     this.setActionState(isPlayer, true);
@@ -2870,6 +2878,11 @@ export default class BattleScene extends Phaser.Scene {
     }
     this.modifyKi(isPlayer, -cost);
     
+    if (this.battleUI) {
+      const moveNameLog = isSuper ? data.superName : data.specialName;
+      this.battleUI.addCombatLog(`${data.name} uses ${moveNameLog}!`, isPlayer ? "#3498db" : "#e74c3c");
+    }
+
     if (isPlayer && this.gameState && this.gameState.gameMode !== 'training') {
         DailyChallenges.addProgress('use_special_5_times', 1);
     }
@@ -3578,15 +3591,22 @@ export default class BattleScene extends Phaser.Scene {
 
     const def = isP ? this.playerDefending : this.enemyDefending;
     const target = isP ? this.player : this.enemy;
+    const targetData = isP ? this.playerData : this.enemyData;
+
+    let msg = "";
+    const logColor = isP ? "#e74c3c" : "#3498db";
 
     let isCritical = false;
     if (def) {
       dmg = Math.floor(dmg * 0.3);
+      msg = `${targetData.name} blocks! (-${dmg} HP)`;
       // Block effect
       this.createImpactEffect(target.x, target.y + 120, 0x3498db, "block"); // Blue shield spark
       if (this.cache.audio.exists("sfx_block")) this.sound.play("sfx_block");
     } else {
       isCritical = dmg > 25; // threshold for critical visual
+      msg = `${targetData.name} takes ${dmg} damage!`;
+      if (isCritical) msg = `CRITICAL! ${msg}`;
       if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
       // Add requested screen-shake and particle burst
       if(this.battleCamera) this.battleCamera.shake(150, 0.02);
@@ -3602,6 +3622,8 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
     
+    if (this.battleUI) this.battleUI.addCombatLog(msg, logColor);
+
     // Reset combo count when hit
     if (isP) {
       this.p1ComboCount = 0;
