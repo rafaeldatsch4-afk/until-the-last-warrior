@@ -14,6 +14,20 @@ export interface CharacterData {
   specialName: string;
   superName: string;
   specialColor: number;
+  baseKey?: string;
+  customData?: {
+      gi1: number;
+      gi2: number;
+      hair: number;
+      skin: number;
+      sp1_id?: string;
+      sp2_id?: string;
+      part_head?: string;
+      part_torso?: string;
+      part_legs?: string;
+      part_feet?: string;
+      part_accessory?: string;
+  };
 }
 
 export interface TournamentMatch {

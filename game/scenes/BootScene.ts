@@ -54,6 +54,13 @@ export default class BootScene extends Phaser.Scene {
                     match.unlocked = true;
                     console.log(`Restored unlocked char: ${match.name}`);
                 }
+              } else if (!match && savedChar.id === 999) {
+                if (savedChar.key === 'custom_999' && savedChar.customData) {
+                  defaultState.characters.push(savedChar);
+                  console.log('Restored custom character from save.');
+                } else {
+                  console.warn('Skipped corrupted custom character save:', savedChar);
+                }
               }
             });
           }
@@ -74,7 +81,10 @@ export default class BootScene extends Phaser.Scene {
               gameMode: window.UTLW.state.gameMode,
               p1CharacterId: window.UTLW.state.p1CharacterId,
               p2CharacterId: window.UTLW.state.p2CharacterId,
-              characters: window.UTLW.state.characters.map(c => ({ id: c.id, unlocked: c.unlocked }))
+              characters: window.UTLW.state.characters.map(c => {
+                 if (c.id === 999) return c; // Save full raw data for custom character
+                 return { id: c.id, unlocked: c.unlocked };
+              })
             };
             localStorage.setItem('utlw_save_v1', JSON.stringify(dataToSave));
             // console.log('Game Saved'); // Uncomment for debugging

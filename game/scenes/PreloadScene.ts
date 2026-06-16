@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { CharacterData } from "../types";
 import { INITIAL_CHARACTERS } from "../data";
 import { generateAllSprites, SPRITE_GENERATORS } from "../sprites/SpriteRegistry";
+import { generateCustomSprite } from "../sprites/CustomSprite";
 
 export default class PreloadScene extends Phaser.Scene {
   declare cameras: Phaser.Cameras.Scene2D.CameraManager;
@@ -147,6 +148,11 @@ export default class PreloadScene extends Phaser.Scene {
     const currentState = window.UTLW?.state;
     const chars = currentState?.characters ?? INITIAL_CHARACTERS;
 
+    const customChar = chars.find((c: any) => c.key === 'custom_999');
+    if (customChar) {
+        generateCustomSprite(this, customChar as any);
+    }
+
     const charsToGenerate = [...chars];
     const hasGohan = chars.some((c) => c.key === 'gohan');
     const hasGoku = chars.some((c) => c.key === 'goku');
@@ -155,7 +161,11 @@ export default class PreloadScene extends Phaser.Scene {
       if (gokuData) charsToGenerate.push(gokuData);
     }
 
-    charsToGenerate.forEach((c) => this.createAnimsFor(c.key));
+    charsToGenerate.forEach((c) => {
+      if (c && typeof c.key === 'string' && c.key !== 'undefined') {
+         this.createAnimsFor(c.key);
+      }
+    });
 
     if (!this.textures.exists('dummy')) {
       const g = this.make.graphics({ x: 0, y: 0, add: false } as any);
@@ -186,7 +196,6 @@ export default class PreloadScene extends Phaser.Scene {
       repeat: number = -1,
     ) => {
       if (!this.textures.exists(texture)) {
-        console.warn(`[PreloadScene] Texture missing: ${texture}`);
         return;
       }
       if (this.anims.exists(animKey)) return;
@@ -195,7 +204,6 @@ export default class PreloadScene extends Phaser.Scene {
       const frames: Phaser.Types.Animations.AnimationFrame[] = [];
       for (let i = start; i <= end; i++) {
         if (!tex.has(i.toString())) {
-           console.warn(`[PreloadScene] Missing frame ${i} for texture ${texture}`);
            // Fallback to frame "0" or bypass to prevent crash, though it will still cause flickering if this fails
            frames.push({ key: texture, frame: "0" });
         } else {
@@ -223,7 +231,7 @@ export default class PreloadScene extends Phaser.Scene {
     createAllForTex(key, key);
     createAllForTex(`${key}_ssj`, `${key}_ssj`);
 
-    if (key === 'goku' || key === 'vegeta' || key === 'naruto') {
+    if (key === 'goku' || key === 'vegeta' || key === 'naruto' || key === 'custom_999') {
       createAllForTex(`${key}_ui`, `${key}_ui`);
     }
   }

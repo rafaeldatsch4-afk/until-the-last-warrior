@@ -7,6 +7,7 @@ const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isMenuScene, setIsMenuScene] = useState(true); // Default to true, assuming we start near menu
+  const [textInputPrompt, setTextInputPrompt] = useState<{ title: string; currentValue: string; onComplete: (val: string) => void } | null>(null);
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -22,6 +23,11 @@ const App: React.FC = () => {
       }
     };
     window.addEventListener('scene-changed', handleSceneChange);
+
+    const handleTextInput = (e: any) => {
+      setTextInputPrompt(e.detail);
+    };
+    window.addEventListener('request-text-input', handleTextInput);
 
     // Listen for PWA installation prompt
     const handleBeforeInstallPrompt = (e: any) => {
@@ -55,6 +61,7 @@ const App: React.FC = () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('request-pwa-install', handleRequestInstall);
       window.removeEventListener('scene-changed', handleSceneChange);
+      window.removeEventListener('request-text-input', handleTextInput);
     };
   }, []);
 
@@ -116,6 +123,51 @@ const App: React.FC = () => {
             TELA CHEIA
           </button>
         </div>
+
+        {/* Text Input Prompt */}
+        {textInputPrompt && (
+          <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
+            <div className="bg-[#2c3e50] border-2 border-[#34495e] p-6 rounded-lg shadow-2xl max-w-sm w-full flex flex-col gap-4">
+              <h3 className="text-xl font-bold text-white font-mono text-center mb-2">{textInputPrompt.title}</h3>
+              <input
+                type="text"
+                maxLength={20}
+                className="w-full bg-[#1a252f] text-yellow-400 text-center text-xl font-bold p-3 outline-none border border-[#34495e] focus:border-[#3498db] transition-colors uppercase"
+                defaultValue={textInputPrompt.currentValue}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    textInputPrompt.onComplete(e.currentTarget.value);
+                    setTextInputPrompt(null);
+                  } else if (e.key === 'Escape') {
+                    setTextInputPrompt(null);
+                  }
+                }}
+                autoFocus
+                onBlur={(e) => e.currentTarget.focus()}
+              />
+              <div className="flex gap-2 mt-2">
+                <button 
+                  onClick={() => setTextInputPrompt(null)}
+                  className="flex-1 bg-[#e74c3c] hover:bg-[#c0392b] text-white p-3 font-bold uppercase transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={(e) => {
+                    const input = e.currentTarget.parentElement?.parentElement?.querySelector('input');
+                    if (input) {
+                      textInputPrompt.onComplete(input.value);
+                      setTextInputPrompt(null);
+                    }
+                  }}
+                  className="flex-1 bg-[#2ecc71] hover:bg-[#27ae60] text-black p-3 font-bold uppercase transition-colors"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="relative overflow-hidden bg-black flex items-center justify-center w-full h-full">
           <GameCanvas />

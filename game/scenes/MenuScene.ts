@@ -175,6 +175,12 @@ export default class MenuScene extends Phaser.Scene {
         if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
         this.scene.start('SettingsScene');
     }, 0x95a5a6, 300);
+
+    this.createMenuButton(startX, startY + spacing * 4, 'CRIAR PERSONAGEM', () => {
+        this.resumeAudioContext();
+        if(this.cache.audio.exists('sfx_select')) this.sound.play('sfx_select');
+        this.scene.start('CharacterCreatorScene');
+    }, 0x2ecc71, 400);
   }
 
   async showChallengesPopup() {

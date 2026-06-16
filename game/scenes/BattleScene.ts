@@ -1047,7 +1047,8 @@ export default class BattleScene extends Phaser.Scene {
     sprite.play(this.getAnimKey(isPlayer ? this.playerData.key : this.enemyData.key, isPlayer ? this.playerTransformLevel : this.enemyTransformLevel, "walk"), true);
     sprite.setFlipX(direction === -1);
     
-    const fighterData = getFighter(isPlayer ? this.playerData.key : this.enemyData.key);
+    const targetData = isPlayer ? this.playerData : this.enemyData;
+    const fighterData = getFighter(targetData.key, targetData.baseKey);
     const color = fighterData.specialColor;
 
     // Create ghost trail effect
@@ -1391,6 +1392,19 @@ export default class BattleScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5)
       .setScale(3) // Scaled down from 4 to fit screen better (Texture height 128 * 3 = 384px)
       .setDepth(1);
+      
+    if (this.playerData.key === 'custom_999') {
+        const originalPlay = this.player.play.bind(this.player);
+        this.player.play = (key: string | Phaser.Types.Animations.PlayAnimationConfig, ignoreIfPlaying?: boolean) => {
+             if (typeof key === 'string') {
+                 if (!key.startsWith('custom_999')) {
+                     key = key.replace(/^[a-zA-Z]+(_)/, 'custom_999$1');
+                 }
+             }
+             return originalPlay(key, ignoreIfPlaying);
+        };
+    }
+      
     this.player.play(`${this.playerData.key}_idle`, true);
     
     // Add cool graphical effects to the sprite
@@ -1438,6 +1452,19 @@ export default class BattleScene extends Phaser.Scene {
       .setScale(3)
       .setFlipX(true)
       .setDepth(1);
+      
+    if (this.enemyData.key === 'custom_999') {
+        const originalPlay = this.enemy.play.bind(this.enemy);
+        this.enemy.play = (key: string | Phaser.Types.Animations.PlayAnimationConfig, ignoreIfPlaying?: boolean) => {
+             if (typeof key === 'string') {
+                 if (!key.startsWith('custom_999')) {
+                     key = key.replace(/^[a-zA-Z]+(_)/, 'custom_999$1');
+                 }
+             }
+             return originalPlay(key, ignoreIfPlaying);
+        };
+    }
+      
     this.enemy.play(`${this.enemyData.key}_idle`, true);
     
     // Add cool graphical effects to the sprite
@@ -1598,15 +1625,7 @@ export default class BattleScene extends Phaser.Scene {
     const yDist = Math.abs((attacker.y || 0) - (target.y || 0));
     if (attackType === "melee" && (dist > 250 || yDist > 100)) {
         this.performWhiffMelee(isPlayer);
-        if (this.battleUI) {
-          this.battleUI.addCombatLog(`${attackerData.name} misses melee!`, isPlayer ? "#3498db" : "#e74c3c");
-        }
         return;
-    }
-
-    if (this.battleUI) {
-      const typeStr = attackType === "melee" ? "Melee Attack" : "Ki Blast";
-      this.battleUI.addCombatLog(`${attackerData.name} uses ${typeStr}!`, isPlayer ? "#3498db" : "#e74c3c");
     }
 
     this.setActionState(isPlayer, true);
@@ -1635,7 +1654,8 @@ export default class BattleScene extends Phaser.Scene {
 
     const isComboFinisher = comboCount % 3 === 0;
 
-    switch (attackerData.key) {
+    const attackerBaseKey = attackerData.key === 'custom_999' ? attackerData.baseKey : attackerData.key;
+    switch (attackerBaseKey) {
       case "goku": {
         const fighter = getFighter("goku");
         fighter.performAttack({
@@ -2878,11 +2898,6 @@ export default class BattleScene extends Phaser.Scene {
     }
     this.modifyKi(isPlayer, -cost);
     
-    if (this.battleUI) {
-      const moveNameLog = isSuper ? data.superName : data.specialName;
-      this.battleUI.addCombatLog(`${data.name} uses ${moveNameLog}!`, isPlayer ? "#3498db" : "#e74c3c");
-    }
-
     if (isPlayer && this.gameState && this.gameState.gameMode !== 'training') {
         DailyChallenges.addProgress('use_special_5_times', 1);
     }
@@ -2910,7 +2925,15 @@ export default class BattleScene extends Phaser.Scene {
         animKeySpecial,
         animKeyIdle,
         () => {
-          switch (data.key) {
+          let specialBaseKey = data.key;
+          if (data.key === 'custom_999') {
+              if (data.customData) {
+                  specialBaseKey = isSuper ? (data.customData.sp2_id || data.baseKey) : (data.customData.sp1_id || data.baseKey);
+              } else {
+                  specialBaseKey = data.baseKey || 'goku';
+              }
+          }
+          switch (specialBaseKey) {
             case "goku": {
               const fighter = getFighter("goku");
               if (isSuper) fighter.performSuper({ scene: this, attacker: sprite, defender: isPlayer ? this.enemy : this.player, isPlayer, attackType: "ki", comboCount: 0, isComboFinisher: false, transformLevel: transLevel });
@@ -3591,22 +3614,15 @@ export default class BattleScene extends Phaser.Scene {
 
     const def = isP ? this.playerDefending : this.enemyDefending;
     const target = isP ? this.player : this.enemy;
-    const targetData = isP ? this.playerData : this.enemyData;
-
-    let msg = "";
-    const logColor = isP ? "#e74c3c" : "#3498db";
 
     let isCritical = false;
     if (def) {
       dmg = Math.floor(dmg * 0.3);
-      msg = `${targetData.name} blocks! (-${dmg} HP)`;
       // Block effect
       this.createImpactEffect(target.x, target.y + 120, 0x3498db, "block"); // Blue shield spark
       if (this.cache.audio.exists("sfx_block")) this.sound.play("sfx_block");
     } else {
       isCritical = dmg > 25; // threshold for critical visual
-      msg = `${targetData.name} takes ${dmg} damage!`;
-      if (isCritical) msg = `CRITICAL! ${msg}`;
       if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
       // Add requested screen-shake and particle burst
       if(this.battleCamera) this.battleCamera.shake(150, 0.02);
@@ -3622,8 +3638,6 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
     
-    if (this.battleUI) this.battleUI.addCombatLog(msg, logColor);
-
     // Reset combo count when hit
     if (isP) {
       this.p1ComboCount = 0;

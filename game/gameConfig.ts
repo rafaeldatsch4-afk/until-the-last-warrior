@@ -10,6 +10,7 @@ import StoreScene from './scenes/StoreScene';
 import SettingsScene from './scenes/SettingsScene';
 import PauseScene from './scenes/PauseScene';
 import MultiplayerLobbyScene from './scenes/MultiplayerLobbyScene';
+import CharacterCreatorScene from './scenes/CharacterCreatorScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -30,7 +31,8 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     StoreScene,
     SettingsScene,
     PauseScene,
-    MultiplayerLobbyScene
+    MultiplayerLobbyScene,
+    CharacterCreatorScene
   ],
   physics: {
     default: 'arcade',
