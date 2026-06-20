@@ -1,19 +1,27 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class MiniPekkaFighter extends Fighter {
-  readonly key = 'minipekka';
-  readonly specialName = 'PANCAKES';
-  readonly superName = 'MEGA PANCAKE';
+  readonly key = "minipekka";
+  readonly specialName = "PANCAKES";
+  readonly superName = "MEGA PANCAKE";
   readonly specialColor = 0xffaa00;
 
   performTransform(scene: any, isPlayer: boolean): void {}
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    const startX = attacker ? attacker.x : (isPlayer ? bs.player.x : bs.enemy.x);
+    const startX = attacker ? attacker.x : isPlayer ? bs.player.x : bs.enemy.x;
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
@@ -54,8 +62,7 @@ export class MiniPekkaFighter extends Fighter {
           bs.takeDamage(
             !isPlayer,
             Math.floor(
-              (isComboFinisher ? 30 : 15) *
-                bs.getDamageMultiplier(transLevel),
+              (isComboFinisher ? 30 : 15) * bs.getDamageMultiplier(transLevel),
             ),
           );
           bs.cameras.main.shake(150, 0.02);
@@ -99,8 +106,7 @@ export class MiniPekkaFighter extends Fighter {
             bs.takeDamage(
               !isPlayer,
               Math.floor(
-                (isComboFinisher ? 15 : 8) *
-                  bs.getDamageMultiplier(transLevel),
+                (isComboFinisher ? 15 : 8) * bs.getDamageMultiplier(transLevel),
               ),
             );
           },
@@ -118,12 +124,18 @@ export class MiniPekkaFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
     const transLevel = transformLevel;
-    
+
     // specialPancake
     const isS = false;
     const baseDmg = isS ? 80 : 50;
@@ -132,11 +144,7 @@ export class MiniPekkaFighter extends Fighter {
     bs.log("PANCAKES!");
     if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack");
 
-    const animKeySpecial = bs.getAnimKey(
-      "minipekka",
-      transLevel,
-      "special",
-    );
+    const animKeySpecial = bs.getAnimKey("minipekka", transLevel, "special");
     const animKeyIdle = bs.getAnimKey("minipekka", transLevel, "idle");
     attacker.play(animKeySpecial);
 
@@ -207,23 +215,23 @@ export class MiniPekkaFighter extends Fighter {
                 }
 
                 // Impact dust
-                
+
                 try {
-                const dust = bs.add
-                  .particles(0, 0, "particle", {
-                    x: target.x,
-                    y: startY,
-                    speed: { min: 100, max: 300 },
-                    angle: { min: 180, max: 360 },
-                    scale: { start: 2, end: 0 },
-                    blendMode: "ADD",
-                    lifespan: 500,
-                    tint: 0xffaa00,
-                    gravityY: 200,
-                  })
-                  .setDepth(19);
-                bs.time.delayedCall(500, () => dust.destroy());
-                } catch(e) {}
+                  const dust = bs.add
+                    .particles(0, 0, "particle", {
+                      x: target.x,
+                      y: startY,
+                      speed: { min: 100, max: 300 },
+                      angle: { min: 180, max: 360 },
+                      scale: { start: 2, end: 0 },
+                      blendMode: "ADD",
+                      lifespan: 500,
+                      tint: 0xffaa00,
+                      gravityY: 200,
+                    })
+                    .setDepth(19);
+                  bs.time.delayedCall(500, () => dust.destroy());
+                } catch (e) {}
 
                 bs.createImpactEffect(target.x, startY, 0xffaa00);
                 bs.takeDamage(!isPlayer, dmg);
@@ -253,23 +261,25 @@ export class MiniPekkaFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
     const transLevel = transformLevel;
-    
+
     // specialMegaPancake
     const dmg = Math.floor(130 * bs.getDamageMultiplier(transLevel));
 
     bs.log("MEGA PANCAKE!");
     if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack");
 
-    const animKeySpecial = bs.getAnimKey(
-      "minipekka",
-      transLevel,
-      "special",
-    );
+    const animKeySpecial = bs.getAnimKey("minipekka", transLevel, "special");
     const animKeyIdle = bs.getAnimKey("minipekka", transLevel, "idle");
     attacker.play(animKeySpecial);
 
@@ -315,18 +325,18 @@ export class MiniPekkaFighter extends Fighter {
         // Fire trail
         let trail: any;
         try {
-        trail = bs.add
-          .particles(0, 0, "particle", {
-            follow: pancake,
-            speed: { min: -100, max: 100 },
-            scale: { start: 2, end: 0 },
-            blendMode: "ADD",
-            lifespan: 400,
-            tint: [0xffaa00, 0xff0000],
-            gravityY: -200,
-          })
-          .setDepth(14);
-        } catch(e) {}
+          trail = bs.add
+            .particles(0, 0, "particle", {
+              follow: pancake,
+              speed: { min: -100, max: 100 },
+              scale: { start: 2, end: 0 },
+              blendMode: "ADD",
+              lifespan: 400,
+              tint: [0xffaa00, 0xff0000],
+              gravityY: -200,
+            })
+            .setDepth(14);
+        } catch (e) {}
 
         bs.tweens.add({
           targets: [pancakeGlow, pancake, butter],
@@ -361,21 +371,21 @@ export class MiniPekkaFighter extends Fighter {
 
             // Impact dust
             try {
-            const dust = bs.add
-              .particles(0, 0, "particle", {
-                x: target.x,
-                y: target.y + 20,
-                speed: { min: 300, max: 700 },
-                angle: { min: 180, max: 360 },
-                scale: { start: 4, end: 0 },
-                blendMode: "ADD",
-                lifespan: 800,
-                tint: 0xffaa00,
-                gravityY: 400,
-              })
-              .setDepth(19);
-            bs.time.delayedCall(800, () => dust.destroy());
-            } catch(e) {}
+              const dust = bs.add
+                .particles(0, 0, "particle", {
+                  x: target.x,
+                  y: target.y + 20,
+                  speed: { min: 300, max: 700 },
+                  angle: { min: 180, max: 360 },
+                  scale: { start: 4, end: 0 },
+                  blendMode: "ADD",
+                  lifespan: 800,
+                  tint: 0xffaa00,
+                  gravityY: 400,
+                })
+                .setDepth(19);
+              bs.time.delayedCall(800, () => dust.destroy());
+            } catch (e) {}
 
             bs.createImpactEffect(target.x, target.y + 120, 0xd35400, "beam");
             bs.takeDamage(!isPlayer, dmg);
@@ -399,7 +409,7 @@ export class MiniPekkaFighter extends Fighter {
                 shadow.destroy();
                 attacker.play(animKeyIdle);
                 bs.time.delayedCall(500, () => {
-                    if (trail) trail.destroy();
+                  if (trail) trail.destroy();
                 });
                 bs.onSpecialComplete(isPlayer);
               },

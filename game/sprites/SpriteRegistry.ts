@@ -49,19 +49,21 @@ export const SPRITE_GENERATORS: SpriteGenerator[] = [
   { name: "Obito Uchiha", fn: generateObitoSprite },
   { name: "Spiderman", fn: generateSpidermanSprite },
   { name: "Saitama", fn: generateSaitamaSprite },
-  { name: "Static", fn: generateStaticSprite }
+  { name: "Static", fn: generateStaticSprite },
 ];
 
 export function generateAllSprites(scene: Phaser.Scene): void {
-    if (scene.textures.exists("goku")) {
-        console.log("All character sprites are already in cache. Skipping generation.");
-        return;
+  if (scene.textures.exists("goku")) {
+    console.log(
+      "All character sprites are already in cache. Skipping generation.",
+    );
+    return;
+  }
+  SPRITE_GENERATORS.forEach((item) => {
+    try {
+      item.fn(scene);
+    } catch (e) {
+      console.error(`Error generating ${item.name}:`, e);
     }
-    SPRITE_GENERATORS.forEach(item => {
-        try {
-            item.fn(scene);
-        } catch (e) {
-            console.error(`Error generating ${item.name}:`, e);
-        }
-    });
+  });
 }

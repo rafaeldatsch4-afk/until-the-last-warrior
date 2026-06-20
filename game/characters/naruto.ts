@@ -1,20 +1,28 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class NarutoFighter extends Fighter {
-  readonly key = 'naruto';
-  readonly specialName = 'RASENGAN';
-  readonly superName = 'RASENSHURIKEN';
+  readonly key = "naruto";
+  readonly specialName = "RASENGAN";
+  readonly superName = "RASENSHURIKEN";
   readonly specialColor = 0x3498db;
 
   performTransform(scene: any, isPlayer: boolean): void {}
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    const startX = attacker ? attacker.x : (isPlayer ? bs.player.x : bs.enemy.x);
-    const startY = attacker ? attacker.y : (isPlayer ? bs.player.y : bs.enemy.y);
+    const startX = attacker ? attacker.x : isPlayer ? bs.player.x : bs.enemy.x;
+    const startY = attacker ? attacker.y : isPlayer ? bs.player.y : bs.enemy.y;
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
@@ -49,8 +57,7 @@ export class NarutoFighter extends Fighter {
           bs.takeDamage(
             !isPlayer,
             Math.floor(
-              (isComboFinisher ? 20 : 12) *
-                bs.getDamageMultiplier(transLevel),
+              (isComboFinisher ? 20 : 12) * bs.getDamageMultiplier(transLevel),
             ),
           );
 
@@ -76,9 +83,7 @@ export class NarutoFighter extends Fighter {
       attacker.play(bs.getAnimKey("naruto", transLevel, "attack"));
 
       const hand = bs.getHandPosition(isPlayer);
-      const rasengan = bs.add
-        .circle(hand.x, hand.y, 15, 0x00ffff)
-        .setDepth(6);
+      const rasengan = bs.add.circle(hand.x, hand.y, 15, 0x00ffff).setDepth(6);
       rasengan.setBlendMode(Phaser.BlendModes.ADD);
 
       bs.tweens.add({
@@ -101,8 +106,7 @@ export class NarutoFighter extends Fighter {
           bs.takeDamage(
             !isPlayer,
             Math.floor(
-              (isComboFinisher ? 25 : 15) *
-                bs.getDamageMultiplier(transLevel),
+              (isComboFinisher ? 25 : 15) * bs.getDamageMultiplier(transLevel),
             ),
           );
           bs.cameras.main.shake(150, 0.02);
@@ -133,7 +137,13 @@ export class NarutoFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
     const isS = false;
@@ -311,10 +321,16 @@ export class NarutoFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialRasenshuriken
     const dmg = Math.floor(120 * bs.getDamageMultiplier(transLevel));
 

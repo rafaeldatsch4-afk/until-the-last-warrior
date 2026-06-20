@@ -1,20 +1,28 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class FrierenFighter extends Fighter {
-  readonly key = 'frieren';
-  readonly specialName = 'ZOLTRAAK';
-  readonly superName = 'BLACK HOLE';
+  readonly key = "frieren";
+  readonly specialName = "ZOLTRAAK";
+  readonly superName = "BLACK HOLE";
   readonly specialColor = 0xffffff;
 
   performTransform(scene: any, isPlayer: boolean): void {}
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    const startX = attacker ? attacker.x : (isPlayer ? bs.player.x : bs.enemy.x);
-    const startY = attacker ? attacker.y : (isPlayer ? bs.player.y : bs.enemy.y);
+    const startX = attacker ? attacker.x : isPlayer ? bs.player.x : bs.enemy.x;
+    const startY = attacker ? attacker.y : isPlayer ? bs.player.y : bs.enemy.y;
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
@@ -94,11 +102,17 @@ export class FrierenFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
     const isS = false;
-    
+
     // specialZoltraak
     const hand = bs.getHandPosition(isPlayer);
     const circleOffset = attacker.x < target.x ? 40 : -40;
@@ -127,19 +141,19 @@ export class FrierenFighter extends Fighter {
     // Gathering particles
     let gatherParticles: any;
     try {
-    gatherParticles = bs.add
-      .particles(0, 0, "particle", {
-        x: hand.x + circleOffset,
-        y: hand.y,
-        speed: { min: -150, max: 150 },
-        scale: { start: 1, end: 0 },
-        blendMode: "ADD",
-        lifespan: 400,
-        tint: 0xffffff,
-        gravityY: 0,
-      })
-      .setDepth(14);
-      } catch(e){}
+      gatherParticles = bs.add
+        .particles(0, 0, "particle", {
+          x: hand.x + circleOffset,
+          y: hand.y,
+          speed: { min: -150, max: 150 },
+          scale: { start: 1, end: 0 },
+          blendMode: "ADD",
+          lifespan: 400,
+          tint: 0xffffff,
+          gravityY: 0,
+        })
+        .setDepth(14);
+    } catch (e) {}
 
     // Spin up
     bs.tweens.add({
@@ -151,7 +165,7 @@ export class FrierenFighter extends Fighter {
       onComplete: () => {
         if (!bs.scene.isActive()) return;
         circles.forEach((c) => c.destroy());
-        if(gatherParticles) gatherParticles.destroy();
+        if (gatherParticles) gatherParticles.destroy();
 
         bs.createScreenFlash(0xffffff, 300, 0.9);
         bs.cameras.main.shake(600, 0.05);
@@ -227,10 +241,16 @@ export class FrierenFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialBlackHole
     const dmg = Math.floor(115 * bs.getDamageMultiplier(transLevel));
 
@@ -238,7 +258,9 @@ export class FrierenFighter extends Fighter {
     if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
 
     // Create black hole on target
-    const hole = bs.add.circle(target.x, target.y + 120, 5, 0x000000).setDepth(15);
+    const hole = bs.add
+      .circle(target.x, target.y + 120, 5, 0x000000)
+      .setDepth(15);
     const ring = bs.add
       .circle(target.x, target.y + 120, 10, 0x9b59b6)
       .setDepth(14)
@@ -255,19 +277,19 @@ export class FrierenFighter extends Fighter {
     // Suck particles
     let suckParticles: any;
     try {
-    suckParticles = bs.add
-      .particles(0, 0, "particle", {
-        x: target.x,
-        y: target.y + 120,
-        speed: { min: -300, max: -100 }, // Negative speed pulls them in
-        scale: { start: 1.5, end: 0 },
-        blendMode: "ADD",
-        lifespan: 600,
-        tint: [0x9b59b6, 0xffffff],
-        gravityY: 0,
-      })
-      .setDepth(16);
-      } catch(e) {}
+      suckParticles = bs.add
+        .particles(0, 0, "particle", {
+          x: target.x,
+          y: target.y + 120,
+          speed: { min: -300, max: -100 }, // Negative speed pulls them in
+          scale: { start: 1.5, end: 0 },
+          blendMode: "ADD",
+          lifespan: 600,
+          tint: [0x9b59b6, 0xffffff],
+          gravityY: 0,
+        })
+        .setDepth(16);
+    } catch (e) {}
 
     // Swirl effect
     const swirlTween = bs.tweens.add({
@@ -358,7 +380,9 @@ export class FrierenFighter extends Fighter {
                 hole.destroy();
                 ring.destroy();
                 aura.destroy();
-                bs.time.delayedCall(600, () => { if(suckParticles) suckParticles.destroy(); });
+                bs.time.delayedCall(600, () => {
+                  if (suckParticles) suckParticles.destroy();
+                });
                 bs.onSpecialComplete(isPlayer);
               },
             });

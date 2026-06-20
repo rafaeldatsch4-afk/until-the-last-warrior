@@ -1,5 +1,5 @@
-import Phaser from 'phaser';
-import { AttackParams, AttackResult } from './FighterTypes';
+import Phaser from "phaser";
+import { AttackParams, AttackResult } from "./FighterTypes";
 
 export abstract class Fighter {
   abstract readonly key: string;
@@ -10,5 +10,9 @@ export abstract class Fighter {
   abstract performAttack(params: AttackParams): AttackResult;
   abstract performSpecial(params: AttackParams): AttackResult;
   abstract performSuper(params: AttackParams): AttackResult;
-  abstract performTransform(scene: Phaser.Scene, isPlayer: boolean, level: number): void;
+  abstract performTransform(
+    scene: Phaser.Scene,
+    isPlayer: boolean,
+    level: number,
+  ): void;
 }

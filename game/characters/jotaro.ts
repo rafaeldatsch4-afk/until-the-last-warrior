@@ -1,20 +1,28 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class JotaroFighter extends Fighter {
-  readonly key = 'jotaro';
-  readonly specialName = 'STAR FINGER';
-  readonly superName = 'ORA ORA ORA';
+  readonly key = "jotaro";
+  readonly specialName = "STAR FINGER";
+  readonly superName = "ORA ORA ORA";
   readonly specialColor = 0x8a2be2;
 
   performTransform(scene: any, isPlayer: boolean): void {}
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    const startX = attacker ? attacker.x : (isPlayer ? bs.player.x : bs.enemy.x);
-    const startY = attacker ? attacker.y : (isPlayer ? bs.player.y : bs.enemy.y);
+    const startX = attacker ? attacker.x : isPlayer ? bs.player.x : bs.enemy.x;
+    const startY = attacker ? attacker.y : isPlayer ? bs.player.y : bs.enemy.y;
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
@@ -72,8 +80,7 @@ export class JotaroFighter extends Fighter {
           bs.takeDamage(
             !isPlayer,
             Math.floor(
-              (isComboFinisher ? 25 : 15) *
-                bs.getDamageMultiplier(transLevel),
+              (isComboFinisher ? 25 : 15) * bs.getDamageMultiplier(transLevel),
             ),
           );
           bs.cameras.main.shake(150, 0.015);
@@ -141,10 +148,16 @@ export class JotaroFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialStarFinger
     const dmg = Math.floor(45 * bs.getDamageMultiplier(transLevel));
 
@@ -245,10 +258,16 @@ export class JotaroFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialOraOraOra
     const dmg = Math.floor(110 * bs.getDamageMultiplier(transLevel));
 
@@ -420,9 +439,7 @@ export class JotaroFighter extends Fighter {
                   ease: "Power2",
                   onComplete: () => {
                     aura.destroy();
-                    attacker.play(
-                      bs.getAnimKey("jotaro", transLevel, "idle"),
-                    );
+                    attacker.play(bs.getAnimKey("jotaro", transLevel, "idle"));
                     bs.onSpecialComplete(isPlayer);
                   },
                 });

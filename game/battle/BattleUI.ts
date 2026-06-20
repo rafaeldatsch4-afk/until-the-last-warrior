@@ -20,18 +20,31 @@ export class BattleUI {
     this.scene = scene;
   }
 
-  createUI(playerData: any, enemyData: any, gameMode: string, arcadeRound: number) {
+  createUI(
+    playerData: any,
+    enemyData: any,
+    gameMode: string,
+    arcadeRound: number,
+  ) {
     const bs = this.scene as any;
     this.uiContainer = bs.add.container(0, 0).setScrollFactor(0).setDepth(10);
-    
+
     // Player 1 HP/Ki Backgrounds
-    const p1HpBg = bs.add.rectangle(150, 50, 250, 22, 0x111111).setStrokeStyle(3, 0xffffff, 0.8);
-    const p1KiBg = bs.add.rectangle(150, 80, 250, 12, 0x111111).setStrokeStyle(2, 0xaaaaaa, 0.6);
+    const p1HpBg = bs.add
+      .rectangle(150, 50, 250, 22, 0x111111)
+      .setStrokeStyle(3, 0xffffff, 0.8);
+    const p1KiBg = bs.add
+      .rectangle(150, 80, 250, 12, 0x111111)
+      .setStrokeStyle(2, 0xaaaaaa, 0.6);
     this.uiContainer.add([p1HpBg, p1KiBg]);
 
     // Player 2 HP/Ki Backgrounds
-    const p2HpBg = bs.add.rectangle(810, 50, 250, 22, 0x111111).setStrokeStyle(3, 0xffffff, 0.8);
-    const p2KiBg = bs.add.rectangle(810, 80, 250, 12, 0x111111).setStrokeStyle(2, 0xaaaaaa, 0.6);
+    const p2HpBg = bs.add
+      .rectangle(810, 50, 250, 22, 0x111111)
+      .setStrokeStyle(3, 0xffffff, 0.8);
+    const p2KiBg = bs.add
+      .rectangle(810, 80, 250, 12, 0x111111)
+      .setStrokeStyle(2, 0xaaaaaa, 0.6);
     this.uiContainer.add([p2HpBg, p2KiBg]);
 
     this.p1HpBar = bs.add
@@ -57,41 +70,43 @@ export class BattleUI {
     this.p2KiBar.scaleX = 0; // Starts with 0 Ki
 
     // Player 1 Name
-    this.p1NameText = bs.add
-      .text(25, 15, playerData.name, {
-        fontSize: "22px",
-        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#fff",
-        stroke: "#000",
-        strokeThickness: 4,
-        shadow: { color: "#3498db", blur: 4, fill: true },
-        resolution: 2
-      });
+    this.p1NameText = bs.add.text(25, 15, playerData.name, {
+      fontSize: "22px",
+      fontFamily:
+        "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      color: "#fff",
+      stroke: "#000",
+      strokeThickness: 4,
+      shadow: { color: "#3498db", blur: 4, fill: true },
+      resolution: 2,
+    });
     this.uiContainer.add(this.p1NameText);
-      
+
     // Player 2 Name
     this.p2NameText = bs.add
       .text(935, 15, enemyData.name, {
         fontSize: "22px",
-        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontFamily:
+          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         color: "#fff",
         stroke: "#000",
         strokeThickness: 4,
         shadow: { color: "#e74c3c", blur: 4, fill: true },
-        resolution: 2
+        resolution: 2,
       })
       .setOrigin(1, 0);
     this.uiContainer.add(this.p2NameText);
-      
+
     this.p1ComboText = bs.add
       .text(25, 110, "", {
         fontSize: "36px",
-        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontFamily:
+          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         color: "#ffaa00",
         stroke: "#000",
         strokeThickness: 5,
         shadow: { color: "#ff0000", blur: 4, fill: true },
-        resolution: 2
+        resolution: 2,
       })
       .setOrigin(0, 0.5)
       .setAlpha(0);
@@ -100,12 +115,13 @@ export class BattleUI {
     this.p2ComboText = bs.add
       .text(935, 110, "", {
         fontSize: "36px",
-        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontFamily:
+          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         color: "#ffaa00",
         stroke: "#000",
         strokeThickness: 5,
         shadow: { color: "#ff0000", blur: 4, fill: true },
-        resolution: 2
+        resolution: 2,
       })
       .setOrigin(1, 0.5)
       .setAlpha(0);
@@ -119,7 +135,7 @@ export class BattleUI {
         stroke: "#000",
         strokeThickness: 5,
         shadow: { color: "#000", blur: 4, offsetX: 2, offsetY: 2, fill: true },
-        resolution: 2
+        resolution: 2,
       })
       .setOrigin(0.5);
     this.uiContainer.add(this.logText);
@@ -129,11 +145,12 @@ export class BattleUI {
         .text(480, 25, `ARCADE: ROUND ${arcadeRound || 1} / 5`, {
           fontSize: "22px",
           color: "#f1c40f",
-          fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+          fontFamily:
+            "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
           stroke: "#000",
           strokeThickness: 4,
           shadow: { color: "#000", blur: 4, fill: true },
-          resolution: 2
+          resolution: 2,
         })
         .setOrigin(0.5)
         .setScrollFactor(0)
@@ -171,7 +188,7 @@ export class BattleUI {
             duration: 350,
             yoyo: true,
             repeat: -1,
-            ease: "Sine.easeInOut"
+            ease: "Sine.easeInOut",
           });
         }
       } else {
@@ -191,7 +208,7 @@ export class BattleUI {
             duration: 350,
             yoyo: true,
             repeat: -1,
-            ease: "Sine.easeInOut"
+            ease: "Sine.easeInOut",
           });
         }
       } else {
@@ -221,7 +238,7 @@ export class BattleUI {
 
     const textObj = isP1 ? this.p1ComboText : this.p2ComboText;
     if (!textObj || !textObj.active) return;
-    
+
     textObj.setText(`${comboCount} HITS!`);
     textObj.setAlpha(1);
 
@@ -230,16 +247,16 @@ export class BattleUI {
 
     this.scene.tweens.killTweensOf(textObj);
     textObj.setScale(targetScale * 1.5);
-    
+
     const shakeIntensity = Math.min(10, comboCount);
     const originalX = isP1 ? 25 : 935;
-    
+
     this.scene.tweens.add({
       targets: textObj,
       scaleX: targetScale,
       scaleY: targetScale,
       duration: 150,
-      ease: 'Back.easeOut',
+      ease: "Back.easeOut",
       onComplete: () => {
         this.scene.tweens.add({
           targets: textObj,
@@ -249,9 +266,9 @@ export class BattleUI {
           duration: 30,
           onComplete: () => {
             textObj.setX(originalX);
-          }
+          },
         });
-      }
+      },
     });
 
     if (isP1) {
@@ -273,8 +290,9 @@ export class BattleUI {
         fontSize: "24px",
         color: "#ff0000",
         fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        resolution: 2
+        fontFamily:
+          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        resolution: 2,
       })
       .setOrigin(0.5)
       .setDepth(20);

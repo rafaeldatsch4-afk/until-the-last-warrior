@@ -1,20 +1,28 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class ChapolimFighter extends Fighter {
-  readonly key = 'chapolim';
-  readonly specialName = 'CHIPOTE CHILLÓN';
-  readonly superName = 'AEROLITOS';
+  readonly key = "chapolim";
+  readonly specialName = "CHIPOTE CHILLÓN";
+  readonly superName = "AEROLITOS";
   readonly specialColor = 0xff0000;
 
   performTransform(scene: any, isPlayer: boolean): void {}
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    const startX = attacker ? attacker.x : (isPlayer ? bs.player.x : bs.enemy.x);
-    const startY = attacker ? attacker.y : (isPlayer ? bs.player.y : bs.enemy.y);
+    const startX = attacker ? attacker.x : isPlayer ? bs.player.x : bs.enemy.x;
+    const startY = attacker ? attacker.y : isPlayer ? bs.player.y : bs.enemy.y;
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
@@ -44,8 +52,7 @@ export class ChapolimFighter extends Fighter {
           bs.takeDamage(
             !isPlayer,
             Math.floor(
-              (isComboFinisher ? 25 : 15) *
-                bs.getDamageMultiplier(transLevel),
+              (isComboFinisher ? 25 : 15) * bs.getDamageMultiplier(transLevel),
             ),
           );
           bs.cameras.main.shake(100, 0.02);
@@ -93,8 +100,7 @@ export class ChapolimFighter extends Fighter {
             bs.takeDamage(
               !isPlayer,
               Math.floor(
-                (isComboFinisher ? 15 : 8) *
-                  bs.getDamageMultiplier(transLevel),
+                (isComboFinisher ? 15 : 8) * bs.getDamageMultiplier(transLevel),
               ),
             );
           },
@@ -112,10 +118,16 @@ export class ChapolimFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialChipote
     const dmg = Math.floor(40 * bs.getDamageMultiplier(transLevel));
 
@@ -214,10 +226,16 @@ export class ChapolimFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialAerolitos
     const dmg = Math.floor(110 * bs.getDamageMultiplier(transLevel));
 
@@ -237,19 +255,19 @@ export class ChapolimFighter extends Fighter {
         // Fire trail
         let trail: any;
         try {
-        trail = bs.add
-          .particles(0, 0, "particle", {
-            color: [0xffaa00, 0xff0000],
-            colorEase: "quad.out",
-            lifespan: 400,
-            angle: { min: 250, max: 290 },
-            scale: { start: size / 5, end: 0, ease: "sine.out" },
-            speed: 150,
-            advance: 2000,
-            blendMode: "ADD",
-          })
-          .setDepth(14);
-          } catch(e){}
+          trail = bs.add
+            .particles(0, 0, "particle", {
+              color: [0xffaa00, 0xff0000],
+              colorEase: "quad.out",
+              lifespan: 400,
+              angle: { min: 250, max: 290 },
+              scale: { start: size / 5, end: 0, ease: "sine.out" },
+              speed: 150,
+              advance: 2000,
+              blendMode: "ADD",
+            })
+            .setDepth(14);
+        } catch (e) {}
 
         const startX = target.x + Phaser.Math.Between(-300, 300);
         const startY = -150;
@@ -257,7 +275,7 @@ export class ChapolimFighter extends Fighter {
         const targetY = target.y + 120 + Phaser.Math.Between(-30, 60);
 
         rock.setPosition(startX, startY);
-        if(trail) trail.startFollow(rock);
+        if (trail) trail.startFollow(rock);
 
         bs.tweens.add({
           targets: rock,
@@ -285,9 +303,9 @@ export class ChapolimFighter extends Fighter {
             });
 
             rock.destroy();
-            if(trail) {
-                 trail.stop();
-                 bs.time.delayedCall(300, () => trail.destroy());
+            if (trail) {
+              trail.stop();
+              bs.time.delayedCall(300, () => trail.destroy());
             }
 
             // Deal damage on the last hit

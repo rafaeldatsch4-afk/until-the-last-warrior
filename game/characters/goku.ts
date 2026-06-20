@@ -1,15 +1,23 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class GokuFighter extends Fighter {
-  readonly key = 'goku';
-  readonly specialName = 'KAMEHAMEHA';
-  readonly superName = 'GENKIDAMA';
+  readonly key = "goku";
+  readonly specialName = "KAMEHAMEHA";
+  readonly superName = "GENKIDAMA";
   readonly specialColor = 0x00ffff;
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
@@ -31,7 +39,8 @@ export class GokuFighter extends Fighter {
         bs.takeDamage(
           !isPlayer,
           Math.floor(
-            (isComboFinisher ? 20 : 10) * bs.getDamageMultiplier(transformLevel),
+            (isComboFinisher ? 20 : 10) *
+              bs.getDamageMultiplier(transformLevel),
           ),
         );
         bs.modifyKi(isPlayer, 5);
@@ -72,9 +81,7 @@ export class GokuFighter extends Fighter {
           if (bs.cache.audio.exists("sfx_beam"))
             bs.sound.play("sfx_beam", { volume: 0.5 });
           const hand = bs.getHandPosition(isPlayer);
-          const blast = bs.add
-            .circle(hand.x, hand.y, 8, 0x00ffff)
-            .setDepth(5);
+          const blast = bs.add.circle(hand.x, hand.y, 8, 0x00ffff).setDepth(5);
           bs.tweens.add({
             targets: blast,
             x: target.x,
@@ -106,7 +113,13 @@ export class GokuFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const dmg = Math.floor(40 * bs.getDamageMultiplier(transformLevel));
 
@@ -119,7 +132,7 @@ export class GokuFighter extends Fighter {
       .circle(hand.x, hand.y, 5, 0x00ffff)
       .setDepth(15)
       .setBlendMode(Phaser.BlendModes.ADD);
-      
+
     bs.tweens.add({
       targets: aura,
       scale: 10,
@@ -166,9 +179,7 @@ export class GokuFighter extends Fighter {
                 beam.destroy();
                 core.destroy();
                 if (bs.scene.isActive()) {
-                  attacker.play(
-                    bs.getAnimKey("goku", transformLevel, "idle"),
-                  );
+                  attacker.play(bs.getAnimKey("goku", transformLevel, "idle"));
                   bs.onSpecialComplete(isPlayer);
                 }
               },
@@ -182,7 +193,13 @@ export class GokuFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const dmg = Math.floor(120 * bs.getDamageMultiplier(transformLevel));
 
@@ -273,7 +290,11 @@ export class GokuFighter extends Fighter {
     return null as any;
   }
 
-  performTransform(scene: Phaser.Scene, isPlayer: boolean, level: number): void {
-      // transform handling logic specifically for Goku would go here if needed.
+  performTransform(
+    scene: Phaser.Scene,
+    isPlayer: boolean,
+    level: number,
+  ): void {
+    // transform handling logic specifically for Goku would go here if needed.
   }
 }

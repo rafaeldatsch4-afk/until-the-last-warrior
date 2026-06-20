@@ -1,15 +1,23 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class CellFighter extends Fighter {
-  readonly key = 'cell';
-  readonly specialName = 'KAMEHAMEHA';
-  readonly superName = 'SOLAR KAMEHAMEHA';
+  readonly key = "cell";
+  readonly specialName = "KAMEHAMEHA";
+  readonly superName = "SOLAR KAMEHAMEHA";
   readonly specialColor = 0x00ff00;
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
@@ -35,7 +43,13 @@ export class CellFighter extends Fighter {
             if (bs.cache.audio.exists("sfx_attack"))
               bs.sound.play("sfx_attack", { volume: 1.2 });
             bs.createImpactEffect(target.x, target.y + 120, 0x00ff00);
-            bs.takeDamage(!isPlayer, Math.floor((isComboFinisher ? 22 : 12) * bs.getDamageMultiplier(transformLevel)));
+            bs.takeDamage(
+              !isPlayer,
+              Math.floor(
+                (isComboFinisher ? 22 : 12) *
+                  bs.getDamageMultiplier(transformLevel),
+              ),
+            );
             bs.cameras.main.shake(150, 0.02);
 
             bs.time.delayedCall(200, () => {
@@ -63,7 +77,13 @@ export class CellFighter extends Fighter {
 
         const hand = bs.getHandPosition(isPlayer);
         const beam = bs.add
-          .rectangle(hand.x, hand.y, Math.abs(target.x - attacker.x), 2, 0xffff00)
+          .rectangle(
+            hand.x,
+            hand.y,
+            Math.abs(target.x - attacker.x),
+            2,
+            0xffff00,
+          )
           .setOrigin(isPlayer ? 0 : 1, 0.5)
           .setDepth(5);
         bs.tweens.add({
@@ -74,7 +94,13 @@ export class CellFighter extends Fighter {
         });
 
         bs.createImpactEffect(target.x, target.y + 120, 0xffff00);
-        bs.takeDamage(!isPlayer, Math.floor((isComboFinisher ? 18 : 10) * bs.getDamageMultiplier(transformLevel)));
+        bs.takeDamage(
+          !isPlayer,
+          Math.floor(
+            (isComboFinisher ? 18 : 10) *
+              bs.getDamageMultiplier(transformLevel),
+          ),
+        );
 
         bs.time.delayedCall(250, () => {
           if (!bs.scene.isActive()) return;
@@ -88,20 +114,36 @@ export class CellFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     bs.specialBeam(isPlayer, false, 0x00ff00, true, false, "kamehameha");
     return null as any;
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     bs.specialBeam(isPlayer, true, 0xffff00, true, true, "SOLAR KAMEHAMEHA!");
 
     return null as any;
   }
 
-  performTransform(scene: Phaser.Scene, isPlayer: boolean, level: number): void {}
+  performTransform(
+    scene: Phaser.Scene,
+    isPlayer: boolean,
+    level: number,
+  ): void {}
 }

@@ -1,5 +1,4 @@
-
-import { CharacterData } from './types';
+import { CharacterData } from "./types";
 
 export const INITIAL_CHARACTERS: CharacterData[] = [
   {
@@ -15,7 +14,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "KAMEHAMEHA",
     superName: "GENKIDAMA",
-    specialColor: 0x00ffff
+    specialColor: 0x00ffff,
   },
   {
     id: 1,
@@ -30,7 +29,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "GALICK GUN",
     superName: "FINAL FLASH",
-    specialColor: 0x9b59b6
+    specialColor: 0x9b59b6,
   },
   {
     id: 2,
@@ -45,7 +44,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "MASENKO",
     superName: "FATHER-SON KAMEHAMEHA",
-    specialColor: 0xffff00
+    specialColor: 0xffff00,
   },
   {
     id: 3,
@@ -60,7 +59,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "MAKANKOSAPPO",
     superName: "HELLZONE GRENADE",
-    specialColor: 0xffff00
+    specialColor: 0xffff00,
   },
   {
     id: 18,
@@ -75,7 +74,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "MAJESTIC DESTROYER FLAME",
     superName: "TENGAI SHINSEI", // Meteor
-    specialColor: 0xff4500
+    specialColor: 0xff4500,
   },
   {
     id: 5,
@@ -90,7 +89,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "KAMEHAMEHA",
     superName: "SOLAR KAMEHAMEHA",
-    specialColor: 0x00ff00
+    specialColor: 0x00ff00,
   },
   {
     id: 6,
@@ -105,7 +104,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "KATANA SLASH",
     superName: "NINJA BARRAGE",
-    specialColor: 0x3498db
+    specialColor: 0x3498db,
   },
   {
     id: 7,
@@ -120,7 +119,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "ZOLTRAAK",
     superName: "BLACK HOLE",
-    specialColor: 0xdfe6e9 // White/Silver Energy
+    specialColor: 0xdfe6e9, // White/Silver Energy
   },
   {
     id: 8,
@@ -135,7 +134,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "MISSILE STRIKE",
     superName: "MATRIX BLAST",
-    specialColor: 0xff6b6b
+    specialColor: 0xff6b6b,
   },
   {
     id: 9,
@@ -150,7 +149,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "PANCAKES",
     superName: "MEGA PANCAKE",
-    specialColor: 0x00aaff
+    specialColor: 0x00aaff,
   },
   {
     id: 10,
@@ -165,7 +164,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "PLASMA DASH",
     superName: "CYBER OVERDRIVE",
-    specialColor: 0x00eaff
+    specialColor: 0x00eaff,
   },
   {
     id: 11,
@@ -180,7 +179,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "CHIPOTE CHILLÓN",
     superName: "AEROLITOS",
-    specialColor: 0xff0000
+    specialColor: 0xff0000,
   },
   {
     id: 12,
@@ -195,7 +194,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "RASENGAN",
     superName: "RASENSHURIKEN",
-    specialColor: 0x3498db
+    specialColor: 0x3498db,
   },
   {
     id: 13,
@@ -210,7 +209,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "BATARANG",
     superName: "THE DARK KNIGHT",
-    specialColor: 0x34495e
+    specialColor: 0x34495e,
   },
   {
     id: 14,
@@ -225,7 +224,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "CLEAVE",
     superName: "CASTELO MANIVOLENTE",
-    specialColor: 0x8b0000
+    specialColor: 0x8b0000,
   },
   {
     id: 15,
@@ -240,7 +239,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "RED & BLUE",
     superName: "HOLLOW PURPLE",
-    specialColor: 0x8a2be2
+    specialColor: 0x8a2be2,
   },
   {
     id: 16,
@@ -255,7 +254,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "KAMUI",
     superName: "TEN-TAILS BEAST BOMB",
-    specialColor: 0xff4500 // Orange-red
+    specialColor: 0xff4500, // Orange-red
   },
   {
     id: 19,
@@ -270,7 +269,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "AMATERASU",
     superName: "TSUKUYOMI",
-    specialColor: 0x000000
+    specialColor: 0x000000,
   },
   {
     id: 20,
@@ -285,7 +284,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "STAR FINGER",
     superName: "ORA ORA ORA",
-    specialColor: 0x8a2be2
+    specialColor: 0x8a2be2,
   },
   {
     id: 17,
@@ -300,7 +299,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "WEB SHOOTER",
     superName: "MAXIMUM SPIDER",
-    specialColor: 0xffffff
+    specialColor: 0xffffff,
   },
   {
     id: 21,
@@ -315,7 +314,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "SERIOUS PUNCH",
     superName: "SUPREME HEADBUTT",
-    specialColor: 0xffcc00
+    specialColor: 0xffcc00,
   },
   {
     id: 22,
@@ -330,6 +329,6 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
     frameHeight: 64,
     specialName: "ELECTRIC DISC",
     superName: "STATIC BURST",
-    specialColor: 0x00ffff
-  }
+    specialColor: 0x00ffff,
+  },
 ];

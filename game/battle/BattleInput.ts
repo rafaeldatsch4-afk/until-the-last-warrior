@@ -54,7 +54,6 @@ export class BattleInput {
     this.scene.input.keyboard.removeAllKeys();
 
     this.keys = this.scene.input.keyboard.addKeys({
-
       p1_up: Phaser.Input.Keyboard.KeyCodes.W,
       p1_down: Phaser.Input.Keyboard.KeyCodes.S,
       p1_left: Phaser.Input.Keyboard.KeyCodes.A,
@@ -65,7 +64,7 @@ export class BattleInput {
       p1_charge: Phaser.Input.Keyboard.KeyCodes.Q,
       p1_special: Phaser.Input.Keyboard.KeyCodes.V,
       p1_transform: Phaser.Input.Keyboard.KeyCodes.X,
-      
+
       p2_up: Phaser.Input.Keyboard.KeyCodes.UP,
       p2_down: Phaser.Input.Keyboard.KeyCodes.DOWN,
       p2_left: Phaser.Input.Keyboard.KeyCodes.LEFT,
@@ -94,9 +93,10 @@ export class BattleInput {
 
   createMobileControls() {
     // Ensure accurate isMobile check
-    const isMobile = this.scene.sys.game.device.input.touch || 
-                     (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
-                     
+    const isMobile =
+      this.scene.sys.game.device.input.touch ||
+      /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
     if (!isMobile) return;
 
     const gw = this.scene.cameras.main.width;
@@ -112,24 +112,37 @@ export class BattleInput {
       onUp?: () => void,
     ) => {
       // Modern Glassy Button Setup
-      const btnGroup = this.scene.add.container(x, y).setScrollFactor(0).setDepth(100);
-      
-      const outerBtn = this.scene.add.circle(0, 0, radius, color, 0.4).setStrokeStyle(3, 0xffffff, 0.5);
-      const innerBtn = this.scene.add.circle(0, 0, radius * 0.85, 0x000000, 0.3);
-      
-      const txt = this.scene.add.text(0, 0, text, {
-        fontFamily: "Impact, sans-serif",
-        fontSize: radius > 40 ? "24px" : "18px",
-        color: "#ffffff",
-        stroke: "#000",
-        strokeThickness: 3
-      }).setOrigin(0.5);
+      const btnGroup = this.scene.add
+        .container(x, y)
+        .setScrollFactor(0)
+        .setDepth(100);
+
+      const outerBtn = this.scene.add
+        .circle(0, 0, radius, color, 0.4)
+        .setStrokeStyle(3, 0xffffff, 0.5);
+      const innerBtn = this.scene.add.circle(
+        0,
+        0,
+        radius * 0.85,
+        0x000000,
+        0.3,
+      );
+
+      const txt = this.scene.add
+        .text(0, 0, text, {
+          fontFamily: "Impact, sans-serif",
+          fontSize: radius > 40 ? "24px" : "18px",
+          color: "#ffffff",
+          stroke: "#000",
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
 
       btnGroup.add([outerBtn, innerBtn, txt]);
-      
+
       this.mobileControls.push(btnGroup);
       if (this.scene.battleUI?.uiContainer) {
-          this.scene.battleUI?.uiContainer.add(btnGroup);
+        this.scene.battleUI?.uiContainer.add(btnGroup);
       }
 
       let isPressed = false;
@@ -156,19 +169,19 @@ export class BattleInput {
 
       const hitArea = new Phaser.Geom.Circle(0, 0, radius * 1.5);
       btnGroup.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
-      
+
       btnGroup.on("pointerdown", () => {
-          press();
+        press();
       });
 
       btnGroup.on("pointerup", () => {
-          release();
+        release();
       });
 
       btnGroup.on("pointerout", () => {
-          release();
+        release();
       });
-      
+
       return btnGroup;
     };
 
@@ -177,89 +190,96 @@ export class BattleInput {
     const defaultJoyY = gh - 100;
     let joyRootX = defaultJoyX;
     let joyRootY = defaultJoyY;
-    
-    const joyContainer = this.scene.add.container(joyRootX, joyRootY).setScrollFactor(0).setDepth(100);
-    const joyBase = this.scene.add.circle(0, 0, 75, 0x000000, 0.4).setStrokeStyle(3, 0xffffff, 0.3);
-    const joyThumb = this.scene.add.circle(0, 0, 35, 0xffffff, 0.6).setStrokeStyle(2, 0x000000, 0.5);
-    
+
+    const joyContainer = this.scene.add
+      .container(joyRootX, joyRootY)
+      .setScrollFactor(0)
+      .setDepth(100);
+    const joyBase = this.scene.add
+      .circle(0, 0, 75, 0x000000, 0.4)
+      .setStrokeStyle(3, 0xffffff, 0.3);
+    const joyThumb = this.scene.add
+      .circle(0, 0, 35, 0xffffff, 0.6)
+      .setStrokeStyle(2, 0x000000, 0.5);
+
     joyContainer.add([joyBase, joyThumb]);
     this.mobileControls.push(joyContainer);
-    
+
     // Large invisible hit area on the bottom-left quadrant for the FLOATING joystick
     // We remove the old rectangle hit area and use global checking for this too.
     if (this.scene.battleUI?.uiContainer) {
-        this.scene.battleUI?.uiContainer.add(joyContainer);
+      this.scene.battleUI?.uiContainer.add(joyContainer);
     }
 
     const getLocalPnt = (pointer: Phaser.Input.Pointer) => {
-        return { x: pointer.x, y: pointer.y };
+      return { x: pointer.x, y: pointer.y };
     };
 
     const handleJoystick = (pointer: Phaser.Input.Pointer) => {
-        if (this.mobileJoystickPointerId !== pointer.id) return;
-        
-        const loc = getLocalPnt(pointer);
-        
-        let dx = loc.x - joyRootX;
-        let dy = loc.y - joyRootY;
-        const maxDist = 75;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        
-        if (dist > maxDist) {
-            dx = (dx / dist) * maxDist;
-            dy = (dy / dist) * maxDist;
-        }
-        
-        joyThumb.setPosition(dx, dy);
-        
-        this.mobileJoystickVector = { x: dx / maxDist, y: dy / maxDist };
-        
-        // Instant response with very small deadzone (360-like responsiveness)
-        this.keys.p1_up.isDown = dy < -10;
-        this.keys.p1_left.isDown = dx < -10;
-        this.keys.p1_right.isDown = dx > 10;
+      if (this.mobileJoystickPointerId !== pointer.id) return;
+
+      const loc = getLocalPnt(pointer);
+
+      let dx = loc.x - joyRootX;
+      let dy = loc.y - joyRootY;
+      const maxDist = 75;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist > maxDist) {
+        dx = (dx / dist) * maxDist;
+        dy = (dy / dist) * maxDist;
+      }
+
+      joyThumb.setPosition(dx, dy);
+
+      this.mobileJoystickVector = { x: dx / maxDist, y: dy / maxDist };
+
+      // Instant response with very small deadzone (360-like responsiveness)
+      this.keys.p1_up.isDown = dy < -10;
+      this.keys.p1_left.isDown = dx < -10;
+      this.keys.p1_right.isDown = dx > 10;
     };
 
-    this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-        const loc = getLocalPnt(pointer);
-        // Only trigger joystick if the pointer is on the left half of the screen
-        if (loc.x < gw / 2 && loc.y > gh / 2 - 50) {
-            if (this.mobileJoystickPointerId === null) {
-                this.mobileJoystickPointerId = pointer.id;
-                
-                // Standard Floating Joystick Behavior
-                joyRootX = loc.x;
-                joyRootY = loc.y;
-                joyContainer.setPosition(joyRootX, joyRootY);
-                joyBase.setAlpha(0.7);
-                
-                handleJoystick(pointer);
-            }
+    this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      const loc = getLocalPnt(pointer);
+      // Only trigger joystick if the pointer is on the left half of the screen
+      if (loc.x < gw / 2 && loc.y > gh / 2 - 50) {
+        if (this.mobileJoystickPointerId === null) {
+          this.mobileJoystickPointerId = pointer.id;
+
+          // Standard Floating Joystick Behavior
+          joyRootX = loc.x;
+          joyRootY = loc.y;
+          joyContainer.setPosition(joyRootX, joyRootY);
+          joyBase.setAlpha(0.7);
+
+          handleJoystick(pointer);
         }
+      }
     });
 
-    this.scene.input.on('pointermove', handleJoystick);
+    this.scene.input.on("pointermove", handleJoystick);
 
     const releaseJoystick = (pointer: Phaser.Input.Pointer) => {
-        if (this.mobileJoystickPointerId === pointer.id) {
-            this.mobileJoystickPointerId = null;
-            
-            joyRootX = defaultJoyX;
-            joyRootY = defaultJoyY;
-            joyContainer.setPosition(joyRootX, joyRootY);
-            
-            joyBase.setAlpha(0.4);
-            joyThumb.setPosition(0, 0);
-            this.mobileJoystickVector = { x: 0, y: 0 };
-            
-            this.keys.p1_up.isDown = false;
-            this.keys.p1_left.isDown = false;
-            this.keys.p1_right.isDown = false;
-        }
+      if (this.mobileJoystickPointerId === pointer.id) {
+        this.mobileJoystickPointerId = null;
+
+        joyRootX = defaultJoyX;
+        joyRootY = defaultJoyY;
+        joyContainer.setPosition(joyRootX, joyRootY);
+
+        joyBase.setAlpha(0.4);
+        joyThumb.setPosition(0, 0);
+        this.mobileJoystickVector = { x: 0, y: 0 };
+
+        this.keys.p1_up.isDown = false;
+        this.keys.p1_left.isDown = false;
+        this.keys.p1_right.isDown = false;
+      }
     };
 
-    this.scene.input.on('pointerup', releaseJoystick);
-    this.scene.input.on('pointerout', releaseJoystick);
+    this.scene.input.on("pointerup", releaseJoystick);
+    this.scene.input.on("pointerout", releaseJoystick);
     // --- End Virtual Joystick ---
 
     // Right side (Attacks)
@@ -328,8 +348,9 @@ export class BattleInput {
 
     pauseBtn.on("pointerdown", () => {
       pauseBtn.setAlpha(0.9);
-      if (this.scene.cache.audio.exists("sfx_select")) this.scene.sound.play("sfx_select");
-      
+      if (this.scene.cache.audio.exists("sfx_select"))
+        this.scene.sound.play("sfx_select");
+
       if (this.scene.gameState.gameMode === "online_pvp") {
         this.scene.scene.launch("PauseScene", { online: true });
       } else {

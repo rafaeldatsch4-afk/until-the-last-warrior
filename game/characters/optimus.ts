@@ -1,19 +1,27 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class OptimusFighter extends Fighter {
-  readonly key = 'optimus';
-  readonly specialName = 'MISSILE STRIKE';
-  readonly superName = 'MATRIX BLAST';
+  readonly key = "optimus";
+  readonly specialName = "MISSILE STRIKE";
+  readonly superName = "MATRIX BLAST";
   readonly specialColor = 0x3498db;
 
   performTransform(scene: any, isPlayer: boolean): void {}
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    const startX = attacker ? attacker.x : (isPlayer ? bs.player.x : bs.enemy.x);
+    const startX = attacker ? attacker.x : isPlayer ? bs.player.x : bs.enemy.x;
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
@@ -33,8 +41,7 @@ export class OptimusFighter extends Fighter {
           bs.takeDamage(
             !isPlayer,
             Math.floor(
-              (isComboFinisher ? 25 : 15) *
-                bs.getDamageMultiplier(transLevel),
+              (isComboFinisher ? 25 : 15) * bs.getDamageMultiplier(transLevel),
             ),
           );
           bs.cameras.main.shake(200, 0.02);
@@ -96,10 +103,16 @@ export class OptimusFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialMissiles
     bs.log("MISSILE STRIKE!");
     const isS = false;
@@ -125,15 +138,15 @@ export class OptimusFighter extends Fighter {
         // Smoke Particle Emitter
         let smoke: any;
         try {
-        smoke = bs.add.particles(0, 0, "particle", {
-          follow: m,
-          scale: { start: 1.2, end: 0 },
-          lifespan: 600,
-          tint: [0xffaa00, 0x555555, 0x222222], // Fire to smoke
-          frequency: 15,
-          blendMode: "ADD",
-        });
-        } catch(e) {}
+          smoke = bs.add.particles(0, 0, "particle", {
+            follow: m,
+            scale: { start: 1.2, end: 0 },
+            lifespan: 600,
+            tint: [0xffaa00, 0x555555, 0x222222], // Fire to smoke
+            frequency: 15,
+            blendMode: "ADD",
+          });
+        } catch (e) {}
 
         const targetX = target.x;
         const targetY = target.y + Phaser.Math.Between(-50, 100); // Hit various body parts
@@ -167,8 +180,8 @@ export class OptimusFighter extends Fighter {
             m.destroy();
             mGlow.destroy();
             if (smoke) {
-                smoke.stop();
-                bs.time.delayedCall(600, () => smoke.destroy());
+              smoke.stop();
+              bs.time.delayedCall(600, () => smoke.destroy());
             }
 
             bs.createImpactEffect(targetX, targetY, 0xffaa00);
@@ -222,10 +235,16 @@ export class OptimusFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialMatrixBlast
     const dmg = Math.floor(125 * bs.getDamageMultiplier(transLevel));
 
@@ -238,28 +257,26 @@ export class OptimusFighter extends Fighter {
       .circle(hand.x, hand.y, 10, 0x00eaff)
       .setDepth(15)
       .setBlendMode(Phaser.BlendModes.ADD);
-    const matrixCore = bs.add
-      .circle(hand.x, hand.y, 5, 0xffffff)
-      .setDepth(16);
+    const matrixCore = bs.add.circle(hand.x, hand.y, 5, 0xffffff).setDepth(16);
 
     bs.cameras.main.shake(800, 0.01);
 
     // Gathering particles
     let gatherParticles: any;
     try {
-    gatherParticles = bs.add
-      .particles(0, 0, "particle", {
-        x: hand.x,
-        y: hand.y,
-        speed: { min: -250, max: 250 },
-        scale: { start: 1.8, end: 0 },
-        blendMode: "ADD",
-        lifespan: 500,
-        tint: 0x00eaff,
-        gravityY: 0,
-      })
-      .setDepth(14);
-      } catch(e) {}
+      gatherParticles = bs.add
+        .particles(0, 0, "particle", {
+          x: hand.x,
+          y: hand.y,
+          speed: { min: -250, max: 250 },
+          scale: { start: 1.8, end: 0 },
+          blendMode: "ADD",
+          lifespan: 500,
+          tint: 0x00eaff,
+          gravityY: 0,
+        })
+        .setDepth(14);
+    } catch (e) {}
 
     bs.tweens.add({
       targets: [matrix, matrixCore],

@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { DailyChallenges } from '../systems/DailyChallenges';
+import { DailyChallenges } from "../systems/DailyChallenges";
 
 export class BattleReward {
   scene: any; // Type as BattleScene
@@ -12,49 +12,52 @@ export class BattleReward {
     const soundManager = this.scene.sound as any;
     if (!soundManager || !soundManager.context) return;
     const ctx = soundManager.context as AudioContext;
-    
-    if (ctx.state === 'suspended') {
+
+    if (ctx.state === "suspended") {
       ctx.resume().catch(() => {});
     }
-    
+
     const sampleRate = ctx.sampleRate;
     const length = sampleRate * 1.5; // 1.5 seconds
     const buffer = ctx.createBuffer(1, length, sampleRate);
     const data = buffer.getChannelData(0);
-    
+
     // Notes: C5(523.25), E5(659.25), G5(783.99), C6(1046.50)
     const notes = [
       { freq: 523.25, time: 0, duration: 0.15 },
       { freq: 659.25, time: 0.15, duration: 0.15 },
       { freq: 783.99, time: 0.3, duration: 0.15 },
-      { freq: 1046.50, time: 0.45, duration: 0.8 }
+      { freq: 1046.5, time: 0.45, duration: 0.8 },
     ];
-    
+
     for (let i = 0; i < length; i++) {
-        const t = i / sampleRate;
-        let sample = 0;
-        
-        for (const note of notes) {
-            if (t >= note.time && t < note.time + note.duration) {
-                // Generate a simple square wave mix
-                const phase = (t - note.time) * note.freq * 2 * Math.PI;
-                const wave = Math.sin(phase) > 0 ? 0.3 : -0.3;
-                
-                // AR envelope
-                const localT = t - note.time;
-                let env = 1;
-                if (localT < 0.05) {
-                    env = localT / 0.05; // Attack
-                } else {
-                    env = Math.max(0, 1 - Math.pow((localT - 0.05) / (note.duration - 0.05), 2)); // Decay/Release
-                }
-                
-                sample += wave * env;
-            }
+      const t = i / sampleRate;
+      let sample = 0;
+
+      for (const note of notes) {
+        if (t >= note.time && t < note.time + note.duration) {
+          // Generate a simple square wave mix
+          const phase = (t - note.time) * note.freq * 2 * Math.PI;
+          const wave = Math.sin(phase) > 0 ? 0.3 : -0.3;
+
+          // AR envelope
+          const localT = t - note.time;
+          let env = 1;
+          if (localT < 0.05) {
+            env = localT / 0.05; // Attack
+          } else {
+            env = Math.max(
+              0,
+              1 - Math.pow((localT - 0.05) / (note.duration - 0.05), 2),
+            ); // Decay/Release
+          }
+
+          sample += wave * env;
         }
-        data[i] = sample * 0.5; // Master volume
+      }
+      data[i] = sample * 0.5; // Master volume
     }
-    
+
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     source.connect(ctx.destination);
@@ -68,10 +71,10 @@ export class BattleReward {
     if (s.regenTimer) s.regenTimer.remove();
 
     if (win) {
-      if (s.gameState && s.gameState.gameMode !== 'training') {
-        DailyChallenges.addProgress('win_3_battles', 1);
+      if (s.gameState && s.gameState.gameMode !== "training") {
+        DailyChallenges.addProgress("win_3_battles", 1);
         if (s.playerHp && s.playerData && s.playerHp === s.playerData.maxHp) {
-            DailyChallenges.addProgress('win_no_damage', 1);
+          DailyChallenges.addProgress("win_no_damage", 1);
         }
       }
       this.playVictorySound();
@@ -83,7 +86,10 @@ export class BattleReward {
     s.cameras.main.setZoom(1);
     s.cameras.main.centerOn(480, 270);
 
-    const bg = s.add.rectangle(480, 270, 20000, 20000, 0x000000, 0.8).setDepth(3000).setScrollFactor(0);
+    const bg = s.add
+      .rectangle(480, 270, 20000, 20000, 0x000000, 0.8)
+      .setDepth(3000)
+      .setScrollFactor(0);
 
     let titleMessage = "DEFEAT...";
     let subtitleMessage = "";
@@ -105,7 +111,11 @@ export class BattleReward {
       // Award coins in PvP regardless of who won (shared stash)
       s.gameState.coins += coinsEarned;
       (window as any).UTLW.save();
-      window.dispatchEvent(new CustomEvent('battle-ended', { detail: { win, gameMode: s.gameState.gameMode } }));
+      window.dispatchEvent(
+        new CustomEvent("battle-ended", {
+          detail: { win, gameMode: s.gameState.gameMode },
+        }),
+      );
     } else {
       // Single Player Outcome
       if (win) {
@@ -134,7 +144,11 @@ export class BattleReward {
     }
 
     if (s.gameState.gameMode !== "local_pvp") {
-       window.dispatchEvent(new CustomEvent('battle-ended', { detail: { win, gameMode: s.gameState.gameMode } }));
+      window.dispatchEvent(
+        new CustomEvent("battle-ended", {
+          detail: { win, gameMode: s.gameState.gameMode },
+        }),
+      );
     }
 
     // Display Title
@@ -148,7 +162,8 @@ export class BattleReward {
         strokeThickness: 8,
       })
       .setOrigin(0.5)
-      .setDepth(3001).setScrollFactor(0);
+      .setDepth(3001)
+      .setScrollFactor(0);
 
     s.tweens.add({
       targets: titleText,
@@ -170,7 +185,8 @@ export class BattleReward {
         .setOrigin(0.5)
         .setDepth(3001)
         .setAlpha(0)
-        .setScale(0.5).setScrollFactor(0);
+        .setScale(0.5)
+        .setScrollFactor(0);
 
       s.tweens.add({
         targets: subText,
@@ -194,7 +210,8 @@ export class BattleReward {
         })
         .setOrigin(0.5)
         .setDepth(3001)
-        .setAlpha(0).setScrollFactor(0);
+        .setAlpha(0)
+        .setScrollFactor(0);
 
       s.tweens.add({
         targets: coinText,
@@ -217,7 +234,8 @@ export class BattleReward {
       .setOrigin(0.5)
       .setDepth(3001)
       .setInteractive({ useHandCursor: true })
-      .setAlpha(0).setScrollFactor(0);
+      .setAlpha(0)
+      .setScrollFactor(0);
 
     s.tweens.add({
       targets: btn,

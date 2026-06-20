@@ -26,49 +26,48 @@ export class BattleAI {
       callback: () => {
         if (s.isBattleOver || !s.scene.isActive()) return;
         if (s.p2ActionActive || s.enemyDefending) {
-           s.aiMoveDir = 0;
-           return;
+          s.aiMoveDir = 0;
+          return;
         }
-        
+
         const dist = Math.abs(s.enemy.x - s.player.x);
         const isLeftOfPlayer = s.enemy.x < s.player.x;
-        
+
         let targetDir = 0; // -1 for Left, 1 for Right, 0 for stop
-        
+
         // Dynamic behavior based on state
         if (s.enemyKi < 30) {
-            // Needs Ki. If too close, retreat! If far enough, stay and charge.
-            if (dist < 400) {
-                targetDir = isLeftOfPlayer ? -1 : 1; // back away
-            } else {
-                targetDir = 0; // stop and charge
-            }
+          // Needs Ki. If too close, retreat! If far enough, stay and charge.
+          if (dist < 400) {
+            targetDir = isLeftOfPlayer ? -1 : 1; // back away
+          } else {
+            targetDir = 0; // stop and charge
+          }
         } else {
-            // Has Ki, ready to attack. If far, approach!
-            if (dist > 300) {
-                targetDir = isLeftOfPlayer ? 1 : -1; // approach
-            } else if (dist < 150) {
-                // very close, jitter a bit
-                targetDir = Math.random() < 0.3 ? (isLeftOfPlayer ? -1 : 1) : 0;
-            } else {
-                // sweet spot for attack, stay still or approach
-                targetDir = Math.random() < 0.6 ? (isLeftOfPlayer ? 1 : -1) : 0;
-            }
+          // Has Ki, ready to attack. If far, approach!
+          if (dist > 300) {
+            targetDir = isLeftOfPlayer ? 1 : -1; // approach
+          } else if (dist < 150) {
+            // very close, jitter a bit
+            targetDir = Math.random() < 0.3 ? (isLeftOfPlayer ? -1 : 1) : 0;
+          } else {
+            // sweet spot for attack, stay still or approach
+            targetDir = Math.random() < 0.6 ? (isLeftOfPlayer ? 1 : -1) : 0;
+          }
         }
-        
+
         // Prevent corner trapping
         if (s.enemy.x <= 150) targetDir = 1;
         if (s.enemy.x >= 1850) targetDir = -1;
-        
+
         s.aiMoveDir = targetDir;
-      }
+      },
     });
   }
 
   enemyDecide() {
     const s = this.scene;
-    if (s.isBattleOver || s.p2ActionActive || !s.scene.isActive())
-      return;
+    if (s.isBattleOver || s.p2ActionActive || !s.scene.isActive()) return;
 
     const r = Math.random();
     const playerHpPct = s.playerHp / s.playerData.maxHp;
@@ -168,14 +167,12 @@ export class BattleAI {
       if (r < 0.5) {
         if (dist < 400 || r < 0.3) s.performSpecial(false, true);
         else s.performCharge(false);
-      }
-      else if (r < 0.8) s.performSpecial(false, false);
+      } else if (r < 0.8) s.performSpecial(false, false);
       else s.performAttack(false, dist < 150 ? "melee" : "ki");
     } else if (s.enemyKi >= 40) {
       // Medium Ki: Mix of Special, Attack, and Charge
       if (r < 0.4) s.performSpecial(false, false);
-      else if (r < 0.7)
-        s.performAttack(false, dist < 150 ? "melee" : "ki");
+      else if (r < 0.7) s.performAttack(false, dist < 150 ? "melee" : "ki");
       else s.performCharge(false);
     } else {
       // Low Ki: Favor Charging or distancing

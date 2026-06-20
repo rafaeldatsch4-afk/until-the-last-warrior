@@ -1,17 +1,25 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class ThukunaFighter extends Fighter {
-  readonly key = 'thukuna';
-  readonly specialName = 'CLEAVE';
-  readonly superName = 'MALEVOLENT SHRINE';
+  readonly key = "thukuna";
+  readonly specialName = "CLEAVE";
+  readonly superName = "MALEVOLENT SHRINE";
   readonly specialColor = 0xc20000;
 
   performTransform(scene: any, isPlayer: boolean): void {}
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
 
@@ -106,10 +114,16 @@ export class ThukunaFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialCleave
     const dmg = Math.floor(45 * bs.getDamageMultiplier(transLevel));
 
@@ -207,10 +221,16 @@ export class ThukunaFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialMalevolentShrine
     const dmg = Math.floor(140 * bs.getDamageMultiplier(transLevel));
 

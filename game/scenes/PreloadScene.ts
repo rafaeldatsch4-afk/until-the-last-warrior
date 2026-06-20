@@ -1,7 +1,10 @@
 import Phaser from "phaser";
 import { CharacterData } from "../types";
 import { INITIAL_CHARACTERS } from "../data";
-import { generateAllSprites, SPRITE_GENERATORS } from "../sprites/SpriteRegistry";
+import {
+  generateAllSprites,
+  SPRITE_GENERATORS,
+} from "../sprites/SpriteRegistry";
 import { generateCustomSprite } from "../sprites/CustomSprite";
 
 export default class PreloadScene extends Phaser.Scene {
@@ -51,7 +54,7 @@ export default class PreloadScene extends Phaser.Scene {
         fontSize: "20px",
         color: "#e2e8f0",
         fontStyle: "bold",
-        resolution: 2
+        resolution: 2,
       })
       .setOrigin(0.5, 0.5);
 
@@ -60,7 +63,7 @@ export default class PreloadScene extends Phaser.Scene {
       alpha: 0.3,
       duration: 500,
       yoyo: true,
-      repeat: -1
+      repeat: -1,
     });
 
     this.load.on("progress", (value: number) => {
@@ -68,7 +71,12 @@ export default class PreloadScene extends Phaser.Scene {
       this.progressBar.fillStyle(0xf59e0b, 1);
       // Carregamento de imagens ocupa os primeiros 10% da barra
       const ratio = value * 0.1;
-      this.progressBar.fillRect(width / 2 - 150, height / 2 - 15, 300 * ratio, 30);
+      this.progressBar.fillRect(
+        width / 2 - 150,
+        height / 2 - 15,
+        300 * ratio,
+        30,
+      );
     });
 
     this.load.on("complete", () => {
@@ -89,10 +97,22 @@ export default class PreloadScene extends Phaser.Scene {
       "arena_tournament",
       "https://labs.phaser.io/assets/skies/clouds.png",
     );
-    this.load.image("arena_ice", "https://labs.phaser.io/assets/skies/sky1.png");
-    this.load.image("arena_lava", "https://labs.phaser.io/assets/skies/underwater3.png");
-    this.load.image("arena_desert", "https://labs.phaser.io/assets/skies/sky2.png");
-    this.load.image("arena_dark", "https://labs.phaser.io/assets/skies/deepblue.png");
+    this.load.image(
+      "arena_ice",
+      "https://labs.phaser.io/assets/skies/sky1.png",
+    );
+    this.load.image(
+      "arena_lava",
+      "https://labs.phaser.io/assets/skies/underwater3.png",
+    );
+    this.load.image(
+      "arena_desert",
+      "https://labs.phaser.io/assets/skies/sky2.png",
+    );
+    this.load.image(
+      "arena_dark",
+      "https://labs.phaser.io/assets/skies/deepblue.png",
+    );
   }
 
   create() {
@@ -112,32 +132,40 @@ export default class PreloadScene extends Phaser.Scene {
 
     const generateNext = () => {
       if (currentGeneratorIndex >= SPRITE_GENERATORS.length) {
-         this.finishPreload();
-         return;
+        this.finishPreload();
+        return;
       }
 
       const item = SPRITE_GENERATORS[currentGeneratorIndex];
       if (this.loadingText && this.loadingText.active) {
-         this.loadingText.setText(`Desenho: ${item.name} (${currentGeneratorIndex + 1}/${SPRITE_GENERATORS.length})`);
+        this.loadingText.setText(
+          `Desenho: ${item.name} (${currentGeneratorIndex + 1}/${SPRITE_GENERATORS.length})`,
+        );
       }
 
       // Progresso: 10% fixo para imagens + 90% proporcional dos guerreiros renderizados
-      const ratio = 0.1 + (currentGeneratorIndex / SPRITE_GENERATORS.length) * 0.9;
+      const ratio =
+        0.1 + (currentGeneratorIndex / SPRITE_GENERATORS.length) * 0.9;
       if (this.progressBar && this.progressBar.active) {
-         this.progressBar.clear();
-         this.progressBar.fillStyle(0xf59e0b, 1);
-         this.progressBar.fillRect(width / 2 - 150, height / 2 - 15, 300 * ratio, 30);
+        this.progressBar.clear();
+        this.progressBar.fillStyle(0xf59e0b, 1);
+        this.progressBar.fillRect(
+          width / 2 - 150,
+          height / 2 - 15,
+          300 * ratio,
+          30,
+        );
       }
 
       // Yield de 20ms para permitir que o navegador atualize a UI de progresso
       this.time.delayedCall(20, () => {
-         try {
-           item.fn(this);
-         } catch (e) {
-           console.error(`Erro ao gerar ${item.name}:`, e);
-         }
-         currentGeneratorIndex++;
-         generateNext();
+        try {
+          item.fn(this);
+        } catch (e) {
+          console.error(`Erro ao gerar ${item.name}:`, e);
+        }
+        currentGeneratorIndex++;
+        generateNext();
       });
     };
 
@@ -148,30 +176,30 @@ export default class PreloadScene extends Phaser.Scene {
     const currentState = window.UTLW?.state;
     const chars = currentState?.characters ?? INITIAL_CHARACTERS;
 
-    const customChar = chars.find((c: any) => c.key === 'custom_999');
+    const customChar = chars.find((c: any) => c.key === "custom_999");
     if (customChar) {
-        generateCustomSprite(this, customChar as any);
+      generateCustomSprite(this, customChar as any);
     }
 
     const charsToGenerate = [...chars];
-    const hasGohan = chars.some((c) => c.key === 'gohan');
-    const hasGoku = chars.some((c) => c.key === 'goku');
+    const hasGohan = chars.some((c) => c.key === "gohan");
+    const hasGoku = chars.some((c) => c.key === "goku");
     if (hasGohan && !hasGoku) {
-      const gokuData = INITIAL_CHARACTERS.find((c) => c.key === 'goku');
+      const gokuData = INITIAL_CHARACTERS.find((c) => c.key === "goku");
       if (gokuData) charsToGenerate.push(gokuData);
     }
 
     charsToGenerate.forEach((c) => {
-      if (c && typeof c.key === 'string' && c.key !== 'undefined') {
-         this.createAnimsFor(c.key);
+      if (c && typeof c.key === "string" && c.key !== "undefined") {
+        this.createAnimsFor(c.key);
       }
     });
 
-    if (!this.textures.exists('dummy')) {
+    if (!this.textures.exists("dummy")) {
       const g = this.make.graphics({ x: 0, y: 0, add: false } as any);
       g.fillStyle(0x555555);
       g.fillRect(0, 0, 32, 32);
-      g.generateTexture('dummy', 32, 32);
+      g.generateTexture("dummy", 32, 32);
       g.destroy();
     }
 
@@ -182,7 +210,7 @@ export default class PreloadScene extends Phaser.Scene {
       if (this.loadingText) this.loadingText.destroy();
       if (this.preloadBg) this.preloadBg.destroy();
 
-      this.scene.start('MenuScene');
+      this.scene.start("MenuScene");
     });
   }
 
@@ -199,15 +227,15 @@ export default class PreloadScene extends Phaser.Scene {
         return;
       }
       if (this.anims.exists(animKey)) return;
-      
+
       const tex = this.textures.get(texture);
       const frames: Phaser.Types.Animations.AnimationFrame[] = [];
       for (let i = start; i <= end; i++) {
         if (!tex.has(i.toString())) {
-           // Fallback to frame "0" or bypass to prevent crash, though it will still cause flickering if this fails
-           frames.push({ key: texture, frame: "0" });
+          // Fallback to frame "0" or bypass to prevent crash, though it will still cause flickering if this fails
+          frames.push({ key: texture, frame: "0" });
         } else {
-           frames.push({ key: texture, frame: i.toString() });
+          frames.push({ key: texture, frame: i.toString() });
         }
       }
       this.anims.create({
@@ -231,7 +259,12 @@ export default class PreloadScene extends Phaser.Scene {
     createAllForTex(key, key);
     createAllForTex(`${key}_ssj`, `${key}_ssj`);
 
-    if (key === 'goku' || key === 'vegeta' || key === 'naruto' || key === 'custom_999') {
+    if (
+      key === "goku" ||
+      key === "vegeta" ||
+      key === "naruto" ||
+      key === "custom_999"
+    ) {
       createAllForTex(`${key}_ui`, `${key}_ui`);
     }
   }
@@ -403,5 +436,4 @@ export default class PreloadScene extends Phaser.Scene {
   // PIXEL ART ENGINE (32x32 GRID SCALED 2x) - LSW / POWER WARRIORS STYLE
   // GENERATES A 4-FRAME SPRITESHEET
   // =================================================================================
- 
 }

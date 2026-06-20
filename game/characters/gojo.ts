@@ -1,20 +1,28 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class GojoFighter extends Fighter {
-  readonly key = 'gojo';
-  readonly specialName = 'RED & BLUE';
-  readonly superName = 'HOLLOW PURPLE';
+  readonly key = "gojo";
+  readonly specialName = "RED & BLUE";
+  readonly superName = "HOLLOW PURPLE";
   readonly specialColor = 0x8a2be2;
 
   performTransform(scene: any, isPlayer: boolean): void {}
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    const startX = attacker ? attacker.x : (isPlayer ? bs.player.x : bs.enemy.x);
-    const startY = attacker ? attacker.y : (isPlayer ? bs.player.y : bs.enemy.y);
+    const startX = attacker ? attacker.x : isPlayer ? bs.player.x : bs.enemy.x;
+    const startY = attacker ? attacker.y : isPlayer ? bs.player.y : bs.enemy.y;
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
@@ -92,10 +100,16 @@ export class GojoFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialRedAndBlue
     const dmg = Math.floor(45 * bs.getDamageMultiplier(transLevel));
 
@@ -123,9 +137,7 @@ export class GojoFighter extends Fighter {
       .setDepth(9)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setAlpha(0.6);
-    const red = bs.add
-      .circle(hand.x, hand.y + 30, 8, 0xff0000, 1)
-      .setDepth(10);
+    const red = bs.add.circle(hand.x, hand.y + 30, 8, 0xff0000, 1).setDepth(10);
     const redCore = bs.add
       .circle(hand.x, hand.y + 30, 3, 0xffffff, 1)
       .setDepth(11);
@@ -134,26 +146,26 @@ export class GojoFighter extends Fighter {
     let blueParticles: any;
     let redParticles: any;
     try {
-    blueParticles = bs.add
-      .particles(0, 0, "particle", {
-        follow: blue,
-        scale: { start: 0.5, end: 0 },
-        lifespan: 200,
-        tint: 0x0000ff,
-        blendMode: "ADD",
-      })
-      .setDepth(8);
+      blueParticles = bs.add
+        .particles(0, 0, "particle", {
+          follow: blue,
+          scale: { start: 0.5, end: 0 },
+          lifespan: 200,
+          tint: 0x0000ff,
+          blendMode: "ADD",
+        })
+        .setDepth(8);
 
-    redParticles = bs.add
-      .particles(0, 0, "particle", {
-        follow: red,
-        scale: { start: 0.5, end: 0 },
-        lifespan: 200,
-        tint: 0xff0000,
-        blendMode: "ADD",
-      })
-      .setDepth(8);
-      } catch(e) {}
+      redParticles = bs.add
+        .particles(0, 0, "particle", {
+          follow: red,
+          scale: { start: 0.5, end: 0 },
+          lifespan: 200,
+          tint: 0xff0000,
+          blendMode: "ADD",
+        })
+        .setDepth(8);
+    } catch (e) {}
 
     bs.tweens.add({
       targets: [blue, red, blueGlow, redGlow, blueCore, redCore],
@@ -183,11 +195,11 @@ export class GojoFighter extends Fighter {
             red.destroy();
             redGlow.destroy();
             redCore.destroy();
-            if(blueParticles) blueParticles.stop();
-            if(redParticles) redParticles.stop();
+            if (blueParticles) blueParticles.stop();
+            if (redParticles) redParticles.stop();
             bs.time.delayedCall(200, () => {
-              if(blueParticles) blueParticles.destroy();
-              if(redParticles) redParticles.destroy();
+              if (blueParticles) blueParticles.destroy();
+              if (redParticles) redParticles.destroy();
             });
 
             bs.createScreenFlash(0x8a2be2, 500, 1);
@@ -238,10 +250,16 @@ export class GojoFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialHollowPurple
     const dmg = Math.floor(150 * bs.getDamageMultiplier(transLevel));
 
@@ -271,7 +289,13 @@ export class GojoFighter extends Fighter {
       .setBlendMode(Phaser.BlendModes.ADD)
       .setAlpha(0.6);
     const blue = bs.add
-      .circle(hand.x - (attacker.x < target.x ? 40 : -40), hand.y, 20, 0x0000ff, 1)
+      .circle(
+        hand.x - (attacker.x < target.x ? 40 : -40),
+        hand.y,
+        20,
+        0x0000ff,
+        1,
+      )
       .setDepth(10)
       .setBlendMode(Phaser.BlendModes.ADD);
 
@@ -281,7 +305,13 @@ export class GojoFighter extends Fighter {
       .setBlendMode(Phaser.BlendModes.ADD)
       .setAlpha(0.6);
     const red = bs.add
-      .circle(hand.x + (attacker.x < target.x ? 40 : -40), hand.y, 20, 0xff0000, 1)
+      .circle(
+        hand.x + (attacker.x < target.x ? 40 : -40),
+        hand.y,
+        20,
+        0xff0000,
+        1,
+      )
       .setDepth(10)
       .setBlendMode(Phaser.BlendModes.ADD);
 
@@ -403,7 +433,12 @@ export class GojoFighter extends Fighter {
                 Math.abs(purple.x - target.x) < 120
               ) {
                 attacker.setData("hollowPurpleTriggered", true);
-                bs.createImpactEffect(target.x, target.y + 120, 0x8a2be2, "beam");
+                bs.createImpactEffect(
+                  target.x,
+                  target.y + 120,
+                  0x8a2be2,
+                  "beam",
+                );
                 bs.cameras.main.shake(300, 0.15);
 
                 // Spatial distortion rings

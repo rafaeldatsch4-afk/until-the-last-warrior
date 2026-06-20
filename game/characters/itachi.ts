@@ -1,19 +1,27 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class ItachiFighter extends Fighter {
-  readonly key = 'itachi';
-  readonly specialName = 'AMATERASU';
-  readonly superName = 'TSUKUYOMI';
+  readonly key = "itachi";
+  readonly specialName = "AMATERASU";
+  readonly superName = "TSUKUYOMI";
   readonly specialColor = 0xff0000;
 
   performTransform(scene: any, isPlayer: boolean): void {
-      // Basic transform is handled by the overall BattleScene sequence
+    // Basic transform is handled by the overall BattleScene sequence
   }
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
 
@@ -140,9 +148,15 @@ export class ItachiFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     // specialAmaterasu
     const dmg = Math.floor(40 * bs.getDamageMultiplier(transformLevel));
 
@@ -152,7 +166,13 @@ export class ItachiFighter extends Fighter {
 
     // Eye bleeding effect on attacker (Itachi)
     const eyeBleed = bs.add
-      .rectangle(attacker.x + (isPlayer ? 5 : -5), attacker.y - 25, 2, 10, 0xff0000)
+      .rectangle(
+        attacker.x + (isPlayer ? 5 : -5),
+        attacker.y - 25,
+        2,
+        10,
+        0xff0000,
+      )
       .setDepth(15);
     bs.tweens.add({
       targets: eyeBleed,
@@ -256,9 +276,15 @@ export class ItachiFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     // specialTsukuyomi
     const dmg = Math.floor(100 * bs.getDamageMultiplier(transformLevel));
 

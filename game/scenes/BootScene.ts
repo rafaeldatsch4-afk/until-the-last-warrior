@@ -1,72 +1,90 @@
-
-import Phaser from 'phaser';
-import { INITIAL_CHARACTERS } from '../data';
-import { GameState } from '../types';
+import Phaser from "phaser";
+import { INITIAL_CHARACTERS } from "../data";
+import { GameState } from "../types";
 
 export default class BootScene extends Phaser.Scene {
   declare registry: Phaser.Data.DataManager;
   declare scene: Phaser.Scenes.ScenePlugin;
 
   constructor() {
-    super('BootScene');
+    super("BootScene");
   }
 
   create() {
     // Initialize Global Game State if it doesn't exist
     if (!window.UTLW) {
-      console.log('Initializing Game State...');
-      
+      console.log("Initializing Game State...");
+
       // Default State
       const defaultState: GameState = {
-          coins: 1000,
-          difficulty: 1,
-          gameMode: 'single',
-          selectedCharacterId: 0,
-          p1CharacterId: 0,
-          p2CharacterId: 1,
-          characters: JSON.parse(JSON.stringify(INITIAL_CHARACTERS)) // Deep copy
+        coins: 1000,
+        difficulty: 1,
+        gameMode: "single",
+        selectedCharacterId: 0,
+        p1CharacterId: 0,
+        p2CharacterId: 1,
+        characters: JSON.parse(JSON.stringify(INITIAL_CHARACTERS)), // Deep copy
       };
 
       // Attempt to load from LocalStorage
       try {
-        const savedData = localStorage.getItem('utlw_save_v1');
+        const savedData = localStorage.getItem("utlw_save_v1");
         if (savedData) {
           const parsed = JSON.parse(savedData);
-          console.log('Found save data:', parsed);
-          
+          console.log("Found save data:", parsed);
+
           // Restore basic stats safely
-          if (typeof parsed.coins === 'number' && !isNaN(parsed.coins)) defaultState.coins = parsed.coins;
-          if (typeof parsed.difficulty === 'number' && !isNaN(parsed.difficulty)) defaultState.difficulty = parsed.difficulty;
-          if (typeof parsed.gameMode === 'string') defaultState.gameMode = parsed.gameMode;
-          if (typeof parsed.p1CharacterId === 'number' && !isNaN(parsed.p1CharacterId)) defaultState.p1CharacterId = parsed.p1CharacterId;
-          if (typeof parsed.p2CharacterId === 'number' && !isNaN(parsed.p2CharacterId)) defaultState.p2CharacterId = parsed.p2CharacterId;
+          if (typeof parsed.coins === "number" && !isNaN(parsed.coins))
+            defaultState.coins = parsed.coins;
+          if (
+            typeof parsed.difficulty === "number" &&
+            !isNaN(parsed.difficulty)
+          )
+            defaultState.difficulty = parsed.difficulty;
+          if (typeof parsed.gameMode === "string")
+            defaultState.gameMode = parsed.gameMode;
+          if (
+            typeof parsed.p1CharacterId === "number" &&
+            !isNaN(parsed.p1CharacterId)
+          )
+            defaultState.p1CharacterId = parsed.p1CharacterId;
+          if (
+            typeof parsed.p2CharacterId === "number" &&
+            !isNaN(parsed.p2CharacterId)
+          )
+            defaultState.p2CharacterId = parsed.p2CharacterId;
 
           // Restore unlocked characters safely
           if (parsed && Array.isArray(parsed.characters)) {
             parsed.characters.forEach((savedChar: any) => {
-              if(!savedChar) return;
-              const match = defaultState.characters.find(c => c.id === savedChar.id);
-              if (match && typeof savedChar.unlocked === 'boolean') {
+              if (!savedChar) return;
+              const match = defaultState.characters.find(
+                (c) => c.id === savedChar.id,
+              );
+              if (match && typeof savedChar.unlocked === "boolean") {
                 // We only persist the unlock if it is true, or if it explicitly matches our logic.
                 // However, since we want to persist *lock* states if needed, we'll simply assign it if true.
                 // It's safer to only unlock if saved as unlocked, so default free chars remain free.
                 if (savedChar.unlocked === true) {
-                    match.unlocked = true;
-                    console.log(`Restored unlocked char: ${match.name}`);
+                  match.unlocked = true;
+                  console.log(`Restored unlocked char: ${match.name}`);
                 }
               } else if (!match && savedChar.id === 999) {
-                if (savedChar.key === 'custom_999' && savedChar.customData) {
+                if (savedChar.key === "custom_999" && savedChar.customData) {
                   defaultState.characters.push(savedChar);
-                  console.log('Restored custom character from save.');
+                  console.log("Restored custom character from save.");
                 } else {
-                  console.warn('Skipped corrupted custom character save:', savedChar);
+                  console.warn(
+                    "Skipped corrupted custom character save:",
+                    savedChar,
+                  );
                 }
               }
             });
           }
         }
       } catch (e) {
-        console.error('Failed to load save data:', e);
+        console.error("Failed to load save data:", e);
         // Fallback to default state silently if corrupt
       }
 
@@ -81,32 +99,32 @@ export default class BootScene extends Phaser.Scene {
               gameMode: window.UTLW.state.gameMode,
               p1CharacterId: window.UTLW.state.p1CharacterId,
               p2CharacterId: window.UTLW.state.p2CharacterId,
-              characters: window.UTLW.state.characters.map(c => {
-                 if (c.id === 999) return c; // Save full raw data for custom character
-                 return { id: c.id, unlocked: c.unlocked };
-              })
+              characters: window.UTLW.state.characters.map((c) => {
+                if (c.id === 999) return c; // Save full raw data for custom character
+                return { id: c.id, unlocked: c.unlocked };
+              }),
             };
-            localStorage.setItem('utlw_save_v1', JSON.stringify(dataToSave));
+            localStorage.setItem("utlw_save_v1", JSON.stringify(dataToSave));
             // console.log('Game Saved'); // Uncomment for debugging
           } catch (e) {
-            console.error('Failed to save game:', e);
+            console.error("Failed to save game:", e);
           }
-        }
+        },
       };
 
       // --- AUTO SAVE SYSTEM ---
       // Automatically save every 5 seconds to prevent data loss on reload/crash
       setInterval(() => {
-          if(window.UTLW && window.UTLW.save) {
-              window.UTLW.save();
-          }
+        if (window.UTLW && window.UTLW.save) {
+          window.UTLW.save();
+        }
       }, 5000);
-      console.log('Auto-Save initialized (5s interval)');
+      console.log("Auto-Save initialized (5s interval)");
     }
 
     // Ensure registry is synced
-    this.registry.set('gameState', window.UTLW.state);
+    this.registry.set("gameState", window.UTLW.state);
 
-    this.scene.start('PreloadScene');
+    this.scene.start("PreloadScene");
   }
 }

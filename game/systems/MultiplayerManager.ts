@@ -11,7 +11,7 @@ export interface MatchStartData {
 export class MultiplayerManager {
   private static instance: MultiplayerManager;
   private socket: Socket | null = null;
-  
+
   public isConnected: boolean = false;
   public roomCode: string = "";
   public localPlayerIndex: 1 | 2 = 1; // 1 = Host/P1, 2 = Guest/P2
@@ -39,28 +39,41 @@ export class MultiplayerManager {
     if (this.socket) return;
 
     // Use current window location to connect directly to the Express server
-    const railwayUrl = "https://until-the-last-warrior-production.up.railway.app";
+    const railwayUrl =
+      "https://until-the-last-warrior-production.up.railway.app";
     const envUrl = import.meta.env.VITE_MULTIPLAYER_URL;
     let url = envUrl || railwayUrl;
-    
+
     // Always connect to the local server in AI Studio preview or local dev
-    if (window.location.hostname.includes("run.app") || window.location.hostname === "localhost") {
+    if (
+      window.location.hostname.includes("run.app") ||
+      window.location.hostname === "localhost"
+    ) {
       url = "";
     }
-    
-    console.log(`Connecting to Multiplayer server at ${url || "default host"}...`);
+
+    console.log(
+      `Connecting to Multiplayer server at ${url || "default host"}...`,
+    );
     this.socket = io(url, {
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      withCredentials: true // Required for AI Studio preview proxy authentication cookies
+      withCredentials: true, // Required for AI Studio preview proxy authentication cookies
     });
 
     this.socket.on("connect_error", (err: any) => {
-      console.error("Socket connection error:", err.message, err.description, err.context);
+      console.error(
+        "Socket connection error:",
+        err.message,
+        err.description,
+        err.context,
+      );
       if (this.onErrorCallback) {
-        this.onErrorCallback("Erro de Conexão com o Servidor PvP. Tentando novamente...");
+        this.onErrorCallback(
+          "Erro de Conexão com o Servidor PvP. Tentando novamente...",
+        );
       }
     });
 
@@ -73,12 +86,15 @@ export class MultiplayerManager {
       console.log("Connected to Multiplayer Server successfully.");
     });
 
-    this.socket.on("waitingForOpponent", (data: { roomCode: string; isPrivate?: boolean }) => {
-      this.roomCode = data.roomCode;
-      if (this.onWaitingCallback) {
-        this.onWaitingCallback(data.roomCode, data.isPrivate);
-      }
-    });
+    this.socket.on(
+      "waitingForOpponent",
+      (data: { roomCode: string; isPrivate?: boolean }) => {
+        this.roomCode = data.roomCode;
+        if (this.onWaitingCallback) {
+          this.onWaitingCallback(data.roomCode, data.isPrivate);
+        }
+      },
+    );
 
     this.socket.on("matchStart", (data: MatchStartData) => {
       this.roomCode = data.roomCode;
@@ -128,17 +144,33 @@ export class MultiplayerManager {
     }
   }
 
-  public createPrivateRoom(playerName: string, characterId: number, roomCode: string) {
+  public createPrivateRoom(
+    playerName: string,
+    characterId: number,
+    roomCode: string,
+  ) {
     this.connect();
     if (this.socket) {
-      this.socket.emit("createPrivateRoom", { name: playerName, characterId, roomCode });
+      this.socket.emit("createPrivateRoom", {
+        name: playerName,
+        characterId,
+        roomCode,
+      });
     }
   }
 
-  public joinPrivateRoom(playerName: string, characterId: number, roomCode: string) {
+  public joinPrivateRoom(
+    playerName: string,
+    characterId: number,
+    roomCode: string,
+  ) {
     this.connect();
     if (this.socket) {
-      this.socket.emit("joinPrivateRoom", { name: playerName, characterId, roomCode });
+      this.socket.emit("joinPrivateRoom", {
+        name: playerName,
+        characterId,
+        roomCode,
+      });
     }
   }
 

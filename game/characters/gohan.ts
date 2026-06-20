@@ -1,15 +1,23 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class GohanFighter extends Fighter {
-  readonly key = 'gohan';
-  readonly specialName = 'MASENKO';
-  readonly superName = 'FATHER-SON KAMEHAMEHA';
+  readonly key = "gohan";
+  readonly specialName = "MASENKO";
+  readonly superName = "FATHER-SON KAMEHAMEHA";
   readonly specialColor = 0xffff00;
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
@@ -96,18 +104,30 @@ export class GohanFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     bs.specialBeam(isPlayer, false, 0xffff00, true, false, "masenko");
 
     return null as any;
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     const dmg = Math.floor(115 * bs.getDamageMultiplier(transformLevel));
     const hand = bs.getHandPosition(isPlayer);
 
@@ -116,7 +136,12 @@ export class GohanFighter extends Fighter {
 
     // Ghost Goku (Visual representation)
     const ghost = bs.add
-      .sprite(attacker.x + (attacker.x < target.x ? -40 : 40), attacker.y - 60, "goku_ssj", "0")
+      .sprite(
+        attacker.x + (attacker.x < target.x ? -40 : 40),
+        attacker.y - 60,
+        "goku_ssj",
+        "0",
+      )
       .setOrigin(0.5, 0.5)
       .setAlpha(0)
       .setScale(3.5)
@@ -128,9 +153,7 @@ export class GohanFighter extends Fighter {
     bs.tweens.add({ targets: ghost, alpha: 0.85, duration: 500 });
 
     // Charge Effect
-    const chargeCore = bs.add
-      .circle(hand.x, hand.y, 2, 0xffffff)
-      .setDepth(16);
+    const chargeCore = bs.add.circle(hand.x, hand.y, 2, 0xffffff).setDepth(16);
     const chargeGlow = bs.add
       .circle(hand.x, hand.y, 5, 0x00ffff)
       .setDepth(15)
@@ -182,9 +205,7 @@ export class GohanFighter extends Fighter {
         const targetScaleX = (isPlayer ? distance : -distance) / 128; // 128 is the width of massive_beam
 
         // Muzzle Flash
-        const muzzle = bs.add
-          .circle(hand.x, hand.y, 80, 0x00ffff)
-          .setDepth(6);
+        const muzzle = bs.add.circle(hand.x, hand.y, 80, 0x00ffff).setDepth(6);
         muzzle.setBlendMode(Phaser.BlendModes.ADD);
         bs.tweens.add({
           targets: muzzle,
@@ -242,7 +263,11 @@ export class GohanFighter extends Fighter {
     return null as any;
   }
 
-  performTransform(scene: Phaser.Scene, isPlayer: boolean, level: number): void {
-      // not yet extracted correctly 
+  performTransform(
+    scene: Phaser.Scene,
+    isPlayer: boolean,
+    level: number,
+  ): void {
+    // not yet extracted correctly
   }
 }

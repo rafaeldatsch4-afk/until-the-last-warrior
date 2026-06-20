@@ -1,19 +1,27 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class CyberNinjaFighter extends Fighter {
-  readonly key = 'cyberninja';
-  readonly specialName = 'PLASMA DASH';
-  readonly superName = 'CYBER OVERDRIVE';
+  readonly key = "cyberninja";
+  readonly specialName = "PLASMA DASH";
+  readonly superName = "CYBER OVERDRIVE";
   readonly specialColor = 0x00eaff;
 
   performTransform(scene: any, isPlayer: boolean): void {}
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    const startX = attacker ? attacker.x : (isPlayer ? bs.player.x : bs.enemy.x);
+    const startX = attacker ? attacker.x : isPlayer ? bs.player.x : bs.enemy.x;
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
@@ -48,8 +56,7 @@ export class CyberNinjaFighter extends Fighter {
           bs.takeDamage(
             !isPlayer,
             Math.floor(
-              (isComboFinisher ? 22 : 12) *
-                bs.getDamageMultiplier(transLevel),
+              (isComboFinisher ? 22 : 12) * bs.getDamageMultiplier(transLevel),
             ),
           );
 
@@ -78,9 +85,7 @@ export class CyberNinjaFighter extends Fighter {
               duration: 150,
               onComplete: () => {
                 attacker.setFlipX(isPlayer ? false : true); // Reset flip
-                attacker.play(
-                  bs.getAnimKey("cyberninja", transLevel, "idle"),
-                );
+                attacker.play(bs.getAnimKey("cyberninja", transLevel, "idle"));
                 bs.setActionState(isPlayer, false);
               },
             });
@@ -139,12 +144,18 @@ export class CyberNinjaFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
     const transLevel = transformLevel;
-    
+
     // specialPlasmaDash
     const isS = false;
     const baseDmg = isS ? 60 : 35;
@@ -280,12 +291,18 @@ export class CyberNinjaFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
     const transLevel = transformLevel;
-    
+
     // specialCyberOverdrive
     const dmg = Math.floor(120 * bs.getDamageMultiplier(transLevel));
     const dashColor = 0xff0055; // Always red for overdrive

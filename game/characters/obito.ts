@@ -1,19 +1,27 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class ObitoFighter extends Fighter {
-  readonly key = 'obito';
-  readonly specialName = 'KAMUI';
-  readonly superName = 'TEN-TAILS BEAST BOMB';
+  readonly key = "obito";
+  readonly specialName = "KAMUI";
+  readonly superName = "TEN-TAILS BEAST BOMB";
   readonly specialColor = 0x000000;
 
   performTransform(scene: any, isPlayer: boolean): void {
-      // Basic transform is handled by the overall BattleScene sequence
+    // Basic transform is handled by the overall BattleScene sequence
   }
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
@@ -106,7 +114,7 @@ export class ObitoFighter extends Fighter {
               ),
             );
             bs.cameras.main.shake(isComboFinisher ? 150 : 50, 0.01);
-            
+
             attacker.play(bs.getAnimKey("obito", transformLevel, "idle"));
             bs.setActionState(isPlayer, false);
           },
@@ -118,9 +126,15 @@ export class ObitoFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     // Obito specialKamui
     const dmg = Math.floor(60 * bs.getDamageMultiplier(transformLevel));
     const startX = attacker.x;
@@ -176,48 +190,53 @@ export class ObitoFighter extends Fighter {
 
             // Instantly warp to target
             attacker.x = target.x + (attacker.x < target.x ? 60 : -60);
-            
+
             // Warp attacker back in
             bs.tweens.add({
-                targets: attacker,
-                scale: 2,
-                alpha: 1,
-                duration: 100,
-                onComplete: () => {
-                    // Strike
-                    bs.createImpactEffect(target.x, target.y + 120, 0x000000, "melee");
-                    bs.takeDamage(!isPlayer, dmg);
-                    bs.cameras.main.shake(200, 0.04);
-        
-                    bs.time.delayedCall(200, () => {
-                        if (!bs.scene.isActive()) return;
-                        
-                        // Warp out again
-                        bs.tweens.add({
-                            targets: attacker,
-                            scale: 0,
-                            alpha: 0,
-                            duration: 100,
-                            onComplete: () => {
-                                // Warp back to start position
-                                attacker.x = startX;
-                                bs.tweens.add({
-                                    targets: attacker,
-                                    scale: 2,
-                                    alpha: 1,
-                                    duration: 100,
-                                    onComplete: () => {
-                                        swirl.destroy();
-                                        swirlCore.destroy();
-                                        swirlGlow.destroy();
-                                        spiral.destroy();
-                                        bs.onSpecialComplete(isPlayer);
-                                    }
-                                });
-                            }
-                        });
-                    });
-                }
+              targets: attacker,
+              scale: 2,
+              alpha: 1,
+              duration: 100,
+              onComplete: () => {
+                // Strike
+                bs.createImpactEffect(
+                  target.x,
+                  target.y + 120,
+                  0x000000,
+                  "melee",
+                );
+                bs.takeDamage(!isPlayer, dmg);
+                bs.cameras.main.shake(200, 0.04);
+
+                bs.time.delayedCall(200, () => {
+                  if (!bs.scene.isActive()) return;
+
+                  // Warp out again
+                  bs.tweens.add({
+                    targets: attacker,
+                    scale: 0,
+                    alpha: 0,
+                    duration: 100,
+                    onComplete: () => {
+                      // Warp back to start position
+                      attacker.x = startX;
+                      bs.tweens.add({
+                        targets: attacker,
+                        scale: 2,
+                        alpha: 1,
+                        duration: 100,
+                        onComplete: () => {
+                          swirl.destroy();
+                          swirlCore.destroy();
+                          swirlGlow.destroy();
+                          spiral.destroy();
+                          bs.onSpecialComplete(isPlayer);
+                        },
+                      });
+                    },
+                  });
+                });
+              },
             });
           },
         });
@@ -228,9 +247,15 @@ export class ObitoFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     // specialTenTailsBeastBomb
     const dmg = Math.floor(130 * bs.getDamageMultiplier(transformLevel));
 

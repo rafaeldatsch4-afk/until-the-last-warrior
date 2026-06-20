@@ -1,15 +1,23 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class MadaraFighter extends Fighter {
-  readonly key = 'madara';
-  readonly specialName = 'MAJESTIC DESTROYER FLAME';
-  readonly superName = 'TENGAI SHINSEI';
+  readonly key = "madara";
+  readonly specialName = "MAJESTIC DESTROYER FLAME";
+  readonly superName = "TENGAI SHINSEI";
   readonly specialColor = 0xff4500;
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
@@ -29,7 +37,10 @@ export class MadaraFighter extends Fighter {
               if (bs.cache.audio.exists("sfx_attack"))
                 bs.sound.play("sfx_attack", { volume: 1.0 });
               bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
-              bs.takeDamage(!isPlayer, Math.floor(6 * bs.getDamageMultiplier(transformLevel)));
+              bs.takeDamage(
+                !isPlayer,
+                Math.floor(6 * bs.getDamageMultiplier(transformLevel)),
+              );
             });
           }
           bs.time.delayedCall(hits * 100 + 100, () => {
@@ -57,9 +68,7 @@ export class MadaraFighter extends Fighter {
 
         const kiColor = transformLevel > 0 ? 0x3b82f6 : 0xff4500;
         const hand = bs.getHandPosition(isPlayer);
-        const blast = bs.add
-          .circle(hand.x, hand.y, 15, kiColor)
-          .setDepth(5);
+        const blast = bs.add.circle(hand.x, hand.y, 15, kiColor).setDepth(5);
         const core = bs.add.circle(blast.x, blast.y, 8, 0xffffff).setDepth(6);
 
         bs.tweens.add({
@@ -71,7 +80,10 @@ export class MadaraFighter extends Fighter {
             core.destroy();
             if (!bs.scene.isActive()) return;
             bs.createImpactEffect(target.x, target.y + 120, kiColor);
-            bs.takeDamage(!isPlayer, Math.floor(12 * bs.getDamageMultiplier(transformLevel)));
+            bs.takeDamage(
+              !isPlayer,
+              Math.floor(12 * bs.getDamageMultiplier(transformLevel)),
+            );
             attacker.play(bs.getAnimKey("madara", transformLevel, "idle"));
             bs.setActionState(isPlayer, false);
           },
@@ -83,9 +95,15 @@ export class MadaraFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     const dmg = Math.floor(45 * bs.getDamageMultiplier(transformLevel));
 
     bs.log("MAJESTIC DESTROYER FLAME!");
@@ -213,27 +231,42 @@ export class MadaraFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     const dmg = Math.floor(90 * bs.getDamageMultiplier(transformLevel));
 
     bs.log("TENGAI SHINSEI!");
     bs.events.emit("super_activated", isPlayer);
 
-    const overlay = bs.add.rectangle(0, 0, 960, 540, 0x000000, 0).setOrigin(0).setDepth(18);
+    const overlay = bs.add
+      .rectangle(0, 0, 960, 540, 0x000000, 0)
+      .setOrigin(0)
+      .setDepth(18);
     bs.tweens.add({
-        targets: overlay,
-        fillAlpha: 0.8,
-        duration: 1000
+      targets: overlay,
+      fillAlpha: 0.8,
+      duration: 1000,
     });
 
-    if (bs.cache.audio.exists("sfx_charge")) bs.sound.play("sfx_charge", { volume: 1.5 });
-    
+    if (bs.cache.audio.exists("sfx_charge"))
+      bs.sound.play("sfx_charge", { volume: 1.5 });
+
     // Giant Meteor!
     const meteorColor = 0x8b4513; // Brown
-    const meteor = bs.add.circle(target.x + (isPlayer ? 100 : -100), -300, 150, meteorColor).setDepth(20);
-    const meteorGlow = bs.add.circle(meteor.x, meteor.y, 180, 0xff4500, 0.8).setBlendMode(Phaser.BlendModes.ADD).setDepth(19);
+    const meteor = bs.add
+      .circle(target.x + (isPlayer ? 100 : -100), -300, 150, meteorColor)
+      .setDepth(20);
+    const meteorGlow = bs.add
+      .circle(meteor.x, meteor.y, 180, 0xff4500, 0.8)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(19);
 
     bs.tweens.add({
       targets: [meteor, meteorGlow],
@@ -242,46 +275,53 @@ export class MadaraFighter extends Fighter {
       duration: 1500,
       ease: "Cubic.easeIn",
       onUpdate: () => {
-         bs.cameras.main.shake(100, 0.01); 
+        bs.cameras.main.shake(100, 0.01);
       },
       onComplete: () => {
-         meteor.destroy();
-         meteorGlow.destroy();
-         
-         if (!bs.scene.isActive()) return;
-         
-         bs.takeDamage(!isPlayer, dmg);
-         bs.createScreenFlash(0xffffff, 1000, 1);
-         bs.cameras.main.shake(1500, 0.2);
-         if (bs.cache.audio.exists("sfx_explosion")) bs.sound.play("sfx_explosion", { volume: 2.0 });
-         
-         for (let i = 0; i < 40; i++) {
-           const spark = bs.add.circle(target.x, target.y + 120, Math.random()*20+10, 0xff4500).setDepth(25);
-           bs.tweens.add({
-             targets: spark,
-             x: target.x + (Math.random() - 0.5) * 500,
-             y: target.y + 120 + (Math.random() - 0.5) * 300,
-             alpha: 0,
-             scale: 0,
-             duration: 600 + Math.random() * 600,
-             onComplete: () => spark.destroy()
-           });
-         }
-         
-         bs.tweens.add({
-             targets: overlay,
-             fillAlpha: 0,
-             duration: 1500,
-             onComplete: () => {
-                 overlay.destroy();
-                 bs.onSpecialComplete(isPlayer);
-             }
-         });
-      }
+        meteor.destroy();
+        meteorGlow.destroy();
+
+        if (!bs.scene.isActive()) return;
+
+        bs.takeDamage(!isPlayer, dmg);
+        bs.createScreenFlash(0xffffff, 1000, 1);
+        bs.cameras.main.shake(1500, 0.2);
+        if (bs.cache.audio.exists("sfx_explosion"))
+          bs.sound.play("sfx_explosion", { volume: 2.0 });
+
+        for (let i = 0; i < 40; i++) {
+          const spark = bs.add
+            .circle(target.x, target.y + 120, Math.random() * 20 + 10, 0xff4500)
+            .setDepth(25);
+          bs.tweens.add({
+            targets: spark,
+            x: target.x + (Math.random() - 0.5) * 500,
+            y: target.y + 120 + (Math.random() - 0.5) * 300,
+            alpha: 0,
+            scale: 0,
+            duration: 600 + Math.random() * 600,
+            onComplete: () => spark.destroy(),
+          });
+        }
+
+        bs.tweens.add({
+          targets: overlay,
+          fillAlpha: 0,
+          duration: 1500,
+          onComplete: () => {
+            overlay.destroy();
+            bs.onSpecialComplete(isPlayer);
+          },
+        });
+      },
     });
 
     return null as any;
   }
 
-  performTransform(scene: Phaser.Scene, isPlayer: boolean, level: number): void {}
+  performTransform(
+    scene: Phaser.Scene,
+    isPlayer: boolean,
+    level: number,
+  ): void {}
 }

@@ -1,15 +1,23 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class PiccoloFighter extends Fighter {
-  readonly key = 'piccolo';
-  readonly specialName = 'MAKANKOSAPPO';
-  readonly superName = 'HELLZONE GRENADE';
+  readonly key = "piccolo";
+  readonly specialName = "MAKANKOSAPPO";
+  readonly superName = "HELLZONE GRENADE";
   readonly specialColor = 0xffaa00;
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
@@ -101,11 +109,11 @@ export class PiccoloFighter extends Fighter {
             (isComboFinisher ? 15 : 8) * bs.getDamageMultiplier(transformLevel),
           ),
         );
-        
+
         bs.time.delayedCall(100, () => {
-            if (!bs.scene.isActive()) return;
-            attacker.play(bs.getAnimKey("piccolo", transformLevel, "idle"));
-            bs.setActionState(isPlayer, false);
+          if (!bs.scene.isActive()) return;
+          attacker.play(bs.getAnimKey("piccolo", transformLevel, "idle"));
+          bs.setActionState(isPlayer, false);
         });
       });
     }
@@ -114,9 +122,15 @@ export class PiccoloFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     // specialMakanko(isPlayer, false)
     const baseDmg = 45;
     const dmg = Math.floor(baseDmg * bs.getDamageMultiplier(transformLevel));
@@ -127,9 +141,7 @@ export class PiccoloFighter extends Fighter {
     bs.log("MAKANKOSAPPO!");
 
     // Charge Effect
-    const chargeCore = bs.add
-      .circle(hand.x, hand.y, 2, 0xffffff)
-      .setDepth(16);
+    const chargeCore = bs.add.circle(hand.x, hand.y, 2, 0xffffff).setDepth(16);
     const chargeGlow = bs.add
       .circle(hand.x, hand.y, 5, 0xffaa00)
       .setDepth(15)
@@ -297,9 +309,15 @@ export class PiccoloFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     // specialHellzoneGrenade
     const dmg = Math.floor(105 * bs.getDamageMultiplier(transformLevel));
 
@@ -319,10 +337,7 @@ export class PiccoloFighter extends Fighter {
         .setDepth(14)
         .setAlpha(0)
         .setBlendMode(Phaser.BlendModes.ADD);
-      const orb = bs.add
-        .circle(ox, oy, 12, 0xffffff)
-        .setDepth(15)
-        .setAlpha(0);
+      const orb = bs.add.circle(ox, oy, 12, 0xffffff).setDepth(15).setAlpha(0);
 
       orbs.push({ orb, orbGlow });
 
@@ -430,5 +445,9 @@ export class PiccoloFighter extends Fighter {
     return null as any;
   }
 
-  performTransform(scene: Phaser.Scene, isPlayer: boolean, level: number): void {}
+  performTransform(
+    scene: Phaser.Scene,
+    isPlayer: boolean,
+    level: number,
+  ): void {}
 }

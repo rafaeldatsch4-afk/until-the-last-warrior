@@ -1,20 +1,28 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class BatmanFighter extends Fighter {
-  readonly key = 'batman';
-  readonly specialName = 'BATARANG';
-  readonly superName = 'THE DARK KNIGHT';
+  readonly key = "batman";
+  readonly specialName = "BATARANG";
+  readonly superName = "THE DARK KNIGHT";
   readonly specialColor = 0xf1c40f;
 
   performTransform(scene: any, isPlayer: boolean): void {}
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    const startX = attacker ? attacker.x : (isPlayer ? bs.player.x : bs.enemy.x);
-    const startY = attacker ? attacker.y : (isPlayer ? bs.player.y : bs.enemy.y);
+    const startX = attacker ? attacker.x : isPlayer ? bs.player.x : bs.enemy.x;
+    const startY = attacker ? attacker.y : isPlayer ? bs.player.y : bs.enemy.y;
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
@@ -34,8 +42,7 @@ export class BatmanFighter extends Fighter {
           bs.takeDamage(
             !isPlayer,
             Math.floor(
-              (isComboFinisher ? 18 : 10) *
-                bs.getDamageMultiplier(transLevel),
+              (isComboFinisher ? 18 : 10) * bs.getDamageMultiplier(transLevel),
             ),
           );
           target.y -= 20; // Knock up slightly
@@ -101,8 +108,7 @@ export class BatmanFighter extends Fighter {
             bs.takeDamage(
               !isPlayer,
               Math.floor(
-                (isComboFinisher ? 15 : 8) *
-                  bs.getDamageMultiplier(transLevel),
+                (isComboFinisher ? 15 : 8) * bs.getDamageMultiplier(transLevel),
               ),
             );
           },
@@ -120,10 +126,16 @@ export class BatmanFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const transLevel = transformLevel;
-    
+
     // specialBatarang
     const dmg = Math.floor(35 * bs.getDamageMultiplier(transLevel));
 
@@ -134,32 +146,36 @@ export class BatmanFighter extends Fighter {
 
     // Throw 5 batarangs
     for (let i = 0; i < 5; i++) {
-        // batarang logic uses game resources if "batarang" key exists. Let's use it.
+      // batarang logic uses game resources if "batarang" key exists. Let's use it.
       bs.time.delayedCall(i * 100, () => {
         if (!bs.scene.isActive()) return;
 
         let hasTexture = bs.textures.exists("batarang");
 
-        const batarangGlow = hasTexture ? bs.add
-          .sprite(hand.x, hand.y, "batarang")
-          .setOrigin(0.5, 0.5)
-          .setDepth(14)
-          .setTint(0x00eaff)
-          .setBlendMode(Phaser.BlendModes.ADD)
-          .setAlpha(0.6)
-          .setScale(1.5) : bs.add.circle(hand.x, hand.y, 10, 0x00eaff).setDepth(14);
+        const batarangGlow = hasTexture
+          ? bs.add
+              .sprite(hand.x, hand.y, "batarang")
+              .setOrigin(0.5, 0.5)
+              .setDepth(14)
+              .setTint(0x00eaff)
+              .setBlendMode(Phaser.BlendModes.ADD)
+              .setAlpha(0.6)
+              .setScale(1.5)
+          : bs.add.circle(hand.x, hand.y, 10, 0x00eaff).setDepth(14);
 
-        const batarang = hasTexture ? bs.add
-          .sprite(hand.x, hand.y, "batarang")
-          .setOrigin(0.5, 0.5)
-          .setDepth(15) : bs.add.circle(hand.x, hand.y, 5, 0x333333).setDepth(15);
+        const batarang = hasTexture
+          ? bs.add
+              .sprite(hand.x, hand.y, "batarang")
+              .setOrigin(0.5, 0.5)
+              .setDepth(15)
+          : bs.add.circle(hand.x, hand.y, 5, 0x333333).setDepth(15);
 
         // Trail - fallback if no particle texture
         let trailConfig: any = {
-            scale: { start: 1, end: 0 },
-            lifespan: 200,
-            tint: 0x00eaff,
-            blendMode: "ADD",
+          scale: { start: 1, end: 0 },
+          lifespan: 200,
+          tint: 0x00eaff,
+          blendMode: "ADD",
         };
         // wait, I should just use "particle" as the author did.
         let trailKey = "particle";
@@ -167,12 +183,12 @@ export class BatmanFighter extends Fighter {
         trailConfig.follow = batarang;
 
         try {
-            const trail = bs.add
-                .particles(0, 0, trailKey, trailConfig)
-                .setDepth(13);
-            
-            bs.time.delayedCall(200, () => trail.destroy());
-        } catch(e) {}
+          const trail = bs.add
+            .particles(0, 0, trailKey, trailConfig)
+            .setDepth(13);
+
+          bs.time.delayedCall(200, () => trail.destroy());
+        } catch (e) {}
 
         // Spin animation
         bs.tweens.add({
@@ -242,11 +258,17 @@ export class BatmanFighter extends Fighter {
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const transLevel = transformLevel;
-    
+
     // specialTheDarkKnight
     const dmg = Math.floor(100 * bs.getDamageMultiplier(transLevel));
 

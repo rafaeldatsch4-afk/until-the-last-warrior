@@ -1,15 +1,23 @@
-import Phaser from 'phaser';
-import { Fighter } from './base/Fighter';
-import { AttackParams, AttackResult } from './base/FighterTypes';
+import Phaser from "phaser";
+import { Fighter } from "./base/Fighter";
+import { AttackParams, AttackResult } from "./base/FighterTypes";
 
 export class VegetaFighter extends Fighter {
-  readonly key = 'vegeta';
-  readonly specialName = 'BIG BANG ATTACK'; // or GALICK GUN, but let's use what data had: "BIG BANG ATTACK"
-  readonly superName = 'FINAL FLASH';
-  readonly specialColor = 0x0000ff; // Need to verify if it's 0x0000ff. I can just use whatever was passed in performCastSequence. 
+  readonly key = "vegeta";
+  readonly specialName = "BIG BANG ATTACK"; // or GALICK GUN, but let's use what data had: "BIG BANG ATTACK"
+  readonly superName = "FINAL FLASH";
+  readonly specialColor = 0x0000ff; // Need to verify if it's 0x0000ff. I can just use whatever was passed in performCastSequence.
 
   performAttack(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, attackType, isComboFinisher, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      attackType,
+      isComboFinisher,
+      transformLevel,
+    } = params;
     const bs = scene as any;
     const startX = attacker.x;
     const startY = attacker.y;
@@ -34,7 +42,10 @@ export class VegetaFighter extends Fighter {
                 target.y + 120 + (Math.random() * 20 - 10),
                 0xffffff,
               );
-              bs.takeDamage(!isPlayer, Math.floor(5 * bs.getDamageMultiplier(transformLevel)));
+              bs.takeDamage(
+                !isPlayer,
+                Math.floor(5 * bs.getDamageMultiplier(transformLevel)),
+              );
               bs.modifyKi(isPlayer, 2);
             });
           }
@@ -77,7 +88,10 @@ export class VegetaFighter extends Fighter {
                 target.y + 120 + (Math.random() * 40 - 20),
                 0xffff00,
               );
-              bs.takeDamage(!isPlayer, Math.floor(4 * bs.getDamageMultiplier(transformLevel)));
+              bs.takeDamage(
+                !isPlayer,
+                Math.floor(4 * bs.getDamageMultiplier(transformLevel)),
+              );
             },
           });
         });
@@ -93,16 +107,28 @@ export class VegetaFighter extends Fighter {
   }
 
   performSpecial(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
-    
+
     bs.specialBeam(isPlayer, false, 0x9b59b6, true, true, "galick");
-    
+
     return null as any;
   }
 
   performSuper(params: AttackParams): AttackResult {
-    const { scene, attacker, defender: target, isPlayer, transformLevel } = params;
+    const {
+      scene,
+      attacker,
+      defender: target,
+      isPlayer,
+      transformLevel,
+    } = params;
     const bs = scene as any;
 
     const dmg = Math.floor(110 * bs.getDamageMultiplier(transformLevel));
@@ -116,9 +142,7 @@ export class VegetaFighter extends Fighter {
       .circle(hand.x, hand.y, 5, 0xffff00)
       .setDepth(15)
       .setBlendMode(Phaser.BlendModes.ADD);
-    const chargeCore = bs.add
-      .circle(hand.x, hand.y, 2, 0xffffff)
-      .setDepth(16);
+    const chargeCore = bs.add.circle(hand.x, hand.y, 2, 0xffffff).setDepth(16);
 
     bs.cameras.main.shake(800, 0.01); // Shake while charging
 
@@ -271,7 +295,11 @@ export class VegetaFighter extends Fighter {
     return null as any;
   }
 
-  performTransform(scene: Phaser.Scene, isPlayer: boolean, level: number): void {
-      // To be implemented if we pull UI/UE transformations
+  performTransform(
+    scene: Phaser.Scene,
+    isPlayer: boolean,
+    level: number,
+  ): void {
+    // To be implemented if we pull UI/UE transformations
   }
 }

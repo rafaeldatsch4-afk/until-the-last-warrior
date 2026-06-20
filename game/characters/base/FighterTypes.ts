@@ -1,11 +1,11 @@
-import Phaser from 'phaser';
+import Phaser from "phaser";
 
 export interface AttackParams {
   scene: Phaser.Scene;
   attacker: Phaser.GameObjects.Sprite;
   defender: Phaser.GameObjects.Sprite;
   isPlayer: boolean;
-  attackType: 'melee' | 'ki';
+  attackType: "melee" | "ki";
   comboCount: number;
   isComboFinisher: boolean;
   transformLevel: number;
