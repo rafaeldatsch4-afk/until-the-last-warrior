@@ -188,7 +188,8 @@ export function generateGokuSprite(scene: Phaser.Scene) {
           (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) +
           shiftX +
           ox;
-        const finalYPose = isAttack || isDefend ? y + poseOffsetY / 2 : y;
+        const finalYPose =
+          isAttack || isDefend || isCharge ? y + poseOffsetY / 2 : y;
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -206,7 +207,8 @@ export function generateGokuSprite(scene: Phaser.Scene) {
           (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) +
           shiftX +
           ox;
-        const finalYPose = isAttack || isDefend ? y + poseOffsetY / 2 : y;
+        const finalYPose =
+          isAttack || isDefend || isCharge ? y + poseOffsetY / 2 : y;
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,

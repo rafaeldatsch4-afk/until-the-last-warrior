@@ -714,31 +714,41 @@ export function generateCustomSprite(
           headDot(16, 8, eyebrowColor);
 
           // Widow's peak base
-          headBox(14, 5, 4, 1, hairColor);
+          headBox(13, 5, 6, 1, hairColor); // wider peak base
           headDot(15, 6, hairColor);
           headDot(16, 6, hairColor);
 
-          headBox(12, 5, 2, 3, hairColor); // side burns
-          headBox(18, 5, 2, 3, hairColor);
+          headBox(11, 5, 2, 3, hairColor); // thicker side burns
+          headBox(19, 5, 2, 3, hairColor);
 
           if (isTransformed) {
             // Super Saiyan Vegeta hair stands straight up
-            headBox(10, 0, 12, 5, hairColor); // Base volume
-            headBox(11, -3, 10, 5, hairColor);
-            headBox(12, -6, 8, 3, hairColor);
-            headBox(13, -8, 6, 2, hairColor);
-            headBox(14, -10, 4, 2, hairColor); // Central spike
-            headBox(8, -1, 2, 4, hairColor); // side flares
-            headBox(22, -1, 2, 4, hairColor);
+            headBox(10, 0, 12, 5, hairColor); // Base volume covers y=0..4
+            headBox(10, -3, 12, 3, hairColor); // Fill corners
+            headBox(11, -6, 10, 4, hairColor);
+            headBox(12, -9, 8, 4, hairColor);
+            headBox(13, -12, 6, 4, hairColor);
+            headBox(14, -14, 4, 3, hairColor); // Central spike
+            
+            // Side flares tightly connected
+            headBox(8, -4, 2, 6, hairColor); 
+            headBox(7, -2, 1, 4, hairColor);
+            headBox(22, -4, 2, 6, hairColor);
+            headBox(24, -2, 1, 4, hairColor);
           } else {
             // Base Vegeta hair
             headBox(10, 0, 12, 5, hairColor);
-            headBox(11, -2, 10, 2, hairColor);
-            headBox(12, -4, 8, 2, hairColor);
-            headBox(13, -6, 6, 2, hairColor);
-            headBox(14, -8, 4, 2, hairColor);
-            headBox(8, -1, 2, 4, hairColor);
-            headBox(22, -1, 2, 4, hairColor);
+            headBox(10, -2, 12, 2, hairColor);
+            headBox(11, -5, 10, 4, hairColor);
+            headBox(12, -8, 8, 4, hairColor);
+            headBox(13, -10, 6, 3, hairColor);
+            headBox(14, -12, 4, 3, hairColor);
+            
+            // Side flares 
+            headBox(8, -2, 2, 5, hairColor);
+            headBox(7, 0, 1, 3, hairColor);
+            headBox(22, -2, 2, 5, hairColor);
+            headBox(24, 0, 1, 3, hairColor);
           }
 
           if (isAttack) {

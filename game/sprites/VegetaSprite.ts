@@ -188,7 +188,8 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) +
           shiftX +
           ox;
-        const finalYPose = isAttack || isDefend ? y + poseOffsetY / 2 : y;
+        const finalYPose =
+          isAttack || isDefend || isCharge ? y + poseOffsetY / 2 : y;
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -206,7 +207,8 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) +
           shiftX +
           ox;
-        const finalYPose = isAttack || isDefend ? y + poseOffsetY / 2 : y;
+        const finalYPose =
+          isAttack || isDefend || isCharge ? y + poseOffsetY / 2 : y;
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -447,53 +449,56 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
 
         if (isTransformed) {
           // SUPER SAIYAN DYNAMIC HAIR
-          headBox(10, -5, 12, 10, HAIR); // Base volume
-          headBox(11, -10, 10, 5, HAIR);
+          // Base volume (height 11 avoids y=5 gap over forehead)
+          headBox(10, -5, 12, 11, HAIR); 
+          headBox(10, -8, 12, 4, HAIR); // Fill corner gaps
+          headBox(11, -12, 10, 5, HAIR);
           headBox(12, -15, 8, 5, HAIR);
-          headBox(13, -18, 6, 3, HAIR);
-          headBox(14, -20, 4, 2, HAIR);
+          headBox(13, -19, 6, 5, HAIR);
+          headBox(14, -22, 4, 4, HAIR);
 
-          // Side flares tightly connected
+          // Side flares tightly connected to center
           headBox(8, -8, 2, 8, HAIR); 
-          headBox(7, -6, 1, 4, HAIR); 
+          headBox(7, -5, 1, 4, HAIR); 
           headBox(22, -8, 2, 8, HAIR);
-          headBox(24, -6, 1, 4, HAIR);
+          headBox(24, -5, 1, 4, HAIR);
 
           // Hair highlights and shading for golden volume
           const LIGHT = isUI ? 0xd2b4de : 0xffcf40;
           const SHADE = isUI ? 0x732d91 : 0xcfa000;
 
           // Inner highlights
-          headBox(14, -18, 2, 10, LIGHT);
+          headBox(14, -20, 2, 12, LIGHT);
           headBox(12, -12, 2, 8, LIGHT);
           headBox(18, -12, 2, 8, LIGHT);
-
+          
           // Shadows
           headBox(16, -18, 1, 10, SHADE);
           headBox(11, -12, 1, 10, SHADE);
           headBox(20, -12, 1, 10, SHADE);
         } else {
           // BASE FORM FLAME HAIR
-          headBox(10, -3, 12, 8, HAIR); // base volume at top of head
-          headBox(11, -7, 10, 4, HAIR);
-          headBox(12, -11, 8, 4, HAIR);
-          headBox(13, -14, 6, 3, HAIR);
-          headBox(14, -16, 4, 2, HAIR);
+          headBox(10, -3, 12, 9, HAIR); // Base volume (height 9 to cover y=5)
+          headBox(10, -7, 12, 5, HAIR); // Fill corner gaps
+          headBox(11, -11, 10, 5, HAIR);
+          headBox(12, -15, 8, 5, HAIR);
+          headBox(13, -18, 6, 4, HAIR);
+          headBox(14, -20, 4, 3, HAIR);
 
           // Side flares tied in
-          headBox(8, -5, 2, 6, HAIR);
-          headBox(7, -3, 1, 3, HAIR);
-          headBox(22, -5, 2, 6, HAIR);
-          headBox(24, -3, 1, 3, HAIR);
+          headBox(8, -6, 2, 7, HAIR);
+          headBox(7, -3, 1, 4, HAIR);
+          headBox(22, -6, 2, 7, HAIR);
+          headBox(24, -3, 1, 4, HAIR);
 
           // Hair Texture & Shading (Striated upwards flame lines)
           const hairShadowC = 0x222222;
 
           // Flame contouring
-          headBox(13, -14, 1, 12, hairShadowC);
-          headBox(17, -12, 1, 10, hairShadowC);
-          headBox(11, -7, 1, 8, hairShadowC);
-          headBox(20, -7, 1, 8, hairShadowC);
+          headBox(13, -16, 1, 14, hairShadowC);
+          headBox(17, -14, 1, 12, hairShadowC);
+          headBox(11, -9, 1, 10, hairShadowC);
+          headBox(20, -9, 1, 10, hairShadowC);
         }
 
         // Deep Widow's Peak (Drawn LAST so it goes over the hair base)
