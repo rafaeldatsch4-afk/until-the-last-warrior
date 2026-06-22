@@ -5,6 +5,7 @@ import { CreatorState } from "../creator/CreatorState";
 import { CreatorPreview } from "../creator/CreatorPreview";
 import { CreatorUI } from "../creator/CreatorUI";
 import { auraColors, giColors, hairColors, partOptions, skinColors } from "../creator/CreatorPartOptions";
+import { generateCustomSprite } from "../sprites/CustomSprite";
 
 export default class CharacterCreatorScene extends Phaser.Scene {
   private state = new CreatorState();
