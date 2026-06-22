@@ -34,8 +34,7 @@ export class GokuFighter extends Fighter {
         attacker.y = target.y - (isComboFinisher ? 50 : 0); // Attack from above on finisher
         attacker.play(bs.getAnimKey("goku", transformLevel, "attack"));
 
-        if (bs.cache.audio.exists("sfx_attack"))
-          bs.sound.play("sfx_attack", { volume: 1.2 });
+        if (bs.soundManager) bs.soundManager.playPunchImpact(true);
         bs.takeDamage(
           !isPlayer,
           Math.floor(
@@ -78,8 +77,7 @@ export class GokuFighter extends Fighter {
       for (let i = 0; i < blastCount; i++) {
         bs.time.delayedCall(i * 80, () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_beam"))
-            bs.sound.play("sfx_beam", { volume: 0.5 });
+          if (bs.soundManager) bs.soundManager.playBeamFire();
           const hand = bs.getHandPosition(isPlayer);
           const blast = bs.add.circle(hand.x, hand.y, 8, 0x00ffff).setDepth(5);
           bs.tweens.add({

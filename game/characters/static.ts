@@ -33,8 +33,7 @@ export class StaticFighter extends Fighter {
         duration: 100,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.0 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
           const hits = isComboFinisher ? 3 : 1;
           for (let i = 0; i < hits; i++) {
@@ -81,8 +80,7 @@ export class StaticFighter extends Fighter {
       attacker.play(bs.getAnimKey("static", transLevel, "attack"));
       bs.time.delayedCall(50, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 0.4, rate: 1.5 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const bolt = bs.add.graphics().setDepth(5);
@@ -149,8 +147,7 @@ export class StaticFighter extends Fighter {
     const dmg = Math.floor(40 * bs.getDamageMultiplier(transLevel));
 
     bs.log("ELECTRIC DISC!");
-    if (bs.cache.audio.exists("sfx_beam"))
-      bs.sound.play("sfx_beam", { volume: 0.8, rate: 0.7 });
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     const hand = bs.getHandPosition(isPlayer);
     const disc = bs.add.ellipse(hand.x, hand.y, 40, 10, 0x00ffff).setDepth(5);
@@ -209,8 +206,7 @@ export class StaticFighter extends Fighter {
     const dmg = Math.floor(85 * bs.getDamageMultiplier(transLevel));
 
     bs.log("STATIC BURST!!!");
-    if (bs.cache.audio.exists("sfx_beam"))
-      bs.sound.play("sfx_beam", { volume: 1.2, rate: 0.5 });
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Zoom in
     bs.cameras.main.zoomTo(1.2, 500, "Cubic.easeInOut", true);

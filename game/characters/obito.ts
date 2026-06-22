@@ -39,8 +39,7 @@ export class ObitoFighter extends Fighter {
         onComplete: () => {
           if (!bs.scene.isActive()) return;
 
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.2 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
           // Visual effect for the staff hit
           const hitColor = transformLevel === 1 ? 0x000000 : 0xffaa00;
@@ -88,8 +87,7 @@ export class ObitoFighter extends Fighter {
       attacker.play(bs.getAnimKey("obito", transformLevel, "attack"));
       bs.time.delayedCall(150, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 1.0 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const orbColor = transformLevel === 1 ? 0x111111 : 0xff4500;
         const hand = bs.getHandPosition(isPlayer);
@@ -140,7 +138,7 @@ export class ObitoFighter extends Fighter {
     const startX = attacker.x;
 
     bs.log("KAMUI!");
-    if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack");
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     // Swirl effect around attacker
     const swirlGlow = bs.add
@@ -260,8 +258,7 @@ export class ObitoFighter extends Fighter {
     const dmg = Math.floor(130 * bs.getDamageMultiplier(transformLevel));
 
     bs.log("TEN-TAILS BEAST BOMB!");
-    if (bs.cache.audio.exists("sfx_beam"))
-      bs.sound.play("sfx_beam", { rate: 0.7 });
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Charge massive dark red/black sphere
     const bombGlow = bs.add

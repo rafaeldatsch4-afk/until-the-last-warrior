@@ -50,8 +50,7 @@ export class CyberNinjaFighter extends Fighter {
         duration: 100, // Dash through
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.2 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(target.x, target.y + 120, 0x00ffff);
           bs.takeDamage(
             !isPlayer,
@@ -97,8 +96,7 @@ export class CyberNinjaFighter extends Fighter {
       attacker.play(bs.getAnimKey("cyberninja", transLevel, "attack"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 0.8 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const shurikenCount = isComboFinisher ? 3 : 1;
         for (let i = 0; i < shurikenCount; i++) {
@@ -163,8 +161,7 @@ export class CyberNinjaFighter extends Fighter {
     const dashColor = transLevel > 0 ? 0xff0055 : 0x00eaff;
 
     bs.log("PLASMA DASH!");
-    if (bs.cache.audio.exists("sfx_attack"))
-      bs.sound.play("sfx_attack", { rate: 2.0 });
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     // Vanish
     attacker.setVisible(false);
@@ -308,8 +305,7 @@ export class CyberNinjaFighter extends Fighter {
     const dashColor = 0xff0055; // Always red for overdrive
 
     bs.log("CYBER OVERDRIVE!");
-    if (bs.cache.audio.exists("sfx_attack"))
-      bs.sound.play("sfx_attack", { rate: 1.5 });
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     attacker.setVisible(false);
 
@@ -383,8 +379,7 @@ export class CyberNinjaFighter extends Fighter {
 
       bs.createScreenFlash(dashColor, 600, 1);
       bs.cameras.main.shake(1000, 0.1);
-      if (bs.cache.audio.exists("sfx_explosion"))
-        bs.sound.play("sfx_explosion");
+      if (bs.soundManager) bs.soundManager.playExplosion(true);
 
       // Final massive slash
       const slashGlow = bs.add

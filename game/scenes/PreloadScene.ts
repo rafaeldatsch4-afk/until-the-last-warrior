@@ -388,8 +388,13 @@ export default class PreloadScene extends Phaser.Scene {
     generateSynthSound("sfx_select", 0.1, "sine", 800, 1200, 0.3);
     generateSynthSound("sfx_attack", 0.1, "square", 200, 50, 0.5);
     generateSynthSound("sfx_hit", 0.15, "sawtooth", 150, 50, 0.6);
+    generateSynthSound("sfx_punch_heavy", 0.25, "square", 100, 20, 0.8);
     generateSynthSound("sfx_block", 0.1, "sine", 400, 300, 0.4);
+    generateSynthSound("sfx_clash", 0.2, "sawtooth", 800, 200, 0.7);
     generateSynthSound("sfx_beam", 1.0, "sawtooth", 400, 100, 0.3);
+    generateSynthSound("sfx_beam_charge", 1.2, "sine", 100, 600, 0.3);
+    generateSynthSound("sfx_beam_fire", 0.6, "square", 800, 100, 0.5);
+    generateSynthSound("sfx_explosion", 0.8, "sawtooth", 200, 20, 0.6);
     generateSynthSound("sfx_transform", 1.5, "square", 100, 300, 0.4);
     generateSynthSound("sfx_transform_mech", 1.5, "sawtooth", 50, 600, 0.6);
     generateSynthSound("sfx_error", 0.2, "sawtooth", 150, 100, 0.4);

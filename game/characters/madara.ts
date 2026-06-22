@@ -34,8 +34,7 @@ export class MadaraFighter extends Fighter {
           for (let i = 0; i < hits; i++) {
             bs.time.delayedCall(i * 100, () => {
               if (!bs.scene.isActive()) return;
-              if (bs.cache.audio.exists("sfx_attack"))
-                bs.sound.play("sfx_attack", { volume: 1.0 });
+              if (bs.soundManager) bs.soundManager.playPunchImpact(true);
               bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
               bs.takeDamage(
                 !isPlayer,
@@ -63,8 +62,7 @@ export class MadaraFighter extends Fighter {
       attacker.play(bs.getAnimKey("madara", transformLevel, "attack"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 1.0 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const kiColor = transformLevel > 0 ? 0x3b82f6 : 0xff4500;
         const hand = bs.getHandPosition(isPlayer);
@@ -107,7 +105,7 @@ export class MadaraFighter extends Fighter {
     const dmg = Math.floor(45 * bs.getDamageMultiplier(transformLevel));
 
     bs.log("MAJESTIC DESTROYER FLAME!");
-    if (bs.cache.audio.exists("sfx_charge")) bs.sound.play("sfx_charge");
+    if (bs.soundManager) bs.soundManager.playBeamCharge();
 
     const inhale = bs.add
       .particles(0, 0, "particle", {
@@ -128,8 +126,7 @@ export class MadaraFighter extends Fighter {
       inhale.stop();
       bs.time.delayedCall(400, () => inhale.destroy());
 
-      if (bs.cache.audio.exists("sfx_beam"))
-        bs.sound.play("sfx_beam", { volume: 1.5 });
+      if (bs.soundManager) bs.soundManager.playBeamFire();
 
       const fireGroup = bs.add.group();
 
@@ -199,8 +196,7 @@ export class MadaraFighter extends Fighter {
         bs.createScreenFlash(0xff4500, 500, 1);
         bs.createImpactEffect(target.x, target.y + 120, 0xff4500, "beam");
         bs.cameras.main.shake(1000, 0.1);
-        if (bs.cache.audio.exists("sfx_explosion"))
-          bs.sound.play("sfx_explosion");
+        if (bs.soundManager) bs.soundManager.playExplosion(true);
 
         for (let i = 0; i < 5; i++) {
           const ring = bs.add
@@ -255,8 +251,7 @@ export class MadaraFighter extends Fighter {
       duration: 1000,
     });
 
-    if (bs.cache.audio.exists("sfx_charge"))
-      bs.sound.play("sfx_charge", { volume: 1.5 });
+    if (bs.soundManager) bs.soundManager.playBeamCharge();
 
     // Giant Meteor!
     const meteorColor = 0x8b4513; // Brown
@@ -286,8 +281,7 @@ export class MadaraFighter extends Fighter {
         bs.takeDamage(!isPlayer, dmg);
         bs.createScreenFlash(0xffffff, 1000, 1);
         bs.cameras.main.shake(1500, 0.2);
-        if (bs.cache.audio.exists("sfx_explosion"))
-          bs.sound.play("sfx_explosion", { volume: 2.0 });
+        if (bs.soundManager) bs.soundManager.playExplosion(true);
 
         for (let i = 0; i < 40; i++) {
           const spark = bs.add

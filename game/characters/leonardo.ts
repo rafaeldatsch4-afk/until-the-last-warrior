@@ -31,8 +31,7 @@ export class LeonardoFighter extends Fighter {
         duration: 150,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.2 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
           const slash = bs.add.graphics().setDepth(6);
           slash.lineStyle(4, 0x00ff00, 1);
@@ -75,8 +74,7 @@ export class LeonardoFighter extends Fighter {
       attacker.play(bs.getAnimKey("leonardo", transLevel, "attack"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 0.8 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const shuriken = bs.add
@@ -127,8 +125,7 @@ export class LeonardoFighter extends Fighter {
     const bs = scene as any;
 
     bs.log("NINJA SLASH!");
-    if (bs.cache.audio.exists("sfx_attack"))
-      bs.sound.play("sfx_attack", { volume: 1.5 });
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     const dmg = Math.floor(40 * bs.getDamageMultiplier(transformLevel));
 
@@ -157,7 +154,7 @@ export class LeonardoFighter extends Fighter {
           onComplete: () => slash.destroy(),
         });
 
-        if (bs.cache.audio.exists("sfx_hit")) bs.sound.play("sfx_hit");
+        if (bs.cache.audio.exists("sfx_hit")) if (bs.soundManager) bs.soundManager.playPunchImpact(false);
         bs.createImpactEffect(target.x, target.y + 50, 0x00ff00);
         bs.takeDamage(!isPlayer, dmg);
 
@@ -225,8 +222,7 @@ export class LeonardoFighter extends Fighter {
         });
 
         if (hits % 2 === 0) bs.cameras.main.shake(50, 0.01);
-        if (bs.cache.audio.exists("sfx_attack"))
-          bs.sound.play("sfx_attack", { volume: 0.5 });
+        if (bs.soundManager) bs.soundManager.playPunchImpact(true);
       },
     });
 
@@ -234,8 +230,7 @@ export class LeonardoFighter extends Fighter {
       if (!bs.scene.isActive()) return;
       bs.cameras.main.shake(500, 0.05);
       bs.createScreenFlash(0x00ff00, 500, 1);
-      if (bs.cache.audio.exists("sfx_explosion"))
-        bs.sound.play("sfx_explosion");
+      if (bs.soundManager) bs.soundManager.playExplosion(true);
       bs.takeDamage(!isPlayer, dmg);
 
       bs.tweens.add({

@@ -198,7 +198,8 @@ export function generateCustomSprite(
           (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) +
           shiftX +
           ox;
-        const finalYPose = isAttack || isDefend ? y + poseOffsetY / 2 : y;
+        const finalYPose =
+          isAttack || isDefend || isCharge ? y + poseOffsetY / 2 : y;
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -217,7 +218,8 @@ export function generateCustomSprite(
           (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) +
           shiftX +
           ox;
-        const finalYPose = isAttack || isDefend ? y + poseOffsetY / 2 : y;
+        const finalYPose =
+          isAttack || isDefend || isCharge ? y + poseOffsetY / 2 : y;
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -657,23 +659,13 @@ export function generateCustomSprite(
           headDot(20, 9, HEAD_1);
           headBox(13, 12, 6, 1, HEAD_1_SHADOW);
 
-          // Webbing Pattern (vertical/horizontal lines)
-          headDot(16, 6, BLACK);
-          headDot(15, 6, BLACK);
-          headDot(13, 7, BLACK);
-          headDot(18, 7, BLACK);
-          headDot(12, 8, BLACK);
-          headDot(19, 8, BLACK);
-          headBox(15, 6, 2, 7, BLACK); // center line
-
-          headDot(13, 9, BLACK);
-          headDot(14, 9, BLACK);
-          headDot(15, 9, BLACK);
-          headDot(17, 9, BLACK);
-          headDot(18, 9, BLACK);
-          headDot(19, 9, BLACK);
-          headDot(14, 10, WHITE);
-          headDot(18, 10, WHITE);
+          // Clean Spiderman Eyes (No webbing to avoid face lines)
+          // Left Eye
+          headBox(12, 8, 3, 3, BLACK);
+          headBox(13, 9, 2, 1, WHITE);
+          // Right Eye
+          headBox(17, 8, 3, 3, BLACK);
+          headBox(17, 9, 2, 1, WHITE);
         } else if (pHead === "saitama") {
           headBox(12, 5, 8, 8, SKIN_TONE);
           headDot(11, 9, SKIN_TONE);
@@ -698,38 +690,67 @@ export function generateCustomSprite(
           headDot(18, 9, eyeColor);
         } else if (pHead === "vegeta") {
           headBox(12, 6, 8, 7, SKIN_TONE);
-          headDot(11, 9, SKIN_TONE);
-          headDot(20, 9, SKIN_TONE);
+          headDot(11, 9, SKIN_TONE); // ear
+          headDot(20, 9, SKIN_TONE); // ear
           headBox(13, 12, 6, 1, SKIN_SHADOW);
 
-          headDot(13, 9, WHITE);
-          headDot(17, 9, WHITE);
+          // Eyes
+          headBox(13, 9, 2, 1, WHITE);
+          headBox(17, 9, 2, 1, WHITE);
           headDot(14, 9, eyeColor);
-          headDot(18, 9, eyeColor);
+          headDot(17, 9, eyeColor);
 
-          // Angry eyebrows
+          // Angry eyebrows sloped inward
+          // Left eyebrow
+          headDot(12, 8, eyebrowColor);
           headDot(13, 8, eyebrowColor);
           headDot(14, 8, eyebrowColor);
-          headDot(17, 8, eyebrowColor);
+          // Right eyebrow
+          headDot(19, 8, eyebrowColor);
           headDot(18, 8, eyebrowColor);
-          headDot(15, 9, eyebrowColor);
-          headDot(16, 9, eyebrowColor);
+          headDot(17, 8, eyebrowColor);
 
-          // Widow's peak hair
-          headBox(13, 2, 6, 3, hairColor);
-          headBox(14, 1, 4, 3, hairColor);
-          headBox(15, 0, 2, 2, hairColor);
-          headBox(11, 5, 2, 4, hairColor);
-          headBox(19, 5, 2, 4, hairColor);
-          headDot(15, 5, hairColor);
-          headDot(16, 5, hairColor);
+          headDot(15, 8, eyebrowColor); // center connection
+          headDot(16, 8, eyebrowColor);
+
+          // Widow's peak base
+          headBox(14, 5, 4, 1, hairColor);
+          headDot(15, 6, hairColor);
+          headDot(16, 6, hairColor);
+
+          headBox(12, 5, 2, 3, hairColor); // side burns
+          headBox(18, 5, 2, 3, hairColor);
+
+          if (isTransformed) {
+            // Super Saiyan Vegeta hair stands straight up
+            headBox(10, 0, 12, 5, hairColor); // Base volume
+            headBox(11, -3, 10, 5, hairColor);
+            headBox(12, -6, 8, 3, hairColor);
+            headBox(13, -8, 6, 2, hairColor);
+            headBox(14, -10, 4, 2, hairColor); // Central spike
+            headBox(8, -1, 2, 4, hairColor); // side flares
+            headBox(22, -1, 2, 4, hairColor);
+          } else {
+            // Base Vegeta hair
+            headBox(10, 0, 12, 5, hairColor);
+            headBox(11, -2, 10, 2, hairColor);
+            headBox(12, -4, 8, 2, hairColor);
+            headBox(13, -6, 6, 2, hairColor);
+            headBox(14, -8, 4, 2, hairColor);
+            headBox(8, -1, 2, 4, hairColor);
+            headBox(22, -1, 2, 4, hairColor);
+          }
 
           if (isAttack) {
-            headBox(15, 12, 2, 1, 0x440000);
+            headBox(14, 11, 4, 2, 0x440000); // Shouting wide open mouth
           } else if (isDefend) {
-            headBox(15, 12, 2, 1, 0x000000);
+            headBox(14, 11, 4, 1, WHITE); // Clenched teeth
           } else if (isCharge) {
-            headBox(15, 12, 2, 2, 0x000000);
+            headBox(14, 11, 4, 2, 0x000000); // Open mouth yelling
+          } else {
+            headBox(14, 11, 4, 1, SKIN_SHADOW); // Scowl line
+            headDot(15, 11, 0x222222);
+            headDot(16, 11, 0x222222);
           }
         } else if (pHead === "jotaro") {
           headBox(12, 6, 8, 7, SKIN_TONE);
@@ -778,16 +799,18 @@ export function generateCustomSprite(
           headDot(18, 8, eyebrowColor);
           headDot(15, 8, SKIN_SHADOW);
           headDot(16, 8, SKIN_SHADOW);
-          headDot(15, 11, 0xdca880);
+          headDot(15, 11, SKIN_SHADOW);
           headDot(13, 11, SKIN_SHADOW);
           headDot(18, 11, SKIN_SHADOW);
 
           if (isAttack) {
-            headBox(15, 12, 2, 1, 0x440000);
+            headBox(15, 12, 2, 1, 0x440000); // Small open mouth
           } else if (isDefend) {
-            headBox(15, 12, 2, 1, WHITE);
+            headBox(15, 12, 2, 1, WHITE); // Clenched teeth
+          } else if (isCharge) {
+            headBox(15, 12, 2, 2, 0x000000); // Open mouth yelling
           } else {
-            headDot(16, 12, 0x222222);
+            headDot(16, 12, 0x222222); // Smirk corner
           }
 
           if (isTransformed && !isUI) {

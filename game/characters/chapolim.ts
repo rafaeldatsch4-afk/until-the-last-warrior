@@ -34,8 +34,7 @@ export class ChapolimFighter extends Fighter {
         duration: 150,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.5 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
           const hammer = bs.add
             .rectangle(target.x, target.y + 120, 20, 10, 0xff0000)
@@ -76,8 +75,7 @@ export class ChapolimFighter extends Fighter {
       attacker.play(bs.getAnimKey("chapolim", transLevel, "attack"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 0.8 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const heart = bs.add
@@ -132,7 +130,7 @@ export class ChapolimFighter extends Fighter {
     const dmg = Math.floor(40 * bs.getDamageMultiplier(transLevel));
 
     bs.log("CHIPOTE CHILLÓN!");
-    if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack");
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     // Create a giant mallet sprite (using graphics)
     const mallet = bs.add.graphics().setDepth(15);
@@ -204,7 +202,7 @@ export class ChapolimFighter extends Fighter {
             }
 
             bs.createImpactEffect(target.x, target.y + 120, 0xff0000, "beam");
-            if (bs.cache.audio.exists("sfx_hit")) bs.sound.play("sfx_hit");
+            if (bs.cache.audio.exists("sfx_hit")) if (bs.soundManager) bs.soundManager.playPunchImpact(false);
             bs.takeDamage(!isPlayer, dmg);
 
             bs.tweens.add({
@@ -240,7 +238,7 @@ export class ChapolimFighter extends Fighter {
     const dmg = Math.floor(110 * bs.getDamageMultiplier(transLevel));
 
     bs.log("AEROLITOS!");
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     bs.cameras.main.shake(1200, 0.03);
 
@@ -287,7 +285,7 @@ export class ChapolimFighter extends Fighter {
             bs.createImpactEffect(targetX, targetY, 0xe74c3c, "melee");
             bs.cameras.main.shake(80, 0.02);
             if (bs.cache.audio.exists("sfx_hit"))
-              bs.sound.play("sfx_hit", { volume: 0.6 });
+              if (bs.soundManager) bs.soundManager.playPunchImpact(false);
 
             // Small explosion for each rock
             const exp = bs.add
@@ -312,8 +310,7 @@ export class ChapolimFighter extends Fighter {
             if (i === 19) {
               bs.createScreenFlash(0xffaa00, 400, 0.9);
               bs.cameras.main.shake(600, 0.06);
-              if (bs.cache.audio.exists("sfx_explosion"))
-                bs.sound.play("sfx_explosion");
+              if (bs.soundManager) bs.soundManager.playExplosion(true);
 
               // Massive final shockwave
               for (let j = 0; j < 5; j++) {

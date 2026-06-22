@@ -54,8 +54,7 @@ export class SaitamaFighter extends Fighter {
         ease: "Expo.easeOut",
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 2.0 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
           bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
           bs.cameras.main.shake(150, 0.02);
@@ -123,8 +122,7 @@ export class SaitamaFighter extends Fighter {
 
       bs.time.delayedCall(50, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 1.0, rate: 0.8 }); // deeper sound for air pressure
+        if (bs.soundManager) bs.soundManager.playBeamFire(); // deeper sound for air pressure
 
         const hand = bs.getHandPosition(isPlayer);
 
@@ -139,7 +137,7 @@ export class SaitamaFighter extends Fighter {
             if (!bs.scene.isActive()) return;
 
             if (i > 0 && bs.cache.audio.exists("sfx_attack")) {
-              bs.sound.play("sfx_attack", { volume: 1.0, rate: 1.5 });
+              if (bs.soundManager) bs.soundManager.playPunchImpact(true);
             }
 
             // Wind pressure (Giant expanding ellipse)
@@ -266,8 +264,7 @@ export class SaitamaFighter extends Fighter {
           bs.time.delayedCall(100, () => {
             if (!bs.scene.isActive()) return;
 
-            if (bs.cache.audio.exists("sfx_explosion"))
-              bs.sound.play("sfx_explosion", { volume: 3.0 });
+            if (bs.soundManager) bs.soundManager.playExplosion(true);
             bs.createScreenFlash(0xffffff, 800, 1);
             bs.cameras.main.shake(1000, 0.1);
 
@@ -411,8 +408,7 @@ export class SaitamaFighter extends Fighter {
           .setDepth(20);
         bs.tweens.add({ targets: glow, scale: 6, alpha: 0, duration: 200 });
 
-        if (bs.cache.audio.exists("sfx_attack"))
-          bs.sound.play("sfx_attack", { volume: 2.5 });
+        if (bs.soundManager) bs.soundManager.playPunchImpact(true);
         bs.cameras.main.shake(150, 0.04);
 
         // DASH! (Almost instantaneous)

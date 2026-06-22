@@ -441,87 +441,66 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
         }
 
         // --- HAIR (Iconic Flame & Widow's Peak) ---
-        // Deep Widow's Peak
-        headBox(13, 4, 6, 2, SKIN);
-        headBox(14, 3, 4, 1, SKIN);
-        headDot(15, 2, SKIN); // Point
-        headDot(16, 2, SKIN);
-
         // Sideburns
         headBox(10, 5, 1, 3, HAIR);
         headBox(21, 5, 1, 3, HAIR);
 
         if (isTransformed) {
           // SUPER SAIYAN DYNAMIC HAIR
-          headBox(9, -4, 14, 9, HAIR); // Base volume
-          headBox(10, -8, 12, 4, HAIR);
-          headBox(11, -12, 10, 4, HAIR);
+          headBox(10, -5, 12, 10, HAIR); // Base volume
+          headBox(11, -10, 10, 5, HAIR);
+          headBox(12, -15, 8, 5, HAIR);
+          headBox(13, -18, 6, 3, HAIR);
+          headBox(14, -20, 4, 2, HAIR);
 
-          // Large dynamic spikes separating outwards
-          headBox(14, -18, 4, 6, HAIR); // Central tall spike
-          headBox(10, -15, 3, 6, HAIR); // Left angled spike
-          headBox(19, -15, 3, 6, HAIR); // Right angled spike
-          headBox(7, -10, 3, 6, HAIR); // Far left flare
-          headBox(22, -10, 3, 6, HAIR); // Far right flare
-
-          // Tapered tips
-          headBox(15, -20, 2, 2, HAIR);
-          headBox(10, -17, 2, 2, HAIR);
-          headBox(20, -17, 2, 2, HAIR);
-          headDot(7, -12, HAIR);
-          headDot(24, -12, HAIR);
+          // Side flares tightly connected
+          headBox(8, -8, 2, 8, HAIR); 
+          headBox(7, -6, 1, 4, HAIR); 
+          headBox(22, -8, 2, 8, HAIR);
+          headBox(24, -6, 1, 4, HAIR);
 
           // Hair highlights and shading for golden volume
           const LIGHT = isUI ? 0xd2b4de : 0xffcf40;
           const SHADE = isUI ? 0x732d91 : 0xcfa000;
 
           // Inner highlights
-          headBox(15, -17, 2, 8, LIGHT);
-          headBox(11, -14, 2, 6, LIGHT);
-          headBox(19, -14, 2, 6, LIGHT);
+          headBox(14, -18, 2, 10, LIGHT);
+          headBox(12, -12, 2, 8, LIGHT);
+          headBox(18, -12, 2, 8, LIGHT);
 
-          // Shadows along the edges of the spikes
-          headBox(14, -18, 1, 10, SHADE);
-          headBox(18, -15, 1, 8, SHADE);
-          headBox(13, -15, 1, 8, SHADE);
-          headBox(21, -10, 1, 6, SHADE);
-          headBox(10, -10, 1, 6, SHADE);
+          // Shadows
+          headBox(16, -18, 1, 10, SHADE);
+          headBox(11, -12, 1, 10, SHADE);
+          headBox(20, -12, 1, 10, SHADE);
         } else {
           // BASE FORM FLAME HAIR
-          headBox(9, -2, 14, 7, HAIR); // base volume at top of head
-          headBox(10, -6, 12, 4, HAIR);
-          headBox(11, -9, 10, 3, HAIR);
-          headBox(13, -12, 6, 3, HAIR);
+          headBox(10, -3, 12, 8, HAIR); // base volume at top of head
+          headBox(11, -7, 10, 4, HAIR);
+          headBox(12, -11, 8, 4, HAIR);
+          headBox(13, -14, 6, 3, HAIR);
+          headBox(14, -16, 4, 2, HAIR);
 
-          // Individual tall spikes (tips of the flames)
-          headBox(14, -16, 2, 4, HAIR);
-          headBox(16, -14, 2, 2, HAIR);
-          headBox(11, -13, 2, 4, HAIR);
-          headBox(19, -12, 2, 3, HAIR);
-
-          // Side flares / flame-like barbs
-          headBox(8, -5, 2, 4, HAIR);
-          headBox(7, -8, 2, 3, HAIR);
-          headBox(6, -4, 1, 2, HAIR); // extra jagged
-
-          headBox(22, -5, 2, 4, HAIR);
-          headBox(23, -8, 2, 3, HAIR);
-          headBox(25, -4, 1, 2, HAIR);
-
-          headBox(10, -10, 2, 2, HAIR);
-          headBox(20, -9, 2, 2, HAIR);
+          // Side flares tied in
+          headBox(8, -5, 2, 6, HAIR);
+          headBox(7, -3, 1, 3, HAIR);
+          headBox(22, -5, 2, 6, HAIR);
+          headBox(24, -3, 1, 3, HAIR);
 
           // Hair Texture & Shading (Striated upwards flame lines)
           const hairShadowC = 0x222222;
 
           // Flame contouring
-          headBox(11, -8, 1, 10, hairShadowC);
-          headBox(20, -7, 1, 9, hairShadowC);
-          headBox(14, -14, 1, 16, hairShadowC);
-          headBox(17, -12, 1, 14, hairShadowC);
-          headBox(9, -6, 1, 8, hairShadowC);
-          headBox(22, -6, 1, 8, hairShadowC);
+          headBox(13, -14, 1, 12, hairShadowC);
+          headBox(17, -12, 1, 10, hairShadowC);
+          headBox(11, -7, 1, 8, hairShadowC);
+          headBox(20, -7, 1, 8, hairShadowC);
         }
+
+        // Deep Widow's Peak (Drawn LAST so it goes over the hair base)
+        headBox(13, 4, 6, 2, SKIN);
+        headBox(14, 3, 4, 1, SKIN);
+        headDot(15, 2, SKIN); // Point
+        headDot(16, 2, SKIN);
       }
     } // End Switch Equivalent
 

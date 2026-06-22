@@ -35,8 +35,7 @@ export class VegetaFighter extends Fighter {
           for (let i = 0; i < hits; i++) {
             bs.time.delayedCall(i * 100, () => {
               if (!bs.scene.isActive()) return;
-              if (bs.cache.audio.exists("sfx_attack"))
-                bs.sound.play("sfx_attack", { volume: 0.8 });
+              if (bs.soundManager) bs.soundManager.playPunchImpact(true);
               bs.createImpactEffect(
                 target.x + (Math.random() * 20 - 10),
                 target.y + 120 + (Math.random() * 20 - 10),
@@ -70,18 +69,44 @@ export class VegetaFighter extends Fighter {
       for (let i = 0; i < blastCount; i++) {
         bs.time.delayedCall(i * 50, () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_beam"))
-            bs.sound.play("sfx_beam", { volume: 0.3 });
+          if (bs.soundManager) bs.soundManager.playBeamFire();
           const hand = bs.getHandPosition(isPlayer);
+          const py = hand.y + (Math.random() * 30 - 15);
           const blast = bs.add
-            .circle(hand.x, hand.y + (Math.random() * 20 - 10), 6, 0xffff00)
-            .setDepth(5);
+            .circle(hand.x, py, 8, 0xffff00)
+            .setDepth(5)
+            .setBlendMode(Phaser.BlendModes.ADD);
+
+          const blastGlow = bs.add
+            .circle(hand.x, py, 14, 0xffa500)
+            .setDepth(4)
+            .setAlpha(0.6)
+            .setBlendMode(Phaser.BlendModes.ADD);
+
           bs.tweens.add({
-            targets: blast,
+            targets: [blast, blastGlow],
             x: target.x,
-            duration: 120,
+            duration: 150,
+            onUpdate: () => {
+              if (!bs.scene.isActive()) return;
+              // Leave trail
+              if (Math.random() > 0.5) {
+                const trail = bs.add
+                  .circle(blast.x, blast.y, 4, 0xffff00)
+                  .setBlendMode(Phaser.BlendModes.ADD)
+                  .setDepth(4);
+                bs.tweens.add({
+                  targets: trail,
+                  alpha: 0,
+                  scale: 0.5,
+                  duration: 100,
+                  onComplete: () => trail.destroy(),
+                });
+              }
+            },
             onComplete: () => {
               blast.destroy();
+              blastGlow.destroy();
               if (!bs.scene.isActive()) return;
               bs.createImpactEffect(
                 target.x,
@@ -135,7 +160,7 @@ export class VegetaFighter extends Fighter {
     const hand = bs.getHandPosition(isPlayer);
 
     bs.log("FINAL FLASH!");
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Charge
     const charge = bs.add

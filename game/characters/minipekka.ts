@@ -34,8 +34,7 @@ export class MiniPekkaFighter extends Fighter {
           if (!bs.scene.isActive()) return;
           attacker.play(bs.getAnimKey("minipekka", transLevel, "attack"));
 
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.5 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
           // Sword arc
           const arc = bs.add.graphics().setDepth(6);
@@ -86,8 +85,7 @@ export class MiniPekkaFighter extends Fighter {
       attacker.play(bs.getAnimKey("minipekka", transLevel, "attack"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 0.8 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const pancake = bs.add
@@ -142,7 +140,7 @@ export class MiniPekkaFighter extends Fighter {
     const dmg = Math.floor(baseDmg * bs.getDamageMultiplier(transLevel));
 
     bs.log("PANCAKES!");
-    if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack");
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     const animKeySpecial = bs.getAnimKey("minipekka", transLevel, "special");
     const animKeyIdle = bs.getAnimKey("minipekka", transLevel, "idle");
@@ -277,7 +275,7 @@ export class MiniPekkaFighter extends Fighter {
     const dmg = Math.floor(130 * bs.getDamageMultiplier(transLevel));
 
     bs.log("MEGA PANCAKE!");
-    if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack");
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     const animKeySpecial = bs.getAnimKey("minipekka", transLevel, "special");
     const animKeyIdle = bs.getAnimKey("minipekka", transLevel, "idle");

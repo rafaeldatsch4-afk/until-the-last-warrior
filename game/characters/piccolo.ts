@@ -38,8 +38,7 @@ export class PiccoloFighter extends Fighter {
         duration: 100,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.0 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
           bs.takeDamage(
             !isPlayer,
@@ -67,8 +66,7 @@ export class PiccoloFighter extends Fighter {
       attacker.play(bs.getAnimKey("piccolo", transformLevel, "attack"));
       bs.time.delayedCall(50, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 0.8 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const beam1 = bs.add
@@ -218,7 +216,7 @@ export class PiccoloFighter extends Fighter {
           repeat: 1,
         });
 
-        if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         bs.tweens.add({
           targets: [core, coreGlow],
@@ -322,7 +320,7 @@ export class PiccoloFighter extends Fighter {
     const dmg = Math.floor(105 * bs.getDamageMultiplier(transformLevel));
 
     bs.log("HELLZONE GRENADE!");
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     const orbs: any[] = [];
     const orbCount = 16;

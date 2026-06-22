@@ -31,8 +31,7 @@ export class ThukunaFighter extends Fighter {
       for (let i = 0; i < slashCount; i++) {
         bs.time.delayedCall(i * 100, () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.0 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
           // Draw slash lines on target
           const slash = bs.add.graphics().setDepth(10);
@@ -65,8 +64,7 @@ export class ThukunaFighter extends Fighter {
       attacker.play(bs.getAnimKey("thukuna", transLevel, "attack"));
       bs.time.delayedCall(150, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 1.2 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const arrow = bs.add
@@ -128,7 +126,7 @@ export class ThukunaFighter extends Fighter {
     const dmg = Math.floor(45 * bs.getDamageMultiplier(transLevel));
 
     bs.log("CLEAVE!");
-    if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack");
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     // Create invisible slash effect
     const slashGlow1 = bs.add
@@ -235,8 +233,7 @@ export class ThukunaFighter extends Fighter {
     const dmg = Math.floor(140 * bs.getDamageMultiplier(transLevel));
 
     bs.log("CASTELO MANIVOLENTE!");
-    if (bs.cache.audio.exists("sfx_attack"))
-      bs.sound.play("sfx_attack", { rate: 0.5 });
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     // Screen goes dark red
     const darkOverlay = bs.add
@@ -381,7 +378,7 @@ export class ThukunaFighter extends Fighter {
 
             bs.createImpactEffect(cx, cy, 0x8b0000);
             if (bs.cache.audio.exists("sfx_hit"))
-              bs.sound.play("sfx_hit", { volume: 0.5 });
+              if (bs.soundManager) bs.soundManager.playPunchImpact(false);
             bs.cameras.main.shake(30, 0.015);
           });
         }
@@ -393,8 +390,7 @@ export class ThukunaFighter extends Fighter {
           // Final massive slash
           bs.createScreenFlash(0xff0000, 400, 0.9);
           bs.cameras.main.shake(600, 0.06);
-          if (bs.cache.audio.exists("sfx_explosion"))
-            bs.sound.play("sfx_explosion");
+          if (bs.soundManager) bs.soundManager.playExplosion(true);
 
           const finalSlash = bs.add
             .rectangle(target.x, target.y + 120, 400, 20, 0xff0000)

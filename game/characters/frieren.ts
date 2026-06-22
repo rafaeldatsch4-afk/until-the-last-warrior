@@ -33,8 +33,7 @@ export class FrierenFighter extends Fighter {
         duration: 150,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.0 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
           bs.takeDamage(
             !isPlayer,
@@ -61,8 +60,7 @@ export class FrierenFighter extends Fighter {
       attacker.play(bs.getAnimKey("frieren", transLevel, "attack"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 1.0 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const beam = bs.add
@@ -255,7 +253,7 @@ export class FrierenFighter extends Fighter {
     const dmg = Math.floor(115 * bs.getDamageMultiplier(transLevel));
 
     bs.log("BLACK HOLE!");
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Create black hole on target
     const hole = bs.add

@@ -4,6 +4,7 @@ import { BattleInput } from "../battle/BattleInput";
 import { BattleUI } from "../battle/BattleUI";
 import { BattleAI } from "../battle/BattleAI";
 import { BattleEnvironment } from "../battle/BattleEnvironment";
+import { BattleSoundManager } from "../battle/BattleSoundManager";
 import Phaser from "phaser";
 import { CharacterData, GameState } from "../types";
 import { getFighter } from "../characters/FighterRegistry";
@@ -16,6 +17,7 @@ export default class BattleScene extends Phaser.Scene {
 
   public battleUI!: BattleUI;
   public battleEnvironment!: BattleEnvironment;
+  public soundManager!: BattleSoundManager;
 
   public battleAI!: BattleAI;
   public battleReward!: BattleReward;
@@ -161,6 +163,7 @@ export default class BattleScene extends Phaser.Scene {
   public p2LastAttackTime: number = 0;
 
   public isBattleOver: boolean = false;
+  private p1WasLeft: boolean = true;
   public turnTimer?: Phaser.Time.TimerEvent;
   public regenTimer?: Phaser.Time.TimerEvent;
   public aiMoveDir: number = 0;
@@ -176,6 +179,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   create() {
+    this.soundManager = new BattleSoundManager(this);
     this.battleAI = new BattleAI(this);
     this.gameState = this.registry.get("gameState") as GameState;
     this.isBattleOver = false;
@@ -438,6 +442,12 @@ export default class BattleScene extends Phaser.Scene {
     if (this.battleEnvironment) this.battleEnvironment.update(time, delta);
 
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
+
+    const playerIsLeft = this.player.x <= this.enemy.x;
+    if (playerIsLeft !== this.p1WasLeft) {
+      this.p1WasLeft = playerIsLeft;
+      this.playTurnTransitionEffect();
+    }
 
     if (!this.debugCirclesDestroyed) {
       if (this.p1DebugCircle) this.p1DebugCircle.destroy();
@@ -1297,8 +1307,7 @@ export default class BattleScene extends Phaser.Scene {
       true,
       direction,
     );
-    if (this.cache.audio.exists("sfx_step"))
-      this.sound.play("sfx_step", { volume: 1.5, rate: 1.5 });
+    if (this.soundManager) this.soundManager.playStep();
 
     const dashDistance = 300 * direction;
     let targetX = sprite.x + dashDistance;
@@ -1917,8 +1926,8 @@ export default class BattleScene extends Phaser.Scene {
             this.createImpactEffect(player.x, startY + 80, 0xecf0f1, "block");
             this.createDustEffect(player.x, startY + 180, 16);
 
-            if (this.cache.audio.exists("sfx_step")) {
-              this.sound.play("sfx_step", { volume: 0.5 });
+            if (this.soundManager) {
+              this.soundManager.playStep();
             }
           },
         });
@@ -2481,8 +2490,8 @@ export default class BattleScene extends Phaser.Scene {
               if (!this.scene.isActive()) return;
 
               // Impact
-              if (this.cache.audio.exists("sfx_attack"))
-                this.sound.play("sfx_attack", { volume: 1.2 });
+              if (this.soundManager)
+                this.soundManager.playPunchImpact(isComboFinisher);
 
               const baseDamage = isComboFinisher ? 20 : 10;
               const damage = Math.floor(
@@ -2587,8 +2596,7 @@ export default class BattleScene extends Phaser.Scene {
               if (!this.scene.isActive()) return;
 
               // Shoot Blast
-              if (this.cache.audio.exists("sfx_beam"))
-                this.sound.play("sfx_beam", { volume: 1.2 });
+              if (this.soundManager) this.soundManager.playKiBlastFire();
 
               // Attacker flash
               this.tweens.add({
@@ -2665,8 +2673,8 @@ export default class BattleScene extends Phaser.Scene {
                       if (!this.scene.isActive()) return;
 
                       // Impact
-                      if (this.cache.audio.exists("sfx_attack"))
-                        this.sound.play("sfx_attack", { volume: 1.5 });
+                      if (this.soundManager)
+                        this.soundManager.playExplosion(false);
 
                       const baseDamage = isComboFinisher ? 15 : 10;
                       const damage = Math.floor(
@@ -3034,8 +3042,8 @@ export default class BattleScene extends Phaser.Scene {
                     onComplete: () => slash.destroy(),
                   });
 
-                  if (this.cache.audio.exists("sfx_hit"))
-                    this.sound.play("sfx_hit", { volume: 0.3, rate: 1.5 });
+                  if (this.soundManager)
+                    this.soundManager.playPunchImpact(false);
                 });
               }
 
@@ -3059,8 +3067,8 @@ export default class BattleScene extends Phaser.Scene {
             }
 
             if (this.battleCamera) this.battleCamera.shake(1000, 0.05);
-            if (this.cache.audio.exists("sfx_transform"))
-              this.sound.play("sfx_transform", { volume: 1.5 });
+            if (this.soundManager)
+              this.soundManager.playTransform(currentLevel + 1);
 
             // Pillar Animation
             pillar.setAlpha(1).setScale(0, 1);
@@ -3992,7 +4000,7 @@ export default class BattleScene extends Phaser.Scene {
 
     if (this.battleUI)
       this.battleUI.showLog(isS ? "SUPER ATTACK!" : type.toUpperCase() + "!");
-    if (this.cache.audio.exists("sfx_beam")) this.sound.play("sfx_beam");
+    if (this.soundManager) this.soundManager.playBeamCharge();
 
     // Charge Effect
     const chargeCore = this.add
@@ -4028,6 +4036,7 @@ export default class BattleScene extends Phaser.Scene {
       repeat: 0,
       onComplete: () => {
         if (!this.scene.isActive()) return;
+        if (this.soundManager) this.soundManager.playBeamFire();
         chargeCore.destroy();
         chargeGlow.destroy();
         gatherParticles.destroy();
@@ -4196,55 +4205,137 @@ export default class BattleScene extends Phaser.Scene {
     x: number,
     y: number,
     color: number,
-    type: "melee" | "beam" | "block" | "super" = "melee",
+    type: "melee" | "beam" | "block" | "super" | "clash" = "melee",
   ) {
     const isSuperMode =
       type === "super" || this.p1SuperActive || this.p2SuperActive;
-    const isBeam = type === "beam" || (isSuperMode && type !== "block");
+    const isBeam =
+      type === "beam" || (isSuperMode && type !== "block" && type !== "clash");
     const isBlock = type === "block";
+    const isClash = type === "clash";
 
     // Main Flash - Make it bigger and punchier
-    const boomRadius = isSuperMode ? 60 : isBeam ? 40 : isBlock ? 15 : 20;
-    const boom = this.add.circle(x, y, boomRadius, color).setDepth(20);
+    const boomRadius = isClash
+      ? 80
+      : isSuperMode
+        ? 60
+        : isBeam
+          ? 40
+          : isBlock
+            ? 15
+            : 20;
+    const boom = this.add
+      .circle(x, y, boomRadius, isClash ? 0xffffff : color)
+      .setDepth(20);
     this.tweens.add({
       targets: boom,
-      scale: isSuperMode ? 12 : isBeam ? 8 : isBlock ? 3 : 6,
+      scale: isClash ? 15 : isSuperMode ? 12 : isBeam ? 8 : isBlock ? 3 : 6,
       alpha: 0,
-      duration: isSuperMode ? 500 : isBeam ? 350 : 250,
+      duration: isClash ? 600 : isSuperMode ? 500 : isBeam ? 350 : 250,
       ease: "Cubic.easeOut",
       onComplete: () => boom.destroy(),
     });
 
     // Add an inner white core for more impact
-    const coreRadius = isSuperMode ? 35 : isBeam ? 20 : 10;
+    const coreRadius = isClash ? 45 : isSuperMode ? 35 : isBeam ? 20 : 10;
     const core = this.add.circle(x, y, coreRadius, 0xffffff).setDepth(21);
     this.tweens.add({
       targets: core,
-      scale: isSuperMode ? 8 : isBeam ? 6 : 4,
+      scale: isClash ? 10 : isSuperMode ? 8 : isBeam ? 6 : 4,
       alpha: 0,
-      duration: isSuperMode ? 300 : isBeam ? 200 : 150,
+      duration: isClash ? 400 : isSuperMode ? 300 : isBeam ? 200 : 150,
       ease: "Cubic.easeOut",
       onComplete: () => core.destroy(),
     });
 
+    // Energy Clash / Anime Slash lines (Visual Impact)
+    if (type === "melee" || isSuperMode || isClash) {
+      const slashCount = isClash ? 4 : isSuperMode ? 3 : 1;
+      for (let i = 0; i < slashCount; i++) {
+        const slashLength = isClash ? 400 : isSuperMode ? 300 : 180;
+        const slashThick = isClash ? 25 : isSuperMode ? 15 : 8;
+        const slash = this.add
+          .rectangle(x, y, slashLength, slashThick, 0xffffff)
+          .setRotation(Phaser.Math.FloatBetween(0, Math.PI))
+          .setDepth(22);
+
+        this.tweens.add({
+          targets: slash,
+          alpha: 0,
+          scaleX: isClash ? 2 : 1.5,
+          scaleY: 0,
+          duration: isClash ? 300 : 200,
+          ease: "Expo.easeOut",
+          onComplete: () => slash.destroy(),
+        });
+      }
+    }
+
+    // Lightning arcs for clash
+    if (isClash) {
+      for (let i = 0; i < 4; i++) {
+        const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+        const lightningData: Phaser.Types.Math.Vector2Like[] = [{ x: 0, y: 0 }];
+        let cx = 0,
+          cy = 0;
+        for (let j = 0; j < 4; j++) {
+          cx += Math.cos(angle + Phaser.Math.FloatBetween(-0.5, 0.5)) * 40;
+          cy += Math.sin(angle + Phaser.Math.FloatBetween(-0.5, 0.5)) * 40;
+          lightningData.push({ x: cx, y: cy });
+        }
+        const lightning = this.add.graphics({ x, y }).setDepth(23);
+        lightning.lineStyle(4, 0xfffc00, 1);
+        lightning.beginPath();
+        lightning.moveTo(0, 0);
+        for (let j = 1; j < lightningData.length; j++) {
+          lightning.lineTo(lightningData[j].x!, lightningData[j].y!);
+        }
+        lightning.strokePath();
+
+        this.tweens.add({
+          targets: lightning,
+          alpha: 0,
+          duration: 150,
+          onComplete: () => lightning.destroy(),
+        });
+      }
+    }
+
     // Debris / Sparks - Faster and more dynamic
-    const particleCount = isSuperMode ? 60 : isBeam ? 32 : isBlock ? 12 : 20;
+    const particleCount = isClash
+      ? 80
+      : isSuperMode
+        ? 60
+        : isBeam
+          ? 32
+          : isBlock
+            ? 12
+            : 20;
     for (let i = 0; i < particleCount; i++) {
+      const sparkColor = isClash
+        ? Phaser.Utils.Array.GetRandom([0xffffff, 0xfffc00, 0xff0000])
+        : isBlock
+          ? 0x3498db
+          : Math.random() > 0.5
+            ? 0xffffff
+            : color;
       const p = this.add
         .rectangle(
           x,
           y,
-          isSuperMode ? 14 : isBeam ? 10 : 6,
-          isSuperMode ? 3 : isBeam ? 2 : 6, // Elongated sparks for beams
-          isBlock ? 0x3498db : Math.random() > 0.5 ? 0xffffff : color,
+          isClash ? 18 : isSuperMode ? 14 : isBeam ? 10 : 6,
+          isClash ? 4 : isSuperMode ? 3 : isBeam ? 2 : 6, // Elongated sparks
+          sparkColor,
         )
         .setDepth(20);
       const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
-      const dist = isSuperMode
-        ? Phaser.Math.Between(250, 550)
-        : isBeam
-          ? Phaser.Math.Between(150, 350)
-          : Phaser.Math.Between(80, 200);
+      const dist = isClash
+        ? Phaser.Math.Between(300, 700)
+        : isSuperMode
+          ? Phaser.Math.Between(250, 550)
+          : isBeam
+            ? Phaser.Math.Between(150, 350)
+            : Phaser.Math.Between(80, 200);
 
       this.tweens.add({
         targets: p,
@@ -4252,41 +4343,49 @@ export default class BattleScene extends Phaser.Scene {
         y: y + Math.sin(angle) * dist,
         alpha: 0,
         scaleY: 0.1,
-        scaleX: isSuperMode ? 3 : isBeam ? 2 : 0.1,
+        scaleX: isClash ? 4 : isSuperMode ? 3 : isBeam ? 2 : 0.1,
         rotation: angle, // Align rotation to travel direction
         duration: Phaser.Math.Between(
-          isSuperMode ? 600 : 400,
-          isSuperMode ? 1200 : 800,
+          isClash ? 700 : isSuperMode ? 600 : 400,
+          isClash ? 1500 : isSuperMode ? 1200 : 800,
         ),
         ease: "Expo.easeOut",
         onComplete: () => p.destroy(),
       });
     }
 
-    // Extra ring for beams or super
-    if (isSuperMode || isBeam) {
-      const ringCount = isSuperMode ? 3 : 1;
+    // Extra ring for beams or super or clash
+    if (isSuperMode || isBeam || isClash) {
+      const ringCount = isClash ? 4 : isSuperMode ? 3 : 1;
       for (let r = 0; r < ringCount; r++) {
         const ring = this.add
           .circle(x, y, 30 + r * 15)
-          .setStrokeStyle(isSuperMode ? 6 : 4, color)
+          .setStrokeStyle(
+            isClash ? 8 : isSuperMode ? 6 : 4,
+            isClash ? 0xffffff : color,
+          )
           .setDepth(19);
         this.tweens.add({
           targets: ring,
-          scale: isSuperMode ? 8 + r * 2 : 5,
+          scale: isClash ? 10 + r * 3 : isSuperMode ? 8 + r * 2 : 5,
           alpha: 0,
-          delay: r * 80,
-          duration: isSuperMode ? 600 : 400,
+          delay: r * (isClash ? 50 : 80),
+          duration: isClash ? 800 : isSuperMode ? 600 : 400,
           ease: "Cubic.easeOut",
           onComplete: () => ring.destroy(),
         });
       }
 
       // Camera shake and screen flash
-      if (isSuperMode) {
+      if (isClash) {
+        if (this.battleCamera) {
+          this.battleCamera.flash(400, 255, 255, 255, true);
+          this.battleCamera.shake(700, 0.1);
+        }
+      } else if (isSuperMode) {
         if (this.battleCamera) {
           this.battleCamera.flash(300, 255, 255, 255, true);
-          this.battleCamera.shake(500, 0.08); // Trigger a stronger camera shake effect
+          this.battleCamera.shake(500, 0.08);
         }
       } else {
         if (this.battleCamera)
@@ -4299,6 +4398,38 @@ export default class BattleScene extends Phaser.Scene {
     } else {
       // Melee specific shake
       if (this.battleCamera) this.battleCamera.shake(150, 0.02);
+    }
+  }
+
+  playTurnTransitionEffect() {
+    if (!this.scene.isActive()) return;
+
+    // Screen shake to emphasize the shift in intensity
+    if (this.battleCamera) {
+      this.battleCamera.shake(200, 0.015);
+    }
+
+    // Particle dust effect at the midway point
+    const midX = (this.player.x + this.enemy.x) / 2;
+    const midY = (this.player.y + this.enemy.y) / 2 + 100; // Closer to the ground/feet
+
+    for (let i = 0; i < 20; i++) {
+      const size = Phaser.Math.Between(8, 20);
+      const dustColors = [0xdad7cd, 0xa3b19b, 0xededed, 0xdbd5c9];
+      const color = dustColors[Math.floor(Math.random() * dustColors.length)];
+
+      const dust = this.add.circle(midX, midY, size, color, 0.7).setDepth(4);
+
+      this.tweens.add({
+        targets: dust,
+        x: midX + Phaser.Math.Between(-200, 200),
+        y: midY + Phaser.Math.Between(-80, 80),
+        scale: { start: 1, end: 3 },
+        alpha: { start: 0.7, end: 0 },
+        duration: Phaser.Math.Between(500, 900),
+        ease: "Quad.easeOut",
+        onComplete: () => dust.destroy(),
+      });
     }
   }
 
@@ -4359,6 +4490,95 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  createFloatingComboMultiplier(x: number, y: number, comboCount: number) {
+    if (!this.scene.isActive()) return;
+
+    // Multiplier effect text (e.g. "x1.2")
+    const multiplier = (1 + (comboCount - 1) * 0.1).toFixed(1);
+
+    // Alternate side based on random jitter to avoid overlap with damage numbers
+    const jitterX =
+      Phaser.Math.Between(40, 80) * (Math.random() > 0.5 ? 1 : -1);
+
+    const text = this.add
+      .text(x + jitterX, y - 60, `${comboCount}x COMBO!`, {
+        fontFamily:
+          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontStyle: "italic",
+        fontSize: "32px",
+        color: "#fffc00",
+        stroke: "#000000",
+        strokeThickness: 5,
+        shadow: {
+          color: "#ff0000",
+          blur: 8,
+          offsetX: 0,
+          offsetY: 0,
+          fill: true,
+        },
+        resolution: 2,
+      })
+      .setOrigin(0.5)
+      .setDepth(100)
+      .setScale(0.5)
+      .setAlpha(0);
+
+    // Punch out animation
+    this.tweens.add({
+      targets: text,
+      scale: 1.2,
+      alpha: 1,
+      y: y - 100,
+      duration: 200,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        this.tweens.add({
+          targets: text,
+          y: y - 130,
+          alpha: 0,
+          scale: 0.8,
+          delay: 400,
+          duration: 300,
+          ease: "Power2",
+          onComplete: () => text.destroy(),
+        });
+      },
+    });
+
+    // Also add a little multiplier text below it
+    const multText = this.add
+      .text(x + jitterX, y - 30, `Damage x${multiplier}`, {
+        fontFamily: "'Courier New', Courier, monospace",
+        fontStyle: "bold",
+        fontSize: "20px",
+        color: "#00ffcc",
+        stroke: "#000000",
+        strokeThickness: 3,
+        resolution: 2,
+      })
+      .setOrigin(0.5)
+      .setDepth(100)
+      .setAlpha(0);
+
+    this.tweens.add({
+      targets: multText,
+      y: y - 70,
+      alpha: 1,
+      duration: 300,
+      ease: "Cubic.easeOut",
+      onComplete: () => {
+        this.tweens.add({
+          targets: multText,
+          y: y - 90,
+          alpha: 0,
+          delay: 300,
+          duration: 200,
+          onComplete: () => multText.destroy(),
+        });
+      },
+    });
+  }
+
   createFloatingDamage(
     x: number,
     y: number,
@@ -4406,8 +4626,17 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
-  takeDamage(isP: boolean, dmg: number) {
+  takeDamage(isP: boolean, baseDmg: number) {
     if (this.isBattleOver || !this.scene.isActive()) return;
+
+    let dmg = baseDmg;
+
+    // Apply combo multiplier ONLY if the target isn't defending
+    const attackerComboCount = isP ? this.p2ComboCount : this.p1ComboCount;
+    if (attackerComboCount > 1) {
+      const mult = 1 + (attackerComboCount - 1) * 0.1;
+      dmg = Math.floor(dmg * mult);
+    }
 
     if (isP) this.isP1Jumping = false;
     else this.isP2Jumping = false;
@@ -4417,23 +4646,43 @@ export default class BattleScene extends Phaser.Scene {
 
     let isCritical = false;
     if (def) {
-      dmg = Math.floor(dmg * 0.3);
+      // If defending, use original base damage and reduce it
+      dmg = Math.floor(baseDmg * 0.3);
       // Block effect
       this.createImpactEffect(target.x, target.y + 120, 0x3498db, "block"); // Blue shield spark
-      if (this.cache.audio.exists("sfx_block")) this.sound.play("sfx_block");
+      if (this.soundManager) this.soundManager.playBlock();
     } else {
       isCritical = dmg > 25; // threshold for critical visual
-      if (this.cache.audio.exists("sfx_hit")) this.sound.play("sfx_hit");
+      const targetActing = isP ? this.p1ActionActive : this.p2ActionActive;
+
       // Add requested screen-shake and particle burst
-      if (this.battleCamera) this.battleCamera.shake(150, 0.02);
-      this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee");
+      if (targetActing) {
+        // CLASH EFFECT! (Both attacking / exchanging blows)
+        this.createImpactEffect(target.x, target.y + 60, 0xfffc00, "clash");
+        if (this.soundManager) this.soundManager.playClash();
+      } else {
+        // normal hit
+        if (this.battleCamera) this.battleCamera.shake(150, 0.02);
+        this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee");
+        if (this.soundManager) this.soundManager.playPunchImpact(isCritical);
+      }
 
       // Update combo counter
       if (this.battleUI) {
         if (isP && this.p2ComboCount > 1) {
           this.battleUI.updateCombo(this.p2ComboCount, false);
+          this.createFloatingComboMultiplier(
+            target.x,
+            target.y - 40,
+            this.p2ComboCount,
+          );
         } else if (!isP && this.p1ComboCount > 1) {
           this.battleUI.updateCombo(this.p1ComboCount, true);
+          this.createFloatingComboMultiplier(
+            target.x,
+            target.y - 40,
+            this.p1ComboCount,
+          );
         }
       }
     }

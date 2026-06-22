@@ -36,8 +36,7 @@ export class BatmanFighter extends Fighter {
         duration: 150,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.0 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
           bs.takeDamage(
             !isPlayer,
@@ -74,8 +73,7 @@ export class BatmanFighter extends Fighter {
       attacker.play(bs.getAnimKey("batman", transLevel, "attack"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 0.8 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const batarang = bs.add
@@ -140,7 +138,7 @@ export class BatmanFighter extends Fighter {
     const dmg = Math.floor(35 * bs.getDamageMultiplier(transLevel));
 
     bs.log("BATARANG!");
-    if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack");
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     const hand = bs.getHandPosition(isPlayer);
 
@@ -209,7 +207,7 @@ export class BatmanFighter extends Fighter {
             if (!bs.scene.isActive()) return;
 
             bs.createImpactEffect(batarang.x, batarang.y, 0x00eaff);
-            if (bs.cache.audio.exists("sfx_hit")) bs.sound.play("sfx_hit");
+            if (bs.cache.audio.exists("sfx_hit")) if (bs.soundManager) bs.soundManager.playPunchImpact(false);
 
             // Shockwave ring
             const ring = bs.add
@@ -273,7 +271,7 @@ export class BatmanFighter extends Fighter {
     const dmg = Math.floor(100 * bs.getDamageMultiplier(transLevel));
 
     bs.log("THE DARK KNIGHT!");
-    if (bs.cache.audio.exists("sfx_attack")) bs.sound.play("sfx_attack");
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     // Screen goes dark
     const darkOverlay = bs.add
@@ -327,7 +325,7 @@ export class BatmanFighter extends Fighter {
 
             bs.createImpactEffect(cx, cy, 0xffffff);
             if (i % 3 === 0) bs.cameras.main.shake(50, 0.01);
-            if (bs.cache.audio.exists("sfx_hit")) bs.sound.play("sfx_hit");
+            if (bs.cache.audio.exists("sfx_hit")) if (bs.soundManager) bs.soundManager.playPunchImpact(false);
           });
         }
 

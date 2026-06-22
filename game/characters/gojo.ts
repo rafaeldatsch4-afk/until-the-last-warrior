@@ -35,8 +35,7 @@ export class GojoFighter extends Fighter {
         attacker.x = target.x + (attacker.x < target.x ? -30 : 30);
         attacker.play(bs.getAnimKey("gojo", transLevel, "attack"));
 
-        if (bs.cache.audio.exists("sfx_attack"))
-          bs.sound.play("sfx_attack", { volume: 1.2 });
+        if (bs.soundManager) bs.soundManager.playPunchImpact(true);
         bs.createImpactEffect(target.x, target.y + 120, 0x00ffff);
         bs.takeDamage(
           !isPlayer,
@@ -63,8 +62,7 @@ export class GojoFighter extends Fighter {
       attacker.play(bs.getAnimKey("gojo", transLevel, "attack"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 1.0 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const orbColor = Math.random() > 0.5 ? 0xff0000 : 0x0000ff;
         const hand = bs.getHandPosition(isPlayer);
@@ -114,7 +112,7 @@ export class GojoFighter extends Fighter {
     const dmg = Math.floor(45 * bs.getDamageMultiplier(transLevel));
 
     bs.log("CURSED TECHNIQUE: RED & BLUE!");
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     const hand = bs.getHandPosition(isPlayer);
 
@@ -264,8 +262,7 @@ export class GojoFighter extends Fighter {
     const dmg = Math.floor(150 * bs.getDamageMultiplier(transLevel));
 
     bs.log("HOLLOW PURPLE!");
-    if (bs.cache.audio.exists("sfx_beam"))
-      bs.sound.play("sfx_beam", { rate: 0.8 });
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     const hand = bs.getHandPosition(isPlayer);
 
@@ -413,8 +410,7 @@ export class GojoFighter extends Fighter {
         });
 
         bs.time.delayedCall(600, () => {
-          if (bs.cache.audio.exists("sfx_explosion"))
-            bs.sound.play("sfx_explosion");
+          if (bs.soundManager) bs.soundManager.playExplosion(true);
 
           // Fire Hollow Purple
           bs.tweens.add({
@@ -471,8 +467,7 @@ export class GojoFighter extends Fighter {
 
               bs.createScreenFlash(0x8a2be2, 600, 1);
               bs.cameras.main.shake(1500, 0.15);
-              if (bs.cache.audio.exists("sfx_explosion"))
-                bs.sound.play("sfx_explosion");
+              if (bs.soundManager) bs.soundManager.playExplosion(true);
 
               // Massive Purple Void
               const voidGlow = bs.add

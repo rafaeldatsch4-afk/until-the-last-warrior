@@ -38,8 +38,7 @@ export class ItachiFighter extends Fighter {
         onComplete: () => {
           if (!bs.scene.isActive()) return;
 
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.2 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
           const hitColor = transformLevel === 1 ? 0xff4500 : 0xcccccc; // Susanoo sword or kunai
           const hitLine = bs.add
@@ -87,8 +86,7 @@ export class ItachiFighter extends Fighter {
 
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 0.8 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const fireballColor = transformLevel === 1 ? 0xff4500 : 0xff8c00; // Susanoo fire or normal fire
         const hand = bs.getHandPosition(isPlayer);
@@ -111,8 +109,7 @@ export class ItachiFighter extends Fighter {
             fireball.destroy();
             glow.destroy();
 
-            if (bs.cache.audio.exists("sfx_explosion"))
-              bs.sound.play("sfx_explosion", { volume: 0.8 });
+            if (bs.soundManager) bs.soundManager.playExplosion(true);
             bs.createImpactEffect(target.x, target.y + 120, fireballColor);
             bs.takeDamage(
               !isPlayer,
@@ -162,7 +159,7 @@ export class ItachiFighter extends Fighter {
 
     bs.log("AMATERASU!");
     attacker.play(bs.getAnimKey("itachi", transformLevel, "attack"));
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Eye bleeding effect on attacker (Itachi)
     const eyeBleed = bs.add
@@ -238,8 +235,7 @@ export class ItachiFighter extends Fighter {
 
     bs.time.delayedCall(1000, () => {
       if (!bs.scene.isActive()) return;
-      if (bs.cache.audio.exists("sfx_explosion"))
-        bs.sound.play("sfx_explosion");
+      if (bs.soundManager) bs.soundManager.playExplosion(true);
 
       bs.createScreenFlash(0x8b0000, 500, 1);
       bs.createImpactEffect(target.x, target.y + 120, 0x000000, "beam");
@@ -290,7 +286,7 @@ export class ItachiFighter extends Fighter {
 
     bs.log("TSUKUYOMI!");
     attacker.play(bs.getAnimKey("itachi", transformLevel, "attack"));
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Screen turns red/black
     const bg = bs.add
@@ -368,8 +364,7 @@ export class ItachiFighter extends Fighter {
               onComplete: () => bg.destroy(),
             });
 
-            if (bs.cache.audio.exists("sfx_explosion"))
-              bs.sound.play("sfx_explosion");
+            if (bs.soundManager) bs.soundManager.playExplosion(true);
 
             // Multiple invisible slashes
             for (let i = 0; i < 8; i++) {

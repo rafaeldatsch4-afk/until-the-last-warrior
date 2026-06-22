@@ -34,8 +34,7 @@ export class SpidermanFighter extends Fighter {
         duration: 100,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.0 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
           const hits = isComboFinisher ? 3 : 1;
           for (let i = 0; i < hits; i++) {
@@ -72,8 +71,7 @@ export class SpidermanFighter extends Fighter {
       attacker.play(bs.getAnimKey("spiderman", transLevel, "attack"));
       bs.time.delayedCall(50, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 0.6 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const isIron = transLevel > 0;
@@ -160,8 +158,7 @@ export class SpidermanFighter extends Fighter {
             // BAM! Uppercut or heavy punch
             attacker.play(bs.getAnimKey("spiderman", transLevel, "attack"));
             bs.cameras.main.shake(200, 0.03);
-            if (bs.cache.audio.exists("sfx_attack"))
-              bs.sound.play("sfx_attack", { volume: 1.5 });
+            if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
             bs.createImpactEffect(target.x, target.y + 120, 0xff0000);
             bs.takeDamage(
@@ -270,8 +267,7 @@ export class SpidermanFighter extends Fighter {
         duration: 80,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 0.8 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(
             target.x + (Math.random() * 40 - 20),
             target.y + 120 + (Math.random() * 40 - 20),

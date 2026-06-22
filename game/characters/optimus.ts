@@ -35,8 +35,7 @@ export class OptimusFighter extends Fighter {
           if (!bs.scene.isActive()) return;
           attacker.play(bs.getAnimKey("optimus", transLevel, "attack"));
 
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.5 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(target.x, target.y + 120, 0xffaa00);
           bs.takeDamage(
             !isPlayer,
@@ -65,8 +64,7 @@ export class OptimusFighter extends Fighter {
       attacker.play(bs.getAnimKey("optimus", transLevel, "attack"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 1.2 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const blast = bs.add
@@ -218,8 +216,7 @@ export class OptimusFighter extends Fighter {
             });
 
             bs.cameras.main.shake(100, 0.02);
-            if (bs.cache.audio.exists("sfx_explosion"))
-              bs.sound.play("sfx_explosion", { volume: 0.3 });
+            if (bs.soundManager) bs.soundManager.playExplosion(true);
           },
         });
       });
@@ -249,7 +246,7 @@ export class OptimusFighter extends Fighter {
     const dmg = Math.floor(125 * bs.getDamageMultiplier(transLevel));
 
     bs.log("MATRIX BLAST!");
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Open chest (visual effect)
     const hand = bs.getHandPosition(isPlayer);

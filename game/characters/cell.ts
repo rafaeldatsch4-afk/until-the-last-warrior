@@ -40,8 +40,7 @@ export class CellFighter extends Fighter {
           ease: "Expo.easeIn",
           onComplete: () => {
             if (!bs.scene.isActive()) return;
-            if (bs.cache.audio.exists("sfx_attack"))
-              bs.sound.play("sfx_attack", { volume: 1.2 });
+            if (bs.soundManager) bs.soundManager.playPunchImpact(true);
             bs.createImpactEffect(target.x, target.y + 120, 0x00ff00);
             bs.takeDamage(
               !isPlayer,
@@ -72,8 +71,7 @@ export class CellFighter extends Fighter {
       attacker.play(bs.getAnimKey("cell", transformLevel, "attack"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
-        if (bs.cache.audio.exists("sfx_beam"))
-          bs.sound.play("sfx_beam", { volume: 1.0 });
+        if (bs.soundManager) bs.soundManager.playBeamFire();
 
         const hand = bs.getHandPosition(isPlayer);
         const beam = bs.add

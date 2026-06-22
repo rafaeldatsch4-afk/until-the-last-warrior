@@ -38,8 +38,7 @@ export class JotaroFighter extends Fighter {
         onComplete: () => {
           if (!bs.scene.isActive()) return;
 
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.2 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
           // Multiple punch impacts for Star Platinum
           const hitColor = transLevel === 1 ? 0x8a2be2 : 0xcccccc;
@@ -128,7 +127,7 @@ export class JotaroFighter extends Fighter {
           projectile.destroy();
           bs.createImpactEffect(target.x, target.y + 120, projectileColor);
           if (bs.cache.audio.exists("sfx_hit"))
-            bs.sound.play("sfx_hit", { volume: 0.8 });
+            if (bs.soundManager) bs.soundManager.playPunchImpact(false);
           bs.takeDamage(
             !isPlayer,
             Math.floor(12 * bs.getDamageMultiplier(transLevel)),
@@ -163,7 +162,7 @@ export class JotaroFighter extends Fighter {
 
     bs.log("STAR FINGER!");
     attacker.play(bs.getAnimKey("jotaro", transLevel, "attack"));
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Stand aura
     const aura = bs.add
@@ -238,7 +237,7 @@ export class JotaroFighter extends Fighter {
         bs.cameras.main.shake(600, 0.08);
         bs.createScreenFlash(0x8a2be2, 400, 0.8);
         if (bs.cache.audio.exists("sfx_hit"))
-          bs.sound.play("sfx_hit", { rate: 1.2 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(false);
 
         bs.tweens.add({
           targets: [finger, fingerCore, fingerGlow],
@@ -273,7 +272,7 @@ export class JotaroFighter extends Fighter {
 
     bs.log("ORA ORA ORA ORA ORA!");
     attacker.play(bs.getAnimKey("jotaro", transLevel, "attack"));
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Stand aura
     const aura = bs.add
@@ -353,7 +352,7 @@ export class JotaroFighter extends Fighter {
             });
 
             if (punches % 2 === 0 && bs.cache.audio.exists("sfx_attack")) {
-              bs.sound.play("sfx_attack", { volume: 0.9, rate: 1.2 });
+              if (bs.soundManager) bs.soundManager.playPunchImpact(true);
             }
 
             bs.cameras.main.shake(50, 0.04);
@@ -377,8 +376,7 @@ export class JotaroFighter extends Fighter {
                   "beam",
                 );
                 bs.cameras.main.shake(1200, 0.12);
-                if (bs.cache.audio.exists("sfx_explosion"))
-                  bs.sound.play("sfx_explosion");
+                if (bs.soundManager) bs.soundManager.playExplosion(true);
 
                 // Huge impact circle
                 const finalHitGlow = bs.add

@@ -51,8 +51,7 @@ export class NarutoFighter extends Fighter {
         duration: 150,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.2 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
           bs.takeDamage(
             !isPlayer,
@@ -98,8 +97,7 @@ export class NarutoFighter extends Fighter {
         },
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.cache.audio.exists("sfx_attack"))
-            bs.sound.play("sfx_attack", { volume: 1.5 });
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(target.x, target.y + 120, 0x00ffff);
           rasengan.destroy();
 
@@ -167,8 +165,7 @@ export class NarutoFighter extends Fighter {
     }
 
     bs.log(attackName);
-    if (bs.cache.audio.exists("sfx_attack"))
-      bs.sound.play("sfx_attack", { rate: 1.5 });
+    if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
     // Create Rasengan in hand
     const hand = bs.getHandPosition(isPlayer);
@@ -242,8 +239,7 @@ export class NarutoFighter extends Fighter {
             // 3. Impact!
             bs.createScreenFlash(color, 500, 1);
             bs.cameras.main.shake(1000, 0.1);
-            if (bs.cache.audio.exists("sfx_explosion"))
-              bs.sound.play("sfx_explosion");
+            if (bs.soundManager) bs.soundManager.playExplosion(true);
 
             // Explosion effect
             const explosion = bs.add
@@ -348,7 +344,7 @@ export class NarutoFighter extends Fighter {
     }
 
     bs.log(attackName);
-    if (bs.cache.audio.exists("sfx_beam")) bs.sound.play("sfx_beam");
+    if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Raise hand
     attacker.y -= 20;
@@ -424,8 +420,7 @@ export class NarutoFighter extends Fighter {
             // Massive explosion sphere
             bs.createScreenFlash(color, 600, 1);
             bs.cameras.main.shake(1200, 0.12);
-            if (bs.cache.audio.exists("sfx_explosion"))
-              bs.sound.play("sfx_explosion");
+            if (bs.soundManager) bs.soundManager.playExplosion(true);
 
             const explosion = bs.add
               .circle(target.x, target.y + 120, 10, color)
