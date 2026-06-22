@@ -397,11 +397,16 @@ export function generateCustomSprite(
           box(19, 14, 2, 9, TORSO_2);
           box(13, 14, 1, 9, TORSO_1_SHADOW);
 
-          // Web pattern
-          box(16, 14, 1, 9, BLACK); // center web
-          box(14, 16, 4, 1, BLACK); // horizontal web
-          box(14, 19, 4, 1, BLACK); // horizontal web
-          box(15, 17, 2, 2, BLACK); // Logo (simplified)
+          // Web pattern (diagonal, mais fino e legível)
+          box(16, 14, 1, 9, BLACK);
+          box(14, 15, 1, 1, BLACK);
+          box(18, 15, 1, 1, BLACK);
+          box(13, 17, 1, 1, BLACK);
+          box(19, 17, 1, 1, BLACK);
+          box(14, 19, 1, 1, BLACK);
+          box(18, 19, 1, 1, BLACK);
+          box(14, 16, 4, 1, BLACK);
+          box(14, 19, 4, 1, BLACK);
 
           if (isCharge) {
             box(20, 4, 3, 10, TORSO_1);
@@ -677,15 +682,13 @@ export function generateCustomSprite(
           headDot(18, 10, WHITE);
         } else if (pHead === "chapolim") {
           headBox(12, 6, 8, 7, SKIN_TONE); // face
-          headBox(11, 5, 10, 5, HEAD_1); // Red hood covering top/sides
+          headBox(11, 4, 10, 6, HEAD_1); // Capacete (agora começa em y=4, mais alto, sem buraco)
           headDot(11, 9, HEAD_1);
           headDot(20, 9, HEAD_1);
-
-          headBox(13, 3, 1, 2, HEAD_1); // Antennae
-          headBox(18, 3, 1, 2, HEAD_1);
-          headDot(12, 2, HEAD_2); // yellow tips
-          headDot(19, 2, HEAD_2);
-
+          headBox(13, 2, 1, 3, HEAD_1); // Antena conectada ao capacete (y=2 a y=5, sem espaço)
+          headBox(18, 2, 1, 3, HEAD_1);
+          headDot(13, 1, HEAD_2); // ponta amarela
+          headDot(18, 1, HEAD_2);
           headDot(14, 9, eyeColor);
           headDot(18, 9, eyeColor);
         } else if (pHead === "vegeta") {
