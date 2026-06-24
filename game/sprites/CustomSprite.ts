@@ -435,11 +435,12 @@ export function generateCustomSprite(
           box(11, 14, 10, 11, TORSO_1); // Heavy black coat
           box(9, 14, 2, 11, TORSO_1); // Coat flair left
           box(21, 14, 2, 11, TORSO_1); // Coat flair right
-          box(13, 14, 6, 9, TORSO_2); // Inner shirt
-          box(14, 14, 4, 3, SKIN_TONE); // Chest
+          box(14, 14, 4, 4, TORSO_2); // Inner shirt - gola V, mais estreita
+          box(15, 18, 2, 3, TORSO_2); // continuação fina da camisa
+          box(14, 14, 4, 2, SKIN_TONE); // Chest exposto, menor
 
           box(17, 14, 2, 8, TORSO_1_SHADOW);
-          box(12, 16, 2, 5, 0xffd700); // Gold chain
+          box(13, 16, 1, 5, 0xffd700); // Gold chain fino
 
           if (isCharge) {
             box(20, 4, 3, 10, TORSO_1);
@@ -521,13 +522,10 @@ export function generateCustomSprite(
           box(11, 14, 10, 9, TORSO_1); // red suit
 
           // Yellow heart shape roughly
-          box(14, 15, 2, 1, TORSO_2);
-          box(17, 15, 2, 1, TORSO_2);
-          box(13, 16, 7, 2, TORSO_2);
-          box(14, 18, 5, 2, TORSO_2);
-          box(15, 20, 3, 1, TORSO_2);
-          box(16, 21, 1, 1, TORSO_2);
-          box(15, 17, 2, 2, TORSO_1); // CH roughly
+          box(14, 16, 4, 1, TORSO_2); // topo do escudo
+          box(13, 17, 6, 3, TORSO_2); // corpo do escudo
+          box(14, 20, 4, 2, TORSO_2); // ponta do escudo
+          box(15, 18, 2, 2, TORSO_1); // detalhe central (vazio)
 
           if (isCharge) {
             box(20, 4, 3, 10, TORSO_1);
@@ -553,13 +551,14 @@ export function generateCustomSprite(
           box(11, 14, 10, 9, SKIN_TONE);
 
           // Pectorals
-          box(11, 17, 3, 1, SKIN_SHADOW);
-          box(18, 17, 3, 1, SKIN_SHADOW);
-          box(15, 14, 2, 8, SKIN_SHADOW); // cleavage
-
+          box(15, 15, 1, 4, SKIN_SHADOW); // cleavage curta, só no topo
+          box(12, 18, 2, 1, SKIN_SHADOW); // sombra peitoral esquerda
+          box(19, 18, 2, 1, SKIN_SHADOW); // sombra peitoral direita
+          
           // Abs (6-pack)
-          box(14, 19, 4, 1, SKIN_SHADOW);
-          box(14, 21, 4, 1, SKIN_SHADOW);
+          box(14, 20, 1, 3, SKIN_SHADOW); // linha abdominal esquerda
+          box(18, 20, 1, 3, SKIN_SHADOW); // linha abdominal direita
+          box(15, 22, 3, 1, SKIN_SHADOW); // abs inferior
 
           if (isCharge) {
             box(20, 4, 3, 10, SKIN_TONE);
@@ -641,14 +640,18 @@ export function generateCustomSprite(
         // ACCESSORY (Back layer)
         // ====================
         if (pAcc === "cape" && pTorso !== "jotaro") {
-          box(10, 14, 12, 13, ACC_1); // Simple cape behind arms
-          box(9, 16, 2, 11, ACC_1);
-          box(21, 16, 2, 11, ACC_1);
+          box(8, 15, 3, 14, ACC_1); // aba esquerda
+          box(21, 15, 3, 14, ACC_1); // aba direita
+          box(9, 27, 14, 2, ACC_1); // dobra inferior conectando
+          const ACC_1_SHADOW = Phaser.Display.Color.IntegerToColor(ACC_1).darken(20).color;
+          box(8, 15, 1, 14, ACC_1_SHADOW); // sombra da dobra
+          box(23, 15, 1, 14, ACC_1_SHADOW);
         } else if (pAcc === "sword") {
           // Sword sheathed on back
-          box(12, 12, 2, 12, 0xdcdcdc); // blade poking out maybe
-          box(11, 11, 4, 1, ACC_1); // hilt guard
-          box(12, 8, 2, 3, 0x8b4513); // handle
+          box(23, 6, 2, 16, 0xdcdcdc); // lâmina na lateral, não sobre o peito
+          box(22, 6, 1, 16, 0xaaaaaa); // sombra da lâmina
+          box(21, 11, 4, 2, ACC_1); // hilt guard
+          box(22, 4, 2, 4, 0x8b4513); // cabo
         }
 
         const HEAD_1_SHADOW =
