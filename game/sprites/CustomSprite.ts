@@ -443,8 +443,8 @@ export function generateCustomSprite(
           box(18, 29, 4, 4, 0x222222);
           box(10, 33, 2, 1, 0x222222); // shoe bottom
           box(18, 33, 2, 1, 0x222222);
-          box(12, 33, 2, 1, skinColor); // toes exposed
-          box(20, 33, 2, 1, skinColor);
+          box(12, 33, 2, 1, SKIN_TONE); // toes exposed
+          box(20, 33, 2, 1, SKIN_TONE);
         } else {
           box(10, 29, 4, 3, FEET_1);
           box(18, 29, 4, 3, FEET_1);
@@ -1015,18 +1015,12 @@ export function generateCustomSprite(
           box(22, 4, 2, 4, 0x8b4513); // cabo
         } else if (pAcc === "aura_blue") {
           // Visual back aura
-          canvas.context.globalAlpha = 0.4;
-          box(4, 2, 24, 32, 0x0088ff);
-          canvas.context.globalAlpha = 0.6;
-          box(6, 4, 20, 28, 0x00ffff);
-          canvas.context.globalAlpha = 1.0;
+          alphaBox(4, 2, 24, 32, 0x0088ff, 0.4);
+          alphaBox(6, 4, 20, 28, 0x00ffff, 0.6);
         } else if (pAcc === "aura_red") {
           // Visual back aura
-          canvas.context.globalAlpha = 0.4;
-          box(4, 2, 24, 32, 0xaa0000);
-          canvas.context.globalAlpha = 0.6;
-          box(6, 4, 20, 28, 0xff0000);
-          canvas.context.globalAlpha = 1.0;
+          alphaBox(4, 2, 24, 32, 0xaa0000, 0.4);
+          alphaBox(6, 4, 20, 28, 0xff0000, 0.6);
         }
 
         const HEAD_1_SHADOW =
