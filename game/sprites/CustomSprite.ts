@@ -349,31 +349,6 @@ export function generateCustomSprite(
           box(14, 23, 4, 3, LEGS_2);
           box(10, 23, 1, 3, TORSO_2_SHADOW);
           box(21, 23, 1, 3, TORSO_2_SHADOW);
-        } else if (pLegs === "batman") {
-          // Batman dark grey legs with black trunks
-          box(10, 23, 4, 6, 0x444444); // grey legs
-          box(18, 23, 4, 6, 0x444444);
-          box(14, 23, 4, 2, 0x444444);
-          // Black trunks
-          box(10, 23, 4, 2, BLACK);
-          box(18, 23, 4, 2, BLACK);
-          box(14, 23, 4, 2, BLACK);
-        } else if (pLegs === "cyberninja") {
-          // Cyberninja armor plates
-          box(10, 23, 4, 6, 0x222222);
-          box(18, 23, 4, 6, 0x222222);
-          box(14, 23, 4, 2, 0x222222);
-          // Metallic plates
-          box(11, 24, 2, 4, 0x88aaee);
-          box(19, 24, 2, 4, 0x88aaee);
-        } else if (pLegs === "naruto") {
-          // Naruto orange pants with bandages on right leg
-          box(10, 23, 4, 6, 0xff7700);
-          box(18, 23, 4, 6, 0xff7700);
-          box(14, 23, 4, 2, 0xff7700);
-          // Bandages and pouch on right leg
-          box(18, 25, 4, 2, WHITE); // bandage
-          box(21, 24, 2, 3, 0x333333); // pouch
         } else {
           // Goku baggy pants (orange)
           box(10, 23, 4, 6, LEGS_1);
@@ -426,25 +401,6 @@ export function generateCustomSprite(
           box(18, 29, 5, 5, BLACK);
           box(11, 29, 1, 5, 0x333333); // shine
           box(19, 29, 1, 5, 0x333333);
-        } else if (pFeet === "batman") {
-          box(10, 29, 4, 5, BLACK); // black boots
-          box(18, 29, 4, 5, BLACK);
-          // boot spikes/folds
-          box(9, 28, 2, 2, BLACK);
-          box(17, 28, 2, 2, BLACK);
-        } else if (pFeet === "cyberninja") {
-          box(10, 29, 4, 5, 0x111111); // dark cyber boots
-          box(18, 29, 4, 5, 0x111111);
-          box(11, 30, 2, 2, 0x00ffff); // neon cyan glow
-          box(19, 30, 2, 2, 0x00ffff); 
-        } else if (pFeet === "naruto") {
-          // Open toed ninja shoes
-          box(10, 29, 4, 4, 0x222222);
-          box(18, 29, 4, 4, 0x222222);
-          box(10, 33, 2, 1, 0x222222); // shoe bottom
-          box(18, 33, 2, 1, 0x222222);
-          box(12, 33, 2, 1, SKIN_TONE); // toes exposed
-          box(20, 33, 2, 1, SKIN_TONE);
         } else {
           box(10, 29, 4, 3, FEET_1);
           box(18, 29, 4, 3, FEET_1);
@@ -832,98 +788,6 @@ export function generateCustomSprite(
             box(8, 24, 3, 1, SKIN_SHADOW); // hands shade/knuckles
             box(21, 24, 3, 1, SKIN_SHADOW);
           }
-        } else if (pTorso === "batman") {
-          // Batman grey suit with black bat symbol
-          box(11, 14, 10, 9, 0x555555); // grey suit
-          box(12, 15, 8, 7, 0x666666);
-          // Bat symbol
-          box(13, 15, 6, 2, BLACK);
-          box(12, 16, 8, 2, BLACK);
-          box(14, 18, 4, 2, BLACK);
-          box(15, 15, 2, 1, 0x666666); // top gaps
-          // Yellow utility belt
-          box(11, 22, 10, 2, 0xffd700);
-          box(12, 22, 1, 2, 0xaa8800);
-          box(15, 22, 2, 2, 0xaa8800);
-          box(19, 22, 1, 2, 0xaa8800);
-
-          if (isCharge) {
-            box(20, 4, 3, 10, 0x555555);
-            box(20, 2, 3, 3, BLACK); // gloves
-            box(9, 4, 3, 10, 0x555555);
-            box(9, 2, 3, 3, BLACK);
-          } else if (isAttack) {
-            box(18, 13, 10, 3, 0x555555);
-            box(25, 13, 7, 3, BLACK);
-            box(8, 14, 3, 7, 0x555555);
-            box(8, 18, 3, 3, BLACK);
-          } else {
-            box(8, 14, 3, 7, 0x555555); // arms
-            box(8, 18, 3, 4, BLACK); // gloves
-            box(21, 14, 3, 7, 0x555555);
-            box(21, 18, 3, 4, BLACK);
-            // Arm spikes
-            box(6, 19, 2, 1, BLACK);
-            box(6, 21, 2, 1, BLACK);
-            box(24, 19, 2, 1, BLACK);
-            box(24, 21, 2, 1, BLACK);
-          }
-        } else if (pTorso === "cyberninja") {
-          // Cyberninja armor torso
-          box(11, 14, 10, 9, 0x222222); // dark undersuit
-          // Neon chest plates
-          box(12, 14, 4, 4, 0x88aaee);
-          box(16, 14, 4, 4, 0x88aaee);
-          box(14, 15, 4, 2, 0x00ffff); // glowing core
-          box(13, 19, 6, 3, 0x444444); // ab plates
-
-          if (isCharge) {
-            box(20, 4, 3, 10, 0x222222);
-            box(20, 4, 3, 4, 0x88aaee); // shoulder pad
-            box(20, 2, 3, 3, 0x444444);
-            box(9, 4, 3, 10, 0x222222);
-            box(9, 4, 3, 4, 0x88aaee);
-            box(9, 2, 3, 3, 0x444444);
-          } else if (isAttack) {
-            box(18, 13, 10, 3, 0x222222);
-            box(18, 12, 4, 4, 0x88aaee); // shoulder pad
-            box(28, 13, 4, 3, 0x444444);
-            box(8, 14, 3, 7, 0x222222);
-            box(8, 13, 4, 4, 0x88aaee);
-          } else {
-            box(8, 14, 3, 7, 0x222222);
-            box(7, 13, 5, 4, 0x88aaee);
-            box(21, 14, 3, 7, 0x222222);
-            box(20, 13, 5, 4, 0x88aaee);
-            // Arm glowing bands
-            box(8, 19, 3, 1, 0x00ffff);
-            box(21, 19, 3, 1, 0x00ffff);
-          }
-        } else if (pTorso === "naruto") {
-          // Naruto orange and blue/black jacket
-          box(11, 14, 10, 9, 0xff7700); // orange base
-          box(12, 14, 8, 4, 0x222222); // blue/black top shoulders
-          box(15, 14, 2, 9, WHITE); // zipper
-          box(12, 15, 1, 7, 0xdd5500); // shading
-          box(19, 15, 1, 7, 0xdd5500);
-          
-          if (isCharge) {
-            box(20, 4, 3, 10, 0xff7700);
-            box(20, 2, 3, 3, SKIN_TONE);
-            box(9, 4, 3, 10, 0xff7700);
-            box(9, 2, 3, 3, SKIN_TONE);
-          } else if (isAttack) {
-            box(18, 13, 10, 3, 0xff7700);
-            box(28, 13, 4, 3, SKIN_TONE);
-            box(8, 14, 3, 7, 0xff7700);
-          } else {
-            box(8, 14, 3, 7, 0xff7700);
-            box(21, 14, 3, 7, 0xff7700);
-            box(8, 14, 3, 2, 0x222222); // shoulder black part
-            box(21, 14, 3, 2, 0x222222);
-            box(8, 19, 3, 2, SKIN_TONE); // exposed hands
-            box(21, 19, 3, 2, SKIN_TONE);
-          }
         } else {
           // Goku Gi
           box(11, 14, 10, 9, TORSO_1);
@@ -1015,12 +879,18 @@ export function generateCustomSprite(
           box(22, 4, 2, 4, 0x8b4513); // cabo
         } else if (pAcc === "aura_blue") {
           // Visual back aura
-          alphaBox(4, 2, 24, 32, 0x0088ff, 0.4);
-          alphaBox(6, 4, 20, 28, 0x00ffff, 0.6);
+          canvas.fillStyle(0x0088ff, 0.4);
+          canvas.fillRect((offsetX + 4) * SCALE, (DRAW_OFFSET_Y + 2) * SCALE, 24 * SCALE, 32 * SCALE);
+          canvas.fillStyle(0x00ffff, 0.6);
+          canvas.fillRect((offsetX + 6) * SCALE, (DRAW_OFFSET_Y + 4) * SCALE, 20 * SCALE, 28 * SCALE);
+          canvas.fillStyle(0xffffff, 1);
         } else if (pAcc === "aura_red") {
           // Visual back aura
-          alphaBox(4, 2, 24, 32, 0xaa0000, 0.4);
-          alphaBox(6, 4, 20, 28, 0xff0000, 0.6);
+          canvas.fillStyle(0xaa0000, 0.4);
+          canvas.fillRect((offsetX + 4) * SCALE, (DRAW_OFFSET_Y + 2) * SCALE, 24 * SCALE, 32 * SCALE);
+          canvas.fillStyle(0xff0000, 0.6);
+          canvas.fillRect((offsetX + 6) * SCALE, (DRAW_OFFSET_Y + 4) * SCALE, 20 * SCALE, 28 * SCALE);
+          canvas.fillStyle(0xffffff, 1);
         }
 
         const HEAD_1_SHADOW =
@@ -1204,83 +1074,6 @@ export function generateCustomSprite(
             headBox(15, 12, 2, 2, 0x000000);
           } else {
             headBox(14, 12, 4, 1, 0x000000);
-          }
-        } else if (pHead === "batman") {
-          // Batman cowl
-          headBox(12, 4, 8, 8, BLACK); // full cowl
-          // Ears
-          headBox(12, 0, 2, 4, BLACK);
-          headBox(18, 0, 2, 4, BLACK);
-          // Exposed lower face
-          headBox(13, 9, 6, 3, SKIN_TONE);
-          // Eyes (white, no pupils)
-          headBox(13, 7, 2, 1, WHITE);
-          headBox(17, 7, 2, 1, WHITE);
-          // Mouth
-          if (isCharge || isAttack) {
-            headBox(15, 10, 2, 1, BLACK);
-          } else {
-            headBox(15, 10, 2, 1, SKIN_SHADOW);
-          }
-        } else if (pHead === "cyberninja") {
-          // Cyberninja helmet
-          headBox(12, 5, 8, 8, 0x222222);
-          headBox(13, 5, 6, 8, 0x333333);
-          headBox(11, 7, 10, 3, 0x111111); // visor base
-          
-          // Glowing visor
-          if (isCharge || isAttack || isTransformed) {
-            headBox(12, 8, 8, 1, 0xff0044); // red attack visor
-          } else {
-            headBox(12, 8, 8, 1, 0x00ffff); // cyan idle visor
-          }
-          // Mouthplate
-          headBox(14, 10, 4, 3, 0x444444);
-          headBox(15, 11, 2, 1, 0x222222);
-        } else if (pHead === "naruto") {
-          headBox(12, 6, 8, 7, SKIN_TONE);
-          headDot(11, 9, SKIN_TONE);
-          headDot(20, 9, SKIN_TONE);
-          headBox(13, 12, 6, 1, SKIN_SHADOW);
-
-          // Headband
-          headBox(11, 5, 10, 2, 0x111111); // cloth
-          headBox(13, 5, 6, 2, 0xaaaaaa); // metal plate
-          headDot(13, 5, 0x444444); // rivets
-          headDot(18, 5, 0x444444);
-          headDot(13, 6, 0x444444);
-          headDot(18, 6, 0x444444);
-
-          // Eyes
-          headBox(13, 9, 2, 1, WHITE);
-          headBox(17, 9, 2, 1, WHITE);
-          headDot(14, 9, eyeColor);
-          headDot(17, 9, eyeColor);
-
-          // Whisker marks
-          headBox(12, 10, 2, 1, SKIN_SHADOW);
-          headBox(18, 10, 2, 1, SKIN_SHADOW);
-          headBox(12, 11, 2, 1, SKIN_SHADOW);
-          headBox(18, 11, 2, 1, SKIN_SHADOW);
-
-          // Hair (Spiky yellow/blonde by default, uses hairColor)
-          headBox(12, 3, 8, 2, hairColor);
-          headBox(10, 1, 2, 3, hairColor);
-          headBox(13, 0, 2, 3, hairColor);
-          headBox(16, -1, 2, 4, hairColor);
-          headBox(19, 1, 2, 3, hairColor);
-          headBox(11, 7, 1, 3, hairColor); // sideburns
-          headBox(20, 7, 1, 3, hairColor);
-
-          if (isCharge || isTransformed) {
-            headDot(14, 9, 0xff0000); // red fox eyes
-            headDot(17, 9, 0xff0000);
-          }
-          
-          if (isAttack || isCharge) {
-            headBox(15, 12, 2, 1, 0x440000);
-          } else {
-            headDot(16, 12, 0x222222);
           }
         } else {
           // Generic anime head (Goku base)

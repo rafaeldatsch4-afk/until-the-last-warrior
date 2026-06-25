@@ -221,6 +221,7 @@ export function generateGokuSprite(scene: Phaser.Scene) {
       const SKIN = 0xffcc99;
       const WHITE = 0xffffff;
       const BLACK = 0x111111;
+      const OUTLINE = 0x1a0a00; // Contorno escuro
 
       {
         // DBZ PALETTE
@@ -260,6 +261,54 @@ export function generateGokuSprite(scene: Phaser.Scene) {
           eyebrowColor = HAIR_SSJ_SHADOW;
         }
 
+        // ==========================================
+        // OUTLINES (Desenhados primeiro, atrás de tudo)
+        // ==========================================
+        
+        // Outlines das pernas e botas
+        box(9, 22, 6, 8, OUTLINE);
+        box(17, 22, 6, 8, OUTLINE);
+        box(9, 28, 6, 5, OUTLINE);
+        box(17, 28, 6, 5, OUTLINE);
+        
+        // Outline do Torso
+        box(10, 13, 12, 11, OUTLINE);
+        
+        // Outlines dos braços
+        if (isCharge) {
+          box(19, 1, 5, 17, OUTLINE);
+          box(8, 1, 5, 17, OUTLINE);
+        } else if (isAttack) {
+          box(20, 12, 16, 6, OUTLINE);
+          box(5, 13, 7, 8, OUTLINE);
+        } else {
+          box(7, 13, 5, 13, OUTLINE);
+          box(20, 13, 5, 13, OUTLINE);
+        }
+
+        // Outline da cabeça
+        headBox(11, 5, 10, 9, OUTLINE); // base head
+        headDot(10, 9, OUTLINE);
+        headDot(21, 9, OUTLINE); // ears
+        
+        // Outlines básicos do cabelo
+        if (isTransformed && !isUI) {
+          headBox(10, -1, 12, 7, OUTLINE);
+          headBox(13, -9, 5, 9, OUTLINE);
+        } else if (isUI) {
+          headBox(10, 0, 12, 8, OUTLINE);
+          headBox(8, 1, 3, 6, OUTLINE);
+          headBox(20, 1, 3, 6, OUTLINE);
+        } else {
+          headBox(10, 0, 12, 6, OUTLINE);
+          headBox(8, -1, 4, 6, OUTLINE);
+          headBox(20, 0, 4, 6, OUTLINE);
+        }
+
+        // ==========================================
+        // CORPO PRINCIPAL
+        // ==========================================
+
         // --- BODY ---
         // Legs
         box(10, 23, 4, 6, GI_ORANGE);
@@ -270,6 +319,12 @@ export function generateGokuSprite(scene: Phaser.Scene) {
         box(21, 23, 1, 6, GI_SHADOW);
         box(12, 24, 1, 4, GI_SHADOW);
         box(19, 24, 1, 4, GI_SHADOW);
+        // Dobras diagonais extras (Upgrade)
+        box(11, 25, 2, 1, GI_SHADOW);
+        box(13, 26, 1, 2, GI_SHADOW);
+        box(18, 25, 2, 1, GI_SHADOW);
+        box(20, 26, 1, 2, GI_SHADOW);
+        
         // Boots (Classic Z style)
         box(10, 29, 4, 3, GI_BLUE);
         box(18, 29, 4, 3, GI_BLUE);
@@ -299,6 +354,10 @@ export function generateGokuSprite(scene: Phaser.Scene) {
         box(14, 18, 1, 4, GI_SHADOW);
         box(17, 18, 1, 4, GI_SHADOW); // Inner folds
         box(12, 19, 8, 1, GI_SHADOW); // Horizontal fold
+        // Dobras diagonais extras no Torso (Upgrade)
+        box(12, 16, 2, 1, GI_SHADOW);
+        box(14, 17, 1, 1, GI_SHADOW);
+        box(17, 16, 2, 1, GI_SHADOW);
 
         // Sash with knot
         box(11, 22, 10, 2, SASH_BLUE);
@@ -320,23 +379,27 @@ export function generateGokuSprite(scene: Phaser.Scene) {
           // Genki Dama charge: both arms raised straight up, spaced out to not overlap head
           // Right arm
           box(20, 4, 3, 10, SKIN_TONE);
+          box(21, 8, 1, 3, SKIN_SHADOW); // Tricep shadow
           box(20, 14, 3, 3, GI_ORANGE); // shoulder
           box(20, 4, 3, 3, GI_BLUE); // wristband
           box(20, 2, 3, 3, SKIN_TONE); // fist
           // Left arm
           box(9, 4, 3, 10, SKIN_TONE);
+          box(10, 8, 1, 3, SKIN_SHADOW); // Tricep shadow
           box(9, 14, 3, 3, GI_ORANGE); // shoulder
           box(9, 4, 3, 3, GI_BLUE); // wristband
           box(9, 2, 3, 3, SKIN_TONE); // fist
         } else if (isAttack) {
           // Right arm punch straight out (muscular)
           box(21, 13, 5, 4, SKIN_TONE); // bicep
+          box(22, 14, 2, 1, SKIN_SHADOW); // Bicep definition (Upgrade)
           box(21, 13, 3, 4, GI_ORANGE); // shoulder/sleeve
           box(21, 13, 1, 4, GI_SHADOW);
           box(26, 14, 5, 3, SKIN_TONE); // forearm
           box(30, 14, 2, 3, GI_BLUE); // wristband
           box(31, 13, 4, 4, SKIN_TONE); // fist (larger)
           box(31, 13, 2, 2, 0xffffff); // fist highlight
+          box(34, 14, 1, 2, SKIN_SHADOW); // knuckles detail
           // Motion blur for punch
           alphaBox(33, 13, 6, 4, SKIN_TONE, 0.4);
           // Left arm pulled back
@@ -366,13 +429,22 @@ export function generateGokuSprite(scene: Phaser.Scene) {
 
           box(8, 23, 3, 2, SKIN_TONE);
           box(21, 23, 3, 2, SKIN_TONE); // Hands
-          // Knuckles
-          box(8, 24, 3, 1, SKIN_SHADOW);
-          box(21, 24, 3, 1, SKIN_SHADOW);
+          
+          // Dedos separados e detalhados nas mãos (Upgrade)
+          box(8, 24, 1, 1, SKIN_TONE);
+          box(9, 24, 1, 1, SKIN_SHADOW);
+          box(10, 24, 1, 1, SKIN_TONE);
+          
+          box(21, 24, 1, 1, SKIN_TONE);
+          box(22, 24, 1, 1, SKIN_SHADOW);
+          box(23, 24, 1, 1, SKIN_TONE);
         }
 
         // Head
-        headBox(12, 6, 8, 7, SKIN_TONE);
+        // Sombra sob a franja (Upgrade)
+        headBox(12, 6, 8, 1, SKIN_SHADOW);
+        headBox(12, 7, 8, 6, SKIN_TONE);
+        
         headDot(11, 9, SKIN_TONE);
         headDot(20, 9, SKIN_TONE); // Ears
         headDot(11, 10, SKIN_SHADOW);
@@ -384,10 +456,18 @@ export function generateGokuSprite(scene: Phaser.Scene) {
         headDot(17, 9, WHITE);
         headDot(14, 9, eyeColor);
         headDot(18, 9, eyeColor);
+        
+        // Separação entre sobrancelha e cabelo para melhor legibilidade (Upgrade)
+        headDot(13, 7, SKIN_TONE);
+        headDot(14, 7, SKIN_TONE);
+        headDot(17, 7, SKIN_TONE);
+        headDot(18, 7, SKIN_TONE);
+        
         headDot(13, 8, eyebrowColor);
         headDot(14, 8, eyebrowColor);
         headDot(17, 8, eyebrowColor);
         headDot(18, 8, eyebrowColor);
+        
         // Angry brow furrow
         headDot(15, 8, SKIN_SHADOW);
         headDot(16, 8, SKIN_SHADOW);

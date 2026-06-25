@@ -1,5 +1,5 @@
 export const partOptions = {
-  head: ["goku", "spiderman", "saitama", "chapolim", "vegeta", "jotaro", "batman", "cyberninja", "naruto"],
+  head: ["goku", "spiderman", "saitama", "chapolim", "vegeta", "jotaro"],
   torso: [
     "goku",
     "spiderman",
@@ -8,12 +8,9 @@ export const partOptions = {
     "saitama",
     "chapolim",
     "muscle",
-    "batman",
-    "cyberninja",
-    "naruto",
   ],
-  legs: ["goku", "spiderman", "jotaro", "saitama", "vegeta", "chapolim", "batman", "cyberninja", "naruto"],
-  feet: ["goku", "spiderman", "chapolim", "saitama", "vegeta", "jotaro", "batman", "cyberninja", "naruto"],
+  legs: ["goku", "spiderman", "jotaro", "saitama", "vegeta", "chapolim"],
+  feet: ["goku", "spiderman", "chapolim", "saitama", "vegeta", "jotaro"],
   accessory: ["none", "sword", "cape", "aura_blue", "aura_red"],
 };
 
