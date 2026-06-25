@@ -13,7 +13,7 @@ import MultiplayerLobbyScene from "./scenes/MultiplayerLobbyScene";
 import CharacterCreatorScene from "./scenes/CharacterCreatorScene";
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
-  type: Phaser.CANVAS,
+  type: Phaser.AUTO,
   width: 960,
   height: 540,
   parent: "game-container",

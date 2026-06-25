@@ -26,6 +26,7 @@ export class CreatorPreview {
     currentColorIndex: number,
     customSp1Id: string,
     customSp2Id: string,
+    isTransformed: boolean = false
   ) {
     const builderData = {
       base: INITIAL_CHARACTERS[currentBaseObjIndex],
@@ -96,16 +97,26 @@ export class CreatorPreview {
     };
 
     createAnim("custom_preview_idle", "custom_preview", 0, 3, 10, -1);
+    createAnim("custom_preview_ssj_idle", "custom_preview_ssj", 0, 3, 10, -1);
 
     this.previewAura = this.scene.add
       .ellipse(700, 250, 150, 250, builderData.auraColor)
       .setAlpha(0.3)
       .setBlendMode(Phaser.BlendModes.ADD);
+    
+    const texName = isTransformed ? "custom_preview_ssj" : "custom_preview";
+    const animName = isTransformed ? "custom_preview_ssj_idle" : "custom_preview_idle";
+
     this.previewSprite = this.scene.add
-      .sprite(700, 250, "custom_preview")
+      .sprite(700, 250, texName)
       .setScale(3.5);
-    if (this.scene.textures.exists("custom_preview")) {
-      this.previewSprite.play(`custom_preview_idle`);
+    if (this.scene.textures.exists(texName)) {
+      this.previewSprite.play(animName);
+    }
+    
+    if (isTransformed) {
+      this.previewAura.setFillStyle(0xffd700, 0.6); // Gold aura
+      this.previewAura.setScale(1.2);
     }
   }
 }

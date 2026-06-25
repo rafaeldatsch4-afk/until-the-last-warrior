@@ -258,6 +258,14 @@ export default class BattleScene extends Phaser.Scene {
     this.battleCamera = new BattleCamera(this);
     this.battleCamera.setupCamera(mapWidth);
 
+    // Create energy particle texture if it doesn't exist
+    if (!this.textures.exists("energy_particle")) {
+      const gfx = this.make.graphics({ x: 0, y: 0 }, false);
+      gfx.fillStyle(0xffffff, 1);
+      gfx.fillCircle(8, 8, 8);
+      gfx.generateTexture("energy_particle", 16, 16);
+    }
+
     if (this.cache.audio.exists("bgm_menu")) this.sound.stopByKey("bgm_menu");
     if (this.cache.audio.exists("bgm_battle")) {
       this.sound.stopByKey("bgm_battle");
@@ -3219,6 +3227,21 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     attacker.play(animKeySpecial);
 
+    // Energy burst particles
+    const emitter = this.add.particles(attacker.x, attacker.y, "energy_particle", {
+      speed: { min: 200, max: 600 },
+      angle: { min: 0, max: 360 },
+      scale: { start: 1.2, end: 0 },
+      alpha: { start: 1, end: 0 },
+      tint: tintColor || 0xffaa00,
+      blendMode: Phaser.BlendModes.ADD,
+      lifespan: { min: 400, max: 800 },
+      quantity: 12,
+      gravityY: -200,
+      frequency: 20,
+    });
+    emitter.setDepth(attacker.depth + 1);
+
     // FIXED: Removed x movement (targets: attacker, x: ...)
     // We only scale to show effort/charging. This prevents the beam from detaching or spawning behind.
 
@@ -3234,7 +3257,10 @@ export default class BattleScene extends Phaser.Scene {
       duration: 50,
       ease: "Quad.easeOut",
       onComplete: () => {
-        if (!this.scene.isActive()) return;
+        if (!this.scene.isActive()) {
+          emitter.destroy();
+          return;
+        }
         attacker.setTint(0xffffff);
 
         // Flash screen slightly to indicate power
@@ -3261,7 +3287,10 @@ export default class BattleScene extends Phaser.Scene {
 
         // 2. HOLD (Stay in pose)
         this.time.delayedCall(500, () => {
-          if (!this.scene.isActive()) return;
+          if (!this.scene.isActive()) {
+            emitter.destroy();
+            return;
+          }
 
           // 3. Recovery (Return to Normal)
           this.tweens.add({
@@ -3272,8 +3301,13 @@ export default class BattleScene extends Phaser.Scene {
             duration: 200,
             ease: "Quad.easeOut",
             onComplete: () => {
-              if (!this.scene.isActive()) return;
+              if (!this.scene.isActive()) {
+                emitter.destroy();
+                return;
+              }
               attacker.clearTint();
+              emitter.stop();
+              this.time.delayedCall(1000, () => emitter.destroy());
               // Let onSpecialComplete handle returning to idle
             },
           });

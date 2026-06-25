@@ -19,6 +19,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   private customSp2Id = "";
   private customSp1Name = "";
   private customSp2Name = "";
+  private previewIsTransformed = false;
 
   private builderData = {
     base: INITIAL_CHARACTERS[0],
@@ -94,6 +95,48 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.add.rectangle(700, 280, 300, 360, 0x1a1a24).setStrokeStyle(2, 0x34495e);
     this.add.text(700, 130, "PREVIEW", { fontSize: "24px", fontStyle: "bold", color: "#3498db" }).setOrigin(0.5);
 
+    // Randomize button
+    const randBtn = this.add.rectangle(880, 40, 120, 40, 0x8e44ad).setStrokeStyle(2, 0xffffff);
+    this.add.text(880, 40, "ALEATÓRIO", { fontSize: "16px", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5);
+    randBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
+      // Randomize styles
+      this.state.style_idx.head = Phaser.Math.Between(0, partOptions.head.length - 1);
+      this.state.style_idx.torso = Phaser.Math.Between(0, partOptions.torso.length - 1);
+      this.state.style_idx.legs = Phaser.Math.Between(0, partOptions.legs.length - 1);
+      this.state.style_idx.feet = Phaser.Math.Between(0, partOptions.feet.length - 1);
+      this.state.style_idx.accessory = Phaser.Math.Between(0, partOptions.accessory.length - 1);
+      
+      // Randomize colors
+      this.state.p_idx.skin = Phaser.Math.Between(0, skinColors.length - 1);
+      this.state.p_idx.hair = Phaser.Math.Between(0, hairColors.length - 1);
+      this.state.p_idx.torso_1 = Phaser.Math.Between(0, giColors.length - 1);
+      this.state.p_idx.torso_2 = Phaser.Math.Between(0, giColors.length - 1);
+      this.state.p_idx.legs_1 = Phaser.Math.Between(0, giColors.length - 1);
+      this.state.p_idx.legs_2 = Phaser.Math.Between(0, giColors.length - 1);
+      this.state.p_idx.feet_1 = Phaser.Math.Between(0, giColors.length - 1);
+      this.state.p_idx.feet_2 = Phaser.Math.Between(0, giColors.length - 1);
+      this.state.p_idx.head_1 = Phaser.Math.Between(0, giColors.length - 1);
+      this.state.p_idx.head_2 = Phaser.Math.Between(0, giColors.length - 1);
+      this.state.p_idx.acc_1 = Phaser.Math.Between(0, giColors.length - 1);
+
+      // Randomize special and super
+      const sp1 = Phaser.Utils.Array.GetRandom(this.AVAILABLE_SPECIALS);
+      const sp2 = Phaser.Utils.Array.GetRandom(this.AVAILABLE_SUPERS);
+      this.customSp1Id = sp1.id;
+      this.customSp1Name = sp1.name;
+      this.customSp2Id = sp2.id;
+      this.customSp2Name = sp2.name;
+
+      this.scene.restart(); 
+    });
+
+    const transBtn = this.add.rectangle(700, 480, 150, 30, 0xf39c12).setStrokeStyle(2, 0xffffff);
+    this.add.text(700, 480, "TRANSFORMAR", { fontSize: "14px", fontStyle: "bold", color: "#000" }).setOrigin(0.5);
+    transBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
+      this.previewIsTransformed = !this.previewIsTransformed;
+      this.updatePreview();
+    });
+
     this.updatePreview();
   }
 
@@ -103,7 +146,8 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       this.currentBaseObjIndex,
       this.currentColorIndex,
       this.customSp1Id,
-      this.customSp2Id
+      this.customSp2Id,
+      this.previewIsTransformed
     );
   }
 
