@@ -1167,6 +1167,15 @@ export function generateCustomSprite(
           }
         }
       }
+
+      // Sombra de contato universal torso/pernas
+      alphaBox(11, 23, 11, 1, 0x000000, 0.25);
+      
+      // Sombra de contato pernas/pés
+      alphaBox(10, 29, 12, 1, 0x000000, 0.2);
+      
+      // Sombra sob o queixo
+      alphaBox(13, 13, 6, 1, 0x000000, 0.15);
     }
 
     canvas.generateTexture(textureName, sheetWidth, sheetHeight);
