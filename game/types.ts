@@ -7,6 +7,8 @@ export interface CharacterData {
   price: number;
   unlocked: boolean;
   maxHp: number;
+  strength?: number;
+  speed?: number;
   transformAvailable: boolean;
   sprite: string;
   frameWidth: number;

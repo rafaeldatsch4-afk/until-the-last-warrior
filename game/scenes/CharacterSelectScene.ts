@@ -20,6 +20,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
   private headerText!: Phaser.GameObjects.Text;
   private fightBtn!: Phaser.GameObjects.Container;
 
+  private tooltipContainer!: Phaser.GameObjects.Container;
+  private tooltipName!: Phaser.GameObjects.Text;
+  private tooltipStats!: Phaser.GameObjects.Text;
+
   constructor() {
     super("CharacterSelectScene");
   }
@@ -175,7 +179,58 @@ export default class CharacterSelectScene extends Phaser.Scene {
     // Botão de Luta (Escondido até selecionar)
     this.createFightButton();
 
+    this.createTooltip();
+
     this.updateUI();
+  }
+
+  createTooltip() {
+    this.tooltipContainer = this.add.container(0, 0).setDepth(100).setVisible(false);
+
+    const bg = this.add.rectangle(0, 0, 140, 60, 0x000000, 0.85).setStrokeStyle(1, 0xffffff);
+    this.tooltipName = this.add.text(-60, -20, "", {
+      fontSize: "14px",
+      fontStyle: "bold",
+      color: "#ffd54a",
+      fontFamily: "system-ui, -apple-system, sans-serif"
+    });
+
+    this.tooltipStats = this.add.text(-60, 0, "", {
+      fontSize: "12px",
+      color: "#ffffff",
+      fontFamily: "system-ui, -apple-system, sans-serif"
+    });
+
+    this.tooltipContainer.add([bg, this.tooltipName, this.tooltipStats]);
+  }
+
+  showTooltip(char: any, x: number, y: number) {
+    this.tooltipContainer.setVisible(true);
+    
+    // Position tooltip near cursor
+    let finalX = x;
+    let finalY = y - 60; // offset above the pointer
+    
+    // Keep within screen bounds
+    const { width } = this.cameras.main;
+    if (finalX + 70 > width) finalX = width - 70;
+    if (finalX - 70 < 0) finalX = 70;
+    if (finalY - 30 < 0) finalY = y + 60; // show below if at top
+    
+    this.tooltipContainer.setPosition(finalX, finalY);
+
+    this.tooltipName.setText(char.name);
+    
+    const hp = char.maxHp || 200;
+    // Generate pseudo-random deterministic stats if not defined
+    const str = char.strength ?? Math.floor(hp / 2.5);
+    const spd = char.speed ?? Math.floor(300 - hp);
+
+    this.tooltipStats.setText(`HP: ${hp} | STR: ${str}\nSPD: ${spd}`);
+  }
+
+  hideTooltip() {
+    this.tooltipContainer.setVisible(false);
   }
 
   createFightButton() {
@@ -497,7 +552,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
       hitArea
         .on("pointerdown", () => this.selectCharacter(char.id))
-        .on("pointerover", () => {
+        .on("pointerover", (pointer: Phaser.Input.Pointer) => {
           if (!isSelected) {
             this.tweens.add({
               targets: card,
@@ -509,6 +564,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
             card.setAlpha(1);
             nameTxt.setColor("#fff");
           }
+          this.showTooltip(char, pointer.x, pointer.y);
+        })
+        .on("pointermove", (pointer: Phaser.Input.Pointer) => {
+          this.showTooltip(char, pointer.x, pointer.y);
         })
         .on("pointerout", () => {
           if (!isSelected) {
@@ -522,6 +581,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
             card.setAlpha(0.8);
             nameTxt.setColor("#ccc");
           }
+          this.hideTooltip();
         });
 
       if (isSelected) {
