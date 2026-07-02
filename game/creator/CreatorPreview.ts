@@ -14,6 +14,8 @@ import { INITIAL_CHARACTERS } from "../data";
 export class CreatorPreview {
   public previewSprite?: Phaser.GameObjects.Sprite;
   public previewAura?: Phaser.GameObjects.Shape;
+  public torsoBoundsBox?: Phaser.GameObjects.Rectangle;
+  public torsoBoundsText?: Phaser.GameObjects.Text;
   private scene: Phaser.Scene;
 
   constructor(scene: Phaser.Scene) {
@@ -64,8 +66,10 @@ export class CreatorPreview {
       this.previewSprite.destroy();
     }
     if (this.previewAura) this.previewAura.destroy();
+    if (this.torsoBoundsBox) this.torsoBoundsBox.destroy();
+    if (this.torsoBoundsText) this.torsoBoundsText.destroy();
 
-    generateCustomSprite(this.scene, {
+    const { torsoBounds } = generateCustomSprite(this.scene, {
       ...(builderData.base as CharacterData),
       key: "custom_preview",
       customData: customData,
@@ -117,6 +121,39 @@ export class CreatorPreview {
     if (isTransformed) {
       this.previewAura.setFillStyle(0xffd700, 0.6); // Gold aura
       this.previewAura.setScale(1.2);
+    }
+
+    if (torsoBounds) {
+      const spriteX = 700;
+      const spriteY = 250;
+      const spriteScale = 3.5;
+      const texScale = 2; // SCALE inside generateCustomSprite
+
+      // Origin of previewSprite is 0.5, 0.5
+      const frameWidth = 96 * texScale;
+      const frameHeight = 64 * texScale;
+
+      const screenLeft = spriteX - (frameWidth * spriteScale) / 2;
+      const screenTop = spriteY - (frameHeight * spriteScale) / 2;
+
+      const boxX = screenLeft + (torsoBounds.minX * texScale) * spriteScale;
+      const boxY = screenTop + (torsoBounds.minY * texScale) * spriteScale;
+      const boxW = (torsoBounds.w * texScale) * spriteScale;
+      const boxH = (torsoBounds.h * texScale) * spriteScale;
+
+      this.torsoBoundsBox = this.scene.add.rectangle(
+        boxX + boxW / 2,
+        boxY + boxH / 2,
+        boxW,
+        boxH
+      ).setStrokeStyle(2, 0x00ff00).setDepth(200);
+
+      this.torsoBoundsText = this.scene.add.text(
+        boxX,
+        boxY - 20,
+        `Torso Size: ${torsoBounds.w}x${torsoBounds.h}`,
+        { fontSize: "16px", color: "#00ff00", fontStyle: "bold", fontFamily: "system-ui" }
+      ).setDepth(200);
     }
   }
 }

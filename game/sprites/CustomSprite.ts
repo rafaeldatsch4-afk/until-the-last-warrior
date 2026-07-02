@@ -14,6 +14,12 @@ export function generateCustomSprite(
   };
 
   const generateForm = (form: number) => {
+    let torsoMinX = 999;
+    let torsoMaxX = -999;
+    let torsoMinY = 999;
+    let torsoMaxY = -999;
+    let isDrawingTorso = false;
+
     const isTransformed = form > 0;
     const isUI = form === 2;
     const SCALE = 2;
@@ -101,6 +107,15 @@ export function generateCustomSprite(
         return { ox, oy };
       };
 
+      const trackBounds = (px: number, py: number, w: number, h: number) => {
+        if (isDrawingTorso && f === 0) {
+          torsoMinX = Math.min(torsoMinX, px);
+          torsoMaxX = Math.max(torsoMaxX, px + w - 1);
+          torsoMinY = Math.min(torsoMinY, py);
+          torsoMaxY = Math.max(torsoMaxY, py + h - 1);
+        }
+      };
+
       const dot = (x: number, y: number, color: number) => {
         const finalY = y < 24 ? y + breatheOffset : y;
         const { ox, oy } =
@@ -115,6 +130,7 @@ export function generateCustomSprite(
           (isAttack || isDefend || isCharge
             ? finalY + poseOffsetY / 2
             : finalY) + oy;
+        trackBounds(finalX, finalYPose + DRAW_OFFSET_Y, 1, 1);
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -145,6 +161,7 @@ export function generateCustomSprite(
           (isAttack || isDefend || isCharge
             ? finalY + poseOffsetY / 2
             : finalY) + oy;
+        trackBounds(finalX, finalYPose + DRAW_OFFSET_Y, w, h);
         canvas.fillStyle(color, alpha);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -174,6 +191,7 @@ export function generateCustomSprite(
           (isAttack || isDefend || isCharge
             ? finalY + poseOffsetY / 2
             : finalY) + oy;
+        trackBounds(finalX, finalYPose + DRAW_OFFSET_Y, w, h);
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -417,49 +435,52 @@ export function generateCustomSprite(
         // ====================
         // TORSO
         // ====================
+        isDrawingTorso = true;
         if (pTorso === "spiderman") {
+          const SPIDER_OUTLINE = 0x1a0a00;
           box(13, 14, 6, 9, TORSO_1); // Core Red
           box(11, 14, 2, 9, TORSO_2); // Blue sides
           box(19, 14, 2, 9, TORSO_2);
 
-          // Shading
-          box(13, 14, 1, 9, TORSO_1_SHADOW);
-          box(11, 14, 1, 9, TORSO_2_SHADOW);
+          // Volume Shading (20% darker edges)
+          box(13, 14, 1, 9, TORSO_1_SHADOW); // Inner red shadow
+          box(18, 14, 1, 9, TORSO_1_SHADOW);
+          box(11, 14, 1, 9, TORSO_2_SHADOW); // Outer blue shadow
           box(20, 14, 1, 9, TORSO_2_SHADOW);
 
           // Belt
           box(11, 22, 10, 2, TORSO_1);
-          box(11, 23, 10, 1, BLACK); // Belt web line
-          box(13, 17, 6, 1, BLACK); // Horizontal web curve
-          box(13, 19, 6, 1, BLACK);
+          box(11, 22, 1, 2, TORSO_1_SHADOW); // Belt shadow left
+          box(20, 22, 1, 2, TORSO_1_SHADOW); // Belt shadow right
+          box(11, 23, 10, 1, SPIDER_OUTLINE); // Belt web line
 
-          // Web pattern vertical lines (thin and clean)
-          box(16, 14, 1, 8, BLACK);
-          dot(14, 15, BLACK);
-          dot(18, 15, BLACK);
-          dot(13, 17, BLACK);
-          dot(19, 17, BLACK);
-          dot(14, 20, BLACK);
-          dot(18, 20, BLACK);
-
-          // Small Spider Emblem
-          box(15, 16, 2, 3, BLACK); // Body
-          box(14, 16, 4, 1, BLACK); // Upper legs
-          box(14, 18, 4, 1, BLACK); // Lower legs
+          // Central Spider Logo (clean 6-pixel icon)
+          box(15, 16, 2, 1, SPIDER_OUTLINE); // Center Body
+          dot(14, 15, SPIDER_OUTLINE); // Top-left leg
+          dot(17, 15, SPIDER_OUTLINE); // Top-right leg
+          dot(14, 17, SPIDER_OUTLINE); // Bottom-left leg
+          dot(17, 17, SPIDER_OUTLINE); // Bottom-right leg
 
           if (isCharge) {
             box(20, 4, 3, 10, TORSO_1);
             box(20, 14, 3, 3, TORSO_1);
             box(20, 2, 3, 3, TORSO_1); // Hands
+            box(22, 2, 1, 15, TORSO_1_SHADOW); // Outer arm shadow
+
             box(9, 4, 3, 10, TORSO_1);
             box(9, 14, 3, 3, TORSO_1);
             box(9, 2, 3, 3, TORSO_1); // Hands
+            box(9, 2, 1, 15, TORSO_1_SHADOW); // Outer arm shadow
           } else if (isAttack) {
             box(21, 14, 6, 3, TORSO_1); // shoulder
             box(27, 14, 5, 3, TORSO_1); // forearm
             box(32, 13, 4, 4, TORSO_1); // hand
+            box(21, 16, 11, 1, TORSO_1_SHADOW); // under arm shadow
+            box(32, 13, 1, 4, TORSO_1_SHADOW); // hand base shadow
+
             box(8, 14, 3, 4, TORSO_1);
             box(7, 18, 4, 4, TORSO_1);
+            box(7, 14, 1, 8, TORSO_1_SHADOW); // back arm shadow
           } else {
             // Classic Idle Arms (Blue bicep, red glove)
             box(8, 14, 3, 4, TORSO_2); // shoulders
@@ -474,23 +495,37 @@ export function generateCustomSprite(
             box(23, 18, 1, 5, TORSO_1_SHADOW);
 
             // Glove Web Rings
-            box(8, 19, 3, 1, BLACK);
-            box(21, 19, 3, 1, BLACK);
-            box(8, 21, 3, 1, BLACK);
-            box(21, 21, 3, 1, BLACK);
+            box(8, 19, 3, 1, SPIDER_OUTLINE);
+            box(21, 19, 3, 1, SPIDER_OUTLINE);
+            box(8, 21, 3, 1, SPIDER_OUTLINE);
+            box(21, 21, 3, 1, SPIDER_OUTLINE);
 
             // Hands
             box(8, 23, 3, 2, TORSO_1);
             box(21, 23, 3, 2, TORSO_1);
+            box(8, 23, 1, 2, TORSO_1_SHADOW);
+            box(23, 23, 1, 2, TORSO_1_SHADOW);
           }
         } else if (pTorso === "jotaro") {
+          // Coat flares at back sides (Abas do casaco) - Behind body
+          box(9, 14, 2, 11, TORSO_1_SHADOW); // Coat flair left
+          box(21, 14, 2, 11, TORSO_1_SHADOW); // Coat flair right
+          // Volume shading for flares
+          box(10, 14, 1, 11, TORSO_1); // Inner highlight left
+          box(21, 14, 1, 11, TORSO_1); // Inner highlight right
+
           // Gakuran / Heavy coat
-          box(11, 14, 10, 8, TORSO_1_SHADOW); // base coat shadow
-          box(12, 14, 8, 8, TORSO_1);
+          box(11, 14, 10, 8, TORSO_1_SHADOW); // base coat shadow (Volume edges)
+          box(12, 14, 8, 8, TORSO_1); // Core coat
 
           // Inner Shirt
-          box(13, 14, 6, 8, TORSO_2_SHADOW);
-          box(14, 14, 4, 8, TORSO_2);
+          box(13, 14, 6, 8, TORSO_2_SHADOW); // shirt shadow edge
+          box(14, 14, 4, 8, TORSO_2); // shirt core
+          
+          // Shirt wrinkles for legibility
+          box(15, 16, 2, 1, TORSO_2_SHADOW);
+          box(14, 19, 2, 1, TORSO_2_SHADOW);
+          box(16, 20, 2, 1, TORSO_2_SHADOW);
 
           // Exposed chest/neck
           box(14, 14, 4, 2, SKIN_SHADOW);
@@ -498,31 +533,37 @@ export function generateCustomSprite(
 
           // Open coat lapels (Lapelas abertas)
           box(11, 14, 2, 8, TORSO_1); // Lapela esquerda
-          box(11, 14, 1, 8, TORSO_1_SHADOW); // Linha lapela esquerda
+          box(11, 14, 1, 8, TORSO_1_SHADOW); // Linha externa lapela esquerda
+          box(12, 14, 1, 8, TORSO_1); // Volume lapela esquerda
+          
           box(19, 14, 2, 8, TORSO_1); // Lapela direita
-          box(20, 14, 1, 8, TORSO_1_SHADOW); // Linha lapela direita
+          box(20, 14, 1, 8, TORSO_1_SHADOW); // Linha externa lapela direita
+          box(19, 14, 1, 8, TORSO_1); // Volume lapela direita
 
           // High collar (Gola alta rígida)
           box(12, 11, 8, 3, TORSO_1_SHADOW);
           box(13, 12, 6, 2, TORSO_1);
+          box(13, 11, 6, 1, TORSO_1_SHADOW); // Collar top rim
 
-          // Golden metal chain (Corrente dourada em argolas)
-          box(12, 13, 1, 5, 0xd4a000); // Gold dark
-          dot(12, 13, 0xffea00); // Gold light
-          dot(12, 15, 0xffea00);
-          dot(12, 17, 0xffea00);
+          // Golden metal chain (Corrente dourada em argolas) - Refined
+          dot(12, 13, 0xd4a000); // Gold dark
+          dot(13, 13, 0xffea00); // Gold light
+          dot(12, 14, 0xffea00);
+          dot(13, 15, 0xd4a000);
+          dot(12, 16, 0xffea00);
+          dot(13, 17, 0xd4a000);
+          dot(12, 18, 0xffea00);
 
           // Double belts / Cinto duplo de Jotaro
           box(11, 22, 10, 2, TORSO_1_SHADOW);
-          box(12, 22, 8, 1, 0x27ae60); // Green belt
-          box(12, 23, 8, 1, 0xc0392b); // Red belt
+          box(11, 22, 10, 1, 0x27ae60); // Green belt
+          box(11, 23, 10, 1, 0xc0392b); // Red belt
           box(14, 22, 2, 2, 0xffd700); // Gold buckle
-
-          // Coat flares at back sides (Abas do casaco)
-          box(9, 14, 2, 11, TORSO_1_SHADOW); // Coat flair left
-          box(21, 14, 2, 11, TORSO_1_SHADOW); // Coat flair right
+          dot(15, 22, 0xd4a000); // Buckle detail
+          dot(14, 23, 0xd4a000);
 
           if (isCharge) {
+            // Arms
             box(20, 4, 3, 10, TORSO_1);
             box(20, 2, 3, 3, SKIN_TONE); // Hands
             box(9, 4, 3, 10, TORSO_1);
@@ -530,7 +571,7 @@ export function generateCustomSprite(
           } else if (isAttack) {
             // Braço de ataque Jotaro style
             box(18, 13, 10, 5, TORSO_1);
-            box(18, 13, 10, 1, TORSO_1_SHADOW);
+            box(18, 13, 10, 1, TORSO_1_SHADOW); // Edge shadow
             box(28, 13, 4, 4, SKIN_TONE);
             box(28, 13, 2, 2, SKIN_SHADOW);
             box(8, 14, 4, 8, TORSO_1);
@@ -552,15 +593,20 @@ export function generateCustomSprite(
             box(12, ty, 8, 1, TORSO_2_SHADOW);
             box(12, ty + 1, 8, 1, TORSO_2);
           }
+          // Inner bodysuit shadows
           box(12, 19, 1, 5, TORSO_2_SHADOW);
           box(19, 19, 1, 5, TORSO_2_SHADOW);
 
           // Main armor block
-          box(11, 14, 10, 5, TORSO_1); // White armor plate
+          box(11, 14, 10, 5, TORSO_1_SHADOW); // Base shadow
+          box(12, 14, 8, 5, TORSO_1); // White armor plate core
 
           // Side gold straps wrap (Classic Vegeta gold straps)
           box(11, 14, 1, 5, 0xffd700); // Gold strap left
           box(20, 14, 1, 5, 0xffd700); // Gold strap right
+          // Strap shadows
+          box(12, 14, 1, 5, 0xd4a000); 
+          box(19, 14, 1, 5, 0xd4a000);
 
           // Chest segments (Angular Pectorals)
           box(11, 16, 4, 1, TORSO_1_SHADOW);
@@ -580,15 +626,44 @@ export function generateCustomSprite(
           box(13, 14, 2, 1, 0xffffff);
           box(17, 14, 2, 1, 0xffffff); // Top chest highlights
 
+          // Under-armpit shading for depth (20% darker)
+          box(11, 16, 2, 3, TORSO_1_SHADOW);
+          box(19, 16, 2, 3, TORSO_1_SHADOW);
+
           if (isCharge) {
             box(20, 4, 3, 10, TORSO_2);
-            box(20, 14, 3, 3, TORSO_1); // Shoulder pad
+            
+            // Shoulder pad (Charge)
+            box(19, 13, 5, 4, 0xd4a000); // Gold hinge
+            box(20, 13, 3, 3, 0xffd700);
+            box(19, 12, 5, 2, TORSO_1); // Pad
+            box(20, 12, 4, 1, 0xffffff); // 1px metallic highlight
+            
             box(20, 2, 3, 3, WHITE); // Gloves
             box(9, 4, 3, 10, TORSO_2);
-            box(9, 14, 3, 3, TORSO_1); // Shoulder pad
+            
+            // Shoulder pad (Charge)
+            box(8, 13, 5, 4, 0xd4a000); // Gold hinge
+            box(9, 13, 3, 3, 0xffd700);
+            box(8, 12, 5, 2, TORSO_1); // Pad
+            box(8, 12, 4, 1, 0xffffff); // 1px metallic highlight
+            
             box(9, 2, 3, 3, WHITE);
           } else if (isAttack) {
+            // Back arm shoulder pad
+            box(7, 13, 4, 3, 0xd4a000);
+            box(8, 13, 2, 2, 0xffd700);
+            box(6, 12, 5, 2, TORSO_1);
+            box(7, 12, 4, 1, 0xffffff); // metallic highlight
+            
             box(21, 13, 5, 4, TORSO_2);
+            
+            // Front arm shoulder pad
+            box(20, 13, 4, 3, 0xd4a000);
+            box(21, 13, 2, 2, 0xffd700);
+            box(20, 12, 5, 2, TORSO_1);
+            box(21, 12, 4, 1, 0xffffff); // metallic highlight
+
             box(26, 14, 5, 3, TORSO_2);
             box(30, 14, 2, 3, WHITE); // glove edge
             box(31, 13, 4, 4, WHITE);
@@ -606,13 +681,27 @@ export function generateCustomSprite(
             box(21, 17, 3, 1, TORSO_2_SHADOW);
             
             // Shoulder Pads Vegeta style
-            box(7, 13, 5, 2, TORSO_1); // Left pad
-            box(20, 13, 5, 2, TORSO_1); // Right pad
+            // Big shoulder pads overlapping arms
+            box(8, 13, 4, 3, 0xd4a000); // Gold hinge shadow
+            box(9, 13, 2, 3, 0xffd700); // Gold hinge core
+            box(20, 13, 4, 3, 0xd4a000);
+            box(21, 13, 2, 3, 0xffd700);
+
+            box(7, 12, 5, 2, TORSO_1); // Left pad
+            box(20, 12, 5, 2, TORSO_1); // Right pad
+            // Pad highlights (metallic 1px line)
+            box(7, 12, 4, 1, 0xffffff);
+            box(21, 12, 4, 1, 0xffffff);
+
             box(7, 13, 1, 2, TORSO_1_SHADOW); // pad shadow
             box(24, 13, 1, 2, TORSO_1_SHADOW);
 
             box(8, 20, 3, 4, WHITE); // Gloves
             box(21, 20, 3, 4, WHITE);
+            // Glove shadow
+            box(8, 20, 1, 4, 0xaaaaaa);
+            box(23, 20, 1, 4, 0xaaaaaa);
+
             box(7, 20, 5, 2, WHITE); // Glove cuff
             box(20, 20, 5, 2, WHITE);
             box(7, 21, 5, 1, 0xdddddd); // Cuffs shadow
@@ -860,6 +949,7 @@ export function generateCustomSprite(
             box(21, 24, 3, 1, SKIN_SHADOW);
           }
         }
+        isDrawingTorso = false;
 
         // ====================
         // ACCESSORY (Back layer)
@@ -1189,9 +1279,18 @@ export function generateCustomSprite(
         tex.add(i.toString(), 0, i * fw, 0, fw, fh);
       }
     }
+
+    return {
+      minX: torsoMinX <= torsoMaxX ? torsoMinX : 0,
+      minY: torsoMinY <= torsoMaxY ? torsoMinY : 0,
+      w: torsoMaxX >= torsoMinX ? torsoMaxX - torsoMinX + 1 : 0,
+      h: torsoMaxY >= torsoMinY ? torsoMaxY - torsoMinY + 1 : 0
+    };
   };
 
-  generateForm(0);
+  const bounds = generateForm(0);
   generateForm(1);
   generateForm(2);
+
+  return { torsoBounds: bounds };
 }

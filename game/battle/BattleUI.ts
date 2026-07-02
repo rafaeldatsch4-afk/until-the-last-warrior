@@ -13,8 +13,21 @@ export class BattleUI {
 
   p1ComboText!: Phaser.GameObjects.Text;
   p2ComboText!: Phaser.GameObjects.Text;
+  p1ComboContainer!: Phaser.GameObjects.Container;
+  p2ComboContainer!: Phaser.GameObjects.Container;
+  p1ComboBg!: Phaser.GameObjects.Graphics;
+  p2ComboBg!: Phaser.GameObjects.Graphics;
+  p1ComboBar!: Phaser.GameObjects.Rectangle;
+  p2ComboBar!: Phaser.GameObjects.Rectangle;
   p1ComboHideTimer?: Phaser.Time.TimerEvent;
   p2ComboHideTimer?: Phaser.Time.TimerEvent;
+
+  p1KiGlow!: Phaser.GameObjects.Rectangle;
+  p2KiGlow!: Phaser.GameObjects.Rectangle;
+  lastP1HpP: number = 1;
+  lastP2HpP: number = 1;
+  lastP1KiP: number = 0;
+  lastP2KiP: number = 0;
 
   constructor(scene: any) {
     this.scene = scene;
@@ -58,6 +71,13 @@ export class BattleUI {
     this.uiContainer.add(this.p1KiBar);
     this.p1KiBar.scaleX = 0; // Starts with 0 Ki
 
+    this.p1KiGlow = bs.add
+      .rectangle(25, 80, 250, 12, 0xffffff)
+      .setOrigin(0, 0.5)
+      .setAlpha(0)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.uiContainer.add(this.p1KiGlow);
+
     this.p2HpBar = bs.add
       .rectangle(685, 50, 250, 22, 0xe74c3c)
       .setOrigin(0, 0.5);
@@ -68,6 +88,19 @@ export class BattleUI {
       .setOrigin(0, 0.5);
     this.uiContainer.add(this.p2KiBar);
     this.p2KiBar.scaleX = 0; // Starts with 0 Ki
+
+    this.p2KiGlow = bs.add
+      .rectangle(685, 80, 250, 12, 0xffffff)
+      .setOrigin(0, 0.5)
+      .setAlpha(0)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.uiContainer.add(this.p2KiGlow);
+
+    // Reset tracking state for new rounds
+    this.lastP1HpP = 1;
+    this.lastP2HpP = 1;
+    this.lastP1KiP = 0;
+    this.lastP2KiP = 0;
 
     // Player 1 Name
     this.p1NameText = bs.add.text(25, 15, playerData.name, {
@@ -97,35 +130,71 @@ export class BattleUI {
       .setOrigin(1, 0);
     this.uiContainer.add(this.p2NameText);
 
+    // Player 1 Combo Sub-Container
+    this.p1ComboContainer = bs.add.container(25, 120).setAlpha(0);
+    this.uiContainer.add(this.p1ComboContainer);
+
+    this.p1ComboBg = bs.add.graphics();
+    this.p1ComboBg.fillStyle(0x000000, 0.65);
+    this.p1ComboBg.fillRoundedRect(0, -22, 210, 44, 8);
+    this.p1ComboBg.lineStyle(2, 0xffaa00, 0.9);
+    this.p1ComboBg.strokeRoundedRect(0, -22, 210, 44, 8);
+    this.p1ComboBg.fillStyle(0xff3300, 1.0);
+    this.p1ComboBg.fillRect(0, -22, 5, 44);
+    this.p1ComboContainer.add(this.p1ComboBg);
+
     this.p1ComboText = bs.add
-      .text(25, 110, "", {
-        fontSize: "36px",
+      .text(15, -4, "", {
+        fontSize: "28px",
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#ffaa00",
-        stroke: "#000",
-        strokeThickness: 5,
-        shadow: { color: "#ff0000", blur: 4, fill: true },
+        fontStyle: "bold italic",
+        color: "#ffcc00",
+        stroke: "#000000",
+        strokeThickness: 6,
+        shadow: { color: "#ff0000", blur: 6, fill: true },
         resolution: 2,
       })
-      .setOrigin(0, 0.5)
-      .setAlpha(0);
-    this.uiContainer.add(this.p1ComboText);
+      .setOrigin(0, 0.5);
+    this.p1ComboContainer.add(this.p1ComboText);
+
+    this.p1ComboBar = bs.add
+      .rectangle(15, 14, 180, 4, 0xffaa00)
+      .setOrigin(0, 0.5);
+    this.p1ComboContainer.add(this.p1ComboBar);
+
+    // Player 2 Combo Sub-Container
+    this.p2ComboContainer = bs.add.container(935, 120).setAlpha(0);
+    this.uiContainer.add(this.p2ComboContainer);
+
+    this.p2ComboBg = bs.add.graphics();
+    this.p2ComboBg.fillStyle(0x000000, 0.65);
+    this.p2ComboBg.fillRoundedRect(-210, -22, 210, 44, 8);
+    this.p2ComboBg.lineStyle(2, 0xffaa00, 0.9);
+    this.p2ComboBg.strokeRoundedRect(-210, -22, 210, 44, 8);
+    this.p2ComboBg.fillStyle(0xff3300, 1.0);
+    this.p2ComboBg.fillRect(-5, -22, 5, 44);
+    this.p2ComboContainer.add(this.p2ComboBg);
 
     this.p2ComboText = bs.add
-      .text(935, 110, "", {
-        fontSize: "36px",
+      .text(-15, -4, "", {
+        fontSize: "28px",
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#ffaa00",
-        stroke: "#000",
-        strokeThickness: 5,
-        shadow: { color: "#ff0000", blur: 4, fill: true },
+        fontStyle: "bold italic",
+        color: "#ffcc00",
+        stroke: "#000000",
+        strokeThickness: 6,
+        shadow: { color: "#ff0000", blur: 6, fill: true },
         resolution: 2,
       })
-      .setOrigin(1, 0.5)
-      .setAlpha(0);
-    this.uiContainer.add(this.p2ComboText);
+      .setOrigin(1, 0.5);
+    this.p2ComboContainer.add(this.p2ComboText);
+
+    this.p2ComboBar = bs.add
+      .rectangle(-15, 14, 180, 4, 0xffaa00)
+      .setOrigin(1, 0.5);
+    this.p2ComboContainer.add(this.p2ComboBar);
 
     this.logText = bs.add
       .text(480, 120, "", {
@@ -160,24 +229,103 @@ export class BattleUI {
 
   updateBars(p1HpP: number, p2HpP: number, p1KiP: number, p2KiP: number) {
     if (this.p1HpBar && this.p1HpBar.active) {
-      // Liquid HP Bars
-      this.scene.tweens.add({
-        targets: this.p1HpBar,
-        scaleX: Math.max(0, p1HpP),
-        duration: 300,
-        ease: "Cubic.easeOut",
-        overwrite: true,
-      });
-      this.scene.tweens.add({
-        targets: this.p2HpBar,
-        scaleX: Math.max(0, p2HpP),
-        duration: 300,
-        ease: "Cubic.easeOut",
-        overwrite: true,
-      });
-      // Liquid Ki Bars
-      this.p1KiBar.scaleX = Math.max(0, p1KiP);
-      this.p2KiBar.scaleX = Math.max(0, p2KiP);
+      // Liquid HP Bars (only update when actual target value changes)
+      if (p1HpP !== this.lastP1HpP) {
+        this.scene.tweens.add({
+          targets: this.p1HpBar,
+          scaleX: Math.max(0, p1HpP),
+          duration: 300,
+          ease: "Cubic.easeOut",
+          overwrite: true,
+        });
+        this.lastP1HpP = p1HpP;
+      }
+
+      if (p2HpP !== this.lastP2HpP) {
+        this.scene.tweens.add({
+          targets: this.p2HpBar,
+          scaleX: Math.max(0, p2HpP),
+          duration: 300,
+          ease: "Cubic.easeOut",
+          overwrite: true,
+        });
+        this.lastP2HpP = p2HpP;
+      }
+
+      // Smooth Ki Bar Fill & Pulse Effects on Gain
+      if (p1KiP !== this.lastP1KiP) {
+        const isGain = p1KiP > this.lastP1KiP;
+
+        // Smoothly animate the horizontal fill of the bar and glow overlay
+        this.scene.tweens.add({
+          targets: [this.p1KiBar, this.p1KiGlow],
+          scaleX: Math.max(0, p1KiP),
+          duration: 250,
+          ease: "Quad.easeOut",
+          overwrite: true,
+        });
+
+        // Trigger visual pulse/glow effect when gaining Ki points
+        if (isGain) {
+          // A) SWELL EFFECT: briefly swell the height (scaleY) and snap back with a bouncy ease
+          this.scene.tweens.add({
+            targets: [this.p1KiBar, this.p1KiGlow],
+            scaleY: { from: 2.2, to: 1.0 },
+            duration: 300,
+            ease: "Back.easeOut",
+            overwrite: true,
+          });
+
+          // B) ENERGY FLASH EFFECT: flash the overlay bright white and fade out smoothly
+          this.p1KiGlow.setAlpha(0.95);
+          this.scene.tweens.add({
+            targets: this.p1KiGlow,
+            alpha: 0,
+            duration: 400,
+            ease: "Quad.easeOut",
+            overwrite: true,
+          });
+        }
+
+        this.lastP1KiP = p1KiP;
+      }
+
+      if (p2KiP !== this.lastP2KiP) {
+        const isGain = p2KiP > this.lastP2KiP;
+
+        // Smoothly animate the horizontal fill of the bar and glow overlay
+        this.scene.tweens.add({
+          targets: [this.p2KiBar, this.p2KiGlow],
+          scaleX: Math.max(0, p2KiP),
+          duration: 250,
+          ease: "Quad.easeOut",
+          overwrite: true,
+        });
+
+        // Trigger visual pulse/glow effect when gaining Ki points
+        if (isGain) {
+          // A) SWELL EFFECT: briefly swell the height (scaleY) and snap back with a bouncy ease
+          this.scene.tweens.add({
+            targets: [this.p2KiBar, this.p2KiGlow],
+            scaleY: { from: 2.2, to: 1.0 },
+            duration: 300,
+            ease: "Back.easeOut",
+            overwrite: true,
+          });
+
+          // B) ENERGY FLASH EFFECT: flash the overlay bright white and fade out smoothly
+          this.p2KiGlow.setAlpha(0.95);
+          this.scene.tweens.add({
+            targets: this.p2KiGlow,
+            alpha: 0,
+            duration: 400,
+            ease: "Quad.easeOut",
+            overwrite: true,
+          });
+        }
+
+        this.lastP2KiP = p2KiP;
+      }
 
       // Pulse Player 1 Ki Bar at 100% (p1KiP >= 1.0)
       if (p1KiP >= 1) {
@@ -236,50 +384,81 @@ export class BattleUI {
   updateCombo(comboCount: number, isP1: boolean) {
     if (comboCount < 2) return;
 
+    const container = isP1 ? this.p1ComboContainer : this.p2ComboContainer;
     const textObj = isP1 ? this.p1ComboText : this.p2ComboText;
-    if (!textObj || !textObj.active) return;
+    const barObj = isP1 ? this.p1ComboBar : this.p2ComboBar;
+
+    if (!container || !container.active || !textObj || !textObj.active) return;
 
     textObj.setText(`${comboCount} HITS!`);
-    textObj.setAlpha(1);
 
-    const bonusScale = Math.min(0.5, (comboCount - 2) * 0.05);
-    const targetScale = 1 + bonusScale;
+    // Kill any existing animations on the container or bar
+    this.scene.tweens.killTweensOf(container);
+    this.scene.tweens.killTweensOf(barObj);
 
-    this.scene.tweens.killTweensOf(textObj);
-    textObj.setScale(targetScale * 1.5);
+    // Reset visibility and apply an energetic entrance scaling and rotation slant
+    container.setAlpha(1);
+    container.setScale(1.35);
+    container.setRotation(isP1 ? -0.06 : 0.06);
 
-    const shakeIntensity = Math.min(10, comboCount);
-    const originalX = isP1 ? 25 : 935;
-
+    // Smoothly drain the active combo timer bar over 2 seconds
+    barObj.scaleX = 1.0;
     this.scene.tweens.add({
-      targets: textObj,
-      scaleX: targetScale,
-      scaleY: targetScale,
-      duration: 150,
+      targets: barObj,
+      scaleX: 0,
+      duration: 2000,
+      ease: "Linear",
+    });
+
+    // Animate the container settling with a Back ease bounce
+    this.scene.tweens.add({
+      targets: container,
+      scaleX: 1.0,
+      scaleY: 1.0,
+      rotation: 0,
+      duration: 180,
       ease: "Back.easeOut",
       onComplete: () => {
+        // Apply slight physical shaking proportionate to combo size
+        const shakeIntensity = Math.min(8, comboCount);
+        const originalX = isP1 ? 25 : 935;
         this.scene.tweens.add({
-          targets: textObj,
-          x: originalX + shakeIntensity,
+          targets: container,
+          x: originalX + (isP1 ? shakeIntensity : -shakeIntensity),
           yoyo: true,
           repeat: 3,
           duration: 30,
           onComplete: () => {
-            textObj.setX(originalX);
+            container.setX(originalX);
           },
         });
       },
     });
 
+    // Set a delayed fade-out timer for when the combo ends/times out (2 seconds)
     if (isP1) {
       if (this.p1ComboHideTimer) this.p1ComboHideTimer.remove();
       this.p1ComboHideTimer = this.scene.time.delayedCall(2000, () => {
-        this.scene.tweens.add({ targets: textObj, alpha: 0, duration: 300 });
+        this.scene.tweens.add({
+          targets: container,
+          alpha: 0,
+          scaleX: 0.8,
+          scaleY: 0.8,
+          duration: 200,
+          ease: "Quad.easeIn",
+        });
       });
     } else {
       if (this.p2ComboHideTimer) this.p2ComboHideTimer.remove();
       this.p2ComboHideTimer = this.scene.time.delayedCall(2000, () => {
-        this.scene.tweens.add({ targets: textObj, alpha: 0, duration: 300 });
+        this.scene.tweens.add({
+          targets: container,
+          alpha: 0,
+          scaleX: 0.8,
+          scaleY: 0.8,
+          duration: 200,
+          ease: "Quad.easeIn",
+        });
       });
     }
   }

@@ -4685,6 +4685,11 @@ export default class BattleScene extends Phaser.Scene {
       // Block effect
       this.createImpactEffect(target.x, target.y + 120, 0x3498db, "block"); // Blue shield spark
       if (this.soundManager) this.soundManager.playBlock();
+
+      // Haptic feedback: Subtle block haptic
+      if (typeof window !== "undefined" && window.navigator && window.navigator.vibrate) {
+        try { window.navigator.vibrate(20); } catch (e) {}
+      }
     } else {
       isCritical = dmg > 25; // threshold for critical visual
       const targetActing = isP ? this.p1ActionActive : this.p2ActionActive;
@@ -4694,11 +4699,21 @@ export default class BattleScene extends Phaser.Scene {
         // CLASH EFFECT! (Both attacking / exchanging blows)
         this.createImpactEffect(target.x, target.y + 60, 0xfffc00, "clash");
         if (this.soundManager) this.soundManager.playClash();
+
+        // Haptic feedback: Quick double pulse for clash
+        if (typeof window !== "undefined" && window.navigator && window.navigator.vibrate) {
+          try { window.navigator.vibrate([30, 40, 30]); } catch (e) {}
+        }
       } else {
         // normal hit
         if (this.battleCamera) this.battleCamera.shake(150, 0.02);
         this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee");
         if (this.soundManager) this.soundManager.playPunchImpact(isCritical);
+
+        // Haptic feedback: Standard vs Critical hits
+        if (typeof window !== "undefined" && window.navigator && window.navigator.vibrate) {
+          try { window.navigator.vibrate(isCritical ? 100 : 50); } catch (e) {}
+        }
       }
 
       // Update combo counter
