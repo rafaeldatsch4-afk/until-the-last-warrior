@@ -652,6 +652,7 @@ export default class MenuScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
     container.add(hitArea);
 
+    let pulseTween: Phaser.Tweens.Tween | null = null;
     const overFn = () => {
         polyMain.setFillStyle(color);
         polyMain.setStrokeStyle(3, 0xffffff);
@@ -664,6 +665,18 @@ export default class MenuScene extends Phaser.Scene {
           duration: 250,
           ease: "Power2",
         });
+        
+        if (!pulseTween) {
+          pulseTween = this.tweens.add({
+            targets: container,
+            scaleX: 1.03,
+            scaleY: 1.03,
+            yoyo: true,
+            repeat: -1,
+            duration: 600,
+            ease: "Sine.easeInOut"
+          });
+        }
     };
     
     const outFn = () => {
@@ -678,6 +691,12 @@ export default class MenuScene extends Phaser.Scene {
           duration: 250,
           ease: "Power2",
         });
+        
+        if (pulseTween) {
+          pulseTween.stop();
+          pulseTween = null;
+          this.tweens.add({ targets: container, scaleX: 1, scaleY: 1, duration: 150 });
+        }
     };
     
     const clickFn = () => {
