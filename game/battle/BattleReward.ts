@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { DailyChallenges } from "../systems/DailyChallenges";
 
@@ -276,24 +277,24 @@ export class BattleReward {
 
           s.gameState.tournamentCurrentRoundIndex = currentRoundIndex + 1;
           s.registry.set("gameState", s.gameState);
-          s.scene.start("TournamentScene");
+          transitionTo(s, "TournamentScene");
         } else {
-          s.scene.start("MenuScene");
+          transitionTo(s, "MenuScene");
         }
       } else if (s.gameState.gameMode === "arcade") {
         if (win) {
           s.gameState.arcadeRound = (s.gameState.arcadeRound || 1) + 1;
           if (s.gameState.arcadeRound > 5) {
-            s.scene.start("MenuScene");
+            transitionTo(s, "MenuScene");
           } else {
             s.registry.set("gameState", s.gameState);
-            s.scene.start("BattleScene");
+            transitionTo(s, "BattleScene");
           }
         } else {
-          s.scene.start("MenuScene");
+          transitionTo(s, "MenuScene");
         }
       } else {
-        s.scene.start("MenuScene");
+        transitionTo(s, "MenuScene");
       }
     });
   }

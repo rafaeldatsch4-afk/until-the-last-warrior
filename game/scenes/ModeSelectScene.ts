@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
 
@@ -9,6 +10,7 @@ export default class ModeSelectScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     this.gameState = this.registry.get("gameState");
 
     if (this.cache.audio.exists("bgm_battle")) {
@@ -148,7 +150,7 @@ export default class ModeSelectScene extends Phaser.Scene {
           }
 
           this.registry.set("gameState", this.gameState);
-          this.scene.start("CharacterSelectScene");
+          transitionTo(this, "CharacterSelectScene");
         },
         m.color,
       );
@@ -156,7 +158,7 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     // Back Button
     this.createBackBtn(100, 50, "VOLTAR", () => {
-      this.scene.start("MenuScene");
+      transitionTo(this, "MenuScene");
     });
   }
 

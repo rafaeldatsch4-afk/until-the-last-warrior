@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
 import { auth } from "../../firebase/init";
@@ -19,6 +20,7 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     this.gameState = this.registry.get("gameState") as GameState;
     this.currentMode = "menu";
     this.typedCode = "";
@@ -95,7 +97,7 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     this.createBackBtn(120, 50, "VOLTAR", () => {
       MultiplayerManager.getInstance().leaveLobby();
       MultiplayerManager.getInstance().disconnect();
-      this.scene.start("CharacterSelectScene");
+      transitionTo(this, "CharacterSelectScene");
     });
   }
 
@@ -535,7 +537,7 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
       this.drawMatchMatchedScreen(data.opponentName);
 
       this.time.delayedCall(2200, () => {
-        this.scene.start("BattleScene");
+        transitionTo(this, "BattleScene");
       });
     };
 

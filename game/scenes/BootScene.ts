@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { INITIAL_CHARACTERS } from "../data";
 import { GameState } from "../types";
@@ -11,6 +12,7 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     // Initialize Global Game State if it doesn't exist
     if (!window.UTLW) {
       console.log("Initializing Game State...");
@@ -125,6 +127,6 @@ export default class BootScene extends Phaser.Scene {
     // Ensure registry is synced
     this.registry.set("gameState", window.UTLW.state);
 
-    this.scene.start("PreloadScene");
+    transitionTo(this, "PreloadScene");
   }
 }

@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
 
@@ -29,6 +30,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     this.state = this.registry.get("gameState") as GameState;
 
     if (this.cache.audio.exists("bgm_battle")) {
@@ -140,7 +142,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     });
     backHit.on("pointerdown", () => {
       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-      this.scene.start("MenuScene");
+      transitionTo(this, "MenuScene");
     });
 
     // Header
@@ -308,7 +310,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
         this.updateUI();
         return;
       } else {
-        this.scene.start("BattleScene");
+        transitionTo(this, "BattleScene");
         return;
       }
     }
@@ -345,11 +347,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
       ];
       this.state.tournamentCurrentRoundIndex = 0;
       this.registry.set("gameState", this.state);
-      this.scene.start("TournamentScene");
+      transitionTo(this, "TournamentScene");
     } else if (this.state.gameMode === "online_pvp") {
-      this.scene.start("MultiplayerLobbyScene");
+      transitionTo(this, "MultiplayerLobbyScene");
     } else {
-      this.scene.start("BattleScene");
+      transitionTo(this, "BattleScene");
     }
   }
 

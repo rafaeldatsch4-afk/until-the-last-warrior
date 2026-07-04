@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { CharacterData } from "../types";
 import { INITIAL_CHARACTERS } from "../data";
@@ -116,6 +117,7 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     this.createAudioAssets();
     this.createFXAssets();
 
@@ -210,7 +212,7 @@ export default class PreloadScene extends Phaser.Scene {
       if (this.loadingText) this.loadingText.destroy();
       if (this.preloadBg) this.preloadBg.destroy();
 
-      this.scene.start("MenuScene");
+      transitionTo(this, "MenuScene");
     });
   }
 

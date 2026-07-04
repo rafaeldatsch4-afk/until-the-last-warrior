@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 
 export default class PauseScene extends Phaser.Scene {
@@ -17,6 +18,7 @@ export default class PauseScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     const { width, height } = this.cameras.main;
 
     // Semi-transparent background
@@ -97,7 +99,7 @@ export default class PauseScene extends Phaser.Scene {
         // We'll need to disconnect from multiplayer if online, but BattleScene does it on exit
       }
       this.scene.stop("BattleScene");
-      this.scene.start("MenuScene");
+      transitionTo(this, "MenuScene");
     });
 
     if (this.isOnline) {

@@ -56,14 +56,25 @@ const App: React.FC = () => {
     };
     window.addEventListener('request-pwa-install', handleRequestInstall);
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle navigation if we are in MenuScene and no text input is open
+      if (isMenuScene && !textInputPrompt) {
+        if (['ArrowUp', 'ArrowDown', 'Enter'].includes(e.key)) {
+          window.dispatchEvent(new CustomEvent('menu-nav', { detail: e.key }));
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.removeEventListener('fullscreenchange', onFullscreenChange);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('request-pwa-install', handleRequestInstall);
       window.removeEventListener('scene-changed', handleSceneChange);
       window.removeEventListener('request-text-input', handleTextInput);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [isMenuScene, textInputPrompt]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {

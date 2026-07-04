@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { INITIAL_CHARACTERS } from "../data";
 import { CharacterData } from "../types";
@@ -69,6 +70,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     this.add.rectangle(480, 270, 960, 540, 0x0f0c29);
     if (this.cameras.main.postFX) {
       this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
@@ -80,7 +82,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     // Back button
     const backBtn = this.add.rectangle(80, 40, 100, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
     this.add.text(80, 40, "VOLTAR", { fontSize: "18px", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5);
-    backBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.scene.start("MenuScene"));
+    backBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => transitionTo(this, "MenuScene"));
 
     // Title
     this.add.text(480, 50, "CRIAR PERSONAGEM", { fontSize: "32px", fontStyle: "bold", color: "#f39c12", fontFamily: "system-ui, -apple-system, 'Arial Black', sans-serif" }).setOrigin(0.5);

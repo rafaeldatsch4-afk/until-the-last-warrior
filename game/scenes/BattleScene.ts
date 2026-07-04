@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import { BattleCamera } from "../battle/BattleCamera";
 import { BattleReward } from "../battle/BattleReward";
 import { BattleInput } from "../battle/BattleInput";
@@ -180,6 +181,7 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     this.soundManager = new BattleSoundManager(this);
     this.battleAI = new BattleAI(this);
     this.gameState = this.registry.get("gameState") as GameState;
@@ -407,7 +409,7 @@ export default class BattleScene extends Phaser.Scene {
 
         this.time.delayedCall(3000, () => {
           mm.disconnect();
-          this.scene.start("MenuScene");
+          transitionTo(this, "MenuScene");
         });
       };
     }

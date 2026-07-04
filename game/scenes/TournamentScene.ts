@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState, CharacterData, TournamentMatch } from "../types";
 import { INITIAL_CHARACTERS } from "../data";
@@ -10,6 +11,7 @@ export default class TournamentScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     this.gameState = this.registry.get("gameState");
 
     if (this.cache.audio.exists("bgm_battle")) {
@@ -71,7 +73,7 @@ export default class TournamentScene extends Phaser.Scene {
     });
 
     if (!this.gameState.tournamentRounds) {
-      this.scene.start("MenuScene");
+      transitionTo(this, "MenuScene");
       return;
     }
 
@@ -119,7 +121,7 @@ export default class TournamentScene extends Phaser.Scene {
         550,
         "VOLTAR AO MENU",
         () => {
-          this.scene.start("MenuScene");
+          transitionTo(this, "MenuScene");
         },
         0x3498db,
       );
@@ -308,7 +310,7 @@ export default class TournamentScene extends Phaser.Scene {
         480,
         "LUTAR!",
         () => {
-          this.scene.start("BattleScene");
+          transitionTo(this, "BattleScene");
         },
         0xe74c3c,
       );

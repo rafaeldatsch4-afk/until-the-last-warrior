@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
 import { DailyChallenges, CHALLENGES } from "../systems/DailyChallenges";
@@ -16,17 +17,26 @@ export default class MenuScene extends Phaser.Scene {
 
   private state!: GameState;
   private coinText!: Phaser.GameObjects.Text;
+  private menuItems: { over: () => void, out: () => void, click: () => void }[] = [];
+  private selectedMenuIndex: number = -1;
+  private navListener: any;
 
   constructor() {
     super("MenuScene");
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     window.dispatchEvent(
       new CustomEvent("scene-changed", { detail: "MenuScene" }),
     );
 
+    this.menuItems = [];
+    this.selectedMenuIndex = -1;
+    this.navListener = (e: any) => this.handleMenuNav(e.detail);
+    window.addEventListener("menu-nav", this.navListener);
     this.events.on("shutdown", () => {
+      window.removeEventListener("menu-nav", this.navListener);
       window.dispatchEvent(new CustomEvent("scene-changed", { detail: null }));
     });
 
@@ -210,7 +220,7 @@ export default class MenuScene extends Phaser.Scene {
         this.resumeAudioContext();
         if (this.cache.audio.exists("sfx_select"))
           this.sound.play("sfx_select");
-        this.scene.start("ModeSelectScene");
+        transitionTo(this, "ModeSelectScene");
       },
       0xe74c3c,
       0,
@@ -224,7 +234,7 @@ export default class MenuScene extends Phaser.Scene {
         this.resumeAudioContext();
         if (this.cache.audio.exists("sfx_select"))
           this.sound.play("sfx_select");
-        this.scene.start("StoreScene");
+        transitionTo(this, "StoreScene");
       },
       0x3498db,
       100,
@@ -252,7 +262,7 @@ export default class MenuScene extends Phaser.Scene {
         this.resumeAudioContext();
         if (this.cache.audio.exists("sfx_select"))
           this.sound.play("sfx_select");
-        this.scene.start("SettingsScene");
+        transitionTo(this, "SettingsScene");
       },
       0x95a5a6,
       300,
@@ -266,7 +276,7 @@ export default class MenuScene extends Phaser.Scene {
         this.resumeAudioContext();
         if (this.cache.audio.exists("sfx_select"))
           this.sound.play("sfx_select");
-        this.scene.start("CharacterCreatorScene");
+        transitionTo(this, "CharacterCreatorScene");
       },
       0x2ecc71,
       400,
@@ -538,6 +548,37 @@ export default class MenuScene extends Phaser.Scene {
     }
   }
 
+  handleMenuNav(key: string) {
+    if (this.menuItems.length === 0) return;
+    
+    // Clear previous selection visually
+    if (this.selectedMenuIndex >= 0 && this.selectedMenuIndex < this.menuItems.length) {
+      this.menuItems[this.selectedMenuIndex].out();
+    }
+    
+    if (key === 'ArrowDown') {
+      this.selectedMenuIndex = (this.selectedMenuIndex + 1) % this.menuItems.length;
+      if (this.cache.audio.exists("sfx_step")) this.sound.play("sfx_step", { volume: 0.5 });
+    } else if (key === 'ArrowUp') {
+      this.selectedMenuIndex = (this.selectedMenuIndex - 1 + this.menuItems.length) % this.menuItems.length;
+      if (this.cache.audio.exists("sfx_step")) this.sound.play("sfx_step", { volume: 0.5 });
+    } else if (key === 'Enter') {
+      if (this.selectedMenuIndex >= 0 && this.selectedMenuIndex < this.menuItems.length) {
+        this.menuItems[this.selectedMenuIndex].click();
+      } else {
+        // If nothing selected, default to first
+        this.selectedMenuIndex = 0;
+        this.menuItems[0].click();
+      }
+      return;
+    }
+    
+    // Apply new selection visually
+    if (this.selectedMenuIndex >= 0 && this.selectedMenuIndex < this.menuItems.length) {
+      this.menuItems[this.selectedMenuIndex].over();
+    }
+  }
+
   createMenuButton(
     x: number,
     y: number,
@@ -611,8 +652,7 @@ export default class MenuScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
     container.add(hitArea);
 
-    hitArea
-      .on("pointerover", () => {
+    const overFn = () => {
         polyMain.setFillStyle(color);
         polyMain.setStrokeStyle(3, 0xffffff);
         txt.setColor("#ffffff");
@@ -624,8 +664,9 @@ export default class MenuScene extends Phaser.Scene {
           duration: 250,
           ease: "Power2",
         });
-      })
-      .on("pointerout", () => {
+    };
+    
+    const outFn = () => {
         polyMain.setFillStyle(0x111625);
         polyMain.setStrokeStyle(3, color);
         txt.setColor("#e2e8f0");
@@ -637,8 +678,9 @@ export default class MenuScene extends Phaser.Scene {
           duration: 250,
           ease: "Power2",
         });
-      })
-      .on("pointerdown", () => {
+    };
+    
+    const clickFn = () => {
         this.tweens.add({
           targets: container,
           scale: 0.95,
@@ -646,6 +688,26 @@ export default class MenuScene extends Phaser.Scene {
           duration: 50,
           onComplete: callback,
         });
-      });
+    };
+
+    const myIndex = this.menuItems.length;
+    this.menuItems.push({ over: overFn, out: outFn, click: clickFn });
+
+    hitArea
+      .on("pointerover", () => {
+         if (this.selectedMenuIndex >= 0 && this.selectedMenuIndex < this.menuItems.length) {
+            this.menuItems[this.selectedMenuIndex].out();
+         }
+         this.selectedMenuIndex = myIndex; 
+         overFn();
+      })
+      .on("pointerout", () => {
+         // only unhighlight if we are still the selected one (mouse leaving)
+         if (this.selectedMenuIndex === myIndex) {
+            this.selectedMenuIndex = -1;
+         }
+         outFn();
+      })
+      .on("pointerdown", clickFn);
   }
 }

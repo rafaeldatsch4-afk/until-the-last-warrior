@@ -1,3 +1,4 @@
+import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
 
@@ -39,6 +40,7 @@ export default class StoreScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     const state = this.registry.get("gameState") as GameState;
 
     this.add.rectangle(480, 270, 960, 540, 0x0c141f);
@@ -72,7 +74,7 @@ export default class StoreScene extends Phaser.Scene {
       .on("pointerout", () => backBtn.setFillStyle(0xe74c3c))
       .on("pointerdown", () => {
         this.sound.play("sfx_select");
-        this.scene.start("MenuScene");
+        transitionTo(this, "MenuScene");
       });
 
     this.add
