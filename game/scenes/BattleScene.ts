@@ -4222,6 +4222,7 @@ export default class BattleScene extends Phaser.Scene {
   // 100% ULTIMATE ATTACKS
   // =========================================================================
 
+
   createScreenFlash(color: number, duration: number, alpha: number = 0.8) {
     const flash = this.add
       .rectangle(480, 270, 960, 540, color)
@@ -4234,6 +4235,13 @@ export default class BattleScene extends Phaser.Scene {
       ease: "Power2",
       onComplete: () => flash.destroy(),
     });
+  }
+
+
+  vibrate(duration: number | number[]) {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(duration);
+    }
   }
 
   createImpactEffect(
