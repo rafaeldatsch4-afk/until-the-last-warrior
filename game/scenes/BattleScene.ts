@@ -270,7 +270,9 @@ export default class BattleScene extends Phaser.Scene {
     if (this.cache.audio.exists("bgm_menu")) this.sound.stopByKey("bgm_menu");
     if (this.cache.audio.exists("bgm_battle")) {
       this.sound.stopByKey("bgm_battle");
-      this.sound.play("bgm_battle", { loop: true, volume: 0.4 });
+      const bgmEnabled = this.registry.get("bgmEnabled") !== false;
+      const bgmVol = this.registry.get("bgmVolume") ?? 0.4;
+      this.sound.play("bgm_battle", { loop: true, volume: bgmEnabled ? bgmVol : 0 });
     }
 
     this.createFighterSprites();

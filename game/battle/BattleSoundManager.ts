@@ -19,7 +19,7 @@ export class BattleSoundManager {
     const detune =
       detuneBase + Phaser.Math.Between(-variationRange, variationRange);
     this.scene.sound.play(key, {
-      volume: baseVolume,
+      volume: baseVolume * (this.scene.registry.get("sfxVolume") ?? 1.0),
       detune: detune,
     });
   }

@@ -20,7 +20,7 @@ export default class ModeSelectScene extends Phaser.Scene {
         if (s.isPlaying) isPlaying = true;
       });
       if (!isPlaying) {
-        this.sound.play("bgm_menu", { loop: true, volume: 0.5 });
+        const bgmEnabled = this.registry.get("bgmEnabled") !== false; const bgmVol = this.registry.get("bgmVolume") ?? 0.5; this.sound.play("bgm_menu", { loop: true, volume: bgmEnabled ? bgmVol : 0 });
       }
     }
 

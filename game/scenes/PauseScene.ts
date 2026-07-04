@@ -58,9 +58,28 @@ export default class PauseScene extends Phaser.Scene {
       this.scene.stop();
     });
 
+    // Settings Button
+    const settingsBtn = this.add
+      .text(width / 2, height / 2 + 100, "SETTINGS", {
+        fontSize: "28px",
+        color: "#f39c12",
+        fontStyle: "bold",
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    settingsBtn.on("pointerover", () => settingsBtn.setColor("#f1c40f"));
+    settingsBtn.on("pointerout", () => settingsBtn.setColor("#f39c12"));
+    settingsBtn.on("pointerdown", () => {
+      this.sound.play("sfx_select", { volume: this.registry.get("sfxVolume") ?? 1.0 });
+      this.scene.launch("SettingsScene", { fromScene: "PauseScene" });
+      this.scene.sleep();
+    });
+
     // Quit Instruction
     const quitBtn = this.add
-      .text(width / 2, height / 2 + 100, "QUIT TO MENU", {
+      .text(width / 2, height / 2 + 170, "QUIT TO MENU", {
         fontSize: "28px",
         color: "#e74c3c",
         fontStyle: "bold",

@@ -14,6 +14,10 @@ export default class SettingsScene extends Phaser.Scene {
   constructor() {
     super("SettingsScene");
   }
+  private returnScene: string = "MenuScene";
+  init(data: any) {
+    if (data && data.fromScene) this.returnScene = data.fromScene;
+  }
 
   create() {
     const state = this.registry.get("gameState") as GameState;
@@ -46,7 +50,14 @@ export default class SettingsScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on("pointerover", () => backBtn.setFillStyle(0xc0392b))
       .on("pointerout", () => backBtn.setFillStyle(0xe74c3c))
-      .on("pointerdown", () => this.scene.start("MenuScene"));
+      .on("pointerdown", () => {
+        if (this.returnScene === "PauseScene") {
+          this.scene.stop();
+          this.scene.wake("PauseScene");
+        } else {
+          this.scene.start("MenuScene");
+        }
+      });
 
     // Title
     this.add
@@ -61,7 +72,7 @@ export default class SettingsScene extends Phaser.Scene {
 
     // --- AUDIO SETTING ---
     this.add
-      .text(480, 100, "AUDIO", {
+      .text(480, 80, "AUDIO SETTINGS", {
         fontSize: "20px",
         color: "#aaa",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
@@ -69,46 +80,80 @@ export default class SettingsScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    const isMuted = this.sound.mute;
-    const soundText = this.add
-      .text(480, 130, isMuted ? "SOUND: OFF" : "SOUND: ON", {
-        fontSize: "24px",
-        color: isMuted ? "#e74c3c" : "#2ecc71", // Red if OFF, Green if ON
+    // BGM Toggle
+    let bgmEnabled = this.registry.get("bgmEnabled") !== false;
+    const bgmToggleText = this.add
+      .text(480, 110, bgmEnabled ? "MUSIC: ON" : "MUSIC: OFF", {
+        fontSize: "22px",
+        color: bgmEnabled ? "#2ecc71" : "#e74c3c",
         fontStyle: "bold",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         resolution: 2,
       })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
-    soundText.on("pointerdown", () => {
-      const newMuteState = !this.sound.mute;
-      this.sound.mute = newMuteState;
+    bgmToggleText.on("pointerdown", () => {
+      bgmEnabled = !bgmEnabled;
+      this.registry.set("bgmEnabled", bgmEnabled);
+      bgmToggleText.setText(bgmEnabled ? "MUSIC: ON" : "MUSIC: OFF");
+      bgmToggleText.setColor(bgmEnabled ? "#2ecc71" : "#e74c3c");
+      
+      const bgmVol = this.registry.get("bgmVolume") ?? 0.5;
+      this.sound.getAll("bgm_menu").forEach(s => (s as Phaser.Sound.BaseSound).setVolume(bgmEnabled ? bgmVol : 0));
+      this.sound.getAll("bgm_battle").forEach(s => (s as Phaser.Sound.BaseSound).setVolume(bgmEnabled ? bgmVol : 0));
 
-      soundText.setText(newMuteState ? "SOUND: OFF" : "SOUND: ON");
-      soundText.setColor(newMuteState ? "#e74c3c" : "#2ecc71");
-
-      // Visual pop
-      this.tweens.add({
-        targets: soundText,
-        scaleX: 1.2,
-        scaleY: 1.2,
-        duration: 100,
-        yoyo: true,
-      });
-
-      // Auditory confirmation if turning on
-      if (!newMuteState) {
-        // Check if 'sfx_select' exists as standard practice in this codebase
-        if (
-          this.sound.getAll("sfx_select").length > 0 ||
-          this.sound.get("sfx_select")
-        ) {
-          this.sound.play("sfx_select");
-        }
+      this.tweens.add({ targets: bgmToggleText, scaleX: 1.1, scaleY: 1.1, duration: 100, yoyo: true });
+      if (bgmEnabled && (this.cache.audio.exists("sfx_select") || this.sound.get("sfx_select"))) {
+         this.sound.play("sfx_select", { volume: this.registry.get("sfxVolume") ?? 1.0 });
       }
     });
+
+    // Helper for sliders
+    const createSlider = (x, y, label, key, defaultVal, isBgm) => {
+      let val = this.registry.get(key);
+      if (val === undefined) {
+        val = defaultVal;
+        this.registry.set(key, val);
+      }
+      
+      this.add.text(x - 120, y, label, { fontSize: "18px", color: "#fff", fontFamily: "system-ui" }).setOrigin(1, 0.5);
+      
+      const track = this.add.rectangle(x - 100, y, 200, 8, 0x555555).setOrigin(0, 0.5);
+      const fill = this.add.rectangle(x - 100, y, 200 * val, 8, 0x3498db).setOrigin(0, 0.5);
+      const handle = this.add.circle(x - 100 + 200 * val, y, 10, 0xffffff).setInteractive({ draggable: true, useHandCursor: true });
+      
+      const updateVolume = (v) => {
+        val = Phaser.Math.Clamp(v, 0, 1);
+        this.registry.set(key, val);
+        fill.width = 200 * val;
+        handle.x = (x - 100) + 200 * val;
+        
+        if (isBgm) {
+           const enabled = this.registry.get("bgmEnabled") !== false;
+           this.sound.getAll("bgm_menu").forEach(s => (s as Phaser.Sound.BaseSound).setVolume(enabled ? val : 0));
+           this.sound.getAll("bgm_battle").forEach(s => (s as Phaser.Sound.BaseSound).setVolume(enabled ? val : 0));
+        }
+      };
+
+      handle.on('drag', (pointer, dragX) => {
+         const pct = (dragX - (x - 100)) / 200;
+         updateVolume(pct);
+      });
+      
+      // Click on track to set value
+      track.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer) => {
+         const pct = (pointer.x - (x - 100)) / 200;
+         updateVolume(pct);
+      });
+      fill.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer) => {
+         const pct = (pointer.x - (x - 100)) / 200;
+         updateVolume(pct);
+      });
+    };
+
+    createSlider(480, 145, "Music Vol", "bgmVolume", 0.5, true);
+    createSlider(480, 175, "SFX Vol", "sfxVolume", 1.0, false);
 
     // --- DIFFICULTY ---
     this.add
