@@ -27,6 +27,8 @@ export interface BattleKeys {
   pause: Phaser.Input.Keyboard.Key;
 }
 
+export type InputAction = "attack" | "kiblast" | "transform" | "special" | "left" | "right" | "up" | "down" | "defend";
+
 export class BattleInput {
   scene: BattleScene;
   keys!: BattleKeys;
@@ -47,6 +49,116 @@ export class BattleInput {
   constructor(scene: BattleScene) {
     this.scene = scene;
   }
+
+  // --- Abstraction Layer ---
+  public checkActionDown(action: InputAction, isPlayer1: boolean): boolean {
+    if (isPlayer1) {
+      switch (action) {
+        case "defend": return this.keys.p1_defend.isDown || this.mobileP1Defend;
+        case "left": return this.keys.p1_left.isDown || this.mobileJoystickVector.x < -0.3;
+        case "right": return this.keys.p1_right.isDown || this.mobileJoystickVector.x > 0.3;
+        case "up": return this.keys.p1_up.isDown || this.mobileJoystickVector.y < -0.3;
+        case "down": return this.keys.p1_down.isDown || this.mobileJoystickVector.y > 0.3;
+        case "special": return this.keys.p1_special.isDown || this.mobileP1Special;
+        case "attack": return this.keys.p1_attack.isDown || this.mobileP1Attack;
+        case "kiblast": return this.keys.p1_kiblast.isDown || this.mobileP1KiBlast;
+        case "transform": return this.keys.p1_transform.isDown || this.mobileP1Transform;
+        default: return false;
+      }
+    } else {
+      switch (action) {
+        case "defend": return this.keys.p2_defend.isDown;
+        case "left": return this.keys.p2_left.isDown;
+        case "right": return this.keys.p2_right.isDown;
+        case "up": return this.keys.p2_up.isDown;
+        case "down": return this.keys.p2_down.isDown;
+        case "special": return this.keys.p2_special.isDown;
+        case "attack": return this.keys.p2_attack.isDown;
+        case "kiblast": return this.keys.p2_kiblast.isDown;
+        case "transform": return this.keys.p2_transform.isDown;
+        default: return false;
+      }
+    }
+  }
+
+  public checkActionJustUp(action: InputAction, isPlayer1: boolean): boolean {
+    if (isPlayer1) {
+      switch (action) {
+        case "special":
+          if (this.mobileP1SpecialJustUp) {
+            this.mobileP1SpecialJustUp = false;
+            return true;
+          }
+          return Phaser.Input.Keyboard.JustUp(this.keys.p1_special);
+        default: return false;
+      }
+    } else {
+      switch (action) {
+        case "special":
+          return Phaser.Input.Keyboard.JustUp(this.keys.p2_special);
+        default: return false;
+      }
+    }
+  }
+
+  public checkActionJustDown(action: InputAction, isPlayer1: boolean): boolean {
+    if (isPlayer1) {
+      switch (action) {
+        case "attack":
+          if (this.mobileP1Attack) {
+            this.mobileP1Attack = false;
+            return true;
+          }
+          return Phaser.Input.Keyboard.JustDown(this.keys.p1_attack);
+        case "kiblast":
+          if (this.mobileP1KiBlast) {
+            this.mobileP1KiBlast = false;
+            return true;
+          }
+          return Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast);
+        case "transform":
+          if (this.mobileP1Transform) {
+            this.mobileP1Transform = false;
+            return true;
+          }
+          return Phaser.Input.Keyboard.JustDown(this.keys.p1_transform);
+        case "left": return Phaser.Input.Keyboard.JustDown(this.keys.p1_left);
+        case "right": return Phaser.Input.Keyboard.JustDown(this.keys.p1_right);
+        case "up": return Phaser.Input.Keyboard.JustDown(this.keys.p1_up);
+        case "down": return Phaser.Input.Keyboard.JustDown(this.keys.p1_down);
+        case "special": return Phaser.Input.Keyboard.JustDown(this.keys.p1_special);
+        default: return false;
+      }
+    } else {
+      switch (action) {
+        case "attack":
+          if (this.scene.p2BufferedAttack) {
+            this.scene.p2BufferedAttack = false;
+            return true;
+          }
+          return Phaser.Input.Keyboard.JustDown(this.keys.p2_attack);
+        case "kiblast":
+          if (this.scene.p2BufferedKiBlast) {
+            this.scene.p2BufferedKiBlast = false;
+            return true;
+          }
+          return Phaser.Input.Keyboard.JustDown(this.keys.p2_kiblast);
+        case "transform":
+          if (this.scene.p2BufferedTransform) {
+            this.scene.p2BufferedTransform = false;
+            return true;
+          }
+          return Phaser.Input.Keyboard.JustDown(this.keys.p2_transform);
+        case "left": return Phaser.Input.Keyboard.JustDown(this.keys.p2_left);
+        case "right": return Phaser.Input.Keyboard.JustDown(this.keys.p2_right);
+        case "up": return Phaser.Input.Keyboard.JustDown(this.keys.p2_up);
+        case "down": return Phaser.Input.Keyboard.JustDown(this.keys.p2_down);
+        case "special": return Phaser.Input.Keyboard.JustDown(this.keys.p2_special);
+        default: return false;
+      }
+    }
+  }
+
 
   createInputs() {
     if (!this.scene.input.keyboard) return;

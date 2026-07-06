@@ -498,14 +498,16 @@ export default class BattleScene extends Phaser.Scene {
       if (this.hasInitialRemotePosition) {
         const target = this.localPlayerIndex === 1 ? this.enemy : this.player;
         if (target && target.active) {
-          target.x += (this.remoteTargetX - target.x) * 0.94;
-          target.y += (this.remoteTargetY - target.y) * 0.94;
+          // Smooth lerp based on delta time, capped at 0.8
+          const lerpFactor = Phaser.Math.Clamp(delta * 0.02, 0.1, 0.8);
+          target.x += (this.remoteTargetX - target.x) * lerpFactor;
+          target.y += (this.remoteTargetY - target.y) * lerpFactor;
         }
       }
 
       this.netSyncTimer += delta;
-      if (this.netSyncTimer >= 16) {
-        // Throttle to ~60 Hz (every frame) for extremely snappy, real-time responsive fighting
+      if (this.netSyncTimer >= 33) {
+        // Throttle to ~30 Hz for smoother internet play without flooding
         this.netSyncTimer = 0;
         const localIdx = this.localPlayerIndex;
         const activeObj = localIdx === 1 ? this.player : this.enemy;
@@ -555,12 +557,12 @@ export default class BattleScene extends Phaser.Scene {
         if (this.battleInput && this.battleInput.mobileP1Dash !== 0) {
             this.performDash(true, this.battleInput.mobileP1Dash);
             this.battleInput.mobileP1Dash = 0;
-        } else if (Phaser.Input.Keyboard.JustDown(this.keys.p1_left)) {
+        } else if (this.battleInput && this.battleInput.checkActionJustDown("left", true)) {
           if (time - this.lastP1LeftTime < 300) {
             this.performDash(true, -1);
           }
           this.lastP1LeftTime = time;
-        } else if (Phaser.Input.Keyboard.JustDown(this.keys.p1_right)) {
+        } else if (this.battleInput && this.battleInput.checkActionJustDown("right", true)) {
           if (time - this.lastP1RightTime < 300) {
             this.performDash(true, 1);
           }
@@ -573,17 +575,11 @@ export default class BattleScene extends Phaser.Scene {
         if (this.playerDefending) {
           // Cannot move while defending/charging
           this.player.setFlipX(this.player.x > this.enemy.x);
-        } else if (
-          this.keys.p1_left.isDown ||
-          this.mobileJoystickVector.x < -0.3
-        ) {
+        } else if (this.battleInput && this.battleInput.checkActionDown("left", true)) {
           this.player.x -= moveSpeed;
           this.player.setFlipX(true);
           isMoving = true;
-        } else if (
-          this.keys.p1_right.isDown ||
-          this.mobileJoystickVector.x > 0.3
-        ) {
+        } else if (this.battleInput && this.battleInput.checkActionDown("right", true)) {
           this.player.x += moveSpeed;
           this.player.setFlipX(false);
           isMoving = true;
@@ -634,7 +630,7 @@ export default class BattleScene extends Phaser.Scene {
 
         if (
           !this.playerDefending &&
-          this.keys.p1_up.isDown &&
+          this.battleInput && this.battleInput.checkActionDown("up", true) &&
           !this.isP1Jumping
         ) {
           this.performJump(true);
@@ -673,36 +669,20 @@ export default class BattleScene extends Phaser.Scene {
         !this.isP2Jumping
       ) {
         // Check double-tap dash
-        if (
-          this.gameState.gameMode === "online_pvp" &&
-          this.localPlayerIndex === 2
-        ) {
-          if (this.battleInput && this.battleInput.mobileP1Dash !== 0) {
+        const useP1Controls = this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2;
+        if (this.battleInput && this.battleInput.mobileP1Dash !== 0 && useP1Controls) {
             this.performDash(false, this.battleInput.mobileP1Dash);
             this.battleInput.mobileP1Dash = 0;
-          } else if (Phaser.Input.Keyboard.JustDown(this.keys.p1_left)) {
-            if (time - this.lastP2LeftTime < 300) {
-              this.performDash(false, -1);
-            }
-            this.lastP2LeftTime = time;
-          } else if (Phaser.Input.Keyboard.JustDown(this.keys.p1_right)) {
-            if (time - this.lastP2RightTime < 300) {
-              this.performDash(false, 1);
-            }
-            this.lastP2RightTime = time;
+        } else if (this.battleInput && this.battleInput.checkActionJustDown("left", useP1Controls ? true : false)) {
+          if (time - this.lastP2LeftTime < 300) {
+            this.performDash(false, -1);
           }
-        } else {
-          if (Phaser.Input.Keyboard.JustDown(this.keys.p2_left)) {
-            if (time - this.lastP2LeftTime < 300) {
-              this.performDash(false, -1);
-            }
-            this.lastP2LeftTime = time;
-          } else if (Phaser.Input.Keyboard.JustDown(this.keys.p2_right)) {
-            if (time - this.lastP2RightTime < 300) {
-              this.performDash(false, 1);
-            }
-            this.lastP2RightTime = time;
+          this.lastP2LeftTime = time;
+        } else if (this.battleInput && this.battleInput.checkActionJustDown("right", useP1Controls ? true : false)) {
+          if (time - this.lastP2RightTime < 300) {
+            this.performDash(false, 1);
           }
+          this.lastP2RightTime = time;
         }
 
         const moveSpeed = 6;
@@ -710,17 +690,10 @@ export default class BattleScene extends Phaser.Scene {
         let moveL = false;
         let moveR = false;
 
-        if (
-          this.gameState.gameMode === "online_pvp" &&
-          this.localPlayerIndex === 2
-        ) {
-          moveL =
-            this.keys.p1_left.isDown || this.mobileJoystickVector.x < -0.3;
-          moveR =
-            this.keys.p1_right.isDown || this.mobileJoystickVector.x > 0.3;
-        } else {
-          moveL = this.keys.p2_left.isDown;
-          moveR = this.keys.p2_right.isDown;
+        if (this.battleInput) {
+          const useP1Controls = this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2;
+          moveL = this.battleInput.checkActionDown("left", useP1Controls);
+          moveR = this.battleInput.checkActionDown("right", useP1Controls);
         }
 
         if (this.enemyDefending) {
@@ -777,11 +750,11 @@ export default class BattleScene extends Phaser.Scene {
           );
         }
 
-        const isJumpPressed =
-          this.gameState.gameMode === "online_pvp" &&
-          this.localPlayerIndex === 2
-            ? this.keys.p1_up.isDown
-            : this.keys.p2_up.isDown;
+        let isJumpPressed = false;
+        if (this.battleInput) {
+            const useP1Controls = this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2;
+            isJumpPressed = this.battleInput.checkActionDown("up", useP1Controls);
+        }
 
         if (!this.enemyDefending && isJumpPressed && !this.isP2Jumping) {
           this.performJump(false);
@@ -875,7 +848,7 @@ export default class BattleScene extends Phaser.Scene {
 
         if (
           !this.enemyDefending &&
-          this.keys.p2_up.isDown &&
+          this.battleInput && this.battleInput.checkActionDown("up", false) &&
           !this.isP2Jumping
         ) {
           this.performJump(false);
@@ -1071,12 +1044,11 @@ export default class BattleScene extends Phaser.Scene {
         this.clearChargeIndicator(true);
       } else {
         // Defend / Charge
-        if (this.keys.p1_defend.isDown || this.mobileP1Defend) {
+        if (this.battleInput && this.battleInput.checkActionDown("defend", true)) {
           this.playerDefending = true;
           this.performContinuousCharge(true, delta);
           this.p1SpecialHoldTime = 0;
           this.clearChargeIndicator(true);
-
           // Anti-Ghosting: If they hold DEF, clear any buffered attacks so they don't fire when DEF is released
           this.mobileP1Attack = false;
           this.mobileP1KiBlast = false;
@@ -1089,45 +1061,28 @@ export default class BattleScene extends Phaser.Scene {
 
         if (!this.playerDefending) {
           // Attack
-          if (
-            Phaser.Input.Keyboard.JustDown(this.keys.p1_attack) ||
-            this.mobileP1Attack
-          ) {
+          if (this.battleInput && this.battleInput.checkActionJustDown("attack", true)) {
             this.performAttack(true, "melee");
-            this.mobileP1Attack = false; // Reset flag
             this.p1AttackBuffer = 0;
           }
           // Ki Blast
-          else if (
-            Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast) ||
-            this.mobileP1KiBlast
-          ) {
+          else if (this.battleInput && this.battleInput.checkActionJustDown("kiblast", true)) {
             this.performAttack(true, "ki");
-            this.mobileP1KiBlast = false; // Reset flag
             this.p1KiBlastBuffer = 0;
           }
           // Transform
-          else if (
-            Phaser.Input.Keyboard.JustDown(this.keys.p1_transform) ||
-            this.mobileP1Transform
-          ) {
+          else if (this.battleInput && this.battleInput.checkActionJustDown("transform", true)) {
             this.performTransform(true);
-            this.mobileP1Transform = false; // Reset flag
             this.p1TransformBuffer = 0;
           }
 
           // Special
           if (!this.p1ActionActive) {
-            if (this.keys.p1_special.isDown || this.mobileP1Special) {
+            if (this.battleInput && this.battleInput.checkActionDown("special", true)) {
               this.p1SpecialHoldTime += delta;
               this.updateChargeIndicator(true, this.p1SpecialHoldTime);
             } else if (
-              (this.p1SpecialHoldTime > 0 && this.mobileP1SpecialJustUp) ||
-              (this.p1SpecialHoldTime > 0 &&
-                Phaser.Input.Keyboard.JustUp(this.keys.p1_special)) ||
-              // Ensure a minimum tap time isn't required if they just tap it
-              (Phaser.Input.Keyboard.JustUp(this.keys.p1_special) &&
-                this.p1SpecialHoldTime === 0)
+              this.battleInput && this.battleInput.checkActionJustUp("special", true)
             ) {
               // Fire the special
               this.performSpecial(
@@ -1171,11 +1126,11 @@ export default class BattleScene extends Phaser.Scene {
         this.p2SpecialHoldTime = 0;
         this.clearChargeIndicator(false);
       } else {
-        let isDefending =
-          this.gameState.gameMode === "online_pvp" &&
-          this.localPlayerIndex === 2
-            ? this.keys.p1_defend.isDown || this.mobileP1Defend
-            : this.keys.p2_defend.isDown;
+        let isDefending = false;
+        const useP1Controls = this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2;
+        if (this.battleInput) {
+            isDefending = this.battleInput.checkActionDown("defend", useP1Controls);
+        }
 
         if (this.gameState.gameMode === "training") {
           isDefending = this.enemyDefending;
@@ -1186,11 +1141,8 @@ export default class BattleScene extends Phaser.Scene {
           this.performContinuousCharge(false, delta);
           this.p2SpecialHoldTime = 0;
           this.clearChargeIndicator(false);
-
-          if (
-            this.gameState.gameMode === "online_pvp" &&
-            this.localPlayerIndex === 2
-          ) {
+          
+          if (useP1Controls) {
             this.mobileP1Attack = false;
             this.mobileP1KiBlast = false;
             this.p1AttackBuffer = 0;
@@ -1200,82 +1152,40 @@ export default class BattleScene extends Phaser.Scene {
           this.enemyDefending = false;
           this.stopContinuousCharge(false);
 
-          const isAttack =
-            this.gameState.gameMode === "online_pvp" &&
-            this.localPlayerIndex === 2
-              ? Phaser.Input.Keyboard.JustDown(this.keys.p1_attack) ||
-                this.mobileP1Attack
-              : Phaser.Input.Keyboard.JustDown(this.keys.p2_attack) ||
-                this.p2BufferedAttack;
+          let isAttack = false;
+          let isKiBlast = false;
+          let isTransform = false;
 
-          const isKiBlast =
-            this.gameState.gameMode === "online_pvp" &&
-            this.localPlayerIndex === 2
-              ? Phaser.Input.Keyboard.JustDown(this.keys.p1_kiblast) ||
-                this.mobileP1KiBlast
-              : Phaser.Input.Keyboard.JustDown(this.keys.p2_kiblast) ||
-                this.p2BufferedKiBlast;
-
-          const isTransform =
-            this.gameState.gameMode === "online_pvp" &&
-            this.localPlayerIndex === 2
-              ? Phaser.Input.Keyboard.JustDown(this.keys.p1_transform) ||
-                this.mobileP1Transform
-              : Phaser.Input.Keyboard.JustDown(this.keys.p2_transform) ||
-                this.p2BufferedTransform;
+          if (this.battleInput) {
+             isAttack = this.battleInput.checkActionJustDown("attack", useP1Controls);
+             isKiBlast = this.battleInput.checkActionJustDown("kiblast", useP1Controls);
+             isTransform = this.battleInput.checkActionJustDown("transform", useP1Controls);
+          }
 
           if (isAttack) {
             this.performAttack(false, "melee");
-            if (
-              this.gameState.gameMode === "online_pvp" &&
-              this.localPlayerIndex === 2
-            ) {
-              this.mobileP1Attack = false;
-            } else {
-              this.p2BufferedAttack = false;
-            }
+            this.p2AttackBuffer = 0;
           } else if (isKiBlast) {
             this.performAttack(false, "ki");
-            if (
-              this.gameState.gameMode === "online_pvp" &&
-              this.localPlayerIndex === 2
-            ) {
-              this.mobileP1KiBlast = false;
-            } else {
-              this.p2BufferedKiBlast = false;
-            }
+            this.p2KiBlastBuffer = 0;
           } else if (isTransform) {
             this.performTransform(false);
-            if (
-              this.gameState.gameMode === "online_pvp" &&
-              this.localPlayerIndex === 2
-            ) {
-              this.mobileP1Transform = false;
-            } else {
-              this.p2BufferedTransform = false;
-            }
+            this.p2TransformBuffer = 0;
           }
 
           if (!this.p2ActionActive) {
-            const isSpecialDown =
-              this.gameState.gameMode === "online_pvp" &&
-              this.localPlayerIndex === 2
-                ? this.keys.p1_special.isDown || this.mobileP1Special
-                : this.keys.p2_special.isDown;
-
-            const isSpecialJustUp =
-              this.gameState.gameMode === "online_pvp" &&
-              this.localPlayerIndex === 2
-                ? this.mobileP1SpecialJustUp ||
-                  Phaser.Input.Keyboard.JustUp(this.keys.p1_special)
-                : Phaser.Input.Keyboard.JustUp(this.keys.p2_special);
+            let isSpecialDown = false;
+            let isSpecialJustUp = false;
+            if (this.battleInput) {
+                isSpecialDown = this.battleInput.checkActionDown("special", useP1Controls);
+                isSpecialJustUp = this.battleInput.checkActionJustUp("special", useP1Controls);
+            }
 
             if (isSpecialDown) {
               this.p2SpecialHoldTime += delta;
               this.updateChargeIndicator(false, this.p2SpecialHoldTime);
             } else if (
-              (this.p2SpecialHoldTime > 0 && isSpecialJustUp) ||
-              (isSpecialJustUp && this.p2SpecialHoldTime === 0)
+              isSpecialJustUp
             ) {
               this.performSpecial(
                 false,
@@ -1283,7 +1193,6 @@ export default class BattleScene extends Phaser.Scene {
               );
               this.p2SpecialHoldTime = 0;
               this.clearChargeIndicator(false);
-              this.mobileP1SpecialJustUp = false;
             } else if (this.p2SpecialHoldTime > 0) {
               this.performSpecial(
                 false,
@@ -1291,9 +1200,21 @@ export default class BattleScene extends Phaser.Scene {
               );
               this.p2SpecialHoldTime = 0;
               this.clearChargeIndicator(false);
-              this.mobileP1SpecialJustUp = false;
             }
           }
+        }
+      }
+
+      // Sync remote player charge visual effects in online PvP
+      if (this.gameState.gameMode === "online_pvp") {
+        if (this.localPlayerIndex === 1) {
+          // P2 is remote
+          if (this.enemyDefending) this.performContinuousCharge(false, 0);
+          else this.stopContinuousCharge(false);
+        } else {
+          // P1 is remote
+          if (this.playerDefending) this.performContinuousCharge(true, 0);
+          else this.stopContinuousCharge(true);
         }
       }
     }

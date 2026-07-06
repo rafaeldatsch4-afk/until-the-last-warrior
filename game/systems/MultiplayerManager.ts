@@ -61,6 +61,7 @@ export class MultiplayerManager {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       withCredentials: true, // Required for AI Studio preview proxy authentication cookies
+      transports: ["websocket"],
     });
 
     this.socket.on("connect_error", (err: any) => {
