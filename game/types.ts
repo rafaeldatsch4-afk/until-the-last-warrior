@@ -73,6 +73,16 @@ export interface GameState {
   tournamentRounds?: TournamentRound[];
   tournamentCurrentRoundIndex?: number;
   tournamentPlayerCharId?: number;
+  stats?: {
+    totalWins: number;
+    winStreak: number;
+    maxWinStreak: number;
+    tournamentsWon: number;
+    arcadeClears: number;
+    charactersUnlocked: number;
+  };
+  unlockedTitles?: string[];
+  equippedTitle?: string;
 }
 
 declare global {

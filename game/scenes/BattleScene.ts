@@ -394,6 +394,9 @@ export default class BattleScene extends Phaser.Scene {
             case "transform":
               this.performTransform(action.isPlayer);
               break;
+            case "hit":
+              this.takeDamage(action.isPlayer, action.damage, true);
+              break;
           }
         } catch (e) {
           console.error("Error executing remote action", e);
@@ -549,7 +552,10 @@ export default class BattleScene extends Phaser.Scene {
         !this.tweens.isTweening(this.player) &&
         !this.isP1Jumping
       ) {
-        if (Phaser.Input.Keyboard.JustDown(this.keys.p1_left)) {
+        if (this.battleInput && this.battleInput.mobileP1Dash !== 0) {
+            this.performDash(true, this.battleInput.mobileP1Dash);
+            this.battleInput.mobileP1Dash = 0;
+        } else if (Phaser.Input.Keyboard.JustDown(this.keys.p1_left)) {
           if (time - this.lastP1LeftTime < 300) {
             this.performDash(true, -1);
           }
@@ -671,7 +677,10 @@ export default class BattleScene extends Phaser.Scene {
           this.gameState.gameMode === "online_pvp" &&
           this.localPlayerIndex === 2
         ) {
-          if (Phaser.Input.Keyboard.JustDown(this.keys.p1_left)) {
+          if (this.battleInput && this.battleInput.mobileP1Dash !== 0) {
+            this.performDash(false, this.battleInput.mobileP1Dash);
+            this.battleInput.mobileP1Dash = 0;
+          } else if (Phaser.Input.Keyboard.JustDown(this.keys.p1_left)) {
             if (time - this.lastP2LeftTime < 300) {
               this.performDash(false, -1);
             }
@@ -4673,8 +4682,17 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
-  takeDamage(isP: boolean, baseDmg: number) {
+  takeDamage(isP: boolean, baseDmg: number, fromNetwork = false) {
     if (this.isBattleOver || !this.scene.isActive()) return;
+
+    if (this.gameState.gameMode === "online_pvp" && !fromNetwork) {
+       const attackerIsLocal = isP !== (this.localPlayerIndex === 1);
+       if (attackerIsLocal) {
+           this.emitNetworkAction({ type: "hit", isPlayer: isP, damage: baseDmg });
+       } else {
+           return;
+       }
+    }
 
     let dmg = baseDmg;
 
@@ -4715,7 +4733,14 @@ export default class BattleScene extends Phaser.Scene {
         BattleHaptics.clash();
       } else {
         // normal hit
-        if (this.battleCamera) this.battleCamera.shake(150, 0.02);
+        if (this.battleCamera) {
+          if (isCritical) {
+            // Intense, longer screen shake for critical hits
+            this.battleCamera.shake(350, 0.05);
+          } else {
+            this.battleCamera.shake(150, 0.02);
+          }
+        }
         this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee");
         if (this.soundManager) this.soundManager.playPunchImpact(isCritical);
 
@@ -4765,6 +4790,64 @@ export default class BattleScene extends Phaser.Scene {
       target.setTintFill(0xffffff); // Initial white flash
       if (this.battleCamera && isCritical)
         this.battleCamera.flash(50, 255, 255, 255, false); // Quick camera flash only on critical hits, non-forcing
+
+      if (isCritical) {
+        const attacker = isP ? this.enemy : this.player;
+        [target, attacker].forEach((char) => {
+          if (char && char.active) {
+            // 1. PostFX Glow (if WebGL supports it and is functional)
+            let fxGlow: any = null;
+            if (char.postFX && typeof char.postFX.addGlow === "function") {
+              try {
+                // Gold/Yellow glow for critical burst
+                fxGlow = char.postFX.addGlow(0xffd700, 4, 1);
+              } catch (e) {
+                console.warn("WebGL postFX glow failed:", e);
+              }
+            }
+
+            // 2. Vector shape glow (Additive blend mode) behind character
+            const glowCircle = this.add
+              .circle(char.x, char.y + 80, 70, 0xffd700, 0.4)
+              .setBlendMode(Phaser.BlendModes.ADD)
+              .setDepth(char.depth - 1);
+
+            this.tweens.add({
+              targets: glowCircle,
+              scale: 1.6,
+              alpha: 0,
+              duration: 400,
+              ease: "Cubic.easeOut",
+              onComplete: () => {
+                glowCircle.destroy();
+                if (fxGlow && char.active && char.postFX) {
+                  try {
+                    char.postFX.remove(fxGlow);
+                  } catch (e) {}
+                }
+              },
+            });
+
+            // 3. Glowing particle burst
+            const particles = this.add
+              .particles(0, 0, "particle", {
+                x: char.x,
+                y: char.y + 80,
+                speed: { min: 80, max: 250 },
+                scale: { start: 1.5, end: 0 },
+                blendMode: "ADD",
+                lifespan: 400,
+                tint: 0xffd700,
+                quantity: 15,
+              })
+              .setDepth(char.depth + 1);
+
+            this.time.delayedCall(400, () => {
+              particles.destroy();
+            });
+          }
+        });
+      }
 
       this.time.delayedCall(40, () => {
         if (target.active) target.setTint(0xff0000); // Then red

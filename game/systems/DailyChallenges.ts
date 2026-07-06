@@ -1,5 +1,6 @@
 import { db, auth } from "../../firebase/init";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { AchievementSystem } from "./Achievements";
 
 export interface ChallengeDef {
   id: string;
@@ -209,6 +210,8 @@ export class DailyChallenges {
         if (window.UTLW && window.UTLW.state) {
           window.UTLW.state.coins += challenge.reward;
           if (window.UTLW.save) window.UTLW.save();
+          AchievementSystem.checkAchievements();
+          AchievementSystem.checkAchievements();
         }
         return true;
       }
@@ -248,6 +251,7 @@ export class DailyChallenges {
         if (window.UTLW && window.UTLW.state) {
           window.UTLW.state.coins += totalReward;
           if (window.UTLW.save) window.UTLW.save();
+          AchievementSystem.checkAchievements();
         }
       }
       return totalReward;

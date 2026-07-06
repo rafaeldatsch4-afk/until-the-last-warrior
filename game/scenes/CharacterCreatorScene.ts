@@ -71,7 +71,21 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.fadeIn(300, 0, 0, 0);
-    this.add.rectangle(480, 270, 960, 540, 0x0f0c29);
+    
+    const { width, height } = this.cameras.main;
+    const bg = this.add.graphics();
+    bg.fillGradientStyle(0x0a0515, 0x000000, 0x1f0f38, 0x050510, 1);
+    bg.fillRect(0, 0, width, height);
+
+    // Grid pattern
+    const grid = this.add.graphics();
+    grid.lineStyle(1, 0x3498db, 0.1);
+    for (let x = 0; x < width; x += 40) grid.moveTo(x, 0).lineTo(x, height);
+    for (let y = 0; y < height; y += 40) grid.moveTo(0, y).lineTo(width, y);
+    grid.strokePath();
+
+    this.add.image(width / 2, height / 2, "arena").setAlpha(0.15).setBlendMode(Phaser.BlendModes.SCREEN);
+
     if (this.cameras.main.postFX) {
       this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
     }
@@ -80,12 +94,10 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.ui = new CreatorUI(this, () => this.updatePreview());
 
     // Back button
-    const backBtn = this.add.rectangle(80, 40, 100, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
-    this.add.text(80, 40, "VOLTAR", { fontSize: "18px", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5);
-    backBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => transitionTo(this, "MenuScene"));
+    this.createStyledButton(80, 40, 120, 40, "VOLTAR", 0xe74c3c, () => transitionTo(this, "MenuScene"));
 
     // Title
-    this.add.text(480, 50, "CRIAR PERSONAGEM", { fontSize: "32px", fontStyle: "bold", color: "#f39c12", fontFamily: "system-ui, -apple-system, 'Arial Black', sans-serif" }).setOrigin(0.5);
+    this.add.text(480, 50, "CRIAR PERSONAGEM", { fontSize: "32px", fontStyle: "italic bold", color: "#f39c12", fontFamily: "system-ui, sans-serif", stroke: "#000", strokeThickness: 4, shadow: { offsetX: 0, offsetY: 0, color: "#f39c12", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
 
     // Build Selectors using the extracted UI
     this.ui.buildAllSelectors(this.state);
@@ -94,13 +106,17 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.setupSaveButton();
 
     // Box
-    this.add.rectangle(700, 280, 300, 360, 0x1a1a24).setStrokeStyle(2, 0x34495e);
-    this.add.text(700, 130, "PREVIEW", { fontSize: "24px", fontStyle: "bold", color: "#3498db" }).setOrigin(0.5);
+    const previewBox = this.add.rectangle(700, 280, 300, 360, 0x1a1a24, 0.8).setStrokeStyle(2, 0x3498db);
+    this.tweens.add({ targets: previewBox, alpha: 0.5, yoyo: true, repeat: -1, duration: 2000 });
+    this.add.text(700, 130, "PREVIEW", { fontSize: "24px", fontStyle: "italic bold", color: "#3498db", stroke: "#000", strokeThickness: 2, shadow: { offsetX: 0, offsetY: 0, color: "#3498db", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
+    
+    // Pedestal
+    const pedestal = this.add.ellipse(700, 420, 120, 40, 0x3498db, 0.3);
+    this.tweens.add({ targets: pedestal, scaleX: 1.1, scaleY: 1.1, alpha: 0.1, yoyo: true, repeat: -1, duration: 1500 });
+
 
     // Randomize button
-    const randBtn = this.add.rectangle(880, 40, 120, 40, 0x8e44ad).setStrokeStyle(2, 0xffffff);
-    this.add.text(880, 40, "ALEATÓRIO", { fontSize: "16px", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5);
-    randBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
+    this.createStyledButton(880, 40, 150, 40, "ALEATÓRIO", 0x8e44ad, () => {
       // Randomize styles
       this.state.style_idx.head = Phaser.Math.Between(0, partOptions.head.length - 1);
       this.state.style_idx.torso = Phaser.Math.Between(0, partOptions.torso.length - 1);
@@ -132,9 +148,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       this.scene.restart(); 
     });
 
-    const transBtn = this.add.rectangle(700, 480, 150, 30, 0xf39c12).setStrokeStyle(2, 0xffffff);
-    this.add.text(700, 480, "TRANSFORMAR", { fontSize: "14px", fontStyle: "bold", color: "#000" }).setOrigin(0.5);
-    transBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
+    this.createStyledButton(700, 480, 150, 35, "TRANSFORMAR", 0xf39c12, () => {
       this.previewIsTransformed = !this.previewIsTransformed;
       this.updatePreview();
     });
@@ -156,10 +170,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   private setupNamesAndSpecials() {
     // Name
     const nameTxt = this.add.text(700, 80, `Nome: ${this.builderData.name}`, { fontSize: "24px", color: "#f1c40f", fontStyle: "bold" }).setOrigin(0.5);
-    const editBtn = this.add.rectangle(700, 115, 80, 30, 0x34495e).setInteractive({ useHandCursor: true });
-    this.add.text(700, 115, "EDITAR", { fontSize: "14px" }).setOrigin(0.5);
-    
-    editBtn.on("pointerdown", () => {
+    const editBtn = this.createStyledButton(700, 115, 90, 30, "EDITAR", 0x34495e, () => {
       window.dispatchEvent(
         new CustomEvent("request-text-input", {
           detail: {
@@ -178,9 +189,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     // Special 1
     const sp1Txt = this.add.text(70, 390, `Esp 1: ${this.customSp1Name || this.builderData.base.specialName}`, { fontSize: "16px", color: "#fff" }).setOrigin(0, 0.5);
-    const sp1Btn = this.add.rectangle(460, 390, 100, 30, 0x34495e).setInteractive({ useHandCursor: true });
-    this.add.text(460, 390, "SELECIONAR", { fontSize: "11px", fontStyle: "bold" }).setOrigin(0.5);
-    sp1Btn.on("pointerdown", () => {
+    const sp1Btn = this.createStyledButton(460, 390, 110, 30, "SELECIONAR", 0x34495e, () => {
       this.ui.showAttackSelectModal(false, this.AVAILABLE_SPECIALS, this.AVAILABLE_SUPERS, (id, name) => {
         this.customSp1Id = id;
         this.customSp1Name = name;
@@ -191,9 +200,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     // Special 2
     const sp2Txt = this.add.text(70, 430, `Super: ${this.customSp2Name || this.builderData.base.superName}`, { fontSize: "16px", color: "#fff" }).setOrigin(0, 0.5);
-    const sp2Btn = this.add.rectangle(460, 430, 100, 30, 0x34495e).setInteractive({ useHandCursor: true });
-    this.add.text(460, 430, "SELECIONAR", { fontSize: "11px", fontStyle: "bold" }).setOrigin(0.5);
-    sp2Btn.on("pointerdown", () => {
+    const sp2Btn = this.createStyledButton(460, 430, 110, 30, "SELECIONAR", 0x34495e, () => {
       this.ui.showAttackSelectModal(true, this.AVAILABLE_SPECIALS, this.AVAILABLE_SUPERS, (id, name) => {
         this.customSp2Id = id;
         this.customSp2Name = name;
@@ -204,10 +211,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   }
 
   private setupSaveButton() {
-    const saveBtn = this.add.rectangle(300, 490, 350, 50, 0x27ae60).setStrokeStyle(2, 0xffffff);
-    this.add.text(300, 490, "SALVAR & EQUIPAR PERSONALIZADO", { fontSize: "16px", fontStyle: "bold", color: "#000" }).setOrigin(0.5);
-
-    saveBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
+    this.createStyledButton(300, 490, 350, 50, "SALVAR E EQUIPAR", 0x27ae60, () => {
       const customData = {
         gi1: 0,
         gi2: 0,
@@ -285,4 +289,34 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       this.tweens.add({ targets: confirmTxt, alpha: 0, y: 320, duration: 2000, onComplete: () => confirmTxt.destroy() });
     });
   }
+  createStyledButton(x: number, y: number, width: number, height: number, text: string, color: number, callback: () => void) {
+    const container = this.add.container(x, y);
+    const bg = this.add.rectangle(0, 0, width, height, color).setStrokeStyle(2, 0xffffff);
+    const glow = this.add.rectangle(0, 0, width, height, color, 0.5).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
+    const txt = this.add.text(0, 0, text, { fontSize: Math.floor(height*0.4) + "px", fontStyle: "bold", fontFamily: "system-ui", color: "#fff", stroke: "#000", strokeThickness: 2 }).setOrigin(0.5);
+    
+    container.add([bg, glow, txt]);
+    
+    const hitArea = this.add.rectangle(0, 0, width, height, 0x000000, 0).setInteractive({ useHandCursor: true });
+    container.add(hitArea);
+    
+    hitArea.on("pointerover", () => {
+      this.tweens.add({ targets: glow, alpha: 1, duration: 150 });
+      this.tweens.add({ targets: container, scale: 1.05, duration: 150 });
+      txt.setColor("#f1c40f");
+    });
+    hitArea.on("pointerout", () => {
+      this.tweens.add({ targets: glow, alpha: 0, duration: 150 });
+      this.tweens.add({ targets: container, scale: 1, duration: 150 });
+      txt.setColor("#fff");
+    });
+    hitArea.on("pointerdown", () => {
+      this.tweens.add({ targets: container, scale: 0.95, yoyo: true, duration: 50, onComplete: callback });
+      if (this.sound && this.cache.audio.exists("sfx_select")) {
+        this.sound.play("sfx_select", { volume: 0.5 });
+      }
+    });
+    return container;
+  }
+
 }

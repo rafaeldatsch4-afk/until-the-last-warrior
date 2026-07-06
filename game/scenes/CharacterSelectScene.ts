@@ -315,6 +315,97 @@ export default class CharacterSelectScene extends Phaser.Scene {
       }
     }
 
+    if (this.state.gameMode === "online_pvp") {
+      transitionTo(this, "MultiplayerLobbyScene");
+      return;
+    }
+
+    // Single Player Modes (Arcade, Tournament, Training) -> Select Difficulty First
+    this.showDifficultyDialog();
+  }
+
+  showDifficultyDialog() {
+    // Create an overlay background
+    const overlay = this.add
+      .rectangle(0, 0, 800, 600, 0x000000, 0.8)
+      .setOrigin(0, 0)
+      .setDepth(100)
+      .setInteractive();
+
+    const dialog = this.add.container(400, 300).setDepth(101);
+    
+    // Dialog Background
+    const bg = this.add.graphics();
+    bg.lineStyle(4, 0x3498db);
+    bg.fillStyle(0x1a1a24, 1);
+    bg.strokeRect(-200, -150, 400, 300);
+    bg.fillRect(-200, -150, 400, 300);
+
+    const title = this.add
+      .text(0, -100, "SELECIONE A DIFICULDADE", {
+        fontSize: "24px",
+        fontFamily: '"Space Grotesk", sans-serif',
+        color: "#ffffff",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+
+    dialog.add([bg, title]);
+
+    const difficulties = [
+      { label: "FÁCIL", value: 0, color: 0x2ecc71 },
+      { label: "NORMAL", value: 1, color: 0xf1c40f },
+      { label: "DIFÍCIL", value: 2, color: 0xe74c3c },
+    ];
+
+    difficulties.forEach((diff, i) => {
+      const btnY = -30 + i * 60;
+      
+      const btnBg = this.add.rectangle(0, btnY, 200, 40, diff.color).setInteractive({ useHandCursor: true });
+      const btnText = this.add
+        .text(0, btnY, diff.label, {
+          fontSize: "20px",
+          fontFamily: '"JetBrains Mono", monospace',
+          color: "#000000",
+          fontStyle: "bold",
+        })
+        .setOrigin(0.5);
+
+      btnBg
+        .on("pointerover", () => btnBg.setAlpha(0.8))
+        .on("pointerout", () => btnBg.setAlpha(1))
+        .on("pointerdown", () => {
+          if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+          this.state.difficulty = diff.value;
+          this.registry.set("gameState", this.state);
+          dialog.destroy();
+          overlay.destroy();
+          this.proceedToBattle();
+        });
+
+      dialog.add([btnBg, btnText]);
+    });
+
+    // Close button
+    const closeBtn = this.add
+      .text(175, -135, "X", {
+        fontSize: "24px",
+        fontFamily: '"Space Grotesk", sans-serif',
+        color: "#e74c3c",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    closeBtn.on("pointerdown", () => {
+      if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      dialog.destroy();
+      overlay.destroy();
+    });
+    dialog.add(closeBtn);
+  }
+
+  proceedToBattle() {
     if (this.state.gameMode === "tournament") {
       this.state.tournamentPlayerCharId = this.state.p1CharacterId;
 
@@ -348,8 +439,6 @@ export default class CharacterSelectScene extends Phaser.Scene {
       this.state.tournamentCurrentRoundIndex = 0;
       this.registry.set("gameState", this.state);
       transitionTo(this, "TournamentScene");
-    } else if (this.state.gameMode === "online_pvp") {
-      transitionTo(this, "MultiplayerLobbyScene");
     } else {
       transitionTo(this, "BattleScene");
     }

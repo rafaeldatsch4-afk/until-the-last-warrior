@@ -1,6 +1,7 @@
 import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { DailyChallenges } from "../systems/DailyChallenges";
+import { AchievementSystem } from "../systems/Achievements";
 
 export class BattleReward {
   scene: any; // Type as BattleScene
@@ -127,12 +128,14 @@ export class BattleReward {
         ) {
           titleMessage = "ARCADE CLEARED!";
           coinsEarned = 500;
+          AchievementSystem.addArcadeClear();
         } else {
           coinsEarned = 100;
         }
         subtitleMessage = `${s.playerData.name.toUpperCase()} WINS!`;
         color = "#f1c40f"; // Gold
         s.gameState.coins += coinsEarned;
+        AchievementSystem.addWin();
         (window as any).UTLW.save();
       } else {
         titleMessage = "DEFEAT...";
@@ -140,6 +143,7 @@ export class BattleReward {
         color = "#e74c3c"; // Red
         coinsEarned = 25; // Small consolation prize
         s.gameState.coins += coinsEarned;
+        AchievementSystem.resetStreak();
         (window as any).UTLW.save();
       }
     }

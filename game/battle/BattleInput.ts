@@ -41,6 +41,7 @@ export class BattleInput {
   mobileP1Charge = false;
   mobileP1Special = false;
   mobileP1Transform = false;
+  mobileP1Dash: number = 0;
   mobileP1SpecialJustUp = false;
 
   constructor(scene: BattleScene) {
@@ -325,8 +326,20 @@ export class BattleInput {
       this.scene.p1KiBlastBuffer = this.scene.BUFFER_MS;
     });
 
+    // DASH
+    createBtn(gw - 170, gh - 170, "DSH", 0xff9900, 40, () => {
+       const isLeft = this.keys.p1_left.isDown;
+       const isRight = this.keys.p1_right.isDown;
+       this.mobileP1Dash = isLeft ? -1 : (isRight ? 1 : 0);
+       if (this.mobileP1Dash === 0) {
+           const activeObj = this.scene.localPlayerIndex === 1 ? this.scene.player : this.scene.enemy;
+           this.mobileP1Dash = activeObj.flipX ? -1 : 1;
+       }
+    });
+
     // TRN (Transform)
-    if (this.scene.playerData.transformAvailable) {
+    const localData = this.scene.localPlayerIndex === 1 ? this.scene.playerData : this.scene.enemyData;
+    if (localData.transformAvailable) {
       this.scene.trnBtnGroup = createBtn(140, 200, "TRN", 0x9b59b6, 50, () => {
         this.mobileP1Transform = true;
         this.scene.p1TransformBuffer = this.scene.BUFFER_MS;

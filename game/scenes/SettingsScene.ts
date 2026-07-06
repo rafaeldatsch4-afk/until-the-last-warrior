@@ -102,8 +102,8 @@ export default class SettingsScene extends Phaser.Scene {
       bgmToggleText.setColor(bgmEnabled ? "#2ecc71" : "#e74c3c");
       
       const bgmVol = this.registry.get("bgmVolume") ?? 0.5;
-      this.sound.getAll("bgm_menu").forEach(s => (s as Phaser.Sound.BaseSound).setVolume(bgmEnabled ? bgmVol : 0));
-      this.sound.getAll("bgm_battle").forEach(s => (s as Phaser.Sound.BaseSound).setVolume(bgmEnabled ? bgmVol : 0));
+      this.sound.getAll("bgm_menu").forEach(s => (s as any).setVolume(bgmEnabled ? bgmVol : 0));
+      this.sound.getAll("bgm_battle").forEach(s => (s as any).setVolume(bgmEnabled ? bgmVol : 0));
 
       this.tweens.add({ targets: bgmToggleText, scaleX: 1.1, scaleY: 1.1, duration: 100, yoyo: true });
       if (bgmEnabled && (this.cache.audio.exists("sfx_select") || this.sound.get("sfx_select"))) {
@@ -133,8 +133,8 @@ export default class SettingsScene extends Phaser.Scene {
         
         if (isBgm) {
            const enabled = this.registry.get("bgmEnabled") !== false;
-           this.sound.getAll("bgm_menu").forEach(s => (s as Phaser.Sound.BaseSound).setVolume(enabled ? val : 0));
-           this.sound.getAll("bgm_battle").forEach(s => (s as Phaser.Sound.BaseSound).setVolume(enabled ? val : 0));
+           this.sound.getAll("bgm_menu").forEach(s => (s as any).setVolume(enabled ? val : 0));
+           this.sound.getAll("bgm_battle").forEach(s => (s as any).setVolume(enabled ? val : 0));
         }
       };
 

@@ -1,6 +1,7 @@
 import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { INITIAL_CHARACTERS } from "../data";
+import { AchievementSystem } from "../systems/Achievements";
 import { GameState } from "../types";
 
 export default class BootScene extends Phaser.Scene {
@@ -26,6 +27,16 @@ export default class BootScene extends Phaser.Scene {
         p1CharacterId: 0,
         p2CharacterId: 1,
         characters: JSON.parse(JSON.stringify(INITIAL_CHARACTERS)), // Deep copy
+        stats: {
+          totalWins: 0,
+          winStreak: 0,
+          maxWinStreak: 0,
+          tournamentsWon: 0,
+          arcadeClears: 0,
+          charactersUnlocked: 0,
+        },
+        unlockedTitles: [],
+        equippedTitle: ""
       };
 
       // Attempt to load from LocalStorage
@@ -84,6 +95,17 @@ export default class BootScene extends Phaser.Scene {
               }
             });
           }
+
+          // Restore achievements safely
+          if (parsed.stats) {
+            defaultState.stats = { ...defaultState.stats, ...parsed.stats };
+          }
+          if (Array.isArray(parsed.unlockedTitles)) {
+            defaultState.unlockedTitles = parsed.unlockedTitles;
+          }
+          if (typeof parsed.equippedTitle === 'string') {
+            defaultState.equippedTitle = parsed.equippedTitle;
+          }
         }
       } catch (e) {
         console.error("Failed to load save data:", e);
@@ -101,6 +123,9 @@ export default class BootScene extends Phaser.Scene {
               gameMode: window.UTLW.state.gameMode,
               p1CharacterId: window.UTLW.state.p1CharacterId,
               p2CharacterId: window.UTLW.state.p2CharacterId,
+              stats: window.UTLW.state.stats,
+              unlockedTitles: window.UTLW.state.unlockedTitles,
+              equippedTitle: window.UTLW.state.equippedTitle,
               characters: window.UTLW.state.characters.map((c) => {
                 if (c.id === 999) return c; // Save full raw data for custom character
                 return { id: c.id, unlocked: c.unlocked };
@@ -126,6 +151,7 @@ export default class BootScene extends Phaser.Scene {
 
     // Ensure registry is synced
     this.registry.set("gameState", window.UTLW.state);
+    setTimeout(() => AchievementSystem.checkAchievements(), 2000);
 
     transitionTo(this, "PreloadScene");
   }

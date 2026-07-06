@@ -7,6 +7,10 @@ export class BattleAI {
 
   startAILoop() {
     const s = this.scene;
+
+    // Do not start AI loops if in training mode
+    if (s.gameState.gameMode === "training") return;
+
     const diff = s.gameState.difficulty; // 0: Easy, 1: Normal, 2: Hard
     let delay = 1500;
     if (diff === 0) delay = 2000;

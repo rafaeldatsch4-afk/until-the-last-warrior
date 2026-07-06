@@ -102,19 +102,18 @@ export default class ModeSelectScene extends Phaser.Scene {
         color: 0x3498db,
         desc: "Lute contra a inteligência artificial",
       },
-      isMobile
-        ? {
-            text: "TREINAMENTO",
-            mode: "training",
-            color: 0x27ae60,
-            desc: "Pratique livremente contra CPU inativa",
-          }
-        : {
-            text: "1 VS 1 (LOCAL)",
-            mode: "local_pvp",
-            color: 0xe74c3c,
-            desc: "Jogue contra um amigo no mesmo teclado",
-          },
+      {
+        text: "1 VS 1 (LOCAL)",
+        mode: "local_pvp",
+        color: 0xe74c3c,
+        desc: "Jogue contra um amigo no mesmo teclado",
+      },
+      {
+        text: "TREINAMENTO",
+        mode: "training",
+        color: 0x2ecc71,
+        desc: "Treine contra um oponente imóvel e imortal",
+      },
       {
         text: "ONLINE PVP ⚡",
         mode: "online_pvp",
@@ -135,8 +134,14 @@ export default class ModeSelectScene extends Phaser.Scene {
       },
     ];
 
+    // Filter out local pvp if mobile
+    if (isMobile) {
+      const idx = modes.findIndex(m => m.mode === "local_pvp");
+      if (idx !== -1) modes.splice(idx, 1);
+    }
+
     modes.forEach((m, index) => {
-      const yPos = 145 + index * 76;
+      const yPos = 135 + index * 68;
       this.createBtn(
         480,
         yPos,
@@ -174,16 +179,16 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     // Button background with gradient/shadow effect
     const shadow = this.add
-      .rectangle(4, 4, 400, 60, 0x000000, 0.5)
+      .rectangle(4, 4, 400, 56, 0x000000, 0.5)
       .setOrigin(0.5);
-    const bg = this.add.rectangle(0, 0, 400, 60, color).setOrigin(0.5);
+    const bg = this.add.rectangle(0, 0, 400, 56, color).setOrigin(0.5);
     const innerBg = this.add
-      .rectangle(0, 0, 392, 52, 0x000000, 0.3)
+      .rectangle(0, 0, 392, 48, 0x000000, 0.3)
       .setOrigin(0.5); // Darker inner area
 
     const txt = this.add
-      .text(0, -8, text, {
-        fontSize: "24px",
+      .text(0, -10, text, {
+        fontSize: "22px",
         color: "#ffffff",
         fontStyle: "bold",
         stroke: "#000",
@@ -193,9 +198,10 @@ export default class ModeSelectScene extends Phaser.Scene {
         resolution: 2,
       })
       .setOrigin(0.5);
+
     const descTxt = this.add
-      .text(0, 13, desc, {
-        fontSize: "13px",
+      .text(0, 12, desc, {
+        fontSize: "12px",
         color: "#dddddd",
         fontStyle: "italic",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
@@ -207,7 +213,7 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     // Hit area
     const hitArea = this.add
-      .rectangle(0, 0, 400, 60, 0x000000, 0)
+      .rectangle(0, 0, 400, 56, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
     container.add(hitArea);
 

@@ -63,14 +63,21 @@ export class CreatorUI {
     onNext: () => void,
     width: number = 140,
   ) {
-    this.scene.add
-      .rectangle(x, y, width, 30, 0x1a252f)
-      .setStrokeStyle(2, 0x34495e);
+    const bg = this.scene.add
+      .rectangle(x, y, width, 30, 0x1a252f, 0.8)
+      .setStrokeStyle(1, 0x34495e);
+    
+    // Add glow effect on hover for the entire selector
+    const glow = this.scene.add
+      .rectangle(x, y, width, 30, 0x3498db, 0.2)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setAlpha(0);
+      
     const txt = this.scene.add
       .text(x, y, getLabel(), {
         fontSize: "13px",
         fontFamily: "system-ui",
-        color: "#fff",
+        color: "#ecf0f1",
       })
       .setOrigin(0.5);
 
@@ -86,9 +93,18 @@ export class CreatorUI {
         onPrev();
         txt.setText(getLabel());
         this.onUpdate();
+        this.scene.tweens.add({ targets: btnL, scale: 0.8, yoyo: true, duration: 50 });
       })
-      .on("pointerover", () => btnL.setColor("#f1c40f").setScale(1.2))
-      .on("pointerout", () => btnL.setColor("#3498db").setScale(1));
+      .on("pointerover", () => {
+         btnL.setColor("#f1c40f").setScale(1.2);
+         this.scene.tweens.add({ targets: glow, alpha: 1, duration: 200 });
+         bg.setStrokeStyle(1, 0x3498db);
+      })
+      .on("pointerout", () => {
+         btnL.setColor("#3498db").setScale(1);
+         this.scene.tweens.add({ targets: glow, alpha: 0, duration: 200 });
+         bg.setStrokeStyle(1, 0x34495e);
+      });
 
     const btnR = this.scene.add
       .text(x + width / 2 - 15, y, ">", {
@@ -102,9 +118,18 @@ export class CreatorUI {
         onNext();
         txt.setText(getLabel());
         this.onUpdate();
+        this.scene.tweens.add({ targets: btnR, scale: 0.8, yoyo: true, duration: 50 });
       })
-      .on("pointerover", () => btnR.setColor("#f1c40f").setScale(1.2))
-      .on("pointerout", () => btnR.setColor("#3498db").setScale(1));
+      .on("pointerover", () => {
+         btnR.setColor("#f1c40f").setScale(1.2);
+         this.scene.tweens.add({ targets: glow, alpha: 1, duration: 200 });
+         bg.setStrokeStyle(1, 0x3498db);
+      })
+      .on("pointerout", () => {
+         btnR.setColor("#3498db").setScale(1);
+         this.scene.tweens.add({ targets: glow, alpha: 0, duration: 200 });
+         bg.setStrokeStyle(1, 0x34495e);
+      });
 
     return txt;
   }
