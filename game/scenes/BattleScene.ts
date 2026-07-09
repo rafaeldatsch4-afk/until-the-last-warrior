@@ -4686,6 +4686,32 @@ export default class BattleScene extends Phaser.Scene {
             this.p1ComboCount,
           );
         }
+
+        const comboCount = isP ? this.p2ComboCount : this.p1ComboCount;
+        if (comboCount > 1 && (this.gameState.gameMode === "online_pvp" || this.gameState.gameMode === "local_pvp")) {
+            // PvP specific gratifying visual effects for combos
+            // Screen flash effect depending on combo count
+            const intensity = Math.min(comboCount * 0.05, 0.4); // Max 0.4 alpha
+            const flashColor = comboCount % 5 === 0 ? 0xff0000 : 0xffffff;
+            const flash = this.add.rectangle(480, 270, 960, 540, flashColor, intensity).setScrollFactor(0).setDepth(200);
+            this.tweens.add({
+              targets: flash,
+              alpha: 0,
+              duration: 150 + comboCount * 10,
+              ease: "Power2",
+              onComplete: () => flash.destroy()
+            });
+
+            // Extra particle burst
+            if (comboCount % 2 === 0) {
+               this.createImpactEffect(target.x + Phaser.Math.Between(-30, 30), target.y + 60 + Phaser.Math.Between(-30, 30), 0x00ffff, "super");
+            }
+
+            // Shake camera more for higher combos
+            if (this.battleCamera) {
+               this.battleCamera.shake(100 + comboCount * 10, Math.min(0.01 + comboCount * 0.002, 0.04));
+            }
+        }
       }
     }
 

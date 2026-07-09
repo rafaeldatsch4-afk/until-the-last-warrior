@@ -125,7 +125,8 @@ export default class SettingsScene extends Phaser.Scene {
       const fill = this.add.rectangle(x - 100, y, 200 * val, 8, 0x3498db).setOrigin(0, 0.5);
       const handle = this.add.circle(x - 100 + 200 * val, y, 10, 0xffffff).setInteractive({ draggable: true, useHandCursor: true });
       
-      const updateVolume = (v) => {
+      let lastSfxPlay = 0;
+      const updateVolume = (v, playSound = false) => {
         val = Phaser.Math.Clamp(v, 0, 1);
         this.registry.set(key, val);
         fill.width = 200 * val;
@@ -135,70 +136,35 @@ export default class SettingsScene extends Phaser.Scene {
            const enabled = this.registry.get("bgmEnabled") !== false;
            this.sound.getAll("bgm_menu").forEach(s => (s as any).setVolume(enabled ? val : 0));
            this.sound.getAll("bgm_battle").forEach(s => (s as any).setVolume(enabled ? val : 0));
+        } else if (playSound) {
+           const now = Date.now();
+           if (now - lastSfxPlay > 150) {
+               lastSfxPlay = now;
+               if (this.cache.audio.exists("sfx_select") || this.sound.get("sfx_select")) {
+                   this.sound.play("sfx_select", { volume: val });
+               }
+           }
         }
       };
 
       handle.on('drag', (pointer, dragX) => {
          const pct = (dragX - (x - 100)) / 200;
-         updateVolume(pct);
+         updateVolume(pct, true);
       });
       
       // Click on track to set value
       track.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer) => {
          const pct = (pointer.x - (x - 100)) / 200;
-         updateVolume(pct);
+         updateVolume(pct, true);
       });
       fill.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer) => {
          const pct = (pointer.x - (x - 100)) / 200;
-         updateVolume(pct);
+         updateVolume(pct, true);
       });
     };
 
     createSlider(480, 145, "Music Vol", "bgmVolume", 0.5, true);
     createSlider(480, 175, "SFX Vol", "sfxVolume", 1.0, false);
-
-    // --- DIFFICULTY ---
-    this.add
-      .text(480, 180, "DIFFICULTY (AI Only)", {
-        fontSize: "20px",
-        color: "#aaa",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    const difficulties = ["Easy", "Normal", "Hard"];
-    difficulties.forEach((diff, i) => {
-      const isSelected = state.difficulty === i;
-      const color = isSelected ? "#ffd54a" : "#666";
-      const y = 220 + i * 40; // Compacted slightly
-      const t = this.add
-        .text(480, y, diff, {
-          fontSize: "24px",
-          color: color,
-          fontStyle: isSelected ? "bold" : "normal",
-          fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-          resolution: 2,
-        })
-        .setOrigin(0.5);
-
-      // Marker
-      if (isSelected) {
-        this.add
-          .text(380, y, "►", {
-            fontSize: "24px",
-            color: "#ffd54a",
-            fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-            resolution: 2,
-          })
-          .setOrigin(0.5);
-      }
-
-      t.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
-        state.difficulty = i;
-        this.scene.restart(); // Restart scene to refresh UI
-      });
-    });
 
     // --- CONTROLS ---
     const controlsBtn = this.add
