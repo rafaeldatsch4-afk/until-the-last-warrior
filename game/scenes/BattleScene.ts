@@ -4657,7 +4657,8 @@ export default class BattleScene extends Phaser.Scene {
         if (this.battleCamera) {
           if (isCritical) {
             // Intense, longer screen shake for critical hits
-            this.battleCamera.shake(350, 0.05);
+            this.battleCamera.shake(600, 0.06);
+            this.battleCamera.flash(300, 255, 50, 50, true); // Vibrant red flash
           } else {
             this.battleCamera.shake(150, 0.02);
           }
@@ -4735,8 +4736,6 @@ export default class BattleScene extends Phaser.Scene {
 
     if (target.active) {
       target.setTintFill(0xffffff); // Initial white flash
-      if (this.battleCamera && isCritical)
-        this.battleCamera.flash(50, 255, 255, 255, false); // Quick camera flash only on critical hits, non-forcing
 
       if (isCritical) {
         const attacker = isP ? this.enemy : this.player;

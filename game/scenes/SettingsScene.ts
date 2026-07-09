@@ -82,37 +82,8 @@ export default class SettingsScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    // BGM Toggle
-    let bgmEnabled = this.registry.get("bgmEnabled") !== false;
-    const bgmToggleText = this.add
-      .text(480, 110, bgmEnabled ? "MUSIC: ON" : "MUSIC: OFF", {
-        fontSize: "22px",
-        color: bgmEnabled ? "#2ecc71" : "#e74c3c",
-        fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        resolution: 2,
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-
-    bgmToggleText.on("pointerdown", () => {
-      bgmEnabled = !bgmEnabled;
-      this.registry.set("bgmEnabled", bgmEnabled);
-      bgmToggleText.setText(bgmEnabled ? "MUSIC: ON" : "MUSIC: OFF");
-      bgmToggleText.setColor(bgmEnabled ? "#2ecc71" : "#e74c3c");
-      
-      const bgmVol = this.registry.get("bgmVolume") ?? 0.5;
-      this.sound.getAll("bgm_menu").forEach(s => (s as any).setVolume(bgmEnabled ? bgmVol : 0));
-      this.sound.getAll("bgm_battle").forEach(s => (s as any).setVolume(bgmEnabled ? bgmVol : 0));
-
-      this.tweens.add({ targets: bgmToggleText, scaleX: 1.1, scaleY: 1.1, duration: 100, yoyo: true });
-      if (bgmEnabled && (this.cache.audio.exists("sfx_select") || this.sound.get("sfx_select"))) {
-         this.sound.play("sfx_select", { volume: this.registry.get("sfxVolume") ?? 1.0 });
-      }
-    });
-
     // Helper for sliders
-    const createSlider = (x, y, label, key, defaultVal, isBgm) => {
+    const createSlider = (x: number, y: number, label: string, key: string, defaultVal: number, isBgm: boolean) => {
       let val = this.registry.get(key);
       if (val === undefined) {
         val = defaultVal;
@@ -126,16 +97,15 @@ export default class SettingsScene extends Phaser.Scene {
       const handle = this.add.circle(x - 100 + 200 * val, y, 10, 0xffffff).setInteractive({ draggable: true, useHandCursor: true });
       
       let lastSfxPlay = 0;
-      const updateVolume = (v, playSound = false) => {
+      const updateVolume = (v: number, playSound = false) => {
         val = Phaser.Math.Clamp(v, 0, 1);
         this.registry.set(key, val);
         fill.width = 200 * val;
         handle.x = (x - 100) + 200 * val;
         
         if (isBgm) {
-           const enabled = this.registry.get("bgmEnabled") !== false;
-           this.sound.getAll("bgm_menu").forEach(s => (s as any).setVolume(enabled ? val : 0));
-           this.sound.getAll("bgm_battle").forEach(s => (s as any).setVolume(enabled ? val : 0));
+           this.sound.getAll("bgm_menu").forEach(s => (s as any).setVolume(val));
+           this.sound.getAll("bgm_battle").forEach(s => (s as any).setVolume(val));
         } else if (playSound) {
            const now = Date.now();
            if (now - lastSfxPlay > 150) {
@@ -147,24 +117,78 @@ export default class SettingsScene extends Phaser.Scene {
         }
       };
 
-      handle.on('drag', (pointer, dragX) => {
+      handle.on('drag', (pointer: any, dragX: number) => {
          const pct = (dragX - (x - 100)) / 200;
          updateVolume(pct, true);
+         if (isBgm && onBgmDragCallback) onBgmDragCallback(pct);
       });
       
       // Click on track to set value
-      track.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer) => {
+      track.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer: any) => {
          const pct = (pointer.x - (x - 100)) / 200;
          updateVolume(pct, true);
+         if (isBgm && onBgmDragCallback) onBgmDragCallback(pct);
       });
-      fill.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer) => {
+      fill.setInteractive({ useHandCursor: true }).on('pointerdown', (pointer: any) => {
          const pct = (pointer.x - (x - 100)) / 200;
          updateVolume(pct, true);
+         if (isBgm && onBgmDragCallback) onBgmDragCallback(pct);
       });
+
+      return updateVolume;
     };
 
-    createSlider(480, 145, "Music Vol", "bgmVolume", 0.5, true);
+    let onBgmDragCallback: ((vol: number) => void) | null = null;
+    let cachedBgmVolume = this.registry.get("bgmVolume") ?? 0.5;
+    if (cachedBgmVolume === 0) cachedBgmVolume = 0.5;
+
+    const updateBgmSlider = createSlider(480, 145, "Music Vol", "bgmVolume", 0.5, true);
     createSlider(480, 175, "SFX Vol", "sfxVolume", 1.0, false);
+
+    // BGM Toggle
+    let bgmEnabled = this.registry.get("bgmEnabled") !== false;
+    if (!bgmEnabled) {
+      updateBgmSlider(0, false);
+    }
+
+    const bgmToggleText = this.add
+      .text(480, 110, bgmEnabled ? "MUSIC: ON" : "MUSIC: OFF", {
+        fontSize: "22px",
+        color: bgmEnabled ? "#2ecc71" : "#e74c3c",
+        fontStyle: "bold",
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    onBgmDragCallback = (vol: number) => {
+      const shouldBeEnabled = vol > 0;
+      if (shouldBeEnabled !== bgmEnabled) {
+         bgmEnabled = shouldBeEnabled;
+         this.registry.set("bgmEnabled", bgmEnabled);
+         bgmToggleText.setText(bgmEnabled ? "MUSIC: ON" : "MUSIC: OFF");
+         bgmToggleText.setColor(bgmEnabled ? "#2ecc71" : "#e74c3c");
+      }
+      if (vol > 0) {
+         cachedBgmVolume = vol;
+      }
+    };
+
+    bgmToggleText.on("pointerdown", () => {
+      bgmEnabled = !bgmEnabled;
+      this.registry.set("bgmEnabled", bgmEnabled);
+      bgmToggleText.setText(bgmEnabled ? "MUSIC: ON" : "MUSIC: OFF");
+      bgmToggleText.setColor(bgmEnabled ? "#2ecc71" : "#e74c3c");
+      
+      const newVol = bgmEnabled ? cachedBgmVolume : 0;
+      updateBgmSlider(newVol, false);
+      
+      this.tweens.add({ targets: bgmToggleText, scaleX: 1.1, scaleY: 1.1, duration: 100, yoyo: true });
+      if (bgmEnabled && (this.cache.audio.exists("sfx_select") || this.sound.get("sfx_select"))) {
+         this.sound.play("sfx_select", { volume: this.registry.get("sfxVolume") ?? 1.0 });
+      }
+    });
 
     // --- CONTROLS ---
     const controlsBtn = this.add
