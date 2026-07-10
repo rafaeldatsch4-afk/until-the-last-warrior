@@ -217,17 +217,20 @@ async function startServer() {
       if (roomId) {
         const room = rooms.get(roomId);
         if (room) {
-          // Tell other player that the opponent left
+          // Avisa o(s) outro(s) jogador(es) que o oponente saiu
           socket.to(roomId).emit("opponentLeft");
-          
-          // Remove players, delete room
-          room.players = room.players.filter(p => p.id !== sId);
-          if (room.players.length === 0) {
-            rooms.delete(roomId);
-            console.log(`Deleted empty room: ${roomId}`);
+
+          // Limpa o registro socketToRoom de TODOS os jogadores da sala,
+          // não só de quem desconectou. Uma partida que tinha 2 jogadores
+          // não deve deixar uma sala "fantasma" de 1 jogador na fila pública.
+          for (const p of room.players) {
+            socketToRoom.delete(p.id);
           }
+          rooms.delete(roomId);
+          console.log(`Room closed due to disconnect: ${roomId}`);
+        } else {
+          socketToRoom.delete(sId);
         }
-        socketToRoom.delete(sId);
       }
     }
   });
