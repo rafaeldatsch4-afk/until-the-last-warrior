@@ -1,6 +1,7 @@
 import { transitionTo } from "../utils/sceneTransition";
 import { BattleCamera } from "../battle/BattleCamera";
 import { BattleReward } from "../battle/BattleReward";
+import { BattleEffects } from "../battle/BattleEffects";
 import { BattleInput } from "../battle/BattleInput";
 import { BattleUI } from "../battle/BattleUI";
 import { BattleAI } from "../battle/BattleAI";
@@ -18,6 +19,7 @@ export default class BattleScene extends Phaser.Scene {
   public trnBtnGroup?: Phaser.GameObjects.Container;
 
   public battleUI!: BattleUI;
+  public effects!: BattleEffects;
   public battleEnvironment!: BattleEnvironment;
   public soundManager!: BattleSoundManager;
 
@@ -110,6 +112,8 @@ export default class BattleScene extends Phaser.Scene {
 
   public playerHp: number = 0;
   public enemyHp: number = 0;
+  public lastPlayerHp: number = 0;
+  public lastEnemyHp: number = 0;
   public playerKi: number = 0;
   public enemyKi: number = 0;
 
@@ -280,9 +284,12 @@ export default class BattleScene extends Phaser.Scene {
     this.createFighterSprites();
     this.playerHp = this.playerData.maxHp;
     this.enemyHp = this.enemyData.maxHp;
+    this.lastPlayerHp = this.playerHp;
+    this.lastEnemyHp = this.enemyHp;
     this.playerKi = 0;
     this.enemyKi = 0;
 
+    this.effects = new BattleEffects(this);
     this.battleUI = new BattleUI(this);
     this.battleReward = new BattleReward(this);
     this.battleUI.createUI(
@@ -470,6 +477,15 @@ export default class BattleScene extends Phaser.Scene {
       if (this.p2DebugCircle) this.p2DebugCircle.destroy();
       this.debugCirclesDestroyed = true;
     }
+
+    if (this.playerHp > this.lastPlayerHp) {
+      this.createHealEffect(this.player.x, this.player.y, this.playerHp - this.lastPlayerHp);
+    }
+    if (this.enemyHp > this.lastEnemyHp) {
+      this.createHealEffect(this.enemy.x, this.enemy.y, this.enemyHp - this.lastEnemyHp);
+    }
+    this.lastPlayerHp = this.playerHp;
+    this.lastEnemyHp = this.enemyHp;
 
     if (this.battleUI)
       this.battleUI.updateBars(
@@ -3888,7 +3904,7 @@ export default class BattleScene extends Phaser.Scene {
             break;
           }
           default:
-            this.specialBeam(
+            this.effects.specialBeam(
               isPlayer,
               isSuper,
               data.specialColor,
@@ -3940,202 +3956,6 @@ export default class BattleScene extends Phaser.Scene {
   // =========================================================================
 
   // 1. BEAM ENGINE (KAMEHAMEHA, GALICK GUN, MASENKO)
-  public specialBeam(
-    isP: boolean,
-    isS: boolean,
-    col: number,
-    hasInner: boolean,
-    vibrate: boolean,
-    type: string,
-  ) {
-    const attacker = isP ? this.player : this.enemy;
-    const target = isP ? this.enemy : this.player;
-    const transLevel = isP
-      ? this.playerTransformLevel
-      : this.enemyTransformLevel;
-    if (!attacker.active || !target.active) {
-      this.setActionState(isP, false);
-      return;
-    }
-
-    const baseDmg = isS ? 60 : 35;
-    const dmg = Math.floor(baseDmg * this.getDamageMultiplier(transLevel));
-
-    const size = isS ? 3.5 : 2.0;
-
-    const hand = this.getHandPosition(isP);
-    const endX = target.x;
-    const distance = Math.abs(endX - hand.x) + 50;
-
-    if (this.battleUI)
-      this.battleUI.showLog(isS ? "SUPER ATTACK!" : type.toUpperCase() + "!");
-    if (this.soundManager) this.soundManager.playBeamCharge();
-
-    // Charge Effect
-    const chargeCore = this.add
-      .circle(hand.x, hand.y, 2, 0xffffff)
-      .setDepth(16);
-    const chargeGlow = this.add
-      .circle(hand.x, hand.y, 5, col)
-      .setDepth(15)
-      .setBlendMode(Phaser.BlendModes.ADD);
-
-    if (this.battleCamera) this.battleCamera.shake(400, 0.01);
-
-    // Gathering particles
-    const gatherParticles = this.add
-      .particles(0, 0, "particle", {
-        x: hand.x,
-        y: hand.y,
-        speed: { min: -150, max: 150 },
-        scale: { start: 0.8, end: 0 },
-        blendMode: "ADD",
-        lifespan: 300,
-        tint: col,
-        gravityY: 0,
-      })
-      .setDepth(14);
-
-    this.tweens.add({
-      targets: [chargeCore, chargeGlow],
-      scale: 12 * size,
-      alpha: { start: 1, end: 0.8 },
-      duration: 400,
-      yoyo: true,
-      repeat: 0,
-      onComplete: () => {
-        if (!this.scene.isActive()) return;
-        if (this.soundManager) this.soundManager.playBeamFire();
-        chargeCore.destroy();
-        chargeGlow.destroy();
-        gatherParticles.destroy();
-
-        this.createScreenFlash(col, 200, 0.6);
-        if (this.battleCamera) this.battleCamera.shake(300, 0.03);
-
-        // The Beam Structure
-        const originX = 0;
-
-        // Outer Glow
-        const beamOuter = this.add
-          .rectangle(hand.x, hand.y, 0, 40 * size, col)
-          .setOrigin(originX, 0.5)
-          .setDepth(4)
-          .setAlpha(0.6)
-          .setBlendMode(Phaser.BlendModes.ADD);
-        // Main Color Beam
-        const beamMain = this.add
-          .rectangle(hand.x, hand.y, 0, 24 * size, col)
-          .setOrigin(originX, 0.5)
-          .setDepth(5)
-          .setAlpha(0.9)
-          .setBlendMode(Phaser.BlendModes.ADD);
-        // Inner Core (White/Bright)
-        const beamCore = this.add
-          .rectangle(hand.x, hand.y, 0, 12 * size, 0xffffff)
-          .setOrigin(originX, 0.5)
-          .setDepth(6);
-
-        beamOuter.scaleX = isP ? 1 : -1;
-        beamMain.scaleX = isP ? 1 : -1;
-        beamCore.scaleX = isP ? 1 : -1;
-
-        // Beam Head/Tip
-        const beamHeadGlow = this.add
-          .circle(hand.x, hand.y, 30 * size, col)
-          .setDepth(5)
-          .setBlendMode(Phaser.BlendModes.ADD)
-          .setAlpha(0.8);
-        const beamHead = this.add
-          .circle(hand.x, hand.y, 15 * size, 0xffffff)
-          .setDepth(6);
-
-        // Particles Emitter for Beam
-        const particles = this.add
-          .particles(0, 0, "particle", {
-            speed: { min: 50, max: 200 },
-            angle: { min: isP ? 160 : -20, max: isP ? 200 : 20 },
-            scale: { start: 0.8 * size, end: 0 },
-            blendMode: "ADD",
-            lifespan: 300,
-            tint: col,
-          })
-          .setDepth(7);
-
-        // Animation
-        this.tweens.add({
-          targets: [beamOuter, beamMain, beamCore],
-          width: distance,
-          duration: type === "masenko" ? 100 : 200,
-          ease: "Power2",
-          onUpdate: () => {
-            if (!this.scene.isActive()) return;
-
-            const shakeAmt = vibrate ? 6 : 2;
-            const jitterY = Phaser.Math.Between(-shakeAmt, shakeAmt);
-
-            beamOuter.setPosition(hand.x, hand.y + jitterY);
-            beamMain.setPosition(hand.x, hand.y + jitterY);
-            beamCore.setPosition(hand.x, hand.y + jitterY / 2);
-
-            // Tip Position
-            const tipX = isP
-              ? hand.x + beamMain.width
-              : hand.x - beamMain.width;
-            beamHeadGlow.setPosition(tipX, hand.y + jitterY);
-            beamHead.setPosition(tipX, hand.y + jitterY);
-
-            // Particle Emitter follows tip
-            particles.setPosition(tipX, hand.y + jitterY);
-          },
-          onComplete: () => {
-            if (!this.scene.isActive()) return;
-
-            this.createImpactEffect(endX, hand.y, col, "beam");
-            this.takeDamage(!isP, dmg);
-            particles.stop();
-
-            // Shockwave rings at impact
-            for (let i = 0; i < 3; i++) {
-              const ring = this.add
-                .circle(endX, hand.y, 20, col)
-                .setStrokeStyle(4 + size * 2, col)
-                .setDepth(20)
-                .setAlpha(0)
-                .setBlendMode(Phaser.BlendModes.ADD);
-              ring.isFilled = false;
-              this.tweens.add({
-                targets: ring,
-                scale: 4 + i * 1.5 + size,
-                alpha: { start: 1, end: 0 },
-                duration: 200 + i * 50,
-                ease: "Cubic.easeOut",
-                onComplete: () => ring.destroy(),
-              });
-            }
-
-            // Fade Out
-            this.tweens.add({
-              targets: [beamOuter, beamMain, beamCore, beamHead, beamHeadGlow],
-              alpha: 0,
-              scaleY: 0,
-              duration: 300,
-              onComplete: () => {
-                beamOuter.destroy();
-                beamMain.destroy();
-                beamCore.destroy();
-                beamHead.destroy();
-                beamHeadGlow.destroy();
-                particles.destroy();
-                this.onSpecialComplete(isP);
-              },
-            });
-          },
-        });
-      },
-    });
-  }
-
   // 2. MAKANKOSAPPO (DOUBLE HELIX REMASTER)
 
   // 4. KATANA SLASH (DIMENSIONAL CUT REMASTER)
@@ -4154,22 +3974,6 @@ export default class BattleScene extends Phaser.Scene {
 
   // =========================================================================
   // 100% ULTIMATE ATTACKS
-  // =========================================================================
-
-
-  createScreenFlash(color: number, duration: number, alpha: number = 0.8) {
-    const flash = this.add
-      .rectangle(480, 270, 960, 540, color)
-      .setDepth(30)
-      .setAlpha(alpha);
-    this.tweens.add({
-      targets: flash,
-      alpha: 0,
-      duration: duration,
-      ease: "Power2",
-      onComplete: () => flash.destroy(),
-    });
-  }
 
 
   vibrate(duration: number | number[]) {
@@ -4406,6 +4210,36 @@ export default class BattleScene extends Phaser.Scene {
         duration: Phaser.Math.Between(500, 900),
         ease: "Quad.easeOut",
         onComplete: () => dust.destroy(),
+      });
+    }
+  }
+
+  createHealEffect(x: number, y: number, amount: number = 10) {
+    if (!this.scene.isActive()) return;
+    // Scale count by amount, max 10 particles
+    const count = Math.max(1, Math.min(10, Math.ceil(amount / 5)));
+    for (let i = 0; i < count; i++) {
+      const size = Phaser.Math.Between(3, 7);
+      // Glowing green colors
+      const colors = [0x2ecc71, 0x27ae60, 0x58d68d, 0xabebc6];
+      const color = Phaser.Utils.Array.GetRandom(colors);
+      
+      const px = x + Phaser.Math.Between(-40, 40);
+      const py = y + Phaser.Math.Between(0, 150);
+
+      const p = this.add
+        .circle(px, py, size, color, Math.random() * 0.5 + 0.5)
+        .setDepth(15)
+        .setBlendMode(Phaser.BlendModes.ADD);
+
+      this.tweens.add({
+        targets: p,
+        y: py - Phaser.Math.Between(40, 100),
+        alpha: 0,
+        scale: 0.1,
+        duration: Phaser.Math.Between(600, 1000),
+        ease: "Sine.easeOut",
+        onComplete: () => p.destroy(),
       });
     }
   }
