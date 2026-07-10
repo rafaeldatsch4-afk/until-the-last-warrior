@@ -88,7 +88,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col bg-black text-white overflow-hidden relative">
+    <div className="h-[100dvh] w-full flex flex-col bg-black text-white overflow-hidden relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
       <main className="flex-1 flex items-center justify-center w-full p-0 relative overflow-hidden">
         <AuthButton />
         <AchievementToast />

@@ -24,7 +24,10 @@ async function startServer() {
       origin: true,
       methods: ["GET", "POST"],
       credentials: true
-    }
+    },
+    perMessageDeflate: {
+      threshold: 1024,
+    },
   });
 
   const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;

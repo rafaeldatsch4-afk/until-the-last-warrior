@@ -14,6 +14,7 @@ import { getFighter } from "../characters/FighterRegistry";
 import { DailyChallenges } from "../systems/DailyChallenges";
 import { auth } from "../../firebase/init";
 import { MultiplayerManager } from "../systems/MultiplayerManager";
+import { animKeyToId, animIdToSuffix } from "../systems/AnimKeyMap";
 
 export default class BattleScene extends Phaser.Scene {
   public trnBtnGroup?: Phaser.GameObjects.Container;
@@ -34,6 +35,8 @@ export default class BattleScene extends Phaser.Scene {
   public isIncomingNetworkAction: boolean = false;
   public localPlayerIndex: 1 | 2 = 1;
   private netSyncTimer: number = 0;
+  private lastSentState: string = "";
+  private lastSentTime: number = 0;
   private remoteTargetX: number = 0;
   private remoteTargetY: number = 0;
   private hasInitialRemotePosition: boolean = false;
@@ -334,14 +337,14 @@ export default class BattleScene extends Phaser.Scene {
           const s_y = state.y;
           const s_flipX = state.f === 1;
           const s_rotation = state.r;
-          const s_anim = state.a;
+          const s_anim_id = state.a;
           const s_hp = state.h;
           const s_ki = state.k;
-          const s_actionActive = state.aa === 1;
+          const s_actionActive = !!(state.flags & 1);
           const s_transformLevel = state.tl;
-          const s_defending = state.d === 1;
-          const s_isJumping = state.j === 1;
-          const s_superActive = state.s === 1;
+          const s_defending = !!(state.flags & 2);
+          const s_isJumping = !!(state.flags & 4);
+          const s_superActive = !!(state.flags & 8);
 
           if (!this.hasInitialRemotePosition) {
             target.x = s_x;
@@ -354,12 +357,15 @@ export default class BattleScene extends Phaser.Scene {
           target.setFlipX(s_flipX);
           target.setRotation(s_rotation);
 
+          const opponentData = this.localPlayerIndex === 1 ? this.enemyData : this.playerData;
+          const animSuffix = animIdToSuffix(s_anim_id);
+          const fullAnimKey = `${opponentData.key}_${animSuffix}`;
+
           if (
             target.anims &&
-            s_anim &&
-            target.anims.currentAnim?.key !== s_anim
+            target.anims.currentAnim?.key !== fullAnimKey
           ) {
-            target.play(s_anim, true);
+            target.play(fullAnimKey, true);
           }
 
           if (this.localPlayerIndex === 1) {
@@ -533,25 +539,28 @@ export default class BattleScene extends Phaser.Scene {
             y: Math.round(activeObj.y),
             f: activeObj.flipX ? 1 : 0,
             r: Math.round(activeObj.rotation * 10) / 10,
-            a: activeObj.anims.currentAnim?.key || "",
+            a: animKeyToId(activeObj.anims.currentAnim?.key || ""),
             h: Math.round(localIdx === 1 ? this.playerHp : this.enemyHp),
             k: Math.round(localIdx === 1 ? this.playerKi : this.enemyKi),
-            aa: (localIdx === 1 ? this.p1ActionActive : this.p2ActionActive)
-              ? 1
-              : 0,
             tl:
               localIdx === 1
                 ? this.playerTransformLevel
                 : this.enemyTransformLevel,
-            d: (localIdx === 1 ? this.playerDefending : this.enemyDefending)
-              ? 1
-              : 0,
-            j: (localIdx === 1 ? this.isP1Jumping : this.isP2Jumping) ? 1 : 0,
-            s: (localIdx === 1 ? this.p1SuperActive : this.p2SuperActive)
-              ? 1
-              : 0,
+            flags:
+              ((localIdx === 1 ? this.p1ActionActive : this.p2ActionActive) ? 1 : 0) |
+              ((localIdx === 1 ? this.playerDefending : this.enemyDefending) ? 2 : 0) |
+              ((localIdx === 1 ? this.isP1Jumping : this.isP2Jumping) ? 4 : 0) |
+              ((localIdx === 1 ? this.p1SuperActive : this.p2SuperActive) ? 8 : 0),
           };
-          MultiplayerManager.getInstance().emitState(stateData);
+          const stateKey = `${stateData.x},${stateData.y},${stateData.a},${stateData.flags}`;
+          const now = Date.now();
+          const forceHeartbeat = now - this.lastSentTime > 500;
+
+          if (stateKey !== this.lastSentState || forceHeartbeat) {
+            this.lastSentState = stateKey;
+            this.lastSentTime = now;
+            MultiplayerManager.getInstance().emitState(stateData);
+          }
         }
       }
     }
