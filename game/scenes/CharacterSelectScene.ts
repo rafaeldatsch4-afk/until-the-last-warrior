@@ -315,7 +315,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
       }
     }
 
-    if (this.state.gameMode === "online_pvp") {
+    if (this.state.gameMode === "online_pvp" || this.state.gameMode === "ranked_pvp") {
       transitionTo(this, "MultiplayerLobbyScene");
       return;
     }

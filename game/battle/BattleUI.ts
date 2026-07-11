@@ -21,6 +21,8 @@ export class BattleUI {
   p2ComboBar!: Phaser.GameObjects.Rectangle;
   p1ComboHideTimer?: Phaser.Time.TimerEvent;
   p2ComboHideTimer?: Phaser.Time.TimerEvent;
+  pingText?: Phaser.GameObjects.Text;
+  pauseOverlay?: Phaser.GameObjects.Container;
 
   p1KiGlow!: Phaser.GameObjects.Rectangle;
   p2KiGlow!: Phaser.GameObjects.Rectangle;
@@ -209,7 +211,30 @@ export class BattleUI {
       .setOrigin(0.5);
     this.uiContainer.add(this.logText);
 
+    
+    if (gameMode === "online_pvp") {
+      this.pingText = bs.add.text(480, 50, "Ping: -- ms", {
+        fontSize: "14px",
+        color: "#ffffff",
+        fontFamily: "monospace",
+        stroke: "#000",
+        strokeThickness: 3
+      }).setOrigin(0.5).setDepth(15).setScrollFactor(0);
+      this.uiContainer.add(this.pingText);
+      
+      const overlayBg = bs.add.rectangle(480, 270, 960, 540, 0x000000, 0.7);
+      const pauseText = bs.add.text(480, 270, "Aguardando oponente reconectar...", {
+        fontSize: "24px",
+        color: "#f1c40f",
+        fontFamily: "Impact, sans-serif"
+      }).setOrigin(0.5);
+      
+      this.pauseOverlay = bs.add.container(0, 0, [overlayBg, pauseText]).setScrollFactor(0).setDepth(100).setVisible(false);
+      this.uiContainer.add(this.pauseOverlay);
+    }
+
     if (gameMode === "arcade") {
+
       bs.add
         .text(480, 25, `ARCADE: ROUND ${arcadeRound || 1} / 5`, {
           fontSize: "22px",
@@ -227,7 +252,22 @@ export class BattleUI {
     }
   }
 
+  
+  updatePing(ping: number) {
+    if (this.pingText) {
+      this.pingText.setText(`Ping: ${ping} ms`);
+      this.pingText.setColor(ping < 80 ? '#2ecc71' : ping < 150 ? '#f1c40f' : '#e74c3c');
+    }
+  }
+  
+  setPaused(paused: boolean) {
+    if (this.pauseOverlay) {
+      this.pauseOverlay.setVisible(paused);
+    }
+  }
+
   updateBars(p1HpP: number, p2HpP: number, p1KiP: number, p2KiP: number) {
+
     if (this.p1HpBar && this.p1HpBar.active) {
       // Liquid HP Bars (only update when actual target value changes)
       if (p1HpP !== this.lastP1HpP) {

@@ -53,6 +53,7 @@ export interface TournamentRound {
 
 export interface GameState {
   coins: number;
+  elo?: number;
   difficulty: number; // 0: Easy, 1: Normal, 2: Hard
   gameMode:
     | "single"
@@ -60,7 +61,8 @@ export interface GameState {
     | "arcade"
     | "tournament"
     | "training"
-    | "online_pvp";
+    | "online_pvp"
+    | "ranked_pvp";
   selectedCharacterId: number; // Legacy/Default P1
   p1CharacterId: number;
   p2CharacterId: number;
@@ -83,6 +85,16 @@ export interface GameState {
   };
   unlockedTitles?: string[];
   equippedTitle?: string;
+  settings?: {
+    lowPerformanceMode?: boolean;
+    hudConfig?: {
+      dpadPos?: { x: number, y: number };
+      dpadScale?: number;
+      buttonsPos?: { x: number, y: number };
+      buttonsScale?: number;
+      opacity?: number;
+    }
+  };
 }
 
 declare global {

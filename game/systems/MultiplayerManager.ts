@@ -17,6 +17,10 @@ export class MultiplayerManager {
   public localPlayerIndex: 1 | 2 = 1; // 1 = Host/P1, 2 = Guest/P2
   public opponentName: string = "Inimigo";
   public opponentCharacterId: number = 0;
+  public sessionId: string = Math.random().toString(36).substring(2, 15);
+
+  public currentPing: number = 0;
+  private pingInterval: any;
 
   // Listeners
   public onWaitingCallback?: (roomCode: string, isPrivate?: boolean) => void;
@@ -24,6 +28,8 @@ export class MultiplayerManager {
   public onRemoteStateCallback?: (state: any) => void;
   public onRemoteActionCallback?: (action: any) => void;
   public onOpponentLeftCallback?: () => void;
+  public onMatchPausedCallback?: () => void;
+  public onMatchResumedCallback?: () => void;
   public onErrorCallback?: (err: string) => void;
 
   private constructor() {}
@@ -82,10 +88,29 @@ export class MultiplayerManager {
       console.warn("Socket connection timeout");
     });
 
+    
+    
     this.socket.on("connect", () => {
       this.isConnected = true;
       console.log("Connected to Multiplayer Server successfully.");
+      
+      // If we already have a roomCode, we might be reconnecting
+      if (this.roomCode) {
+        this.socket.emit("reconnectMatch", { sessionId: this.sessionId, roomCode: this.roomCode });
+      }
+      
+      this.pingInterval = setInterval(() => {
+        if (this.socket && this.socket.connected) {
+          this.socket.emit("ping", Date.now());
+        }
+      }, 1000);
     });
+
+    
+    this.socket.on("pong", (timestamp: number) => {
+      this.currentPing = Date.now() - timestamp;
+    });
+
 
     this.socket.on(
       "waitingForOpponent",
@@ -97,7 +122,15 @@ export class MultiplayerManager {
       },
     );
 
+    
+    this.socket.on("matchPaused", () => {
+      if (this.onMatchPausedCallback) this.onMatchPausedCallback();
+    });
+    this.socket.on("matchResumed", () => {
+      if (this.onMatchResumedCallback) this.onMatchResumedCallback();
+    });
     this.socket.on("matchStart", (data: MatchStartData) => {
+
       this.roomCode = data.roomCode;
       this.localPlayerIndex = data.localPlayerIndex;
       this.opponentName = data.opponentName;
@@ -138,10 +171,10 @@ export class MultiplayerManager {
     });
   }
 
-  public joinMatchmaking(playerName: string, characterId: number) {
+  public joinMatchmaking(playerName: string, characterId: number, isRanked: boolean = false, rating: number = 1000) {
     this.connect();
     if (this.socket) {
-      this.socket.emit("joinMatchmaking", { name: playerName, characterId });
+      this.socket.emit("joinMatchmaking", { name: playerName, characterId, sessionId: this.sessionId, isRanked, rating });
     }
   }
 
@@ -156,6 +189,7 @@ export class MultiplayerManager {
         name: playerName,
         characterId,
         roomCode,
+        sessionId: this.sessionId
       });
     }
   }
@@ -171,6 +205,7 @@ export class MultiplayerManager {
         name: playerName,
         characterId,
         roomCode,
+        sessionId: this.sessionId
       });
     }
   }
@@ -195,6 +230,9 @@ export class MultiplayerManager {
   }
 
   public disconnect() {
+    if (this.pingInterval) clearInterval(this.pingInterval);
+    this.pingInterval = null;
+    this.currentPing = 0;
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;

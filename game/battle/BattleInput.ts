@@ -20,6 +20,7 @@ export interface BattleKeys {
   p2_right: Phaser.Input.Keyboard.Key;
   p2_attack: Phaser.Input.Keyboard.Key;
   p2_kiblast: Phaser.Input.Keyboard.Key;
+  p2_charge: Phaser.Input.Keyboard.Key;
   p2_defend: Phaser.Input.Keyboard.Key;
   p2_special: Phaser.Input.Keyboard.Key;
   p2_transform: Phaser.Input.Keyboard.Key;
@@ -27,7 +28,7 @@ export interface BattleKeys {
   pause: Phaser.Input.Keyboard.Key;
 }
 
-export type InputAction = "attack" | "kiblast" | "transform" | "special" | "left" | "right" | "up" | "down" | "defend";
+export type InputAction = "attack" | "kiblast" | "transform" | "special" | "left" | "right" | "up" | "down" | "defend" | "charge";
 
 export class BattleInput {
   scene: BattleScene;
@@ -55,6 +56,7 @@ export class BattleInput {
     if (isPlayer1) {
       switch (action) {
         case "defend": return this.keys.p1_defend.isDown || this.mobileP1Defend;
+        case "charge": return this.keys.p1_charge.isDown || this.mobileP1Charge;
         case "left": return this.keys.p1_left.isDown || this.mobileJoystickVector.x < -0.3;
         case "right": return this.keys.p1_right.isDown || this.mobileJoystickVector.x > 0.3;
         case "up": return this.keys.p1_up.isDown || this.mobileJoystickVector.y < -0.3;
@@ -68,6 +70,7 @@ export class BattleInput {
     } else {
       switch (action) {
         case "defend": return this.keys.p2_defend.isDown;
+        case "charge": return this.keys.p2_charge.isDown;
         case "left": return this.keys.p2_left.isDown;
         case "right": return this.keys.p2_right.isDown;
         case "up": return this.keys.p2_up.isDown;
@@ -174,7 +177,7 @@ export class BattleInput {
       p1_attack: Phaser.Input.Keyboard.KeyCodes.E,
       p1_kiblast: Phaser.Input.Keyboard.KeyCodes.C,
       p1_defend: Phaser.Input.Keyboard.KeyCodes.Q,
-      p1_charge: Phaser.Input.Keyboard.KeyCodes.Q,
+      p1_charge: Phaser.Input.Keyboard.KeyCodes.R,
       p1_special: Phaser.Input.Keyboard.KeyCodes.V,
       p1_transform: Phaser.Input.Keyboard.KeyCodes.X,
 
@@ -185,6 +188,7 @@ export class BattleInput {
       p2_attack: Phaser.Input.Keyboard.KeyCodes.I,
       p2_kiblast: Phaser.Input.Keyboard.KeyCodes.L,
       p2_defend: Phaser.Input.Keyboard.KeyCodes.O,
+      p2_charge: Phaser.Input.Keyboard.KeyCodes.U,
       p2_special: Phaser.Input.Keyboard.KeyCodes.K,
       p2_transform: Phaser.Input.Keyboard.KeyCodes.P,
 
@@ -214,6 +218,13 @@ export class BattleInput {
 
     const gw = this.scene.cameras.main.width;
     const gh = this.scene.cameras.main.height;
+    
+    const cfg = this.scene.gameState.settings?.hudConfig;
+    const opacity = cfg?.opacity ?? 0.5;
+    const dpadScale = cfg?.dpadScale ?? 1.0;
+    const btnScale = cfg?.buttonsScale ?? 1.0;
+    const dpadPos = cfg?.dpadPos ?? { x: 140, y: gh - 100 };
+    const btnPos = cfg?.buttonsPos ?? { x: gw - 160, y: gh - 100 };
 
     const createBtn = (
       x: number,
@@ -231,15 +242,9 @@ export class BattleInput {
         .setDepth(100);
 
       const outerBtn = this.scene.add
-        .circle(0, 0, radius, color, 0.4)
+        .circle(0, 0, radius, color, opacity)
         .setStrokeStyle(3, 0xffffff, 0.5);
-      const innerBtn = this.scene.add.circle(
-        0,
-        0,
-        radius * 0.85,
-        0x000000,
-        0.3,
-      );
+      const innerBtn = this.scene.add.circle(0, 0, radius * 0.85, 0x000000, Math.min(1, opacity * 1.5));
 
       const txt = this.scene.add
         .text(0, 0, text, {
@@ -299,8 +304,8 @@ export class BattleInput {
     };
 
     // --- Virtual Joystick ---
-    const defaultJoyX = 140;
-    const defaultJoyY = gh - 100;
+    const defaultJoyX = dpadPos.x;
+    const defaultJoyY = dpadPos.y;
     let joyRootX = defaultJoyX;
     let joyRootY = defaultJoyY;
 
@@ -316,6 +321,8 @@ export class BattleInput {
       .setStrokeStyle(2, 0x000000, 0.5);
 
     joyContainer.add([joyBase, joyThumb]);
+    joyContainer.setScale(dpadScale);
+    joyBase.setAlpha(opacity);
     this.mobileControls.push(joyContainer);
 
     // Large invisible hit area on the bottom-left quadrant for the FLOATING joystick
@@ -364,7 +371,7 @@ export class BattleInput {
           joyRootX = loc.x;
           joyRootY = loc.y;
           joyContainer.setPosition(joyRootX, joyRootY);
-          joyBase.setAlpha(0.7);
+          joyBase.setAlpha(Math.min(1, opacity * 1.5));
 
           handleJoystick(pointer);
         }
@@ -381,7 +388,7 @@ export class BattleInput {
         joyRootY = defaultJoyY;
         joyContainer.setPosition(joyRootX, joyRootY);
 
-        joyBase.setAlpha(0.4);
+        joyBase.setAlpha(opacity);
         joyThumb.setPosition(0, 0);
         this.mobileJoystickVector = { x: 0, y: 0 };
 
@@ -396,18 +403,18 @@ export class BattleInput {
     // --- End Virtual Joystick ---
 
     // Right side (Attacks)
-    createBtn(gw - 100, gh - 100, "ATK", 0xe74c3c, 60, () => {
+    createBtn(btnPos.x + 60, btnPos.y, "ATK", 0xe74c3c, 60 * btnScale, () => {
       this.mobileP1Attack = true;
       this.scene.p1AttackBuffer = this.scene.BUFFER_MS;
     });
 
     // SPC (Special)
     createBtn(
-      gw - 100,
-      gh - 240,
+      btnPos.x + 60,
+      btnPos.y - 140 * btnScale,
       "SPC",
       0xf1c40f,
-      45,
+      45 * btnScale,
       () => {
         this.mobileP1Special = true;
       },
@@ -417,13 +424,14 @@ export class BattleInput {
       },
     );
 
-    // DEF/CHARGE
+    
+    // DEF
     createBtn(
-      gw - 240,
-      gh - 100,
-      "DEF/\nCHG",
+      btnPos.x - 160 * btnScale,
+      btnPos.y,
+      "DEF",
       0x3498db,
-      45,
+      45 * btnScale,
       () => {
         this.mobileP1Defend = true;
       },
@@ -432,14 +440,30 @@ export class BattleInput {
       },
     );
 
+    // CHARGE
+    createBtn(
+      btnPos.x - 80 * btnScale,
+      btnPos.y,
+      "CHG",
+      0x2ecc71,
+      45 * btnScale,
+      () => {
+        this.mobileP1Charge = true;
+      },
+      () => {
+        this.mobileP1Charge = false;
+      },
+    );
+
+
     // KI BLAST
-    createBtn(gw - 240, gh - 240, "KI", 0x00ffff, 45, () => {
+    createBtn(btnPos.x - 80 * btnScale, btnPos.y - 140 * btnScale, "KI", 0x00ffff, 45 * btnScale, () => {
       this.mobileP1KiBlast = true;
       this.scene.p1KiBlastBuffer = this.scene.BUFFER_MS;
     });
 
     // DASH
-    createBtn(gw - 170, gh - 170, "DSH", 0xff9900, 40, () => {
+    createBtn(btnPos.x - 10 * btnScale, btnPos.y - 70 * btnScale, "DSH", 0xff9900, 40 * btnScale, () => {
        const isLeft = this.keys.p1_left.isDown;
        const isRight = this.keys.p1_right.isDown;
        this.mobileP1Dash = isLeft ? -1 : (isRight ? 1 : 0);
@@ -452,7 +476,7 @@ export class BattleInput {
     // TRN (Transform)
     const localData = this.scene.localPlayerIndex === 1 ? this.scene.playerData : this.scene.enemyData;
     if (localData.transformAvailable) {
-      this.scene.trnBtnGroup = createBtn(140, 200, "TRN", 0x9b59b6, 50, () => {
+      this.scene.trnBtnGroup = createBtn(dpadPos.x, dpadPos.y - 180 * dpadScale, "TRN", 0x9b59b6, 50 * dpadScale, () => {
         this.mobileP1Transform = true;
         this.scene.p1TransformBuffer = this.scene.BUFFER_MS;
       });

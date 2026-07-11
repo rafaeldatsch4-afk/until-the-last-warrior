@@ -327,6 +327,7 @@ export default class StoreScene extends Phaser.Scene {
       char.unlocked = true;
 
       window.UTLW.save();
+      window.dispatchEvent(new CustomEvent('sync-coins', { detail: { coins: state.coins }}));
       this.showSaveIndicator();
 
       this.coinsText.setText(`COINS: ${state.coins}`);

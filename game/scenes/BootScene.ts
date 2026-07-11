@@ -36,7 +36,17 @@ export default class BootScene extends Phaser.Scene {
           charactersUnlocked: 0,
         },
         unlockedTitles: [],
-        equippedTitle: ""
+        equippedTitle: "",
+        settings: {
+          lowPerformanceMode: false,
+          hudConfig: {
+            dpadPos: { x: 150, y: 380 },
+            dpadScale: 1,
+            buttonsPos: { x: 810, y: 380 },
+            buttonsScale: 1,
+            opacity: 0.5
+          }
+        }
       };
 
       // Attempt to load from LocalStorage
@@ -106,6 +116,12 @@ export default class BootScene extends Phaser.Scene {
           if (typeof parsed.equippedTitle === 'string') {
             defaultState.equippedTitle = parsed.equippedTitle;
           }
+          if (parsed.settings) {
+            defaultState.settings = { ...defaultState.settings, ...parsed.settings };
+            if (parsed.settings.hudConfig) {
+               defaultState.settings.hudConfig = { ...defaultState.settings.hudConfig, ...parsed.settings.hudConfig };
+            }
+          }
         }
       } catch (e) {
         console.error("Failed to load save data:", e);
@@ -126,6 +142,7 @@ export default class BootScene extends Phaser.Scene {
               stats: window.UTLW.state.stats,
               unlockedTitles: window.UTLW.state.unlockedTitles,
               equippedTitle: window.UTLW.state.equippedTitle,
+              settings: window.UTLW.state.settings,
               characters: window.UTLW.state.characters.map((c) => {
                 if (c.id === 999) return c; // Save full raw data for custom character
                 return { id: c.id, unlocked: c.unlocked };

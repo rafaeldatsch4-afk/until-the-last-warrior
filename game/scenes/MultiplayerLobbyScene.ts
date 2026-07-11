@@ -666,6 +666,8 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     MultiplayerManager.getInstance().joinMatchmaking(
       this.getPlayerName(),
       this.gameState.p1CharacterId,
+      this.gameState.gameMode === "ranked_pvp",
+      this.gameState.elo || 1000
     );
   }
 

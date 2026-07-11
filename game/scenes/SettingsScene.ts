@@ -207,7 +207,38 @@ export default class SettingsScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on("pointerover", () => controlsBtn.setFillStyle(0x8e44ad))
       .on("pointerout", () => controlsBtn.setFillStyle(0x9b59b6))
-      .on("pointerdown", () => this.showControlsOverlay());
+            .on("pointerdown", () => this.showControlsOverlay());
+
+    // --- DISPLAY / PERFORMANCE ---
+    this.add
+      .text(480, 220, "DISPLAY & PERFORMANCE", {
+        fontSize: "20px",
+        color: "#aaa",
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    let potatoMode = state.settings?.lowPerformanceMode || false;
+    const perfBtn = this.add.rectangle(480, 260, 250, 40, potatoMode ? 0xe74c3c : 0x2ecc71).setStrokeStyle(2, 0xffffff);
+    const perfTxt = this.add.text(480, 260, potatoMode ? "POTATO MODE: ON" : "POTATO MODE: OFF", { fontSize: "16px", fontStyle: "bold", color: "#000", fontFamily: "system-ui" }).setOrigin(0.5);
+    perfBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
+       potatoMode = !potatoMode;
+       if (!state.settings) state.settings = {};
+       state.settings.lowPerformanceMode = potatoMode;
+       window.UTLW.save();
+       perfBtn.setFillStyle(potatoMode ? 0xe74c3c : 0x2ecc71);
+       perfTxt.setText(potatoMode ? "POTATO MODE: ON" : "POTATO MODE: OFF");
+    });
+
+    const isMobile = this.sys.game.device.input.touch || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+        const hudBtn = this.add.rectangle(480, 310, 250, 40, 0xf39c12).setStrokeStyle(2, 0xffffff);
+        const hudTxt = this.add.text(480, 310, "CUSTOMIZE MOBILE HUD", { fontSize: "16px", fontStyle: "bold", color: "#000", fontFamily: "system-ui" }).setOrigin(0.5);
+        hudBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
+           this.showHudEditor();
+        });
+    }
 
     // --- DATA MANAGEMENT (SAVE/LOAD) ---
     this.add
@@ -297,6 +328,112 @@ export default class SettingsScene extends Phaser.Scene {
         });
     }
   }
+
+  
+  showHudEditor() {
+    const overlay = this.add.container(0, 0);
+    overlay.setDepth(200);
+
+    // Dark background
+    const bg = this.add.rectangle(480, 270, 960, 540, 0x000000, 0.95);
+    bg.setInteractive();
+
+    const state = this.registry.get("gameState") as GameState;
+    if (!state.settings) state.settings = {};
+    if (!state.settings.hudConfig) {
+       state.settings.hudConfig = {
+         dpadPos: { x: 150, y: 380 },
+         dpadScale: 1,
+         buttonsPos: { x: 810, y: 380 },
+         buttonsScale: 1,
+         opacity: 0.5
+       };
+    }
+    const cfg = state.settings.hudConfig;
+
+    // Title
+    const title = this.add.text(480, 30, "HUD EDITOR (DRAG ELEMENTS)", { fontSize: "24px", color: "#fff", fontStyle: "bold" }).setOrigin(0.5);
+
+    // Draggable D-Pad representation
+    const dpadCont = this.add.container(cfg.dpadPos.x, cfg.dpadPos.y);
+    const dpadBg = this.add.circle(0, 0, 75, 0x3498db, cfg.opacity).setStrokeStyle(3, 0xffffff);
+    dpadCont.add([dpadBg, this.add.text(0, 0, "JOYSTICK", { fontSize: "16px", color: "#fff" }).setOrigin(0.5)]);
+    dpadCont.setScale(cfg.dpadScale);
+    dpadBg.setInteractive({ draggable: true });
+    
+    // Draggable Action Buttons representation
+    const btnCont = this.add.container(cfg.buttonsPos.x, cfg.buttonsPos.y);
+    const btnBg = this.add.circle(0, 0, 100, 0xe74c3c, cfg.opacity).setStrokeStyle(3, 0xffffff);
+    btnCont.add([btnBg, this.add.text(0, 0, "ACTION\nBUTTONS", { fontSize: "16px", color: "#fff", align: "center" }).setOrigin(0.5)]);
+    btnCont.setScale(cfg.buttonsScale);
+    btnBg.setInteractive({ draggable: true });
+
+    this.input.setDraggable(dpadBg);
+    this.input.setDraggable(btnBg);
+
+    this.input.on('drag', (pointer: any, gameObject: any, dragX: number, dragY: number) => {
+        const parent = gameObject.parentContainer;
+        parent.x = dragX;
+        parent.y = dragY;
+    });
+
+    // Sliders
+    let sOpacity = cfg.opacity;
+    let sScale = cfg.dpadScale; // using same scale for both for simplicity
+
+    const createSlider = (x: number, y: number, label: string, initVal: number, min: number, max: number, onChange: (val: number) => void) => {
+        const c = this.add.container(x, y);
+        c.add(this.add.text(-120, 0, label, { fontSize: "16px", color: "#fff" }).setOrigin(1, 0.5));
+        const track = this.add.rectangle(0, 0, 200, 8, 0x555555).setOrigin(0, 0.5);
+        const percent = (initVal - min) / (max - min);
+        const fill = this.add.rectangle(0, 0, 200 * percent, 8, 0x2ecc71).setOrigin(0, 0.5);
+        const handle = this.add.circle(200 * percent, 0, 10, 0xffffff).setInteractive({ draggable: true });
+        c.add([track, fill, handle]);
+        
+        handle.on('drag', (pointer: any, dragX: number) => {
+           let nx = Math.max(0, Math.min(200, dragX));
+           handle.x = nx;
+           fill.width = nx;
+           let p = nx / 200;
+           let v = min + p * (max - min);
+           onChange(v);
+        });
+        return c;
+    };
+
+    const s1 = createSlider(380, 430, "OPACITY", sOpacity, 0.1, 1.0, (v) => {
+       sOpacity = v;
+       dpadBg.setAlpha(v);
+       btnBg.setAlpha(v);
+    });
+
+    const s2 = createSlider(380, 470, "SCALE", sScale, 0.5, 2.0, (v) => {
+       sScale = v;
+       dpadCont.setScale(v);
+       btnCont.setScale(v);
+    });
+
+    // Save & Close Button
+    const saveBtn = this.add.rectangle(480, 510, 150, 40, 0x2ecc71).setInteractive({ useHandCursor: true });
+    const saveTxt = this.add.text(480, 510, "SAVE", { fontSize: "18px", color: "#000", fontStyle: "bold" }).setOrigin(0.5);
+
+    saveBtn.on("pointerdown", () => {
+       cfg.dpadPos = { x: dpadCont.x, y: dpadCont.y };
+       cfg.buttonsPos = { x: btnCont.x, y: btnCont.y };
+       cfg.dpadScale = sScale;
+       cfg.buttonsScale = sScale;
+       cfg.opacity = sOpacity;
+       window.UTLW.save();
+       
+       overlay.destroy();
+       
+       // Remove drag event listeners to avoid memory leaks
+       this.input.off('drag');
+    });
+
+    overlay.add([bg, title, dpadCont, btnCont, s1, s2, saveBtn, saveTxt]);
+  }
+
 
   showControlsOverlay() {
     const overlay = this.add.container(0, 0);

@@ -86,6 +86,13 @@ export default class PreloadScene extends Phaser.Scene {
 
     this.load.image("arena", "https://labs.phaser.io/assets/skies/space3.png");
     this.load.image("utlw_logo", "icon.png");
+
+    // Generate particle texture
+    const graphics = this.make.graphics({ x: 0, y: 0 });
+    graphics.fillStyle(0xffffff, 1);
+    graphics.fillCircle(8, 8, 8);
+    graphics.generateTexture('hit_spark', 16, 16);
+
     this.load.image(
       "arena_namek",
       "https://labs.phaser.io/assets/skies/sky4.png",

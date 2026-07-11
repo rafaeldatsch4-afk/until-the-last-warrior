@@ -70,7 +70,7 @@ export const AuthButton: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [dbUsername, setDbUsername] = useState('');
-  const [stats, setStats] = useState({ matches: 0, wins: 0, losses: 0, achievements: [] as string[] });
+  const [stats, setStats] = useState({ matches: 0, wins: 0, losses: 0, achievements: [] as string[], elo: 1000, coins: 0 });
   
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -100,6 +100,14 @@ export const AuthButton: React.FC = () => {
         const updateData: any = {
            matches: increment(1)
         };
+        
+        let earnedCoins = win ? 50 : 10;
+        updateData.coins = increment(earnedCoins);
+        
+        if (gameMode === "ranked_pvp") {
+           let eloChange = win ? 25 : -25;
+           updateData.elo = increment(eloChange);
+        }
         if (win) {
            updateData.wins = increment(1);
         } else {
@@ -138,14 +146,28 @@ export const AuthButton: React.FC = () => {
            matches: prev.matches + 1,
            wins: prev.wins + (win ? 1 : 0),
            losses: prev.losses + (win ? 0 : 1),
-           achievements: [...prev.achievements, ...newAchievements]
+           achievements: [...prev.achievements, ...newAchievements],
+           elo: gameMode === "ranked_pvp" ? Math.max(0, (prev.elo || 1000) + (win ? 25 : -25)) : prev.elo,
+           coins: (prev.coins || 0) + earnedCoins
         }));
+        
+        if (window.UTLW && window.UTLW.state) {
+            window.UTLW.state.coins = (window.UTLW.state.coins || 0) + earnedCoins;
+            window.UTLW.save();
+        }
       } catch (err) {
         console.error("Erro ao salvar estatísticas:", err);
         handleFirestoreError(err, OperationType.WRITE, `users/${u.uid}`);
       }
     };
     window.addEventListener('battle-ended', handleBattleEnded);
+    
+    const handleSyncCoins = async (e: any) => {
+        if (!auth.currentUser) return;
+        const userRef = doc(db, 'users', auth.currentUser.uid);
+        await setDoc(userRef, { coins: e.detail.coins }, { merge: true });
+    };
+    window.addEventListener('sync-coins', handleSyncCoins);
 
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
@@ -161,8 +183,14 @@ export const AuthButton: React.FC = () => {
                matches: data?.matches || 0,
                wins: data?.wins || 0,
                losses: data?.losses || 0,
-               achievements: data?.achievements || []
+               achievements: data?.achievements || [],
+               elo: data?.elo || 1000,
+               coins: data?.coins || 0
              });
+             if (window.UTLW && window.UTLW.state) {
+                 window.UTLW.state.coins = data?.coins || 0;
+                 window.UTLW.state.elo = data?.elo || 1000;
+             }
              await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
           } else {
              setDbUsername(u.email?.split('@')[0] || '');
@@ -178,11 +206,17 @@ export const AuthButton: React.FC = () => {
                    const data = retrySnap.data();
                    setDbUsername(data?.username || u.email?.split('@')[0]);
                    setStats({
-                     matches: data?.matches || 0,
-                     wins: data?.wins || 0,
-                     losses: data?.losses || 0,
-                     achievements: data?.achievements || []
-                   });
+               matches: data?.matches || 0,
+               wins: data?.wins || 0,
+               losses: data?.losses || 0,
+               achievements: data?.achievements || [],
+               elo: data?.elo || 1000,
+               coins: data?.coins || 0
+             });
+             if (window.UTLW && window.UTLW.state) {
+                 window.UTLW.state.coins = data?.coins || 0;
+                 window.UTLW.state.elo = data?.elo || 1000;
+             }
                    await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
                 } else {
                    setDbUsername(u.email?.split('@')[0] || '');
@@ -204,6 +238,7 @@ export const AuthButton: React.FC = () => {
       unsub();
       window.removeEventListener('scene-changed', handleSceneChange);
       window.removeEventListener('battle-ended', handleBattleEnded);
+      window.removeEventListener('sync-coins', handleSyncCoins);
     };
   }, []);
 
@@ -413,7 +448,7 @@ export const AuthButton: React.FC = () => {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center shrink-0">
+                      <div className="grid grid-cols-5 gap-2 sm:gap-3 text-center shrink-0">
                          <div className="bg-black/40 rounded-lg p-2 border border-gray-700/50">
                            <div className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">Lutas</div>
                            <div className="font-black text-lg sm:text-xl text-blue-400">{stats.matches}</div>
@@ -425,6 +460,14 @@ export const AuthButton: React.FC = () => {
                          <div className="bg-black/40 rounded-lg p-2 border border-red-900/30">
                            <div className="text-red-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Derrotas</div>
                            <div className="font-black text-lg sm:text-xl text-red-400">{stats.losses}</div>
+                         </div>
+                         <div className="bg-black/40 rounded-lg p-2 border border-yellow-900/30">
+                           <div className="text-yellow-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Elo</div>
+                           <div className="font-black text-lg sm:text-xl text-yellow-400">{stats.elo || 1000}</div>
+                         </div>
+                         <div className="bg-black/40 rounded-lg p-2 border border-yellow-900/30">
+                           <div className="text-yellow-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Coins</div>
+                           <div className="font-black text-lg sm:text-xl text-yellow-400">{stats.coins || 0}</div>
                          </div>
                       </div>
                     </div>

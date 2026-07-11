@@ -35,6 +35,8 @@ export default class BattleScene extends Phaser.Scene {
   public isIncomingNetworkAction: boolean = false;
   public localPlayerIndex: 1 | 2 = 1;
   private netSyncTimer: number = 0;
+  private pingUpdateTimer: number = 0;
+  private isMatchPaused: boolean = false;
   private lastSentState: string = "";
   private lastSentTime: number = 0;
   private remoteTargetX: number = 0;
@@ -124,6 +126,10 @@ export default class BattleScene extends Phaser.Scene {
   public enemyTransformLevel: number = 0;
   public playerDefending: boolean = false;
   public enemyDefending: boolean = false;
+  public p1DefendStartTime: number = 0;
+  public p2DefendStartTime: number = 0;
+  public p1InvulnerableUntil: number = 0;
+  public p2InvulnerableUntil: number = 0;
 
   // Action Flags to prevent spamming
   public p1ActionActive: boolean = false;
@@ -253,7 +259,7 @@ export default class BattleScene extends Phaser.Scene {
       .setDepth(-10);
 
     // Intelligently desaturate and adjust only the background so characters remain colorful
-    if (bgImage.postFX) {
+    if (bgImage.postFX && !this.gameState.settings?.lowPerformanceMode) {
       const bgMatrix = bgImage.postFX.addColorMatrix();
       // Lower saturation of the background by 40% to stop eye burn
       bgMatrix.saturate(-0.4);
@@ -311,6 +317,17 @@ export default class BattleScene extends Phaser.Scene {
     this.hasInitialRemotePosition = false;
 
     if (this.gameState.gameMode === "online_pvp") {
+      const mm_ext = MultiplayerManager.getInstance();
+      mm_ext.onMatchPausedCallback = () => {
+        this.isMatchPaused = true;
+        if (this.battleUI) this.battleUI.setPaused(true);
+        // Pause players visually?
+      };
+      mm_ext.onMatchResumedCallback = () => {
+        this.isMatchPaused = false;
+        if (this.battleUI) this.battleUI.setPaused(false);
+      };
+
       const mm = MultiplayerManager.getInstance();
 
       this.time.delayedCall(100, () => {
@@ -468,6 +485,17 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
+
+    if (this.gameState.gameMode === "online_pvp" && this.battleUI) {
+      this.pingUpdateTimer += delta;
+      if (this.pingUpdateTimer > 1000) {
+        this.pingUpdateTimer = 0;
+        this.battleUI.updatePing(MultiplayerManager.getInstance().currentPing);
+      }
+    }
+    
+    if (this.isMatchPaused) return; // Freeze logic if paused
+
     if (this.battleEnvironment) this.battleEnvironment.update(time, delta);
 
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
@@ -504,8 +532,8 @@ export default class BattleScene extends Phaser.Scene {
     if (this.playerHp <= 0 || this.enemyHp <= 0) {
       this.isBattleOver = true;
       this.time.timeScale = 0.15;
-      if (this.battleCamera) this.battleCamera.shake(600, 0.003);
-      else this.cameras.main.shake(600, 0.003);
+      if (this.battleCamera) if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(600, 0.003);
+      else if (!this.gameState.settings?.lowPerformanceMode) this.cameras.main.shake(600, 0.003);
 
       this.time.delayedCall(105, () => {
         this.time.timeScale = 1;
@@ -597,7 +625,7 @@ export default class BattleScene extends Phaser.Scene {
         const moveSpeed = 6;
         let isMoving = false;
 
-        if (this.playerDefending) {
+        if (this.playerDefending || (this.battleInput && this.battleInput.checkActionDown("charge", true))) {
           // Cannot move while defending/charging
           this.player.setFlipX(this.player.x > this.enemy.x);
         } else if (this.battleInput && this.battleInput.checkActionDown("left", true)) {
@@ -612,7 +640,7 @@ export default class BattleScene extends Phaser.Scene {
           this.player.setFlipX(this.player.x > this.enemy.x);
         }
 
-        if (isMoving && !this.playerDefending) {
+        if (isMoving && !this.playerDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", true))) {
           const walkAnim = this.getAnimKey(
             this.playerData.key,
             this.playerTransformLevel,
@@ -636,7 +664,7 @@ export default class BattleScene extends Phaser.Scene {
               walkDirection,
             );
           }
-        } else if (!this.p1ActionActive && !this.playerDefending) {
+        } else if (!this.p1ActionActive && !this.playerDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", true))) {
           const idleAnim = this.getAnimKey(
             this.playerData.key,
             this.playerTransformLevel,
@@ -721,7 +749,7 @@ export default class BattleScene extends Phaser.Scene {
           moveR = this.battleInput.checkActionDown("right", useP1Controls);
         }
 
-        if (this.enemyDefending) {
+        if (this.enemyDefending || (this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
           this.enemy.setFlipX(this.enemy.x > this.player.x);
         } else if (moveL) {
           this.enemy.x -= moveSpeed;
@@ -735,7 +763,7 @@ export default class BattleScene extends Phaser.Scene {
           this.enemy.setFlipX(this.enemy.x > this.player.x);
         }
 
-        if (isMoving && !this.enemyDefending) {
+        if (isMoving && !this.enemyDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
           const walkAnim = this.getAnimKey(
             this.enemyData.key,
             this.enemyTransformLevel,
@@ -758,7 +786,7 @@ export default class BattleScene extends Phaser.Scene {
               walkDirection,
             );
           }
-        } else if (!this.p2ActionActive && !this.enemyDefending) {
+        } else if (!this.p2ActionActive && !this.enemyDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
           const idleAnim = this.getAnimKey(
             this.enemyData.key,
             this.enemyTransformLevel,
@@ -817,7 +845,7 @@ export default class BattleScene extends Phaser.Scene {
         const moveSpeed = 6;
         let isMoving = false;
 
-        if (this.enemyDefending) {
+        if (this.enemyDefending || (this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
           this.enemy.setFlipX(this.enemy.x > this.player.x);
         } else if (moveL) {
           this.enemy.x -= moveSpeed;
@@ -831,7 +859,7 @@ export default class BattleScene extends Phaser.Scene {
           this.enemy.setFlipX(this.enemy.x > this.player.x);
         }
 
-        if (isMoving && !this.enemyDefending) {
+        if (isMoving && !this.enemyDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
           const walkAnim = this.getAnimKey(
             this.enemyData.key,
             this.enemyTransformLevel,
@@ -1001,16 +1029,17 @@ export default class BattleScene extends Phaser.Scene {
       if (this.p1Shield) {
         this.p1Shield.setX(this.player.x);
         this.p1Shield.setY(this.player.y + 80);
-        if (this.playerTransformLevel > 0 && !this.playerDefending) {
+        if (this.playerDefending) {
           this.p1Shield.setVisible(true);
           const colors = this.getCharacterAuraColor(true);
-          (this.p1Shield as Phaser.GameObjects.Arc).setStrokeStyle(
-            2,
-            colors.ringColor,
-            0.4,
-          );
+          (this.p1Shield as Phaser.GameObjects.Arc).setStrokeStyle(4, colors.ringColor, 0.8);
+          this.p1Shield.setScale(1.1 + Math.sin(time * 0.08) * 0.15);
+        } else if (this.playerTransformLevel > 0) {
+          this.p1Shield.setVisible(true);
+          const colors = this.getCharacterAuraColor(true);
+          (this.p1Shield as Phaser.GameObjects.Arc).setStrokeStyle(2, colors.ringColor, 0.4);
           this.p1Shield.setScale(0.85 + Math.sin(time * 0.024) * 0.05);
-        } else if (!this.playerDefending) {
+        } else {
           this.p1Shield.setVisible(false);
         }
       }
@@ -1042,16 +1071,17 @@ export default class BattleScene extends Phaser.Scene {
       if (this.p2Shield) {
         this.p2Shield.setX(this.enemy.x);
         this.p2Shield.setY(this.enemy.y + 80);
-        if (this.enemyTransformLevel > 0 && !this.enemyDefending) {
+        if (this.enemyDefending) {
           this.p2Shield.setVisible(true);
           const colors = this.getCharacterAuraColor(false);
-          (this.p2Shield as Phaser.GameObjects.Arc).setStrokeStyle(
-            2,
-            colors.ringColor,
-            0.4,
-          );
+          (this.p2Shield as Phaser.GameObjects.Arc).setStrokeStyle(4, colors.ringColor, 0.8);
+          this.p2Shield.setScale(1.1 + Math.sin(time * 0.08) * 0.15);
+        } else if (this.enemyTransformLevel > 0) {
+          this.p2Shield.setVisible(true);
+          const colors = this.getCharacterAuraColor(false);
+          (this.p2Shield as Phaser.GameObjects.Arc).setStrokeStyle(2, colors.ringColor, 0.4);
           this.p2Shield.setScale(0.85 + Math.sin(time * 0.024) * 0.05);
-        } else if (!this.enemyDefending) {
+        } else {
           this.p2Shield.setVisible(false);
         }
       }
@@ -1068,10 +1098,30 @@ export default class BattleScene extends Phaser.Scene {
         this.p1SpecialHoldTime = 0;
         this.clearChargeIndicator(true);
       } else {
-        // Defend / Charge
-        if (this.battleInput && this.battleInput.checkActionDown("defend", true)) {
-          this.playerDefending = true;
+        
+        // Charge
+        let isCharging = false;
+        if (this.battleInput && this.battleInput.checkActionDown("charge", true)) {
+          isCharging = true;
           this.performContinuousCharge(true, delta);
+          this.p1SpecialHoldTime = 0;
+          this.clearChargeIndicator(true);
+        } else {
+          this.stopContinuousCharge(true);
+        }
+
+        // Defend
+        if (this.battleInput && this.battleInput.checkActionDown("defend", true)) {
+          if (!this.playerDefending) this.p1DefendStartTime = this.time.now;
+          this.playerDefending = true;
+          // Play defend animation if not charging
+          if (!isCharging) {
+              const transLevel = this.playerTransformLevel;
+              const defAnim = this.getAnimKey(this.playerData.key, transLevel, "defend");
+              if (this.player.anims.currentAnim?.key !== defAnim) {
+                this.player.play(defAnim);
+              }
+          }
           this.p1SpecialHoldTime = 0;
           this.clearChargeIndicator(true);
           // Anti-Ghosting: If they hold DEF, clear any buffered attacks so they don't fire when DEF is released
@@ -1081,10 +1131,10 @@ export default class BattleScene extends Phaser.Scene {
           this.p1KiBlastBuffer = 0;
         } else {
           this.playerDefending = false;
-          this.stopContinuousCharge(true);
         }
 
-        if (!this.playerDefending) {
+
+        if (!this.playerDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", true))) {
           // Attack
           if (this.battleInput && this.battleInput.checkActionJustDown("attack", true)) {
             this.performAttack(true, "melee");
@@ -1151,19 +1201,37 @@ export default class BattleScene extends Phaser.Scene {
         this.p2SpecialHoldTime = 0;
         this.clearChargeIndicator(false);
       } else {
-        let isDefending = false;
+        
         const useP1Controls = this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2;
+
+        let isCharging = false;
+        let isDefending = false;
         if (this.battleInput) {
             isDefending = this.battleInput.checkActionDown("defend", useP1Controls);
+            isCharging = this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2);
         }
 
         if (this.gameState.gameMode === "training") {
           isDefending = this.enemyDefending;
         }
 
+        if (isCharging) {
+          this.performContinuousCharge(false, delta);
+          this.p2SpecialHoldTime = 0;
+          this.clearChargeIndicator(false);
+        } else {
+          this.stopContinuousCharge(false);
+        }
+
         if (isDefending) {
           this.enemyDefending = true;
-          this.performContinuousCharge(false, delta);
+          if (!isCharging) {
+              const transLevel = this.enemyTransformLevel;
+              const defAnim = this.getAnimKey(this.enemyData.key, transLevel, "defend");
+              if (this.enemy.anims.currentAnim?.key !== defAnim) {
+                this.enemy.play(defAnim);
+              }
+          }
           this.p2SpecialHoldTime = 0;
           this.clearChargeIndicator(false);
           
@@ -1175,7 +1243,7 @@ export default class BattleScene extends Phaser.Scene {
           }
         } else {
           this.enemyDefending = false;
-          this.stopContinuousCharge(false);
+
 
           let isAttack = false;
           let isKiBlast = false;
@@ -1608,15 +1676,7 @@ export default class BattleScene extends Phaser.Scene {
       aura.setAlpha(0.5 + Math.sin(this.time.now * 0.06) * 0.25);
     }
 
-    if (shield && shield.active) {
-      shield.setVisible(true);
-      (shield as Phaser.GameObjects.Arc).setStrokeStyle(
-        4,
-        colors.ringColor,
-        0.8,
-      );
-      shield.setScale(1.1 + Math.sin(this.time.now * 0.08) * 0.15);
-    }
+    // Shield is now managed in update() loop based on defend state
 
     // Ki Charge Particles Effect
     const sprite = isPlayer ? this.player : this.enemy;
@@ -2471,7 +2531,7 @@ export default class BattleScene extends Phaser.Scene {
 
               // Visual Impact
               if (this.battleCamera)
-                this.battleCamera.shake(
+                if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(
                   isComboFinisher ? 200 : 100,
                   isComboFinisher ? 0.02 : 0.01,
                 );
@@ -2481,7 +2541,7 @@ export default class BattleScene extends Phaser.Scene {
                   this.battleUI.showCombo(target.x, target.y - 100);
               }
 
-              this.createImpactEffect(target.x, target.y + 120, 0xffffff);
+              this.createImpactEffect(target.x, target.y + 60, 0xffffff);
 
               // Target hit flash
               this.tweens.add({
@@ -2655,7 +2715,7 @@ export default class BattleScene extends Phaser.Scene {
                       // Visual Impact
                       this.createImpactEffect(
                         target.x,
-                        target.y + 120,
+                        target.y + 60,
                         blastColor,
                         "beam",
                       );
@@ -2891,7 +2951,7 @@ export default class BattleScene extends Phaser.Scene {
         });
         darkAuraElements.push(darkParticle);
       }
-      if (this.battleCamera) this.battleCamera.shake(800, 0.01);
+      if (this.battleCamera) if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(800, 0.01);
     }
 
     // Gathering energy particles
@@ -3034,7 +3094,7 @@ export default class BattleScene extends Phaser.Scene {
                 this.battleCamera.flash(800, 255, 255, 255, true);
             }
 
-            if (this.battleCamera) this.battleCamera.shake(1000, 0.05);
+            if (this.battleCamera) if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(1000, 0.05);
             if (this.soundManager)
               this.soundManager.playTransform(currentLevel + 1);
 
@@ -3196,7 +3256,7 @@ export default class BattleScene extends Phaser.Scene {
       tint: tintColor || 0xffaa00,
       blendMode: Phaser.BlendModes.ADD,
       lifespan: { min: 400, max: 800 },
-      quantity: 12,
+      quantity: this.gameState.settings?.lowPerformanceMode ? 2 : 12,
       gravityY: -200,
       frequency: 20,
     });
@@ -4001,7 +4061,7 @@ export default class BattleScene extends Phaser.Scene {
     const isClash = type === "clash";
 
     if (!isBlock && typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent('shake-screen'));
+      if (!this.gameState.settings?.lowPerformanceMode) window.dispatchEvent(new CustomEvent('shake-screen'));
     }
 
     // Main Flash - Make it bigger and punchier
@@ -4037,6 +4097,34 @@ export default class BattleScene extends Phaser.Scene {
       ease: "Cubic.easeOut",
       onComplete: () => core.destroy(),
     });
+
+    
+    // Sparks & Particles using Phaser Particle System
+    const isPotato = this.gameState.settings?.lowPerformanceMode;
+    const sparkCount = isPotato ? 2 : (isClash ? 25 : isBlock ? 8 : isSuperMode ? 20 : 12);
+    const sparkColor = isBlock ? 0x3498db : (isClash ? 0xfffc00 : color);
+
+    const particles = this.add.particles(x, y, 'hit_spark', {
+      speed: { min: isBlock ? 100 : 200, max: isClash ? 800 : (isBlock ? 300 : 600) },
+      angle: { min: 0, max: 360 },
+      scale: { start: isClash ? 1.5 : 1, end: 0 },
+      alpha: { start: 1, end: 0 },
+      tint: sparkColor,
+      lifespan: { min: 200, max: isClash ? 600 : 400 },
+      gravityY: isBlock ? 0 : 300, // Sparks fall down slightly
+      quantity: sparkCount,
+      emitting: false
+    });
+    
+    particles.setDepth(23);
+    particles.explode(sparkCount);
+    
+    // Cleanup particle emitter after it finishes
+    this.time.delayedCall(1000, () => {
+      if (particles) particles.destroy();
+    });
+
+
 
     // Energy Clash / Anime Slash lines (Visual Impact)
     if (type === "melee" || isSuperMode || isClash) {
@@ -4170,24 +4258,24 @@ export default class BattleScene extends Phaser.Scene {
       if (isClash) {
         if (this.battleCamera) {
           this.battleCamera.flash(400, 255, 255, 255, true);
-          this.battleCamera.shake(700, 0.1);
+          if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(700, 0.1);
         }
       } else if (isSuperMode) {
         if (this.battleCamera) {
           this.battleCamera.flash(300, 255, 255, 255, true);
-          this.battleCamera.shake(500, 0.08);
+          if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(500, 0.08);
         }
       } else {
         if (this.battleCamera)
           this.battleCamera.flash(150, 255, 255, 255, true);
-        if (this.battleCamera) this.battleCamera.shake(300, 0.05);
+        if (this.battleCamera) if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(300, 0.05);
       }
     } else if (isBlock) {
       // Block specific shake
-      if (this.battleCamera) this.battleCamera.shake(100, 0.01);
+      if (this.battleCamera) if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(100, 0.01);
     } else {
       // Melee specific shake
-      if (this.battleCamera) this.battleCamera.shake(150, 0.02);
+      if (this.battleCamera) if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(150, 0.02);
     }
   }
 
@@ -4196,7 +4284,7 @@ export default class BattleScene extends Phaser.Scene {
 
     // Screen shake to emphasize the shift in intensity
     if (this.battleCamera) {
-      this.battleCamera.shake(200, 0.015);
+      if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(200, 0.015);
     }
 
     // Particle dust effect at the midway point
@@ -4416,7 +4504,7 @@ export default class BattleScene extends Phaser.Scene {
     const jitterY = Phaser.Math.Between(-10, 10);
 
     const text = this.add
-      .text(x + jitterX, y + jitterY, `-${amount}`, {
+      .text(x + jitterX, y + jitterY, (amount === 0 && isBlock) ? "BLOQUEIO" : `-${amount}`, {
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         fontSize: fontSize,
@@ -4448,6 +4536,7 @@ export default class BattleScene extends Phaser.Scene {
 
   takeDamage(isP: boolean, baseDmg: number, fromNetwork = false) {
     if (this.isBattleOver || !this.scene.isActive()) return;
+    if (this.time.now < (isP ? this.p1InvulnerableUntil : this.p2InvulnerableUntil)) return; // Wake-up I-frames
 
     if (this.gameState.gameMode === "online_pvp" && !fromNetwork) {
        const attackerIsLocal = isP !== (this.localPlayerIndex === 1);
@@ -4463,7 +4552,7 @@ export default class BattleScene extends Phaser.Scene {
     // Apply combo multiplier ONLY if the target isn't defending
     const attackerComboCount = isP ? this.p2ComboCount : this.p1ComboCount;
     if (attackerComboCount > 1) {
-      const mult = 1 + (attackerComboCount - 1) * 0.1;
+      const mult = Math.max(0.2, 1 - (attackerComboCount - 1) * 0.1);
       dmg = Math.floor(dmg * mult);
     }
 
@@ -4475,11 +4564,49 @@ export default class BattleScene extends Phaser.Scene {
 
     let isCritical = false;
     if (def) {
-      // If defending, use original base damage and reduce it
-      dmg = Math.floor(baseDmg * 0.3);
+      const defendStartTime = isP ? this.p1DefendStartTime : this.p2DefendStartTime;
+      const isPerfectBlock = (this.time.now - defendStartTime) < 200; // 200ms window
+
+      if (isPerfectBlock) {
+        dmg = 0; // Negate all damage
+        this.createFloatingDamage(target.x, target.y + 20, 0, false, true);
+        const floatText = this.add.text(target.x, target.y - 40, "PERFECT BLOCK!", { fontSize: "32px", color: "#00ffff", fontStyle: "bold", stroke: "#000", strokeThickness: 6 }).setOrigin(0.5);
+        this.tweens.add({ targets: floatText, y: target.y - 80, alpha: 0, duration: 1000, onComplete: () => floatText.destroy() });
+        this.createImpactEffect(target.x, target.y + 40, 0x00ffff, "super");
+        this.battleCamera?.flash(200, 255, 255, 255);
+        if (this.soundManager) this.soundManager.playClash();
+        triggerVibration("heavy");
+        // Hitstun the attacker
+        if (isP) this.p2ActionActive = false; else this.p1ActionActive = false;
+        return; // Stop processing damage
+      } else {
+        // Normal block
+        dmg = Math.floor(baseDmg * 0.3);
+      }
       // Block effect
-      this.createImpactEffect(target.x, target.y + 120, 0x3498db, "block"); // Blue shield spark
+      
+      // Block effect
+      this.createImpactEffect(target.x, target.y + 40, 0x3498db, "block"); // Blue shield spark
       if (this.soundManager) this.soundManager.playBlock();
+      
+      // Floating text for block
+      this.createFloatingDamage(target.x, target.y + 20, 0, false, true); // We'll hijack this to show "BLOCKED"
+      
+      // Shield Hit Flash
+      const shield = isP ? this.p1Shield : this.p2Shield;
+      if (shield) {
+        this.tweens.add({
+          targets: shield,
+          scale: 1.8,
+          alpha: 1,
+          yoyo: true,
+          duration: 100,
+          onComplete: () => {
+             // Let it return to normal scale
+          }
+        });
+      }
+
 
       // Haptic feedback: Subtle block haptic
       triggerVibration("light");
@@ -4500,10 +4627,10 @@ export default class BattleScene extends Phaser.Scene {
         if (this.battleCamera) {
           if (isCritical) {
             // Intense, longer screen shake for critical hits
-            this.battleCamera.shake(600, 0.06);
+            if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(600, 0.06);
             this.battleCamera.flash(300, 255, 50, 50, true); // Vibrant red flash
           } else {
-            this.battleCamera.shake(150, 0.02);
+            if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(150, 0.02);
           }
         }
         this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee");
@@ -4553,7 +4680,7 @@ export default class BattleScene extends Phaser.Scene {
 
             // Shake camera more for higher combos
             if (this.battleCamera) {
-               this.battleCamera.shake(100 + comboCount * 10, Math.min(0.01 + comboCount * 0.002, 0.04));
+               if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(100 + comboCount * 10, Math.min(0.01 + comboCount * 0.002, 0.04));
             }
         }
       }
@@ -4581,12 +4708,26 @@ export default class BattleScene extends Phaser.Scene {
       target.setTintFill(0xffffff); // Initial white flash
 
       if (isCritical) {
+        // Wake-up i-frames: Knockdown logic
+        if (isP) this.p1InvulnerableUntil = this.time.now + 1500;
+        else this.p2InvulnerableUntil = this.time.now + 1500;
+        
+        // Flash to indicate i-frames
+        this.tweens.add({
+          targets: target,
+          alpha: 0.2,
+          yoyo: true,
+          duration: 150,
+          repeat: 5,
+          onComplete: () => { if(target.active) target.alpha = 1; }
+        });
+
         const attacker = isP ? this.enemy : this.player;
         [target, attacker].forEach((char) => {
           if (char && char.active) {
             // 1. PostFX Glow (if WebGL supports it and is functional)
             let fxGlow: any = null;
-            if (char.postFX && typeof char.postFX.addGlow === "function") {
+            if (char.postFX && typeof char.postFX.addGlow === "function" && !this.gameState.settings?.lowPerformanceMode) {
               try {
                 // Gold/Yellow glow for critical burst
                 fxGlow = char.postFX.addGlow(0xffd700, 4, 1);
@@ -4627,7 +4768,7 @@ export default class BattleScene extends Phaser.Scene {
                 blendMode: "ADD",
                 lifespan: 400,
                 tint: 0xffd700,
-                quantity: 15,
+                quantity: this.gameState.settings?.lowPerformanceMode ? 3 : 15,
               })
               .setDepth(char.depth + 1);
 
