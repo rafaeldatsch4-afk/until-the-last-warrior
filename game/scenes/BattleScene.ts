@@ -4000,6 +4000,10 @@ export default class BattleScene extends Phaser.Scene {
     const isBlock = type === "block";
     const isClash = type === "clash";
 
+    if (!isBlock && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent('shake-screen'));
+    }
+
     // Main Flash - Make it bigger and punchier
     const boomRadius = isClash
       ? 80

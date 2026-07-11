@@ -9,6 +9,7 @@ const App: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isMenuScene, setIsMenuScene] = useState(true); // Default to true, assuming we start near menu
   const [textInputPrompt, setTextInputPrompt] = useState<{ title: string; currentValue: string; onComplete: (val: string) => void } | null>(null);
+  const [isShaking, setIsShaking] = useState(false);
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -29,6 +30,12 @@ const App: React.FC = () => {
       setTextInputPrompt(e.detail);
     };
     window.addEventListener('request-text-input', handleTextInput);
+
+    const handleShakeScreen = () => {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 400); // 400ms matches animation duration
+    };
+    window.addEventListener('shake-screen', handleShakeScreen);
 
     // Listen for PWA installation prompt
     const handleBeforeInstallPrompt = (e: any) => {
@@ -74,6 +81,7 @@ const App: React.FC = () => {
       window.removeEventListener('scene-changed', handleSceneChange);
       window.removeEventListener('request-text-input', handleTextInput);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('shake-screen', handleShakeScreen);
     };
   }, [isMenuScene, textInputPrompt]);
 
@@ -88,7 +96,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col bg-black text-white overflow-hidden relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+    <div className={`h-[100dvh] w-full flex flex-col bg-black text-white overflow-hidden relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] ${isShaking ? 'animate-shake-screen' : ''}`}>
       <main className="flex-1 flex items-center justify-center w-full p-0 relative overflow-hidden">
         <AuthButton />
         <AchievementToast />
