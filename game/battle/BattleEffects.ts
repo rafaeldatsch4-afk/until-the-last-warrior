@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { triggerVibration } from "../utils/haptics";
 import type BattleScene from "../scenes/BattleScene";
 
 export class BattleEffects {
@@ -62,6 +63,7 @@ export class BattleEffects {
       .setBlendMode(Phaser.BlendModes.ADD);
 
     if (this.scene.battleCamera) this.scene.battleCamera.shake(400, 0.01);
+    if (vibrate) triggerVibration("beam_charge");
 
     // Gathering particles
     const gatherParticles = this.scene.add
@@ -93,6 +95,7 @@ export class BattleEffects {
 
         this.createScreenFlash(col, 200, 0.6);
         if (this.scene.battleCamera) this.scene.battleCamera.shake(300, 0.03);
+        if (vibrate) triggerVibration("beam_fire");
 
         // The Beam Structure
         const originX = 0;

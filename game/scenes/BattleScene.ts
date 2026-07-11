@@ -7,7 +7,7 @@ import { BattleUI } from "../battle/BattleUI";
 import { BattleAI } from "../battle/BattleAI";
 import { BattleEnvironment } from "../battle/BattleEnvironment";
 import { BattleSoundManager } from "../battle/BattleSoundManager";
-import { BattleHaptics } from "../battle/BattleHaptics";
+import { triggerVibration } from "../utils/haptics";
 import Phaser from "phaser";
 import { CharacterData, GameState } from "../types";
 import { getFighter } from "../characters/FighterRegistry";
@@ -3985,11 +3985,7 @@ export default class BattleScene extends Phaser.Scene {
   // 100% ULTIMATE ATTACKS
 
 
-  vibrate(duration: number | number[]) {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(duration);
-    }
-  }
+
 
   createImpactEffect(
     x: number,
@@ -4482,7 +4478,7 @@ export default class BattleScene extends Phaser.Scene {
       if (this.soundManager) this.soundManager.playBlock();
 
       // Haptic feedback: Subtle block haptic
-      BattleHaptics.block();
+      triggerVibration("light");
     } else {
       isCritical = dmg > 25; // threshold for critical visual
       const targetActing = isP ? this.p1ActionActive : this.p2ActionActive;
@@ -4494,7 +4490,7 @@ export default class BattleScene extends Phaser.Scene {
         if (this.soundManager) this.soundManager.playClash();
 
         // Haptic feedback: Quick double pulse for clash
-        BattleHaptics.clash();
+        triggerVibration("clash");
       } else {
         // normal hit
         if (this.battleCamera) {
@@ -4510,7 +4506,7 @@ export default class BattleScene extends Phaser.Scene {
         if (this.soundManager) this.soundManager.playPunchImpact(isCritical);
 
         // Haptic feedback: Standard vs Critical hits
-        BattleHaptics.hit(isCritical);
+        triggerVibration(isCritical ? "critical" : "medium");
       }
 
       // Update combo counter
