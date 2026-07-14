@@ -72,6 +72,7 @@ export default class LeaderboardScene extends Phaser.Scene {
         const data = doc.data();
         const username = data.username || "Desconhecido";
         const wins = data.wins || 0;
+        const avatar = data.avatar || "🥷";
 
         const rowBg = this.add.rectangle(480, startY, 600, 40, rank % 2 === 0 ? 0x2c3e50 : 0x34495e, 0.8)
           .setStrokeStyle(1, 0x7f8c8d);
@@ -82,7 +83,8 @@ export default class LeaderboardScene extends Phaser.Scene {
         if (rank === 3) color = "#cd7f32"; // Bronze
 
         this.add.text(220, startY, `#${rank}`, { fontSize: "20px", color, fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0, 0.5);
-        this.add.text(280, startY, username, { fontSize: "20px", color, fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0, 0.5);
+        this.add.text(260, startY, avatar, { fontSize: "24px", fontFamily: "system-ui" }).setOrigin(0.5, 0.5);
+        this.add.text(290, startY, username, { fontSize: "20px", color, fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0, 0.5);
         this.add.text(740, startY, `${wins} Vitórias`, { fontSize: "20px", color: "#2ecc71", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(1, 0.5);
 
         startY += 50;

@@ -70,7 +70,8 @@ export const AuthButton: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [dbUsername, setDbUsername] = useState('');
-  const [stats, setStats] = useState({ matches: 0, wins: 0, losses: 0, achievements: [] as string[], elo: 1000, coins: 0 });
+  const [selectedAvatar, setSelectedAvatar] = useState('🥷');
+  const [stats, setStats] = useState({ matches: 0, wins: 0, losses: 0, achievements: [] as string[], elo: 1000, coins: 0, avatar: '' });
   
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -185,7 +186,8 @@ export const AuthButton: React.FC = () => {
                losses: data?.losses || 0,
                achievements: data?.achievements || [],
                elo: data?.elo || 1000,
-               coins: data?.coins || 0
+               coins: data?.coins || 0,
+               avatar: data?.avatar || ''
              });
              if (window.UTLW && window.UTLW.state) {
                  window.UTLW.state.coins = data?.coins || 0;
@@ -194,7 +196,7 @@ export const AuthButton: React.FC = () => {
              await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
           } else {
              setDbUsername(u.email?.split('@')[0] || '');
-             setStats({ matches: 0, wins: 0, losses: 0, achievements: [] });
+             setStats({ matches: 0, wins: 0, losses: 0, achievements: [], avatar: '' });
           }
         } catch (err: any) {
           // Retry automatically after a short delay to account for token propagation latency
@@ -211,7 +213,8 @@ export const AuthButton: React.FC = () => {
                losses: data?.losses || 0,
                achievements: data?.achievements || [],
                elo: data?.elo || 1000,
-               coins: data?.coins || 0
+               coins: data?.coins || 0,
+               avatar: data?.avatar || ''
              });
              if (window.UTLW && window.UTLW.state) {
                  window.UTLW.state.coins = data?.coins || 0;
@@ -220,7 +223,7 @@ export const AuthButton: React.FC = () => {
                    await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
                 } else {
                    setDbUsername(u.email?.split('@')[0] || '');
-                   setStats({ matches: 0, wins: 0, losses: 0, achievements: [] });
+                   setStats({ matches: 0, wins: 0, losses: 0, achievements: [], avatar: '' });
                 }
              } catch (retryErr: any) {
                 console.error("Erro ao atualizar lastLogin:", retryErr);
@@ -231,7 +234,7 @@ export const AuthButton: React.FC = () => {
         }
       } else {
         setDbUsername('');
-        setStats({ matches: 0, wins: 0, losses: 0, achievements: [] });
+        setStats({ matches: 0, wins: 0, losses: 0, achievements: [], avatar: '' });
       }
     });
     return () => {
@@ -304,12 +307,14 @@ export const AuthButton: React.FC = () => {
           await cred.user.getIdToken(true);
           await setDoc(doc(db, 'users', cred.user.uid), {
             username: username,
+            avatar: selectedAvatar,
             createdAt: serverTimestamp(),
             lastLogin: serverTimestamp(),
             wins: 0,
           });
           await setDoc(doc(db, 'leaderboard_public', cred.user.uid), {
             username: username,
+            avatar: selectedAvatar,
             wins: 0,
           });
         } catch (dbErr: any) {
@@ -443,10 +448,14 @@ export const AuthButton: React.FC = () => {
                     <div className="bg-gray-800/50 rounded-xl p-4 sm:p-5 mb-4 border border-gray-700/50 shadow-inner shrink-0">
                       <div className="flex items-center gap-3 sm:gap-4 mb-4 pb-4 border-b border-gray-700/50">
                         <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-300 border-2 border-yellow-400 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.4)]">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-md">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                          </svg>
+                          {stats.avatar ? (
+                            <span className="text-3xl">{stats.avatar}</span>
+                          ) : (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-md">
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                              <circle cx="12" cy="7" r="4" />
+                            </svg>
+                          )}
                         </div>
                         <div className="text-left min-w-0">
                           <p className="text-gray-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">Combatente</p>
@@ -644,6 +653,23 @@ export const AuthButton: React.FC = () => {
                       />
                     </div>
                   </div>
+                  {!isLogin && (
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">Escolha seu Avatar</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {['🥷', '🦸‍♂️', '🧛', '🤖', '👽', '💀', '🤡', '👹'].map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => setSelectedAvatar(emoji)}
+                            className={`h-12 text-2xl flex items-center justify-center rounded-lg border transition-all ${selectedAvatar === emoji ? 'bg-yellow-500/20 border-yellow-500 scale-110 shadow-[0_0_10px_rgba(234,179,8,0.3)] z-10' : 'bg-black/40 border-gray-700 hover:border-gray-500 hover:bg-black/60'}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">Código Secreto (Min. 6)</label>
                     <div className="relative">
