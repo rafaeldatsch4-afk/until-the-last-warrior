@@ -308,6 +308,10 @@ export const AuthButton: React.FC = () => {
             lastLogin: serverTimestamp(),
             wins: 0,
           });
+          await setDoc(doc(db, 'leaderboard_public', cred.user.uid), {
+            username: username,
+            wins: 0,
+          });
         } catch (dbErr: any) {
           handleFirestoreError(dbErr, OperationType.CREATE, `users/${cred.user.uid}`);
         }
@@ -345,6 +349,7 @@ export const AuthButton: React.FC = () => {
       try {
         // Deletar doc do firestore
         await deleteDoc(doc(db, 'users', user.uid));
+        await deleteDoc(doc(db, 'leaderboard_public', user.uid));
       } catch (dbErr: any) {
         handleFirestoreError(dbErr, OperationType.DELETE, `users/${user.uid}`);
       }

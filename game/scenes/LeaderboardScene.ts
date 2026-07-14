@@ -50,7 +50,7 @@ export default class LeaderboardScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     try {
-      const usersRef = collection(db, "users");
+      const usersRef = collection(db, "leaderboard_public");
       const q = query(usersRef, orderBy("wins", "desc"), limit(10));
       const querySnapshot = await getDocs(q);
 
