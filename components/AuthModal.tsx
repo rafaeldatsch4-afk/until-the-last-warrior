@@ -439,53 +439,62 @@ export const AuthButton: React.FC = () => {
             {user ? (
               <div className="flex flex-col h-full">
                 <div className="text-center mb-4 shrink-0">
-                  <h2 id="modal-title" className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 uppercase tracking-wider drop-shadow-sm">CARTÃO DE JOGADOR</h2>
+                  <h2 id="modal-title" className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 uppercase tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] filter drop-shadow-lg" style={{ fontFamily: 'system-ui, sans-serif' }}>FIGHTER ID</h2>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 flex-1 min-h-0">
                   {/* LEFT COLUMN: Player info & Accounts */}
-                  <div className="flex flex-col flex-1 min-w-0 sm:w-1/2">
-                    <div className="bg-gray-800/50 rounded-xl p-4 sm:p-5 mb-4 border border-gray-700/50 shadow-inner shrink-0">
-                      <div className="flex items-center gap-3 sm:gap-4 mb-4 pb-4 border-b border-gray-700/50">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-300 border-2 border-yellow-400 flex items-center justify-center shadow-[0_0_15px_rgba(234,179,8,0.4)]">
+                  <div className="flex flex-col flex-1 min-w-0 sm:w-1/2 relative z-10">
+                    <div className="bg-black/60 rounded-xl p-4 sm:p-5 mb-4 border border-yellow-500/30 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] shrink-0 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                      <div className="flex items-center gap-4 sm:gap-5 mb-5 pb-5 border-b border-gray-700/80">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg bg-gradient-to-tr from-yellow-800 to-yellow-500 border-2 border-yellow-300 flex items-center justify-center shadow-[0_0_20px_rgba(234,179,8,0.5)] transform -rotate-3 hover:rotate-0 transition-transform duration-300">
                           {stats.avatar ? (
-                            <span className="text-3xl">{stats.avatar}</span>
+                            <span className="text-4xl sm:text-5xl drop-shadow-md">{stats.avatar}</span>
                           ) : (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-md">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 sm:w-10 sm:h-10 drop-shadow-md">
                               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                               <circle cx="12" cy="7" r="4" />
                             </svg>
                           )}
                         </div>
-                        <div className="text-left min-w-0">
-                          <p className="text-gray-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">Combatente</p>
-                          <p className="font-black text-xl sm:text-2xl text-white tracking-wide truncate" title={dbUsername}>{dbUsername}</p>
+                        <div className="text-left min-w-0 z-10 flex-1">
+                          <div className="inline-block bg-yellow-500 text-black text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm mb-1">Status: Online</div>
+                          <p className="font-black text-2xl sm:text-3xl text-white tracking-wider truncate drop-shadow-md" title={dbUsername}>{dbUsername}</p>
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-5 gap-2 sm:gap-3 text-center shrink-0">
-                         <div className="bg-black/40 rounded-lg p-2 border border-gray-700/50">
-                           <div className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">Lutas</div>
-                           <div className="font-black text-lg sm:text-xl text-blue-400">{stats.matches}</div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 text-center shrink-0">
+                         <div className="bg-gray-900/80 rounded-lg p-2.5 border border-gray-700 shadow-inner relative overflow-hidden group">
+                           <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                           <div className="text-gray-400 text-[10px] uppercase font-bold tracking-widest mb-1">Lutas</div>
+                           <div className="font-black text-xl sm:text-2xl text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]">{stats.matches}</div>
                          </div>
-                         <div className="bg-black/40 rounded-lg p-2 border border-green-900/30">
-                           <div className="text-green-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Vitórias</div>
-                           <div className="font-black text-lg sm:text-xl text-green-400">{stats.wins}</div>
+                         <div className="bg-gray-900/80 rounded-lg p-2.5 border border-gray-700 shadow-inner relative overflow-hidden group">
+                           <div className="absolute inset-0 bg-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                           <div className="text-green-500 opacity-80 text-[10px] uppercase font-bold tracking-widest mb-1">Vitórias</div>
+                           <div className="font-black text-xl sm:text-2xl text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">{stats.wins}</div>
                          </div>
-                         <div className="bg-black/40 rounded-lg p-2 border border-red-900/30">
-                           <div className="text-red-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Derrotas</div>
-                           <div className="font-black text-lg sm:text-xl text-red-400">{stats.losses}</div>
+                         <div className="bg-gray-900/80 rounded-lg p-2.5 border border-gray-700 shadow-inner relative overflow-hidden group">
+                           <div className="absolute inset-0 bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                           <div className="text-red-500 opacity-80 text-[10px] uppercase font-bold tracking-widest mb-1">Derrotas</div>
+                           <div className="font-black text-xl sm:text-2xl text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]">{stats.losses}</div>
                          </div>
-                         <div className="bg-black/40 rounded-lg p-2 border border-yellow-900/30">
-                           <div className="text-yellow-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Elo</div>
-                           <div className="font-black text-lg sm:text-xl text-yellow-400">{stats.elo || 1000}</div>
+                         <div className="bg-gray-900/80 rounded-lg p-2.5 border border-gray-700 shadow-inner relative overflow-hidden group col-span-1 sm:col-span-1">
+                           <div className="absolute inset-0 bg-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                           <div className="text-yellow-500 opacity-80 text-[10px] uppercase font-bold tracking-widest mb-1">Rank (Elo)</div>
+                           <div className="font-black text-xl sm:text-2xl text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">{stats.elo || 1000}</div>
                          </div>
-                         <div className="bg-black/40 rounded-lg p-2 border border-yellow-900/30">
-                           <div className="text-yellow-500 opacity-80 text-[10px] uppercase font-bold tracking-wider mb-1">Coins</div>
-                           <div className="font-black text-lg sm:text-xl text-yellow-400">{stats.coins || 0}</div>
+                         <div className="bg-gray-900/80 rounded-lg p-2.5 border border-gray-700 shadow-inner relative overflow-hidden group col-span-1 sm:col-span-2">
+                           <div className="absolute inset-0 bg-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                           <div className="text-yellow-500 opacity-80 text-[10px] uppercase font-bold tracking-widest mb-1">Gold Coins</div>
+                           <div className="font-black text-xl sm:text-2xl text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)] flex justify-center items-center gap-1">
+                             <span className="text-yellow-500">🪙</span> {stats.coins || 0}
+                           </div>
                          </div>
                       </div>
                     </div>
+                    
 
                     <div className="mt-auto pt-2 flex flex-col gap-2 shrink-0">
                       {showPasswordChange ? (
@@ -577,21 +586,21 @@ export const AuthButton: React.FC = () => {
                   </div>
 
                   {/* RIGHT COLUMN: Trophy Room */}
-                  <div className="flex flex-col flex-1 min-w-0 sm:w-1/2 bg-black/30 rounded-xl p-3 sm:p-4 border border-gray-800">
+                  <div className="flex flex-col flex-1 min-w-0 sm:w-1/2 bg-black/60 rounded-xl p-4 sm:p-5 border border-yellow-500/30 shadow-[inset_0_0_30px_rgba(0,0,0,0.8)] relative z-10">
                      <div className="flex items-center gap-2 mb-3 shrink-0">
                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-yellow-500">
                          <circle cx="12" cy="8" r="7"></circle>
                          <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
                        </svg>
-                       <h3 className="text-gray-300 text-xs sm:text-sm font-bold uppercase tracking-widest">Sala de Troféus</h3>
+                       <h3 className="text-yellow-500 text-sm sm:text-base font-black uppercase tracking-widest drop-shadow-md">Sala de Troféus</h3>
                      </div>
                      <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 -mr-1">
                         {stats.achievements.length > 0 ? (
                            <div className="flex flex-col gap-2">
                              {stats.achievements.map((ach, idx) => (
-                                <div key={idx} className="flex items-center gap-3 bg-gradient-to-r from-yellow-900/40 to-transparent border-l-2 border-yellow-500 px-3 py-2 rounded-r">
+                                <div key={idx} className="flex items-center gap-3 bg-gradient-to-r from-yellow-900/60 to-black/40 border-l-4 border-yellow-500 px-4 py-3 rounded-r-lg shadow-md hover:from-yellow-800/80 transition-colors">
                                    <span className="text-xl">🏆</span>
-                                   <span className="text-yellow-100 text-[10px] sm:text-xs font-bold uppercase tracking-wide">{ach}</span>
+                                   <span className="text-yellow-100 text-xs sm:text-sm font-bold uppercase tracking-wide">{ach}</span>
                                 </div>
                              ))}
                            </div>
@@ -606,9 +615,11 @@ export const AuthButton: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col">
-                <div className="text-center mb-6">
-                  <h2 id="modal-title" className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 uppercase tracking-wider drop-shadow-sm">
+              <div className="flex flex-col relative z-10">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -ml-10 -mb-10"></div>
+                <div className="text-center mb-6 relative z-10">
+                  <h2 id="modal-title" className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 uppercase tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] filter drop-shadow-lg" style={{ fontFamily: 'system-ui, sans-serif' }}>
                     PORTAL DO GUERREIRO
                   </h2>
                   <p className="text-xs text-gray-400 mt-2 font-medium tracking-wide uppercase">Identifique-se para salvar o seu progresso</p>
