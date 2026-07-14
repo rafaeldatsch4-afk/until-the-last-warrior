@@ -285,6 +285,25 @@ export class BattleReward {
         } else {
           transitionTo(s, "MenuScene");
         }
+      } else if (s.gameState.gameMode === "story") {
+        if (win) {
+          const storyState = s.gameState.storyState;
+          if (storyState) {
+            storyState.stage += 1;
+            storyState.exp += 50 + (storyState.level * 10);
+            const expNeeded = (storyState.level + 1) * 100;
+            if (storyState.exp >= expNeeded) {
+               storyState.level++;
+               storyState.exp -= expNeeded;
+               storyState.statPoints += 2;
+            }
+            s.registry.set("gameState", s.gameState);
+            (window as any).UTLW.save();
+          }
+          transitionTo(s, "StoryHubScene");
+        } else {
+          transitionTo(s, "StoryHubScene");
+        }
       } else if (s.gameState.gameMode === "arcade") {
         if (win) {
           s.gameState.arcadeRound = (s.gameState.arcadeRound || 1) + 1;

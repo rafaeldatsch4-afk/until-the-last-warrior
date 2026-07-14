@@ -56,6 +56,7 @@ export interface GameState {
   elo?: number;
   difficulty: number; // 0: Easy, 1: Normal, 2: Hard
   gameMode:
+    | "story"
     | "single"
     | "local_pvp"
     | "arcade"
@@ -75,6 +76,20 @@ export interface GameState {
   tournamentRounds?: TournamentRound[];
   tournamentCurrentRoundIndex?: number;
   tournamentPlayerCharId?: number;
+  storyState?: {
+    level: number;
+    exp: number;
+    statPoints: number;
+    stats: {
+      attack: number;
+      defense: number;
+      ki: number;
+      speed: number;
+      health: number;
+    };
+    stage: number;
+    customCharacter?: CharacterData;
+  };
   stats?: {
     totalWins: number;
     winStreak: number;

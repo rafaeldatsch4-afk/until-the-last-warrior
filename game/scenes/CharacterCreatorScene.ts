@@ -94,7 +94,14 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.ui = new CreatorUI(this, () => this.updatePreview());
 
     // Back button
-    this.createStyledButton(80, 40, 120, 40, "VOLTAR", 0xe74c3c, () => transitionTo(this, "MenuScene"));
+    this.createStyledButton(80, 40, 120, 40, "VOLTAR", 0xe74c3c, () => {
+      const gs = this.registry.get("gameState");
+      if (gs && gs.gameMode === "story") {
+        transitionTo(this, "ModeSelectScene");
+      } else {
+        transitionTo(this, "MenuScene");
+      }
+    });
 
     // Title
     this.add.text(480, 50, "CRIAR PERSONAGEM", { fontSize: "32px", fontStyle: "italic bold", color: "#f39c12", fontFamily: "system-ui, sans-serif", stroke: "#000", strokeThickness: 4, shadow: { offsetX: 0, offsetY: 0, color: "#f39c12", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
@@ -283,6 +290,23 @@ export default class CharacterCreatorScene extends Phaser.Scene {
         this.registry.set("gameState", gameState);
         // @ts-ignore
         if (window.UTLW) window.UTLW.save();
+      }
+
+      if (gameState?.gameMode === "story") {
+         if (!gameState.storyState) {
+            gameState.storyState = {
+              level: 0,
+              exp: 0,
+              statPoints: 0,
+              stats: { attack: 10, defense: 10, ki: 10, speed: 10, health: 100 },
+              stage: 1
+            };
+         }
+         gameState.storyState.customCharacter = customChar;
+         this.registry.set("gameState", gameState);
+         if (window.UTLW) window.UTLW.save();
+         transitionTo(this, "StoryHubScene");
+         return;
       }
 
       const confirmTxt = this.add.text(250, 350, "Equipado como Player 1!", { color: "#00ff00", fontSize: "18px", fontStyle: "bold" }).setOrigin(0.5);

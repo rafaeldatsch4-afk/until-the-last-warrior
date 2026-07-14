@@ -64,19 +64,16 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     // Title
     const title = this.add
-      .text(480, 80, "SELECIONE O MODO", {
-        fontSize: "52px",
+      .text(480, 60, "MODO DE JOGO", {
+        fontSize: "48px",
         color: "#ffffff",
-        fontStyle: "bold",
-        stroke: "#000000",
-        strokeThickness: 8,
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontStyle: "900",
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         shadow: {
           offsetX: 0,
-          offsetY: 4,
-          color: "#000000",
-          blur: 4,
+          offsetY: 6,
+          color: "#f1c40f",
+          blur: 0,
           stroke: true,
           fill: true,
         },
@@ -86,7 +83,7 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: title,
-      y: 75,
+      y: 55,
       duration: 2000,
       yoyo: true,
       repeat: -1,
@@ -97,43 +94,49 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     const modes = [
       {
-        text: "1 VS 1 (CPU)",
+        text: "📖 HISTÓRIA",
+        mode: "story",
+        color: 0x8e44ad,
+        desc: "Crie seu lutador e avance por batalhas épicas",
+      },
+      {
+        text: "🤖 1 VS 1 (CPU)",
         mode: "single",
         color: 0x3498db,
         desc: "Lute contra a inteligência artificial",
       },
       {
-        text: "1 VS 1 (LOCAL)",
+        text: "👥 1 VS 1 (LOCAL)",
         mode: "local_pvp",
         color: 0xe74c3c,
         desc: "Jogue contra um amigo no mesmo teclado",
       },
       {
-        text: "TREINAMENTO",
+        text: "🥋 TREINAMENTO",
         mode: "training",
         color: 0x2ecc71,
         desc: "Treine contra um oponente imóvel e imortal",
       },
       {
-        text: "PARTIDA RÁPIDA ⚡",
+        text: "⚡ PARTIDA RÁPIDA",
         mode: "online_pvp",
         color: 0x27ae60,
         desc: "Jogue online por diversão",
       },
       {
-        text: "RANQUEADA 🏆",
+        text: "🏆 RANQUEADA",
         mode: "ranked_pvp",
         color: 0xd35400,
         desc: "Suba nas ligas lutando a sério",
       },
       {
-        text: "ARCADE",
+        text: "🕹️ ARCADE",
         mode: "arcade",
         color: 0x9b59b6,
         desc: "Enfrente uma série de oponentes",
       },
       {
-        text: "TORNEIO",
+        text: "🏅 TORNEIO",
         mode: "tournament",
         color: 0xf1c40f,
         desc: "Chaveamento de 8 lutadores",
@@ -147,7 +150,7 @@ export default class ModeSelectScene extends Phaser.Scene {
     }
 
     modes.forEach((m, index) => {
-      const yPos = 135 + index * 68;
+      const yPos = 120 + index * 52;
       this.createBtn(
         480,
         yPos,
@@ -161,7 +164,15 @@ export default class ModeSelectScene extends Phaser.Scene {
           }
 
           this.registry.set("gameState", this.gameState);
-          transitionTo(this, "CharacterSelectScene");
+          if (m.mode === "story") {
+            if (!this.gameState.storyState || !this.gameState.storyState.customCharacter) {
+               transitionTo(this, "CharacterCreatorScene");
+            } else {
+               transitionTo(this, "StoryHubScene");
+            }
+          } else {
+            transitionTo(this, "CharacterSelectScene");
+          }
         },
         m.color,
       );
@@ -183,24 +194,52 @@ export default class ModeSelectScene extends Phaser.Scene {
   ) {
     const container = this.add.container(x, y);
 
-    // Button background with gradient/shadow effect
-    const shadow = this.add
-      .rectangle(4, 4, 400, 56, 0x000000, 0.5)
-      .setOrigin(0.5);
-    const bg = this.add.rectangle(0, 0, 400, 56, color).setOrigin(0.5);
-    const innerBg = this.add
-      .rectangle(0, 0, 392, 48, 0x000000, 0.3)
-      .setOrigin(0.5); // Darker inner area
+    // Using graphics to draw a more stylish rounded button
+    const graphics = this.add.graphics();
+    const btnWidth = 420;
+    const btnHeight = 46;
+    const radius = 8;
+    
+    // Draw initial state
+    const drawBtn = (isHover: boolean) => {
+      graphics.clear();
+      
+      // Shadow
+      graphics.fillStyle(0x000000, 0.6);
+      graphics.fillRoundedRect(-btnWidth/2 + 4, -btnHeight/2 + 6, btnWidth, btnHeight, radius);
+      
+      // Background (brighter on hover)
+      const r = (color >> 16) & 255;
+      const g = (color >> 8) & 255;
+      const b = color & 255;
+      
+      let fillColor = color;
+      if (isHover) {
+         fillColor = (Math.min(255, r + 40) << 16) | (Math.min(255, g + 40) << 8) | Math.min(255, b + 40);
+      }
+      
+      graphics.fillStyle(fillColor, 1);
+      graphics.fillRoundedRect(-btnWidth/2, -btnHeight/2, btnWidth, btnHeight, radius);
+      
+      // Inner dark gradient/glow
+      graphics.fillStyle(0x000000, 0.2);
+      graphics.fillRoundedRect(-btnWidth/2 + 2, -btnHeight/2 + 2, btnWidth - 4, btnHeight / 2, radius - 2);
+      
+      // Border
+      graphics.lineStyle(2, isHover ? 0xffffff : 0x000000, isHover ? 0.8 : 0.5);
+      graphics.strokeRoundedRect(-btnWidth/2, -btnHeight/2, btnWidth, btnHeight, radius);
+    };
+    
+    drawBtn(false);
 
     const txt = this.add
-      .text(0, -10, text, {
-        fontSize: "22px",
+      .text(0, -8, text, {
+        fontSize: "20px",
         color: "#ffffff",
         fontStyle: "bold",
         stroke: "#000",
-        strokeThickness: 4,
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        strokeThickness: 3,
+        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         resolution: 2,
       })
       .setOrigin(0.5);
@@ -208,36 +247,31 @@ export default class ModeSelectScene extends Phaser.Scene {
     const descTxt = this.add
       .text(0, 12, desc, {
         fontSize: "12px",
-        color: "#dddddd",
+        color: "#eeeeee",
         fontStyle: "italic",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         resolution: 2,
       })
       .setOrigin(0.5);
 
-    container.add([shadow, bg, innerBg, txt, descTxt]);
+    container.add([graphics, txt, descTxt]);
 
     // Hit area
     const hitArea = this.add
-      .rectangle(0, 0, 400, 56, 0x000000, 0)
+      .rectangle(0, 0, btnWidth, btnHeight, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
     container.add(hitArea);
 
     hitArea.on("pointerover", () => {
-      const r = (color >> 16) & 255;
-      const g = (color >> 8) & 255;
-      const b = color & 255;
-      const hoverColor =
-        (Math.min(255, r + 40) << 16) |
-        (Math.min(255, g + 40) << 8) |
-        Math.min(255, b + 40);
-      bg.setFillStyle(hoverColor);
+      drawBtn(true);
       this.tweens.add({ targets: container, scale: 1.05, duration: 100 });
     });
+    
     hitArea.on("pointerout", () => {
-      bg.setFillStyle(color);
+      drawBtn(false);
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
+    
     hitArea.on("pointerdown", () => {
       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
       this.tweens.add({
@@ -252,9 +286,26 @@ export default class ModeSelectScene extends Phaser.Scene {
 
   createBackBtn(x: number, y: number, text: string, onClick: () => void) {
     const container = this.add.container(x, y);
-    const bg = this.add
-      .rectangle(0, 0, 120, 40, 0x555555)
-      .setStrokeStyle(2, 0xffffff);
+    
+    const graphics = this.add.graphics();
+    const btnWidth = 120;
+    const btnHeight = 40;
+    const radius = 6;
+    
+    const drawBtn = (isHover: boolean) => {
+      graphics.clear();
+      graphics.fillStyle(0x000000, 0.6);
+      graphics.fillRoundedRect(-btnWidth/2 + 2, -btnHeight/2 + 3, btnWidth, btnHeight, radius);
+      
+      graphics.fillStyle(isHover ? 0x777777 : 0x555555, 1);
+      graphics.fillRoundedRect(-btnWidth/2, -btnHeight/2, btnWidth, btnHeight, radius);
+      
+      graphics.lineStyle(2, 0xffffff, 0.8);
+      graphics.strokeRoundedRect(-btnWidth/2, -btnHeight/2, btnWidth, btnHeight, radius);
+    };
+    
+    drawBtn(false);
+
     const txt = this.add
       .text(0, 0, text, {
         fontSize: "18px",
@@ -265,21 +316,23 @@ export default class ModeSelectScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    container.add([bg, txt]);
+    container.add([graphics, txt]);
 
     const hitArea = this.add
-      .rectangle(0, 0, 120, 40, 0x000000, 0)
+      .rectangle(0, 0, btnWidth, btnHeight, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
     container.add(hitArea);
 
     hitArea.on("pointerover", () => {
-      bg.setFillStyle(0x777777);
+      drawBtn(true);
       this.tweens.add({ targets: container, scale: 1.1, duration: 100 });
     });
+    
     hitArea.on("pointerout", () => {
-      bg.setFillStyle(0x555555);
+      drawBtn(false);
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
+    
     hitArea.on("pointerdown", () => {
       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
       this.tweens.add({

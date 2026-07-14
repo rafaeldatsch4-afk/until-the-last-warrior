@@ -17,6 +17,9 @@ import { MultiplayerManager } from "../systems/MultiplayerManager";
 import { animKeyToId, animIdToSuffix } from "../systems/AnimKeyMap";
 
 export default class BattleScene extends Phaser.Scene {
+  enemyMaxHp!: number;
+  playerMaxHp!: number;
+  storyStats?: any;
   public trnBtnGroup?: Phaser.GameObjects.Container;
 
   public battleUI!: BattleUI;
@@ -229,7 +232,7 @@ export default class BattleScene extends Phaser.Scene {
     if (
       this.gameState.gameMode === "local_pvp" ||
       this.gameState.gameMode === "tournament" ||
-      this.gameState.gameMode === "online_pvp"
+      this.gameState.gameMode === "online_pvp" || this.gameState.gameMode === "story"
     ) {
       this.enemyData =
         chars.find((c) => c.id === this.gameState.p2CharacterId) || chars[1];
@@ -292,7 +295,14 @@ export default class BattleScene extends Phaser.Scene {
 
     this.createFighterSprites();
     this.playerHp = this.playerData.maxHp;
-    this.enemyHp = this.enemyData.maxHp;
+    
+    let p2HpBonus = 0;
+    if (this.gameState.gameMode === "story" && this.gameState.storyState) {
+       p2HpBonus = (this.gameState.storyState.stage - 1) * 20;
+    }
+    this.enemyMaxHp = this.enemyData.maxHp + p2HpBonus;
+    this.enemyHp = this.enemyMaxHp;
+
     this.lastPlayerHp = this.playerHp;
     this.lastEnemyHp = this.enemyHp;
     this.playerKi = 0;
@@ -523,8 +533,8 @@ export default class BattleScene extends Phaser.Scene {
 
     if (this.battleUI)
       this.battleUI.updateBars(
-        this.playerHp / this.playerData.maxHp,
-        this.enemyHp / this.enemyData.maxHp,
+        this.playerHp / (this.playerMaxHp || this.playerData.maxHp),
+        this.enemyHp / (this.enemyMaxHp || this.enemyData.maxHp),
         this.playerKi / 100,
         this.enemyKi / 100,
       );
@@ -622,7 +632,10 @@ export default class BattleScene extends Phaser.Scene {
           this.lastP1RightTime = time;
         }
 
-        const moveSpeed = 6;
+        let moveSpeed = 6;
+        if (this.gameState.gameMode === "story" && this.storyStats) {
+           moveSpeed += (this.storyStats.speed - 10) * 0.2;
+        }
         let isMoving = false;
 
         if (this.playerDefending || (this.battleInput && this.battleInput.checkActionDown("charge", true))) {
@@ -738,7 +751,10 @@ export default class BattleScene extends Phaser.Scene {
           this.lastP2RightTime = time;
         }
 
-        const moveSpeed = 6;
+        let moveSpeed = 6;
+        if (this.gameState.gameMode === "story" && this.storyStats) {
+           moveSpeed += (this.storyStats.speed - 10) * 0.2;
+        }
         let isMoving = false;
         let moveL = false;
         let moveR = false;
@@ -842,7 +858,10 @@ export default class BattleScene extends Phaser.Scene {
         if (moveR && this.enemy.x > this.player.x && distToPlayer > 600)
           moveR = false;
 
-        const moveSpeed = 6;
+        let moveSpeed = 6;
+        if (this.gameState.gameMode === "story" && this.storyStats) {
+           moveSpeed += (this.storyStats.speed - 10) * 0.2;
+        }
         let isMoving = false;
 
         if (this.enemyDefending || (this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
@@ -1662,7 +1681,14 @@ export default class BattleScene extends Phaser.Scene {
 
   performContinuousCharge(isPlayer: boolean, delta: number) {
     if (this.isBattleOver) return;
-    const chargeRate = 0.04 * delta; // Slightly faster charge
+    let chargeRate = 0.04 * delta;
+    if (this.gameState.gameMode === "story") {
+       if (isPlayer && this.storyStats) {
+           chargeRate += (this.storyStats.ki - 10) * 0.002 * delta;
+       } else if (!isPlayer && this.storyStats) {
+           chargeRate += (this.gameState.storyState.stage - 1) * 0.002 * delta;
+       }
+    } // Slightly faster charge
     this.modifyKi(isPlayer, chargeRate);
 
     const colors = this.getCharacterAuraColor(isPlayer);
@@ -2523,7 +2549,7 @@ export default class BattleScene extends Phaser.Scene {
 
               const baseDamage = isComboFinisher ? 20 : 10;
               const damage = Math.floor(
-                baseDamage * this.getDamageMultiplier(transLevel),
+                baseDamage * this.getDamageMultiplier(transLevel, isPlayer),
               );
 
               this.takeDamage(!isPlayer, damage);
@@ -2706,7 +2732,7 @@ export default class BattleScene extends Phaser.Scene {
 
                       const baseDamage = isComboFinisher ? 15 : 10;
                       const damage = Math.floor(
-                        baseDamage * this.getDamageMultiplier(transLevel),
+                        baseDamage * this.getDamageMultiplier(transLevel, isPlayer),
                       );
 
                       this.takeDamage(!isPlayer, damage);
@@ -4005,10 +4031,19 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   // Helper to calculate damage multiplier based on transformation level
-  public getDamageMultiplier(transLevel: number): number {
-    if (transLevel === 1) return 1.25; // 25% stronger
-    if (transLevel === 2) return 1.5; // 50% stronger
-    return 1.0;
+  public getDamageMultiplier(transLevel: number, isPlayer: boolean = true): number {
+    let mult = 1.0;
+    if (transLevel === 1) mult = 1.25;
+    if (transLevel === 2) mult = 1.5;
+    
+    if (this.gameState.gameMode === "story" && isPlayer && this.storyStats) {
+       mult *= (1 + (this.storyStats.attack - 10) * 0.05);
+    } else if (this.gameState.gameMode === "story" && !isPlayer && this.storyStats) {
+       // enemy scales with stage
+       mult *= (1 + (this.gameState.storyState.stage - 1) * 0.1);
+    }
+    
+    return mult;
   }
 
   // Helper to get EXACT hand position based on sprite flipping
@@ -4548,6 +4583,13 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     let dmg = baseDmg;
+    if (this.gameState.gameMode === "story") {
+       if (isP && this.storyStats) {
+          dmg = Math.max(1, Math.floor(dmg * (1 - (this.storyStats.defense - 10) * 0.05)));
+       } else if (!isP && this.storyStats) {
+          dmg = Math.max(1, Math.floor(dmg * (1 - (this.gameState.storyState.stage - 1) * 0.05)));
+       }
+    }
 
     // Apply combo multiplier ONLY if the target isn't defending
     const attackerComboCount = isP ? this.p2ComboCount : this.p1ComboCount;
@@ -4938,8 +4980,8 @@ export default class BattleScene extends Phaser.Scene {
     if (oldKi !== (isP ? this.playerKi : this.enemyKi)) {
       if (this.battleUI)
         this.battleUI.updateBars(
-          this.playerHp / this.playerData.maxHp,
-          this.enemyHp / this.enemyData.maxHp,
+          this.playerHp / (this.playerMaxHp || this.playerData.maxHp),
+          this.enemyHp / (this.enemyMaxHp || this.enemyData.maxHp),
           this.playerKi / 100,
           this.enemyKi / 100,
         );
