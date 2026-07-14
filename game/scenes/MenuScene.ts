@@ -281,6 +281,20 @@ export default class MenuScene extends Phaser.Scene {
       0x2ecc71,
       400,
     );
+    this.createMenuButton(
+      startX,
+      startY + spacing * 5,
+      "TOP GLOBAL",
+      () => {
+        this.resumeAudioContext();
+        if (this.cache.audio.exists("sfx_select"))
+          this.sound.play("sfx_select");
+        transitionTo(this, "LeaderboardScene");
+      },
+      0x9b59b6,
+      500,
+    );
+
   }
 
   async showChallengesPopup() {

@@ -306,6 +306,7 @@ export const AuthButton: React.FC = () => {
             username: username,
             createdAt: serverTimestamp(),
             lastLogin: serverTimestamp(),
+            wins: 0,
           });
         } catch (dbErr: any) {
           handleFirestoreError(dbErr, OperationType.CREATE, `users/${cred.user.uid}`);

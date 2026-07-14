@@ -1,3 +1,5 @@
+import { auth, db } from "../../firebase/init";
+import { doc, updateDoc } from "firebase/firestore";
 import { GameState } from "../types";
 
 export interface Achievement {
@@ -96,6 +98,7 @@ export class AchievementSystem {
       stats.maxWinStreak = stats.winStreak;
     }
     this.checkAchievements();
+    this.syncStatsToCloud();
   }
 
   static resetStreak() {
@@ -108,11 +111,28 @@ export class AchievementSystem {
     if (!window.UTLW || !window.UTLW.state || !window.UTLW.state.stats) return;
     window.UTLW.state.stats.tournamentsWon++;
     this.checkAchievements();
+    this.syncStatsToCloud();
   }
 
   static addArcadeClear() {
     if (!window.UTLW || !window.UTLW.state || !window.UTLW.state.stats) return;
     window.UTLW.state.stats.arcadeClears++;
     this.checkAchievements();
+    this.syncStatsToCloud();
+  }
+
+  static async syncStatsToCloud() {
+    if (!window.UTLW || !window.UTLW.state || !window.UTLW.state.stats) return;
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const stats = window.UTLW.state.stats;
+        await updateDoc(doc(db, 'users', user.uid), {
+          wins: stats.totalWins || 0
+        });
+      }
+    } catch (e) {
+      console.warn("Failed to sync stats", e);
+    }
   }
 }
