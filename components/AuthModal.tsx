@@ -143,6 +143,18 @@ export const AuthButton: React.FC = () => {
 
         await setDoc(userRef, updateData, { merge: true });
 
+        const updatedSnap = await getDoc(userRef);
+        if (updatedSnap.exists()) {
+          const updatedData = updatedSnap.data();
+          await setDoc(doc(db, 'leaderboard_public', u.uid), {
+            username: updatedData.username || 'Jogador',
+            avatar: updatedData.avatar || '🥷',
+            wins: updatedData.wins || 0,
+            elo: updatedData.elo || 1000,
+            matches: updatedData.matches || 0,
+          }, { merge: true });
+        }
+
         setStats(prev => ({
            matches: prev.matches + 1,
            wins: prev.wins + (win ? 1 : 0),
