@@ -294,7 +294,11 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     this.createFighterSprites();
-    this.playerHp = this.playerData.maxHp;
+    const isStoryMode = this.gameState.gameMode === "story";
+    const storyStats = isStoryMode ? this.gameState.storyState?.stats : null;
+    const healthBonus = storyStats ? storyStats.health * 5 : 0; // cada ponto = +5 HP máximo
+    this.playerMaxHp = this.playerData.maxHp + healthBonus;
+    this.playerHp = this.playerMaxHp;
     
     let p2HpBonus = 0;
     if (this.gameState.gameMode === "story" && this.gameState.storyState) {
@@ -633,8 +637,10 @@ export default class BattleScene extends Phaser.Scene {
         }
 
         let moveSpeed = 6;
-        if (this.gameState.gameMode === "story" && this.storyStats) {
-           moveSpeed += (this.storyStats.speed - 10) * 0.2;
+        if (this.gameState.gameMode === "story") {
+          const speedStat = this.gameState.storyState?.stats.speed || 0;
+          const speedBonus = speedStat * 0.1;
+          moveSpeed += speedBonus;
         }
         let isMoving = false;
 
@@ -752,9 +758,6 @@ export default class BattleScene extends Phaser.Scene {
         }
 
         let moveSpeed = 6;
-        if (this.gameState.gameMode === "story" && this.storyStats) {
-           moveSpeed += (this.storyStats.speed - 10) * 0.2;
-        }
         let isMoving = false;
         let moveL = false;
         let moveR = false;
@@ -859,9 +862,6 @@ export default class BattleScene extends Phaser.Scene {
           moveR = false;
 
         let moveSpeed = 6;
-        if (this.gameState.gameMode === "story" && this.storyStats) {
-           moveSpeed += (this.storyStats.speed - 10) * 0.2;
-        }
         let isMoving = false;
 
         if (this.enemyDefending || (this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
@@ -1683,8 +1683,10 @@ export default class BattleScene extends Phaser.Scene {
     if (this.isBattleOver) return;
     let chargeRate = 0.04 * delta;
     if (this.gameState.gameMode === "story") {
-       if (isPlayer && this.storyStats) {
-           chargeRate += (this.storyStats.ki - 10) * 0.002 * delta;
+       if (isPlayer) {
+           const kiStat = this.gameState.storyState?.stats.ki || 0;
+           const kiBonus = (kiStat * 0.001) * delta;
+           chargeRate += kiBonus;
        } else if (!isPlayer && this.storyStats) {
            chargeRate += (this.gameState.storyState.stage - 1) * 0.002 * delta;
        }
@@ -4036,9 +4038,12 @@ export default class BattleScene extends Phaser.Scene {
     if (transLevel === 1) mult = 1.25;
     if (transLevel === 2) mult = 1.5;
     
-    if (this.gameState.gameMode === "story" && isPlayer && this.storyStats) {
-       mult *= (1 + (this.storyStats.attack - 10) * 0.05);
-    } else if (this.gameState.gameMode === "story" && !isPlayer && this.storyStats) {
+    const isStoryMode = this.gameState.gameMode === "story";
+    if (isStoryMode && isPlayer) {
+      const attackStat = this.gameState.storyState?.stats.attack || 0;
+      const attackBonus = 1 + (attackStat * 0.03); // cada ponto = +3% de dano
+      mult *= attackBonus;
+    } else if (isStoryMode && !isPlayer && this.storyStats) {
        // enemy scales with stage
        mult *= (1 + (this.gameState.storyState.stage - 1) * 0.1);
     }
@@ -4596,8 +4601,10 @@ export default class BattleScene extends Phaser.Scene {
 
     let dmg = baseDmg;
     if (this.gameState.gameMode === "story") {
-       if (isP && this.storyStats) {
-          dmg = Math.max(1, Math.floor(dmg * (1 - (this.storyStats.defense - 10) * 0.05)));
+       if (isP) {
+          const defenseStat = this.gameState.storyState?.stats.defense || 0;
+          const reduction = Math.min(0.5, defenseStat * 0.02); // cada ponto reduz 2% do dano, cap em 50%
+          dmg = Math.floor(dmg * (1 - reduction));
        } else if (!isP && this.storyStats) {
           dmg = Math.max(1, Math.floor(dmg * (1 - (this.gameState.storyState.stage - 1) * 0.05)));
        }
