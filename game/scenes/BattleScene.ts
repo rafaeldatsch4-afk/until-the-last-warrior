@@ -4082,6 +4082,18 @@ export default class BattleScene extends Phaser.Scene {
 
 
 
+  specialBeam(isP: boolean, isS: boolean, col: number, hasInner: boolean, vibrate: boolean, type: string) {
+    if (this.effects) {
+      this.effects.specialBeam(isP, isS, col, hasInner, vibrate, type);
+    }
+  }
+
+  createScreenFlash(color: number, duration: number, alpha: number = 0.8) {
+    if (this.effects) {
+      this.effects.createScreenFlash(color, duration, alpha);
+    }
+  }
+
   createImpactEffect(
     x: number,
     y: number,

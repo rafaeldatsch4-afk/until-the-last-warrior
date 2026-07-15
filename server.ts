@@ -40,6 +40,34 @@ async function startServer() {
   
   // Game matchmaking rooms state
   const rooms: Map<string, Room> = new Map();
+
+  // Rate limiting: rastreia timestamps dos últimos eventos por socket
+  const rateLimitMap = new Map<string, Map<string, number[]>>();
+
+  function isRateLimited(socketId: string, eventName: string, maxEvents: number, windowMs: number): boolean {
+    const now = Date.now();
+    if (!rateLimitMap.has(socketId)) rateLimitMap.set(socketId, new Map());
+    const socketEvents = rateLimitMap.get(socketId)!;
+
+    if (!socketEvents.has(eventName)) socketEvents.set(eventName, []);
+    const timestamps = socketEvents.get(eventName)!;
+
+    while (timestamps.length > 0 && now - timestamps[0] > windowMs) {
+      timestamps.shift();
+    }
+
+    if (timestamps.length >= maxEvents) {
+      return true;
+    }
+
+    timestamps.push(now);
+    return false;
+  }
+
+  function cleanupRateLimit(socketId: string) {
+    rateLimitMap.delete(socketId);
+  }
+
   // Map socket IDs to room IDs
   const socketToRoom: Map<string, string> = new Map();
 
@@ -86,11 +114,13 @@ async function startServer() {
 
     // Ping for latency
     socket.on("ping", (timestamp) => {
+      if (isRateLimited(socket.id, "ping", 3, 1000)) return;
       socket.emit("pong", timestamp);
     });
 
     // Join random public matchmaking
     socket.on("joinMatchmaking", (data: { name: string; characterId: number; sessionId?: string; ping?: number; isRanked?: boolean; rating?: number }) => {
+      if (isRateLimited(socket.id, "joinMatchmaking", 3, 5000)) return;
       // First, make sure they are not already in a room
       if (socketToRoom.has(socket.id)) {
         return;
@@ -151,6 +181,7 @@ async function startServer() {
 
     // Create a private room
     socket.on("createPrivateRoom", (data: { name: string; characterId: number; roomCode: string; sessionId?: string }) => {
+      if (isRateLimited(socket.id, "createPrivateRoom", 3, 5000)) return;
       if (socketToRoom.has(socket.id)) {
         return;
       }
@@ -187,6 +218,7 @@ async function startServer() {
 
     // Join a private room
     socket.on("joinPrivateRoom", (data: { name: string; characterId: number; roomCode: string; sessionId?: string }) => {
+      if (isRateLimited(socket.id, "joinPrivateRoom", 3, 5000)) return;
       if (socketToRoom.has(socket.id)) {
         return;
       }
@@ -236,6 +268,7 @@ async function startServer() {
 
     // Sync state
     socket.on("playerState", (state: any) => {
+      if (isRateLimited(socket.id, "playerState", 35, 1000)) return;
       const roomId = socketToRoom.get(socket.id);
       if (roomId) {
         socket.to(roomId).emit("remotePlayerState", state);
@@ -244,6 +277,7 @@ async function startServer() {
 
     // Relay actions (attacks, skills, dash, jumps)
     socket.on("action", (act: any) => {
+      if (isRateLimited(socket.id, "action", 20, 1000)) return;
       const roomId = socketToRoom.get(socket.id);
       if (roomId) {
         socket.to(roomId).emit("remoteAction", act);
@@ -301,6 +335,7 @@ async function startServer() {
     });
     
     function handleDisconnect(sId: string) {
+      cleanupRateLimit(sId);
       const roomId = socketToRoom.get(sId);
       if (roomId) {
         const room = rooms.get(roomId);
