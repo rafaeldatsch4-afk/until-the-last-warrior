@@ -10,6 +10,7 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider
 } from 'firebase/auth';
+import { loadFromCloud } from '../game/systems/CloudSave';
 import { doc, setDoc, serverTimestamp, getDoc, deleteDoc, increment, arrayUnion } from 'firebase/firestore';
 
 enum OperationType {
@@ -205,6 +206,19 @@ export const AuthButton: React.FC = () => {
                  window.UTLW.state.coins = data?.coins || 0;
                  window.UTLW.state.elo = data?.elo || 1000;
              }
+             // Load cloud save
+             loadFromCloud(u.uid).then((cloudSave) => {
+               if (cloudSave && window.UTLW && window.UTLW.state) {
+                 if (cloudSave.coins !== undefined) window.UTLW.state.coins = cloudSave.coins;
+                 if (cloudSave.stats) window.UTLW.state.stats = cloudSave.stats;
+                 if (cloudSave.storyState) window.UTLW.state.storyState = cloudSave.storyState;
+                 if (cloudSave.unlockedTitles) window.UTLW.state.unlockedTitles = cloudSave.unlockedTitles;
+                 if (cloudSave.equippedTitle) window.UTLW.state.equippedTitle = cloudSave.equippedTitle;
+                 if (cloudSave.characters) window.UTLW.state.characters = cloudSave.characters;
+                 if (window.UTLW.save) window.UTLW.save();
+               }
+             });
+             
              await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
           } else {
              setDbUsername(u.email?.split('@')[0] || '');
@@ -232,7 +246,20 @@ export const AuthButton: React.FC = () => {
                  window.UTLW.state.coins = data?.coins || 0;
                  window.UTLW.state.elo = data?.elo || 1000;
              }
-                   await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
+
+             // Load cloud save
+             loadFromCloud(u.uid).then((cloudSave) => {
+               if (cloudSave && window.UTLW && window.UTLW.state) {
+                 if (cloudSave.coins !== undefined) window.UTLW.state.coins = cloudSave.coins;
+                 if (cloudSave.stats) window.UTLW.state.stats = cloudSave.stats;
+                 if (cloudSave.storyState) window.UTLW.state.storyState = cloudSave.storyState;
+                 if (cloudSave.unlockedTitles) window.UTLW.state.unlockedTitles = cloudSave.unlockedTitles;
+                 if (cloudSave.equippedTitle) window.UTLW.state.equippedTitle = cloudSave.equippedTitle;
+                 if (cloudSave.characters) window.UTLW.state.characters = cloudSave.characters;
+                 if (window.UTLW.save) window.UTLW.save();
+               }
+             });
+                                await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
                 } else {
                    setDbUsername(u.email?.split('@')[0] || '');
                    setStats({ matches: 0, wins: 0, losses: 0, achievements: [], avatar: '' });

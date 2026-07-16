@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { transitionTo } from "../utils/sceneTransition";
+import { syncCloudSaveImmediate } from "../systems/CloudSave";
 import { GameState } from "../types";
 
 export default class StoryHubScene extends Phaser.Scene {
@@ -29,6 +30,7 @@ export default class StoryHubScene extends Phaser.Scene {
 
     // Back Button
     this.createBtn(100, 40, 120, 40, "VOLTAR", 0x7f8c8d, () => {
+      syncCloudSaveImmediate();
       transitionTo(this, "ModeSelectScene");
     });
 

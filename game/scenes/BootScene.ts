@@ -1,4 +1,6 @@
 import { transitionTo } from "../utils/sceneTransition";
+import { saveToCloud } from "../systems/CloudSave";
+import { auth } from "../../firebase/init";
 import Phaser from "phaser";
 import { INITIAL_CHARACTERS } from "../data";
 import { AchievementSystem } from "../systems/Achievements";
@@ -140,6 +142,7 @@ export default class BootScene extends Phaser.Scene {
               p1CharacterId: window.UTLW.state.p1CharacterId,
               p2CharacterId: window.UTLW.state.p2CharacterId,
               stats: window.UTLW.state.stats,
+              storyState: window.UTLW.state.storyState,
               unlockedTitles: window.UTLW.state.unlockedTitles,
               equippedTitle: window.UTLW.state.equippedTitle,
               settings: window.UTLW.state.settings,
@@ -163,6 +166,35 @@ export default class BootScene extends Phaser.Scene {
           window.UTLW.save();
         }
       }, 5000);
+
+      // --- CLOUD AUTO SAVE SYSTEM ---
+      setInterval(() => {
+        const user = auth.currentUser;
+        if (user && window.UTLW) {
+          saveToCloud(user.uid, {
+            coins: window.UTLW.state.coins,
+            stats: window.UTLW.state.stats,
+            storyState: window.UTLW.state.storyState,
+            unlockedTitles: window.UTLW.state.unlockedTitles,
+            equippedTitle: window.UTLW.state.equippedTitle,
+            characters: window.UTLW.state.characters,
+          });
+        }
+      }, 30000);
+
+      window.addEventListener("beforeunload", () => {
+        const user = auth.currentUser;
+        if (user && window.UTLW) {
+          saveToCloud(user.uid, {
+            coins: window.UTLW.state.coins,
+            stats: window.UTLW.state.stats,
+            storyState: window.UTLW.state.storyState,
+            unlockedTitles: window.UTLW.state.unlockedTitles,
+            equippedTitle: window.UTLW.state.equippedTitle,
+            characters: window.UTLW.state.characters,
+          });
+        }
+      });
       console.log("Auto-Save initialized (5s interval)");
     }
 

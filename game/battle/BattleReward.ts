@@ -1,4 +1,5 @@
 import { transitionTo } from "../utils/sceneTransition";
+import { syncCloudSaveImmediate } from "../systems/CloudSave";
 import Phaser from "phaser";
 import { DailyChallenges } from "../systems/DailyChallenges";
 import { AchievementSystem } from "../systems/Achievements";
@@ -281,8 +282,10 @@ export class BattleReward {
 
           s.gameState.tournamentCurrentRoundIndex = currentRoundIndex + 1;
           s.registry.set("gameState", s.gameState);
+          syncCloudSaveImmediate();
           transitionTo(s, "TournamentScene");
         } else {
+          syncCloudSaveImmediate();
           transitionTo(s, "MenuScene");
         }
       } else if (s.gameState.gameMode === "story") {
@@ -300,24 +303,30 @@ export class BattleReward {
             s.registry.set("gameState", s.gameState);
             (window as any).UTLW.save();
           }
+          syncCloudSaveImmediate();
           transitionTo(s, "StoryHubScene");
         } else {
+          syncCloudSaveImmediate();
           transitionTo(s, "StoryHubScene");
         }
       } else if (s.gameState.gameMode === "arcade") {
         if (win) {
           s.gameState.arcadeRound = (s.gameState.arcadeRound || 1) + 1;
           if (s.gameState.arcadeRound > 5) {
-            transitionTo(s, "MenuScene");
+            syncCloudSaveImmediate();
+          transitionTo(s, "MenuScene");
           } else {
             s.registry.set("gameState", s.gameState);
-            transitionTo(s, "BattleScene");
+            syncCloudSaveImmediate();
+          transitionTo(s, "BattleScene");
           }
         } else {
+          syncCloudSaveImmediate();
           transitionTo(s, "MenuScene");
         }
       } else {
-        transitionTo(s, "MenuScene");
+        syncCloudSaveImmediate();
+          transitionTo(s, "MenuScene");
       }
     });
   }
