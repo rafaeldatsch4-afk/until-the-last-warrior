@@ -3,8 +3,9 @@ import { db, auth } from "../../firebase/init";
 
 export async function saveToCloud(userId: string, saveData: any): Promise<void> {
   try {
+    const cleanData = Object.fromEntries(Object.entries(saveData).filter(([_, v]) => v !== undefined));
     await setDoc(doc(db, "users", userId, "save", "progress"), {
-      ...saveData,
+      ...cleanData,
       lastSyncedAt: Date.now(),
     }, { merge: true });
   } catch (e) {
