@@ -529,8 +529,9 @@ export const AuthButton: React.FC = () => {
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-80 shrink-0"></div>
             
             <button 
-              onClick={() => setShowModal(false)}
-              className="absolute top-2 right-2 md:top-3 md:right-3 z-50 text-gray-400 hover:text-white hover:bg-white/10 rounded-full w-12 h-12 md:w-10 md:h-10 flex items-center justify-center transition-colors"
+              onClick={(e) => { e.preventDefault(); setShowModal(false); }}
+              onTouchEnd={(e) => { e.preventDefault(); setShowModal(false); }}
+              className="absolute top-2 right-2 md:top-3 md:right-3 z-[100] text-gray-400 hover:text-white hover:bg-white/10 rounded-full w-14 h-14 md:w-10 md:h-10 flex items-center justify-center transition-colors pointer-events-auto"
               aria-label="Fechar"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 md:w-5 md:h-5">

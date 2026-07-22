@@ -10,6 +10,7 @@ const App: React.FC = () => {
   const [isMenuScene, setIsMenuScene] = useState(true); // Default to true, assuming we start near menu
   const [textInputPrompt, setTextInputPrompt] = useState<{ title: string; currentValue: string; onComplete: (val: string) => void } | null>(null);
   const [isShaking, setIsShaking] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -36,6 +37,11 @@ const App: React.FC = () => {
       setTimeout(() => setIsShaking(false), 400); // 400ms matches animation duration
     };
     window.addEventListener('shake-screen', handleShakeScreen);
+
+    const handleTransitionStart = () => setIsTransitioning(true);
+    const handleTransitionEnd = () => setIsTransitioning(false);
+    window.addEventListener('scene-transition-start', handleTransitionStart);
+    window.addEventListener('scene-transition-end', handleTransitionEnd);
 
     // Listen for PWA installation prompt
     const handleBeforeInstallPrompt = (e: any) => {
@@ -75,6 +81,8 @@ const App: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      window.removeEventListener('scene-transition-start', handleTransitionStart);
+      window.removeEventListener('scene-transition-end', handleTransitionEnd);
       document.removeEventListener('fullscreenchange', onFullscreenChange);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('request-pwa-install', handleRequestInstall);
@@ -194,6 +202,10 @@ const App: React.FC = () => {
           <GameCanvas />
         </div>
       </main>
+      {/* Scene Transition Overlay */}
+      <div 
+        className={`fixed inset-0 bg-black z-[200] pointer-events-none transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`}
+      ></div>
     </div>
   );
 };
