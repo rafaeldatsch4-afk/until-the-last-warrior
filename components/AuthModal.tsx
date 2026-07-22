@@ -530,10 +530,10 @@ export const AuthButton: React.FC = () => {
             
             <button 
               onClick={() => setShowModal(false)}
-              className="absolute top-2 right-2 z-10 text-gray-400 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+              className="absolute top-2 right-2 md:top-3 md:right-3 z-50 text-gray-400 hover:text-white hover:bg-white/10 rounded-full w-12 h-12 md:w-10 md:h-10 flex items-center justify-center transition-colors"
               aria-label="Fechar"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 md:w-5 md:h-5">
                 <path d="M18 6L6 18M6 6l12 12"></path>
               </svg>
             </button>
