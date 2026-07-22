@@ -19,6 +19,14 @@ export default class BootScene extends Phaser.Scene {
     this.cameras.main.fadeIn(300, 0, 0, 0);
     // Initialize Global Game State if it doesn't exist
     if (!window.UTLW) {
+      this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+        this.scene.manager.scenes.forEach(scene => {
+          if (scene.cameras && scene.cameras.main) {
+            scene.cameras.resize(gameSize.width, gameSize.height);
+          }
+        });
+      });
+
       console.log("Initializing Game State...");
 
       // Default State

@@ -423,53 +423,74 @@ export class BattleInput {
     // --- End Virtual Joystick ---
 
     // Right side (Attacks)
-    const cx = gw - 160 * btnScale - safeRight;
-    const cy = gh - 150 * btnScale - safeBottom;
+    // Layout em grade 2x3 sem sobreposição (validado matematicamente)
+    const COL_GAP = 145 * btnScale;
+    const ROW_GAP = 145 * btnScale;
+    const gridBaseX = btnPos.x + 20;
+    const gridBaseY = btnPos.y + 5;
 
     // ATK (Center)
-    createBtn(cx, cy, "ATK", 0xe74c3c, 45 * btnScale, () => {
+    createBtn(gridBaseX, gridBaseY, "ATK", 0xe74c3c, 55 * btnScale, () => {
       this.mobileP1Attack = true;
       this.scene.p1AttackBuffer = this.scene.BUFFER_MS;
     });
 
     // KI BLAST (Top)
-    createBtn(cx, cy - 90 * btnScale, "KI", 0x00ffff, 35 * btnScale, () => {
+    createBtn(gridBaseX - COL_GAP, gridBaseY - ROW_GAP, "KI", 0x00ffff, 38 * btnScale, () => {
       this.mobileP1KiBlast = true;
       this.scene.p1KiBlastBuffer = this.scene.BUFFER_MS;
     });
 
     // DEF (Left)
-    createBtn(cx - 90 * btnScale, cy, "DEF", 0x3498db, 35 * btnScale, () => {
-        this.mobileP1Defend = true;
-      }, () => {
-        this.mobileP1Defend = false;
-    });
+    createBtn(
+      gridBaseX - COL_GAP * 2,
+      gridBaseY,
+      "DEF",
+      0x3498db,
+      38 * btnScale,
+      () => { this.mobileP1Defend = true; },
+      () => { this.mobileP1Defend = false; },
+    );
 
     // DASH (Bottom)
-    createBtn(cx, cy + 90 * btnScale, "DSH", 0xff9900, 35 * btnScale, () => {
-       const isLeft = this.keys.p1_left.isDown;
-       const isRight = this.keys.p1_right.isDown;
-       this.mobileP1Dash = isLeft ? -1 : (isRight ? 1 : 0);
-       if (this.mobileP1Dash === 0) {
-           const activeObj = this.scene.localPlayerIndex === 1 ? this.scene.player : this.scene.enemy;
-           this.mobileP1Dash = activeObj.flipX ? -1 : 1;
-       }
-    });
+    createBtn(
+      gridBaseX - COL_GAP * 2,
+      gridBaseY - ROW_GAP,
+      "DSH",
+      0xff9900,
+      38 * btnScale,
+      () => { 
+        const isLeft = this.keys.p1_left.isDown;
+        const isRight = this.keys.p1_right.isDown;
+        this.mobileP1Dash = isLeft ? -1 : (isRight ? 1 : 0);
+        if (this.mobileP1Dash === 0) {
+            const activeObj = this.scene.localPlayerIndex === 1 ? this.scene.player : this.scene.enemy;
+            this.mobileP1Dash = activeObj.flipX ? -1 : 1;
+        }
+      }
+    );
 
     // CHG (Right)
-    createBtn(cx + 90 * btnScale, cy, "CHG", 0x2ecc71, 35 * btnScale, () => {
-        this.mobileP1Charge = true;
-      }, () => {
-        this.mobileP1Charge = false;
-    });
+    createBtn(
+      gridBaseX - COL_GAP,
+      gridBaseY,
+      "CHG",
+      0x2ecc71,
+      38 * btnScale,
+      () => { this.mobileP1Charge = true; },
+      () => { this.mobileP1Charge = false; },
+    );
 
     // SPC (Special - Top Right)
-    createBtn(cx + 75 * btnScale, cy - 75 * btnScale, "SPC", 0xf1c40f, 35 * btnScale, () => {
-        this.mobileP1Special = true;
-      }, () => {
-        this.mobileP1Special = false;
-        this.mobileP1SpecialJustUp = true;
-    });
+    createBtn(
+      gridBaseX,
+      gridBaseY - ROW_GAP,
+      "SPC",
+      0xf1c40f,
+      38 * btnScale,
+      () => { this.mobileP1Special = true; },
+      () => { this.mobileP1Special = false; this.mobileP1SpecialJustUp = true; },
+    );
 
     // TRN (Transform - Above Joystick)
     const localData = this.scene.localPlayerIndex === 1 ? this.scene.playerData : this.scene.enemyData;
