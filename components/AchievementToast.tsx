@@ -32,7 +32,7 @@ export const AchievementToast: React.FC = () => {
   }, []);
 
   return (
-    <div className="absolute top-16 left-4 z-50 flex flex-col gap-2 pointer-events-none">
+    <div className="absolute z-50 flex flex-col gap-2 pointer-events-none" style={{ top: 'max(4rem, calc(3rem + env(safe-area-inset-top)))', left: 'max(1rem, env(safe-area-inset-left))' }}>
       <AnimatePresence>
         {toasts.map(toast => (
           <motion.div

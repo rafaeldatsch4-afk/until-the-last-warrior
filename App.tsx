@@ -96,12 +96,12 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`h-[100dvh] w-full flex flex-col bg-black text-white overflow-hidden relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] ${isShaking ? 'animate-shake-screen' : ''}`}>
+    <div className={`fixed inset-0 bg-black text-white overflow-hidden flex flex-col ${isShaking ? 'animate-shake-screen' : ''}`}>
       <main className="flex-1 flex items-center justify-center w-full p-0 relative overflow-hidden">
         <AuthButton />
         <AchievementToast />
         {/* Buttons Container */}
-        <div className="absolute top-4 right-4 z-40 flex flex-col sm:flex-row gap-2">
+        <div className="absolute z-40 flex flex-col sm:flex-row gap-2" style={{ top: 'max(1rem, env(safe-area-inset-top))', right: 'max(1rem, env(safe-area-inset-right))' }}>
           {isMenuScene && (
             <button
               onClick={toggleFullscreen}

@@ -369,13 +369,18 @@ export function generateCustomSprite(
           box(21, 23, 1, 3, TORSO_2_SHADOW);
         } else {
           // Goku baggy pants (orange)
-          box(10, 23, 4, 6, LEGS_1);
-          box(18, 23, 4, 6, LEGS_1);
-          box(14, 23, 4, 2, LEGS_1);
-          box(10, 23, 1, 6, LEGS_1_SHADOW);
-          box(21, 23, 1, 6, LEGS_1_SHADOW);
-          box(12, 24, 1, 4, LEGS_1_SHADOW);
-          box(19, 24, 1, 4, LEGS_1_SHADOW);
+          // Belt
+          box(11, 23, 10, 2, LEGS_2); // Blue belt
+          // Belt folds/knot
+          box(11, 24, 2, 4, LEGS_2);
+          
+          // Baggy pants
+          box(10, 25, 5, 4, LEGS_1);
+          box(17, 25, 5, 4, LEGS_1);
+          
+          // Folds
+          box(10, 25, 1, 4, LEGS_1_SHADOW);
+          box(17, 25, 1, 4, LEGS_1_SHADOW);
         }
 
         // ====================
@@ -420,16 +425,14 @@ export function generateCustomSprite(
           box(11, 29, 1, 5, 0x333333); // shine
           box(19, 29, 1, 5, 0x333333);
         } else {
-          box(10, 29, 4, 3, FEET_1);
-          box(18, 29, 4, 3, FEET_1);
-          box(10, 29, 4, 1, 0xeaddcf); // rope
-          box(18, 29, 4, 1, 0xeaddcf);
-          box(12, 29, 1, 3, FEET_2); // red part
-          box(20, 29, 1, 3, FEET_2);
-          box(10, 31, 4, 1, FEET_1);
-          box(18, 31, 4, 1, FEET_1);
-          box(10, 30, 1, 2, FEET_1_SHADOW);
-          box(18, 30, 1, 2, FEET_1_SHADOW);
+          box(10, 29, 5, 4, FEET_1); // Blue boots
+          box(17, 29, 5, 4, FEET_1);
+          box(10, 29, 5, 1, 0xeaddcf); // rope / yellow line
+          box(17, 29, 5, 1, 0xeaddcf);
+          box(12, 29, 2, 4, FEET_2); // Red stripe in middle
+          box(19, 29, 2, 4, FEET_2);
+          box(10, 32, 5, 1, FEET_1_SHADOW); // sole
+          box(17, 32, 5, 1, FEET_1_SHADOW);
         }
 
         // ====================
@@ -879,30 +882,18 @@ export function generateCustomSprite(
           }
         } else {
           // Goku Gi
-          box(11, 14, 10, 9, TORSO_1);
-          box(13, 14, 6, 4, TORSO_2); // Undershirt
-          box(13, 14, 1, 4, TORSO_2_SHADOW);
-          box(18, 14, 1, 4, TORSO_2_SHADOW);
-          box(14, 14, 4, 2, SKIN_TONE); // Neck
+          // Blue undershirt
+          box(14, 14, 4, 9, TORSO_2); 
+          // Chest skin (V-neck of the blue shirt)
+          box(14, 14, 4, 2, SKIN_TONE); 
+          // Orange Gi Main
+          box(11, 14, 3, 9, TORSO_1); // Left side
+          box(18, 14, 3, 9, TORSO_1); // Right side
+          box(11, 14, 1, 9, TORSO_1_SHADOW);
+          box(20, 14, 1, 9, TORSO_1_SHADOW);
 
-          // Neck shadow
-          box(14, 15, 4, 1, SKIN_SHADOW);
-          dot(15, 16, SKIN_TONE); // V-neck dip
-
-          // Gi folds on torso
-          box(19, 17, 2, 6, TORSO_1_SHADOW); // Shading right
-          box(11, 17, 1, 5, TORSO_1_SHADOW); // Shading left
-          box(14, 18, 1, 4, TORSO_1_SHADOW);
-          box(17, 18, 1, 4, TORSO_1_SHADOW); // Inner folds
-          box(12, 19, 8, 1, TORSO_1_SHADOW); // Horizontal fold
-          box(15, 20, 2, 2, TORSO_1_SHADOW); // Center wrinkle
-
-          // Sash with knot (Faixa azul com nó)
-          box(11, 22, 10, 2, TORSO_2); // Sash
-          box(11, 23, 10, 1, TORSO_2_SHADOW); // Sash shadow
-          box(11, 23, 2, 4, TORSO_2); // Knot flap
-          box(11, 27, 2, 1, TORSO_2); // Lower flap
-          box(11, 24, 1, 4, TORSO_2_SHADOW); // Knot shadow
+          // Belt (now uses LEGS_2 instead of TORSO_2, and is drawn here or in Legs)
+          // We will draw it in LEGS block to avoid confusion, so we don't draw it here.
 
           if (isCharge) {
             box(20, 4, 3, 10, SKIN_TONE);
@@ -926,27 +917,17 @@ export function generateCustomSprite(
             box(7, 14, 4, 3, TORSO_1);
             box(6, 18, 4, 2, TORSO_2);
           } else {
-            box(8, 14, 3, 4, TORSO_1);
-            box(21, 14, 3, 4, TORSO_1);
-            box(8, 15, 1, 3, TORSO_1_SHADOW);
-            box(23, 15, 1, 3, TORSO_1_SHADOW);
+            // BACK ARM
+            box(8, 14, 3, 3, TORSO_2); // Blue short sleeve
+            box(8, 17, 3, 5, SKIN_TONE); // Bare arm
+            box(8, 20, 3, 2, TORSO_2); // Wristband
+            box(8, 22, 3, 3, SKIN_TONE); // Hand
 
-            box(8, 18, 3, 3, SKIN_TONE);
-            box(21, 18, 3, 3, SKIN_TONE);
-            box(8, 18, 1, 3, SKIN_SHADOW); // arm shadow
-            box(23, 18, 1, 3, SKIN_SHADOW);
-            box(9, 19, 1, 2, SKIN_SHADOW);
-            box(22, 19, 1, 2, SKIN_SHADOW); // Bicep definition
-
-            box(8, 20, 3, 3, TORSO_2); // Wristbands
-            box(21, 20, 3, 3, TORSO_2);
-            box(8, 20, 1, 3, TORSO_2_SHADOW); // Wristbands shadow
-            box(23, 20, 1, 3, TORSO_2_SHADOW);
-
-            box(8, 23, 3, 2, SKIN_TONE); // Hands
-            box(21, 23, 3, 2, SKIN_TONE);
-            box(8, 24, 3, 1, SKIN_SHADOW); // Knuckles
-            box(21, 24, 3, 1, SKIN_SHADOW);
+            // FRONT ARM
+            box(21, 14, 3, 3, TORSO_2); // Blue short sleeve
+            box(21, 17, 3, 5, SKIN_TONE);
+            box(21, 20, 3, 2, TORSO_2);
+            box(21, 22, 3, 3, SKIN_TONE); // Hand
           }
         }
         isDrawingTorso = false;
@@ -992,6 +973,7 @@ export function generateCustomSprite(
         // ====================
         if (pHead === "spiderman") {
           headBox(12, 6, 8, 7, HEAD_1);
+          headBox(14, 13, 4, 1, HEAD_1); // Neck
           headDot(11, 9, HEAD_1);
           headDot(20, 9, HEAD_1);
           headBox(13, 12, 6, 1, HEAD_1_SHADOW);
@@ -1013,6 +995,7 @@ export function generateCustomSprite(
           headBox(17, 8, 2, 1, WHITE); // Right Eye Inner
         } else if (pHead === "saitama") {
           headBox(12, 5, 8, 8, SKIN_TONE);
+          headBox(14, 13, 4, 1, SKIN_TONE); // Neck
           headDot(11, 9, SKIN_TONE);
           headDot(20, 9, SKIN_TONE);
           headBox(13, 12, 6, 1, SKIN_SHADOW); // chin shadow
@@ -1040,6 +1023,7 @@ export function generateCustomSprite(
           }
         } else if (pHead === "chapolim") {
           headBox(12, 6, 8, 7, SKIN_TONE); // face
+          headBox(14, 13, 4, 1, SKIN_TONE); // Neck
           headBox(11, 4, 10, 6, HEAD_1); // Capacete (agora começa em y=4, mais alto, sem buraco)
           headBox(12, 6, 8, 2, HEAD_1_SHADOW); // Capacete shadow
           headDot(11, 9, HEAD_1);
@@ -1060,6 +1044,7 @@ export function generateCustomSprite(
           headDot(18, 9, eyeColor);
         } else if (pHead === "vegeta") {
           headBox(12, 6, 8, 7, SKIN_TONE);
+          headBox(14, 13, 4, 1, SKIN_TONE); // Neck
           headDot(11, 9, SKIN_TONE); // ear
           headDot(20, 9, SKIN_TONE); // ear
           headBox(13, 12, 6, 1, SKIN_SHADOW);
@@ -1139,6 +1124,7 @@ export function generateCustomSprite(
           }
         } else if (pHead === "jotaro") {
           headBox(12, 6, 8, 7, SKIN_TONE);
+          headBox(14, 13, 4, 1, SKIN_TONE); // Neck
           headDot(11, 9, SKIN_TONE);
           headDot(20, 9, SKIN_TONE);
 
@@ -1168,6 +1154,7 @@ export function generateCustomSprite(
         } else {
           // Generic anime head (Goku base)
           headBox(12, 6, 8, 7, SKIN_TONE);
+          headBox(14, 13, 4, 1, SKIN_TONE); // Neck
           headDot(11, 9, SKIN_TONE);
           headDot(20, 9, SKIN_TONE);
           headDot(11, 10, SKIN_SHADOW);
@@ -1226,15 +1213,17 @@ export function generateCustomSprite(
             headBox(18, 1, 1, 3, WHITE);
             headBox(15, -1, 1, 3, WHITE);
           } else {
-            headBox(11, 1, 10, 5, hairColor);
-            headBox(13, -2, 3, 3, hairColor);
-            headBox(16, -1, 3, 2, hairColor);
-            headBox(9, 0, 2, 4, hairColor);
-            headBox(7, 1, 2, 3, hairColor);
-            headBox(21, 1, 2, 4, hairColor);
-            headBox(23, 2, 2, 3, hairColor);
+            // Goku Base Hair
+            headBox(11, 1, 10, 6, hairColor); 
+            headBox(7, 1, 4, 3, hairColor); 
+            headBox(9, -1, 3, 3, hairColor);
+            headBox(21, 1, 4, 3, hairColor);
+            headBox(20, -1, 3, 3, hairColor);
+            headBox(12, -2, 3, 4, hairColor);
+            headBox(16, -3, 3, 5, hairColor);
             headBox(13, 6, 2, 2, hairColor);
-            headBox(16, 6, 2, 2, hairColor);
+            headBox(17, 6, 2, 2, hairColor);
+            headBox(15, 6, 1, 3, hairColor);
           }
         }
 

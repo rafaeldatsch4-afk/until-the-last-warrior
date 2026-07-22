@@ -495,6 +495,17 @@ export default class BattleScene extends Phaser.Scene {
       if (this.gameState.gameMode === "online_pvp") {
         MultiplayerManager.getInstance().disconnect();
       }
+
+      // Limpeza completa para evitar acúmulo de memória entre partidas
+      this.tweens.killAll();
+      this.time.removeAllEvents();
+
+      // Destrói qualquer emissor de partículas ainda ativo
+      this.children.list
+        .filter((child) => child.type === "ParticleEmitter" || (child as any).emitters)
+        .forEach((emitter) => {
+          try { (emitter as any).destroy(); } catch (e) {}
+        });
     });
   }
 

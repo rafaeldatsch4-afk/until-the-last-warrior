@@ -66,8 +66,6 @@ export class CreatorPreview {
       this.previewSprite.destroy();
     }
     if (this.previewAura) this.previewAura.destroy();
-    if (this.torsoBoundsBox) this.torsoBoundsBox.destroy();
-    if (this.torsoBoundsText) this.torsoBoundsText.destroy();
 
     const { torsoBounds } = generateCustomSprite(this.scene, {
       ...(builderData.base as CharacterData),
@@ -123,7 +121,7 @@ export class CreatorPreview {
       this.previewAura.setScale(1.2);
     }
 
-    if (torsoBounds) {
+    if (false && torsoBounds) {
       const spriteX = 700;
       const spriteY = 250;
       const spriteScale = 3.5;

@@ -1,3 +1,4 @@
+import { detectLowEndDevice } from "../systems/DeviceCapability";
 import { transitionTo } from "../utils/sceneTransition";
 import { saveToCloud } from "../systems/CloudSave";
 import { auth } from "../../firebase/init";
@@ -40,7 +41,7 @@ export default class BootScene extends Phaser.Scene {
         unlockedTitles: [],
         equippedTitle: "",
         settings: {
-          lowPerformanceMode: false,
+          lowPerformanceMode: detectLowEndDevice(),
           hudConfig: {
             dpadPos: { x: 150, y: 380 },
             dpadScale: 1,
@@ -123,6 +124,11 @@ export default class BootScene extends Phaser.Scene {
             if (parsed.settings.hudConfig) {
                defaultState.settings.hudConfig = { ...defaultState.settings.hudConfig, ...parsed.settings.hudConfig };
             }
+          }
+          if (!parsed.settings || parsed.settings.lowPerformanceMode === undefined) {
+             if (defaultState.settings.lowPerformanceMode) {
+                 this.registry.set("showPerfToast", true);
+             }
           }
         }
       } catch (e) {

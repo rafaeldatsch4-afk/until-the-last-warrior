@@ -107,7 +107,14 @@ export const AuthButton: React.FC = () => {
         updateData.coins = increment(earnedCoins);
         
         if (gameMode === "ranked_pvp") {
+           const currentElo = stats.elo ?? 1000;
            let eloChange = win ? 25 : -25;
+
+           // Evita que o ELO fique negativo: se a perda levaria abaixo de 0, perde só o suficiente para chegar a 0
+           if (!win && currentElo + eloChange < 0) {
+             eloChange = -currentElo;
+           }
+
            updateData.elo = increment(eloChange);
         }
         if (win) {
@@ -121,7 +128,8 @@ export const AuthButton: React.FC = () => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           const currentWins = (data.wins || 0) + (win ? 1 : 0);
-          const currentMatches = (data.matches || 0) + 1;
+          const currentLosses = (data.losses || 0) + (win ? 0 : 1);
+          const currentMatches = currentWins + currentLosses;
           const currentAchievements = data.achievements || [];
           
           if (currentWins >= 1 && !currentAchievements.includes("Primeira Vitória!")) {
@@ -179,6 +187,7 @@ export const AuthButton: React.FC = () => {
     const handleSyncCoins = async (e: any) => {
         if (!auth.currentUser) return;
         const userRef = doc(db, 'users', auth.currentUser.uid);
+        setStats(prev => ({ ...prev, coins: e.detail.coins }));
         await setDoc(userRef, { coins: e.detail.coins }, { merge: true });
     };
     window.addEventListener('sync-coins', handleSyncCoins);
@@ -192,16 +201,39 @@ export const AuthButton: React.FC = () => {
           const docSnap = await getDoc(userRef);
           if (docSnap.exists()) {
              const data = docSnap.data();
-             setDbUsername(data?.username || u.email?.split('@')[0]);
+             
+             const wins = data?.wins || 0;
+             const losses = data?.losses || 0;
+             let matches = data?.matches || 0;
+             const dbUname = data?.username || u.email?.split('@')[0] || 'Jogador';
+             const dbAvatar = data?.avatar || '🥷';
+
+             // Auto-correct stats and force sync to leaderboard
+             if (matches !== wins + losses) {
+                 matches = wins + losses;
+                 await setDoc(userRef, { matches }, { merge: true });
+             }
+             
+             // Always sync to leaderboard_public on load to guarantee name appears
+             await setDoc(doc(db, 'leaderboard_public', u.uid), {
+                 username: dbUname,
+                 avatar: dbAvatar,
+                 wins: wins,
+                 elo: data?.elo || 1000,
+                 matches: matches,
+             }, { merge: true });
+
+             setDbUsername(dbUname);
              setStats({
-               matches: data?.matches || 0,
-               wins: data?.wins || 0,
-               losses: data?.losses || 0,
+               matches: matches,
+               wins: wins,
+               losses: losses,
                achievements: data?.achievements || [],
                elo: data?.elo || 1000,
                coins: data?.coins || 0,
-               avatar: data?.avatar || ''
+               avatar: dbAvatar
              });
+
              if (window.UTLW && window.UTLW.state) {
                  window.UTLW.state.coins = data?.coins || 0;
                  window.UTLW.state.elo = data?.elo || 1000;
@@ -209,7 +241,10 @@ export const AuthButton: React.FC = () => {
              // Load cloud save
              loadFromCloud(u.uid).then((cloudSave) => {
                if (cloudSave && window.UTLW && window.UTLW.state) {
-                 if (cloudSave.coins !== undefined) window.UTLW.state.coins = cloudSave.coins;
+                 if (cloudSave.coins !== undefined) {
+                   window.UTLW.state.coins = cloudSave.coins;
+                   setStats(prev => ({...prev, coins: cloudSave.coins}));
+                 }
                  if (cloudSave.stats) window.UTLW.state.stats = cloudSave.stats;
                  if (cloudSave.storyState) window.UTLW.state.storyState = cloudSave.storyState;
                  if (cloudSave.unlockedTitles) window.UTLW.state.unlockedTitles = cloudSave.unlockedTitles;
@@ -232,16 +267,39 @@ export const AuthButton: React.FC = () => {
                 const retrySnap = await getDoc(userRef);
                 if (retrySnap.exists()) {
                    const data = retrySnap.data();
-                   setDbUsername(data?.username || u.email?.split('@')[0]);
-                   setStats({
-               matches: data?.matches || 0,
-               wins: data?.wins || 0,
-               losses: data?.losses || 0,
+                   
+             const wins = data?.wins || 0;
+             const losses = data?.losses || 0;
+             let matches = data?.matches || 0;
+             const dbUname = data?.username || u.email?.split('@')[0] || 'Jogador';
+             const dbAvatar = data?.avatar || '🥷';
+
+             // Auto-correct stats and force sync to leaderboard
+             if (matches !== wins + losses) {
+                 matches = wins + losses;
+                 await setDoc(userRef, { matches }, { merge: true });
+             }
+             
+             // Always sync to leaderboard_public on load to guarantee name appears
+             await setDoc(doc(db, 'leaderboard_public', u.uid), {
+                 username: dbUname,
+                 avatar: dbAvatar,
+                 wins: wins,
+                 elo: data?.elo || 1000,
+                 matches: matches,
+             }, { merge: true });
+
+             setDbUsername(dbUname);
+             setStats({
+               matches: matches,
+               wins: wins,
+               losses: losses,
                achievements: data?.achievements || [],
                elo: data?.elo || 1000,
                coins: data?.coins || 0,
-               avatar: data?.avatar || ''
+               avatar: dbAvatar
              });
+
              if (window.UTLW && window.UTLW.state) {
                  window.UTLW.state.coins = data?.coins || 0;
                  window.UTLW.state.elo = data?.elo || 1000;
@@ -250,7 +308,10 @@ export const AuthButton: React.FC = () => {
              // Load cloud save
              loadFromCloud(u.uid).then((cloudSave) => {
                if (cloudSave && window.UTLW && window.UTLW.state) {
-                 if (cloudSave.coins !== undefined) window.UTLW.state.coins = cloudSave.coins;
+                 if (cloudSave.coins !== undefined) {
+                   window.UTLW.state.coins = cloudSave.coins;
+                   setStats(prev => ({...prev, coins: cloudSave.coins}));
+                 }
                  if (cloudSave.stats) window.UTLW.state.stats = cloudSave.stats;
                  if (cloudSave.storyState) window.UTLW.state.storyState = cloudSave.storyState;
                  if (cloudSave.unlockedTitles) window.UTLW.state.unlockedTitles = cloudSave.unlockedTitles;
@@ -355,6 +416,8 @@ export const AuthButton: React.FC = () => {
             username: username,
             avatar: selectedAvatar,
             wins: 0,
+            elo: 1000,
+            matches: 0,
           });
         } catch (dbErr: any) {
           handleFirestoreError(dbErr, OperationType.CREATE, `users/${cred.user.uid}`);
@@ -416,7 +479,8 @@ export const AuthButton: React.FC = () => {
   return (
     <>
       <div 
-        className="absolute top-4 left-4 z-40"
+        className="absolute z-40"
+        style={{ top: 'max(1rem, env(safe-area-inset-top))', left: 'max(1rem, env(safe-area-inset-left))' }}
         onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onMouseDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}

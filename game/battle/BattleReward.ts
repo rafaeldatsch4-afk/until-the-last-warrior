@@ -76,7 +76,8 @@ export class BattleReward {
     if (win) {
       if (s.gameState && s.gameState.gameMode !== "training") {
         DailyChallenges.addProgress("win_3_battles", 1);
-        if (s.playerHp && s.playerData && s.playerHp === s.playerData.maxHp) {
+        const effectiveMaxHp = s.playerMaxHp || s.playerData.maxHp;
+        if (s.playerHp && effectiveMaxHp && s.playerHp === effectiveMaxHp) {
           DailyChallenges.addProgress("win_no_damage", 1);
         }
       }
@@ -280,7 +281,13 @@ export class BattleReward {
             }
           });
 
+          const wasLastRound = currentRoundIndex === rounds.length - 1;
           s.gameState.tournamentCurrentRoundIndex = currentRoundIndex + 1;
+
+          if (wasLastRound) {
+            AchievementSystem.addTournamentWin();
+          }
+
           s.registry.set("gameState", s.gameState);
           syncCloudSaveImmediate();
           transitionTo(s, "TournamentScene");

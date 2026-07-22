@@ -43,6 +43,18 @@ export default class MenuScene extends Phaser.Scene {
     this.state = this.registry.get("gameState") as GameState;
     const { width, height } = this.cameras.main;
 
+    if (this.registry.get("showPerfToast")) {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("achievement-unlocked", {
+          detail: {
+            title: "Desempenho Otimizado",
+            desc: "Modo leve ativado automaticamente. Pode ser alterado em Configurações."
+          }
+        }));
+      }, 500);
+      this.registry.set("showPerfToast", false);
+    }
+
     // Unlock Audio Context (Browser Policy)
     this.sound.pauseOnBlur = false;
 

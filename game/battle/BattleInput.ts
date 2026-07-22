@@ -223,8 +223,27 @@ export class BattleInput {
     const opacity = cfg?.opacity ?? 0.5;
     const dpadScale = cfg?.dpadScale ?? 1.0;
     const btnScale = cfg?.buttonsScale ?? 1.0;
-    const dpadPos = cfg?.dpadPos ?? { x: 140, y: gh - 100 };
-    const btnPos = cfg?.buttonsPos ?? { x: gw - 160, y: gh - 100 };
+    const getSafeArea = () => {
+      const div = document.createElement('div');
+      div.style.padding = 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+      div.style.position = 'absolute';
+      div.style.visibility = 'hidden';
+      document.body.appendChild(div);
+      const style = getComputedStyle(div);
+      const top = parseInt(style.paddingTop) || 0;
+      const right = parseInt(style.paddingRight) || 0;
+      const bottom = parseInt(style.paddingBottom) || 0;
+      const left = parseInt(style.paddingLeft) || 0;
+      document.body.removeChild(div);
+      return { top, right, bottom, left };
+    };
+    const safeArea = getSafeArea();
+    const safeLeft = safeArea.left;
+    const safeRight = safeArea.right;
+    const safeBottom = safeArea.bottom;
+
+    const dpadPos = cfg?.dpadPos ?? { x: 100 + safeLeft, y: gh - 100 - safeBottom };
+    const btnPos = cfg?.buttonsPos ?? { x: gw - 100 - safeRight, y: gh - 100 - safeBottom };
 
     const createBtn = (
       x: number,
@@ -360,7 +379,8 @@ export class BattleInput {
       this.keys.p1_right.isDown = dx > 10;
     };
 
-    this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+    this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
+      if (currentlyOver && currentlyOver.length > 0) return; // Prevent triggering if clicking a button
       const loc = getLocalPnt(pointer);
       // Only trigger joystick if the pointer is on the left half of the screen
       if (loc.x < gw / 2 && loc.y > gh / 2 - 50) {
@@ -403,67 +423,30 @@ export class BattleInput {
     // --- End Virtual Joystick ---
 
     // Right side (Attacks)
-    createBtn(btnPos.x + 60, btnPos.y, "ATK", 0xe74c3c, 60 * btnScale, () => {
+    const cx = gw - 160 * btnScale - safeRight;
+    const cy = gh - 150 * btnScale - safeBottom;
+
+    // ATK (Center)
+    createBtn(cx, cy, "ATK", 0xe74c3c, 45 * btnScale, () => {
       this.mobileP1Attack = true;
       this.scene.p1AttackBuffer = this.scene.BUFFER_MS;
     });
 
-    // SPC (Special)
-    createBtn(
-      btnPos.x + 60,
-      btnPos.y - 140 * btnScale,
-      "SPC",
-      0xf1c40f,
-      45 * btnScale,
-      () => {
-        this.mobileP1Special = true;
-      },
-      () => {
-        this.mobileP1Special = false;
-        this.mobileP1SpecialJustUp = true;
-      },
-    );
-
-    
-    // DEF
-    createBtn(
-      btnPos.x - 160 * btnScale,
-      btnPos.y,
-      "DEF",
-      0x3498db,
-      45 * btnScale,
-      () => {
-        this.mobileP1Defend = true;
-      },
-      () => {
-        this.mobileP1Defend = false;
-      },
-    );
-
-    // CHARGE
-    createBtn(
-      btnPos.x - 80 * btnScale,
-      btnPos.y,
-      "CHG",
-      0x2ecc71,
-      45 * btnScale,
-      () => {
-        this.mobileP1Charge = true;
-      },
-      () => {
-        this.mobileP1Charge = false;
-      },
-    );
-
-
-    // KI BLAST
-    createBtn(btnPos.x - 80 * btnScale, btnPos.y - 140 * btnScale, "KI", 0x00ffff, 45 * btnScale, () => {
+    // KI BLAST (Top)
+    createBtn(cx, cy - 90 * btnScale, "KI", 0x00ffff, 35 * btnScale, () => {
       this.mobileP1KiBlast = true;
       this.scene.p1KiBlastBuffer = this.scene.BUFFER_MS;
     });
 
-    // DASH
-    createBtn(btnPos.x - 10 * btnScale, btnPos.y - 70 * btnScale, "DSH", 0xff9900, 40 * btnScale, () => {
+    // DEF (Left)
+    createBtn(cx - 90 * btnScale, cy, "DEF", 0x3498db, 35 * btnScale, () => {
+        this.mobileP1Defend = true;
+      }, () => {
+        this.mobileP1Defend = false;
+    });
+
+    // DASH (Bottom)
+    createBtn(cx, cy + 90 * btnScale, "DSH", 0xff9900, 35 * btnScale, () => {
        const isLeft = this.keys.p1_left.isDown;
        const isRight = this.keys.p1_right.isDown;
        this.mobileP1Dash = isLeft ? -1 : (isRight ? 1 : 0);
@@ -473,10 +456,25 @@ export class BattleInput {
        }
     });
 
-    // TRN (Transform)
+    // CHG (Right)
+    createBtn(cx + 90 * btnScale, cy, "CHG", 0x2ecc71, 35 * btnScale, () => {
+        this.mobileP1Charge = true;
+      }, () => {
+        this.mobileP1Charge = false;
+    });
+
+    // SPC (Special - Top Right)
+    createBtn(cx + 75 * btnScale, cy - 75 * btnScale, "SPC", 0xf1c40f, 35 * btnScale, () => {
+        this.mobileP1Special = true;
+      }, () => {
+        this.mobileP1Special = false;
+        this.mobileP1SpecialJustUp = true;
+    });
+
+    // TRN (Transform - Above Joystick)
     const localData = this.scene.localPlayerIndex === 1 ? this.scene.playerData : this.scene.enemyData;
     if (localData.transformAvailable) {
-      this.scene.trnBtnGroup = createBtn(dpadPos.x, dpadPos.y - 180 * dpadScale, "TRN", 0x9b59b6, 50 * dpadScale, () => {
+      this.scene.trnBtnGroup = createBtn(dpadPos.x, dpadPos.y - 180 * dpadScale, "TRN", 0x9b59b6, 40 * dpadScale, () => {
         this.mobileP1Transform = true;
         this.scene.p1TransformBuffer = this.scene.BUFFER_MS;
       });
