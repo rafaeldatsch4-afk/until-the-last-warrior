@@ -118,6 +118,9 @@ export default class BootScene extends Phaser.Scene {
           }
 
           // Restore achievements safely
+          if (parsed.storyState) {
+            defaultState.storyState = parsed.storyState;
+          }
           if (parsed.stats) {
             defaultState.stats = { ...defaultState.stats, ...parsed.stats };
           }

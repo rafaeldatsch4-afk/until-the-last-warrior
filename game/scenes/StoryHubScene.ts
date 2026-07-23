@@ -104,6 +104,56 @@ export default class StoryHubScene extends Phaser.Scene {
     });
   }
   
+
+  showConfigMenu() {
+    const overlay = this.add.rectangle(480, 270, 960, 540, 0x000000, 0.8).setInteractive();
+    const bg = this.add.rectangle(480, 270, 400, 300, 0x111111).setStrokeStyle(3, 0xf1c40f);
+    const title = this.add.text(480, 160, "OPÇÕES DA HISTÓRIA", { fontSize: "28px", color: "#fff", fontStyle: "bold" }).setOrigin(0.5);
+
+    const editBtn = this.createModalBtn(480, 220, 300, 50, "EDITAR VISUAL DO PERSONAGEM", 0x2ecc71, () => {
+       // Transition to CharacterCreatorScene to edit character visual
+       transitionTo(this, "CharacterCreatorScene");
+    });
+
+    const deleteBtn = this.createModalBtn(480, 290, 300, 50, "EXCLUIR PROGRESSO (RESET)", 0xe74c3c, () => {
+       // Excluir historia
+       this.gameState.storyState = undefined;
+       this.registry.set("gameState", this.gameState);
+       if (window.UTLW) window.UTLW.save();
+       transitionTo(this, "ModeSelectScene");
+    });
+
+    const closeBtn = this.createModalBtn(480, 360, 300, 50, "FECHAR", 0x7f8c8d, () => {
+       overlay.destroy();
+       bg.destroy();
+       title.destroy();
+       editBtn.destroy();
+       deleteBtn.destroy();
+       closeBtn.destroy();
+    });
+  }
+
+  createModalBtn(x: number, y: number, width: number, height: number, text: string, color: number, callback: () => void) {
+    const container = this.add.container(x, y);
+    const bg = this.add.rectangle(0, 0, width, height, color).setStrokeStyle(2, 0xffffff);
+    const txt = this.add.text(0, 0, text, { fontSize: Math.floor(height * 0.4) + "px", color: "#fff", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5);
+    container.add([bg, txt]);
+    const hitArea = this.add.rectangle(0, 0, width, height, 0x000, 0).setInteractive({ useHandCursor: true });
+    container.add(hitArea);
+    hitArea.on("pointerdown", () => {
+       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+       this.tweens.add({ targets: container, scale: 0.9, duration: 50, yoyo: true, onComplete: callback });
+    });
+    
+    // Create a destroy wrapper to clean up the container
+    const destroyObj = {
+       destroy: () => {
+           container.destroy();
+       }
+    };
+    return destroyObj;
+  }
+
   startNextBattle() {
      // Prepare the battle setup
      const storyState = this.gameState.storyState!;

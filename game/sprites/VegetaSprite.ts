@@ -3,7 +3,6 @@ import Phaser from "phaser";
 export function generateVegetaSprite(scene: Phaser.Scene) {
   const generateForm = (form: number) => {
     const key = "vegeta";
-
     const isTransformed = form > 0;
     const isUI = form === 2;
     const SCALE = 2;
@@ -26,6 +25,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
     // Loop to draw 8 frames side by side
     for (let f = 0; f < FRAMES; f++) {
       const offsetX = f * FRAME_WIDTH;
+
       const isWalk = f >= 4 && f <= 7;
       const isAttack = f === 8 || f === 9;
       const isDefend = f === 10;
@@ -105,6 +105,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           (isAttack || isDefend || isCharge
             ? finalY + poseOffsetY / 2
             : finalY) + (typeof oy !== "undefined" ? oy : 0);
+
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -135,6 +136,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           (isAttack || isDefend || isCharge
             ? finalY + poseOffsetY / 2
             : finalY) + (typeof oy !== "undefined" ? oy : 0);
+
         canvas.fillStyle(color, alpha);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -164,6 +166,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           (isAttack || isDefend || isCharge
             ? finalY + poseOffsetY / 2
             : finalY) + (typeof oy !== "undefined" ? oy : 0);
+
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -190,6 +193,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           ox;
         const finalYPose =
           isAttack || isDefend || isCharge ? y + poseOffsetY / 2 : y;
+
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -198,6 +202,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           h * SCALE,
         );
       };
+
       const headDot = (x: number, y: number, color: number) => {
         const { ox, oy } =
           typeof getWalkOffsets === "function"
@@ -209,6 +214,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           ox;
         const finalYPose =
           isAttack || isDefend || isCharge ? y + poseOffsetY / 2 : y;
+
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
@@ -237,6 +243,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
         let HAIR = BLACK;
         let EYE = BLACK;
         let BROW = BLACK;
+
         if (isUI) {
           // Ultra Ego
           HAIR = 0x9b59b6; // Purple
@@ -261,6 +268,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           box(11, ly + 1, 4, 1, SUIT_LIGHT);
           box(17, ly + 1, 4, 1, SUIT_LIGHT);
         }
+
         // Inner leg shadow
         box(14, 23, 1, 5, 0x0a142c);
         box(17, 23, 1, 5, 0x0a142c);
@@ -285,6 +293,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
         dot(13, 32, GOLD);
         dot(18, 32, GOLD);
         dot(22, 32, GOLD);
+
         // Highlight on gold tip
         dot(9, 33, 0xffeb73);
         dot(18, 33, 0xffeb73);
@@ -302,24 +311,25 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           box(12, ty, 8, 1, SUIT_SHADOW);
           box(12, ty + 1, 8, 1, SUIT_LIGHT);
         }
+
         box(12, 19, 1, 5, 0x0a142c);
         box(19, 19, 1, 5, 0x0a142c); // Side shadow
 
         // --- ANGULAR ARMOR ---
         // Main armor block
         box(11, 14, 10, 6, ARMOR_WHITE);
-
+        
         // Armor Abdomen extension (yellow straps wrap)
         box(11, 14, 2, 6, GOLD);
         box(19, 14, 2, 6, GOLD); // Side gold straps
         box(11, 14, 1, 6, GOLD_SHADOW);
         box(20, 14, 1, 6, GOLD_SHADOW); // Gold strap shadow
-
+        
         // Chest segments (Angular Pectorals)
         box(11, 16, 4, 1, ARMOR_SHADOW);
         box(17, 16, 4, 1, ARMOR_SHADOW);
         box(15, 14, 2, 3, ARMOR_DARK); // Center division
-
+        
         // Abdomen armor segments (vertical ribbed plates)
         for (let rx = 13; rx <= 18; rx += 1) {
           if (rx % 2 !== 0) {
@@ -328,7 +338,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
             box(rx, 17, 1, 3, ARMOR_SHADOW);
           }
         }
-
+        
         // Armor bright highlights
         box(13, 14, 2, 1, 0xffffff);
         box(17, 14, 2, 1, 0xffffff); // Top chest
@@ -341,7 +351,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
         dot(6, 12, ARMOR_WHITE); // Peak point white
         box(7, 14, 4, 1, ARMOR_SHADOW); // Underside shadow
         box(7, 13, 2, 1, 0xffffff); // Glint
-
+        
         // Right Pad
         box(20, 12, 7, 2, GOLD);
         box(21, 13, 5, 2, ARMOR_WHITE);
@@ -356,13 +366,16 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           box(22, 13, 5, 1, SUIT_SHADOW); // Ribbing
           box(22, 15, 5, 1, SUIT_SHADOW);
           box(27, 14, 6, 3, SUIT_BLUE); // Forearm
+          
           // Segmented Glove
           box(30, 12, 2, 7, ARMOR_WHITE); // Flare
           box(30, 13, 1, 5, ARMOR_SHADOW);
           box(32, 13, 4, 5, ARMOR_WHITE);
           box(32, 14, 2, 2, ARMOR_SHADOW); // Knuckles
           box(34, 13, 3, 4, ARMOR_WHITE); // Extended fist
+          
           alphaBox(36, 13, 4, 4, ARMOR_WHITE, 0.5); // Blur
+          
           box(6, 15, 4, 5, SUIT_BLUE); // Left arm back
           box(5, 17, 6, 2, ARMOR_WHITE); // Left glove flare
           box(6, 19, 4, 3, ARMOR_WHITE); // Left glove
@@ -370,60 +383,65 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           // Resting arms with Suit Ribbing
           box(8, 16, 3, 4, SUIT_BLUE);
           box(21, 16, 3, 4, SUIT_BLUE);
+          
           // Arm ribbed shading
           box(8, 16, 3, 1, SUIT_SHADOW);
           box(8, 17, 3, 1, SUIT_LIGHT);
           box(8, 18, 3, 1, SUIT_SHADOW);
           box(8, 19, 3, 1, SUIT_LIGHT);
-
+          
           box(21, 16, 3, 1, SUIT_SHADOW);
           box(21, 17, 3, 1, SUIT_LIGHT);
           box(21, 18, 3, 1, SUIT_SHADOW);
           box(21, 19, 3, 1, SUIT_LIGHT);
-
+          
           // Gloves (White, flared top, segmented)
           box(6, 19, 7, 2, ARMOR_WHITE);
           box(19, 19, 7, 2, ARMOR_WHITE);
           box(6, 20, 7, 1, ARMOR_SHADOW);
           box(19, 20, 7, 1, ARMOR_SHADOW);
-
+          
           // Hands
           box(8, 21, 3, 3, ARMOR_WHITE);
           box(21, 21, 3, 3, ARMOR_WHITE);
-          box(8, 22, 3, 1, ARMOR_SHADOW);
-          box(21, 22, 3, 1, ARMOR_SHADOW);
+          // Fingers separation
+          box(8, 22, 1, 1, ARMOR_SHADOW);
+          box(10, 22, 1, 1, ARMOR_SHADOW);
+          box(21, 22, 1, 1, ARMOR_SHADOW);
+          box(23, 22, 1, 1, ARMOR_SHADOW);
         }
 
         // --- HEAD & FACE ---
-        headBox(11, 6, 10, 6, SKIN); // Face base (a bit wider)
+        headBox(11, 6, 10, 1, SKIN_SHADOW); // Forehead shadow under hair
+        headBox(11, 7, 10, 5, SKIN); // Face base
         headBox(13, 12, 6, 1, SKIN); // Pointed chin
-
+        
         // Angular cheek shading (Vegeta's gaunt look)
         headBox(11, 6, 1, 6, SKIN_SHADOW);
         headBox(20, 6, 1, 6, SKIN_SHADOW);
         headBox(13, 10, 1, 2, SKIN_SHADOW);
         headBox(18, 10, 1, 2, SKIN_SHADOW); // Cheekbone hollows
         headBox(13, 12, 6, 1, SKIN_SHADOW); // Chin shadow
-
+        
         // Eyes & Angry Brow (Heavy furrow)
         headBox(12, 8, 3, 1, WHITE);
         headBox(17, 8, 3, 1, WHITE);
-
+        
         // Sharp, angled eyebrows for a deeper aggressive slant
         headBox(12, 7, 3, 1, BROW);
         headBox(17, 7, 3, 1, BROW);
         headDot(14, 8, BROW); // Deep furrow
         headDot(17, 8, BROW);
         headBox(15, 8, 2, 1, SKIN_SHADOW); // bridge crease
-
+        
         // Pupils focused and intense
         headDot(13, 8, EYE);
         headDot(18, 8, EYE);
-
+        
         // Angle cutoff to make them slant aggressively
         headDot(12, 8, SKIN);
         headDot(19, 8, SKIN);
-
+        
         // Expressions (Fierce and Angry)
         if (isAttack) {
           headBox(14, 11, 4, 3, 0x440000); // Shouting wide open
@@ -456,7 +474,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           headBox(12, -15, 8, 5, HAIR);
           headBox(13, -19, 6, 5, HAIR);
           headBox(14, -22, 4, 4, HAIR);
-
+          
           // Side flares tightly connected to center
           headBox(8, -8, 2, 8, HAIR); 
           headBox(7, -5, 1, 4, HAIR); 
@@ -466,7 +484,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           // Hair highlights and shading for golden volume
           const LIGHT = isUI ? 0xd2b4de : 0xffcf40;
           const SHADE = isUI ? 0x732d91 : 0xcfa000;
-
+          
           // Inner highlights
           headBox(14, -20, 2, 12, LIGHT);
           headBox(12, -12, 2, 8, LIGHT);
@@ -484,7 +502,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           headBox(12, -15, 8, 5, HAIR);
           headBox(13, -18, 6, 4, HAIR);
           headBox(14, -20, 4, 3, HAIR);
-
+          
           // Side flares tied in
           headBox(8, -6, 2, 7, HAIR);
           headBox(7, -3, 1, 4, HAIR);
@@ -493,7 +511,6 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
 
           // Hair Texture & Shading (Striated upwards flame lines)
           const hairShadowC = 0x222222;
-
           // Flame contouring
           headBox(13, -16, 1, 14, hairShadowC);
           headBox(17, -14, 1, 12, hairShadowC);
