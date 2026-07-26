@@ -138,16 +138,16 @@ export class BattleUI {
 
     this.p1ComboBg = bs.add.graphics();
     this.p1ComboBg.fillStyle(0x000000, 0.65);
-    this.p1ComboBg.fillRoundedRect(0, -22, 210, 44, 8);
+    this.p1ComboBg.fillRoundedRect(0, -30, 240, 60, 8);
     this.p1ComboBg.lineStyle(2, 0xffaa00, 0.9);
-    this.p1ComboBg.strokeRoundedRect(0, -22, 210, 44, 8);
+    this.p1ComboBg.strokeRoundedRect(0, -30, 240, 60, 8);
     this.p1ComboBg.fillStyle(0xff3300, 1.0);
-    this.p1ComboBg.fillRect(0, -22, 5, 44);
+    this.p1ComboBg.fillRect(0, -30, 8, 60);
     this.p1ComboContainer.add(this.p1ComboBg);
 
     this.p1ComboText = bs.add
-      .text(15, -4, "", {
-        fontSize: "28px",
+      .text(20, -4, "", {
+        fontSize: "36px",
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         fontStyle: "bold italic",
@@ -161,7 +161,7 @@ export class BattleUI {
     this.p1ComboContainer.add(this.p1ComboText);
 
     this.p1ComboBar = bs.add
-      .rectangle(15, 14, 180, 4, 0xffaa00)
+      .rectangle(20, 20, 200, 6, 0xffaa00)
       .setOrigin(0, 0.5);
     this.p1ComboContainer.add(this.p1ComboBar);
 
@@ -171,16 +171,16 @@ export class BattleUI {
 
     this.p2ComboBg = bs.add.graphics();
     this.p2ComboBg.fillStyle(0x000000, 0.65);
-    this.p2ComboBg.fillRoundedRect(-210, -22, 210, 44, 8);
+    this.p2ComboBg.fillRoundedRect(-240, -30, 240, 60, 8);
     this.p2ComboBg.lineStyle(2, 0xffaa00, 0.9);
-    this.p2ComboBg.strokeRoundedRect(-210, -22, 210, 44, 8);
+    this.p2ComboBg.strokeRoundedRect(-240, -30, 240, 60, 8);
     this.p2ComboBg.fillStyle(0xff3300, 1.0);
-    this.p2ComboBg.fillRect(-5, -22, 5, 44);
+    this.p2ComboBg.fillRect(-8, -30, 8, 60);
     this.p2ComboContainer.add(this.p2ComboBg);
 
     this.p2ComboText = bs.add
-      .text(-15, -4, "", {
-        fontSize: "28px",
+      .text(-20, -4, "", {
+        fontSize: "36px",
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         fontStyle: "bold italic",
@@ -194,7 +194,7 @@ export class BattleUI {
     this.p2ComboContainer.add(this.p2ComboText);
 
     this.p2ComboBar = bs.add
-      .rectangle(-15, 14, 180, 4, 0xffaa00)
+      .rectangle(-20, 20, 200, 6, 0xffaa00)
       .setOrigin(1, 0.5);
     this.p2ComboContainer.add(this.p2ComboBar);
 
@@ -438,7 +438,7 @@ export class BattleUI {
 
     // Reset visibility and apply an energetic entrance scaling and rotation slant
     container.setAlpha(1);
-    container.setScale(1.35);
+    container.setScale(1.5);
     container.setRotation(isP1 ? -0.06 : 0.06);
 
     // Smoothly drain the active combo timer bar over 2 seconds

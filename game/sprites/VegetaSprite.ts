@@ -6,23 +6,17 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
     const isTransformed = form > 0;
     const isUI = form === 2;
     const SCALE = 2;
-    // Increased frame width to prevent extended limbs/weapons from bleeding into adjacent frames
     const FRAME_WIDTH = 96;
-    const FRAME_HEIGHT = 64; // Taller frame to support big hair
-    const DRAW_OFFSET_Y = 32; // Shift body down so feet are at bottom of 64px frame
+    const FRAME_HEIGHT = 64; 
+    const DRAW_OFFSET_Y = 32; 
     const FRAMES = 12;
 
-    // Calculate total dimensions
     const sheetWidth = FRAME_WIDTH * SCALE * FRAMES;
     const sheetHeight = FRAME_HEIGHT * SCALE;
 
     const canvas = scene.make.graphics({ x: 0, y: 0 });
-
-    // Shift sprites horizontally to center them in the new wider frame
-    // Standard frame is 96px wide. Local center is 16. Shift by 32 gets to 48 (center).
     const shiftX = 32;
 
-    // Loop to draw 8 frames side by side
     for (let f = 0; f < FRAMES; f++) {
       const offsetX = f * FRAME_WIDTH;
 
@@ -31,14 +25,11 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
       const isDefend = f === 10;
       const isCharge = f === 11;
 
-      // ANIMATION LOGIC: Breathing / Bobbing
-      // Note: y coordinates below 22 are bobbed. DRAW_OFFSET_Y is added to final position.
       const breatheOffset =
         !isAttack && !isDefend && !isCharge && !isWalk && (f === 1 || f === 3)
           ? 1
           : 0;
 
-      // Pose offsets
       const poseOffsetX = f === 8 ? 2 : f === 9 ? 4 : f === 10 ? -2 : 0;
       const poseOffsetY =
         f === 8
@@ -227,39 +218,92 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
       const SKIN = 0xffcc99;
       const WHITE = 0xffffff;
       const BLACK = 0x111111;
+      const OUTLINE = 0x1a0a00;
 
       {
-        const SUIT_BLUE = 0x1f3c88; // Deeper, more vibrant blue
+        const SUIT_BLUE = 0x1f3c88; 
         const SUIT_SHADOW = 0x0f1e44;
         const SUIT_LIGHT = 0x2e57c6;
         const ARMOR_WHITE = 0xfafafa;
-        const ARMOR_SHADOW = 0xbac3d6; // Slight blueish tint to armor shadows
+        const ARMOR_SHADOW = 0xbac3d6; 
         const ARMOR_DARK = 0x7b879c;
-        const GOLD = 0xffc800; // Richer yellow/gold
+        const GOLD = 0xffc800; 
         const GOLD_SHADOW = 0xcc9900;
-        const SKIN = 0xffce9e;
+        const SKIN_TONE = 0xffce9e;
         const SKIN_SHADOW = 0xe0ac7d;
+        const HAIR_BLACK = 0x1a1a1a;
 
-        let HAIR = BLACK;
-        let EYE = BLACK;
-        let BROW = BLACK;
+        const HAIR_SSJ_GOLD = 0xffea00; 
+        const HAIR_SSJ_SHADOW = 0xd4a000;
+        const HAIR_SSJ_LIGHT = 0xfff599;
+        const EYE_SSJ_TEAL = 0x00f2ff;
+
+        const HAIR_UI_SILVER = 0x9b59b6; // UE
+        const HAIR_UI_SHADOW = 0x6e2c8a;
+        const HAIR_UI_LIGHT = 0xcd85e8;
+        const EYE_UI_SILVER = 0xff00ff;
+
+        let hairColor = HAIR_BLACK;
+        let eyeColor = 0x111111;
+        let eyebrowColor = HAIR_BLACK;
 
         if (isUI) {
-          // Ultra Ego
-          HAIR = 0x9b59b6; // Purple
-          EYE = 0xff00ff; // Magenta
-          BROW = 0x9b59b6;
+          hairColor = HAIR_UI_SILVER;
+          eyeColor = EYE_UI_SILVER;
+          eyebrowColor = HAIR_UI_SHADOW;
         } else if (isTransformed) {
-          // SSJ
-          HAIR = 0xffe600; // Golden
-          EYE = 0x00f2ff;
-          BROW = 0xffe600;
+          hairColor = HAIR_SSJ_GOLD;
+          eyeColor = EYE_SSJ_TEAL;
+          eyebrowColor = HAIR_SSJ_SHADOW;
+        }
+
+        // ==========================================
+        // OUTLINES
+        // ==========================================
+        
+        // Outlines das pernas e botas
+        box(9, 22, 6, 8, OUTLINE);
+        box(17, 22, 6, 8, OUTLINE);
+        box(9, 28, 6, 5, OUTLINE);
+        box(17, 28, 6, 5, OUTLINE);
+        
+        // Outline do Torso
+        box(10, 13, 12, 11, OUTLINE);
+        
+        // Outlines dos braços
+        if (isCharge) {
+          box(19, 1, 5, 17, OUTLINE);
+          box(8, 1, 5, 17, OUTLINE);
+        } else if (isAttack) {
+          box(20, 12, 16, 6, OUTLINE);
+          box(5, 13, 7, 8, OUTLINE);
+        } else {
+          box(7, 13, 5, 13, OUTLINE);
+          box(20, 13, 5, 13, OUTLINE);
+        }
+
+        // Outline da cabeça
+        headBox(11, 5, 10, 9, OUTLINE); 
+        headDot(10, 9, OUTLINE);
+        headDot(21, 9, OUTLINE); 
+        
+        // Outlines básicos do cabelo
+        if (isTransformed && !isUI) {
+          headBox(9, -8, 14, 15, OUTLINE);
+          headBox(12, -15, 8, 10, OUTLINE);
+        } else if (isUI) {
+          headBox(10, 0, 12, 8, OUTLINE);
+          headBox(8, 1, 3, 6, OUTLINE);
+          headBox(20, 1, 3, 6, OUTLINE);
+        } else {
+          headBox(9, -6, 14, 13, OUTLINE);
+          headBox(11, -11, 10, 10, OUTLINE);
         }
 
         // --- LEGS & BOOTS ---
         // Bodysuit base
         box(11, 23, 4, 6, SUIT_BLUE);
-        box(17, 23, 4, 6, SUIT_BLUE); // Thighs base
+        box(17, 23, 4, 6, SUIT_BLUE); 
 
         // Enhanced Ribbed bodysuit texture on legs
         for (let ly = 23; ly < 28; ly += 2) {
@@ -298,39 +342,30 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
         dot(9, 33, 0xffeb73);
         dot(18, 33, 0xffeb73);
 
-        box(10, 34, 5, 1, 0x000000);
-        box(17, 34, 5, 1, 0x000000); // Sole shadow
-
         // --- TORSO ---
-        // Bodysuit underneath
         box(12, 19, 8, 4, SUIT_BLUE);
         box(14, 23, 4, 2, SUIT_BLUE); // Crotch connection gap
 
-        // Enhanced Bodysuit ribbing on abdomen
         for (let ty = 19; ty < 23; ty += 2) {
           box(12, ty, 8, 1, SUIT_SHADOW);
           box(12, ty + 1, 8, 1, SUIT_LIGHT);
         }
 
         box(12, 19, 1, 5, 0x0a142c);
-        box(19, 19, 1, 5, 0x0a142c); // Side shadow
+        box(19, 19, 1, 5, 0x0a142c); 
 
         // --- ANGULAR ARMOR ---
-        // Main armor block
         box(11, 14, 10, 6, ARMOR_WHITE);
         
-        // Armor Abdomen extension (yellow straps wrap)
         box(11, 14, 2, 6, GOLD);
-        box(19, 14, 2, 6, GOLD); // Side gold straps
+        box(19, 14, 2, 6, GOLD); 
         box(11, 14, 1, 6, GOLD_SHADOW);
-        box(20, 14, 1, 6, GOLD_SHADOW); // Gold strap shadow
+        box(20, 14, 1, 6, GOLD_SHADOW); 
         
-        // Chest segments (Angular Pectorals)
         box(11, 16, 4, 1, ARMOR_SHADOW);
         box(17, 16, 4, 1, ARMOR_SHADOW);
-        box(15, 14, 2, 3, ARMOR_DARK); // Center division
+        box(15, 14, 2, 3, ARMOR_DARK); 
         
-        // Abdomen armor segments (vertical ribbed plates)
         for (let rx = 13; rx <= 18; rx += 1) {
           if (rx % 2 !== 0) {
             box(rx, 17, 1, 3, ARMOR_DARK);
@@ -339,20 +374,17 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           }
         }
         
-        // Armor bright highlights
         box(13, 14, 2, 1, 0xffffff);
-        box(17, 14, 2, 1, 0xffffff); // Top chest
+        box(17, 14, 2, 1, 0xffffff); 
 
-        // --- SHOULDERS (Classic angular gold pads) ---
-        // Left Pad (overlapping arm and chest)
-        box(5, 12, 7, 2, GOLD); // Extended Gold Shoulder
-        box(6, 13, 5, 2, ARMOR_WHITE); // White pad overlapping
-        dot(5, 11, GOLD); // Peak point gold
-        dot(6, 12, ARMOR_WHITE); // Peak point white
-        box(7, 14, 4, 1, ARMOR_SHADOW); // Underside shadow
-        box(7, 13, 2, 1, 0xffffff); // Glint
+        // --- SHOULDERS ---
+        box(5, 12, 7, 2, GOLD); 
+        box(6, 13, 5, 2, ARMOR_WHITE); 
+        dot(5, 11, GOLD); 
+        dot(6, 12, ARMOR_WHITE); 
+        box(7, 14, 4, 1, ARMOR_SHADOW); 
+        box(7, 13, 2, 1, 0xffffff); 
         
-        // Right Pad
         box(20, 12, 7, 2, GOLD);
         box(21, 13, 5, 2, ARMOR_WHITE);
         dot(26, 11, GOLD);
@@ -362,29 +394,26 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
 
         // --- ARMS ---
         if (isAttack) {
-          box(21, 13, 6, 4, SUIT_BLUE); // Bicep extended
-          box(22, 13, 5, 1, SUIT_SHADOW); // Ribbing
+          box(21, 13, 6, 4, SUIT_BLUE); 
+          box(22, 13, 5, 1, SUIT_SHADOW); 
           box(22, 15, 5, 1, SUIT_SHADOW);
-          box(27, 14, 6, 3, SUIT_BLUE); // Forearm
+          box(27, 14, 6, 3, SUIT_BLUE); 
           
-          // Segmented Glove
-          box(30, 12, 2, 7, ARMOR_WHITE); // Flare
+          box(30, 12, 2, 7, ARMOR_WHITE); 
           box(30, 13, 1, 5, ARMOR_SHADOW);
           box(32, 13, 4, 5, ARMOR_WHITE);
-          box(32, 14, 2, 2, ARMOR_SHADOW); // Knuckles
-          box(34, 13, 3, 4, ARMOR_WHITE); // Extended fist
+          box(32, 14, 2, 2, ARMOR_SHADOW); 
+          box(34, 13, 3, 4, ARMOR_WHITE); 
           
-          alphaBox(36, 13, 4, 4, ARMOR_WHITE, 0.5); // Blur
+          alphaBox(36, 13, 4, 4, ARMOR_WHITE, 0.5); 
           
-          box(6, 15, 4, 5, SUIT_BLUE); // Left arm back
-          box(5, 17, 6, 2, ARMOR_WHITE); // Left glove flare
-          box(6, 19, 4, 3, ARMOR_WHITE); // Left glove
+          box(6, 15, 4, 5, SUIT_BLUE); 
+          box(5, 17, 6, 2, ARMOR_WHITE); 
+          box(6, 19, 4, 3, ARMOR_WHITE); 
         } else {
-          // Resting arms with Suit Ribbing
           box(8, 16, 3, 4, SUIT_BLUE);
           box(21, 16, 3, 4, SUIT_BLUE);
           
-          // Arm ribbed shading
           box(8, 16, 3, 1, SUIT_SHADOW);
           box(8, 17, 3, 1, SUIT_LIGHT);
           box(8, 18, 3, 1, SUIT_SHADOW);
@@ -395,136 +424,138 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
           box(21, 18, 3, 1, SUIT_SHADOW);
           box(21, 19, 3, 1, SUIT_LIGHT);
           
-          // Gloves (White, flared top, segmented)
           box(6, 19, 7, 2, ARMOR_WHITE);
           box(19, 19, 7, 2, ARMOR_WHITE);
           box(6, 20, 7, 1, ARMOR_SHADOW);
           box(19, 20, 7, 1, ARMOR_SHADOW);
           
-          // Hands
-          box(8, 21, 3, 3, ARMOR_WHITE);
-          box(21, 21, 3, 3, ARMOR_WHITE);
-          // Fingers separation
-          box(8, 22, 1, 1, ARMOR_SHADOW);
-          box(10, 22, 1, 1, ARMOR_SHADOW);
-          box(21, 22, 1, 1, ARMOR_SHADOW);
-          box(23, 22, 1, 1, ARMOR_SHADOW);
+          // Dedos detalhados
+          box(8, 21, 1, 1, ARMOR_WHITE);
+          box(9, 21, 1, 1, ARMOR_SHADOW);
+          box(10, 21, 1, 1, ARMOR_WHITE);
+                    
+          box(21, 21, 1, 1, ARMOR_WHITE);
+          box(22, 21, 1, 1, ARMOR_SHADOW);
+          box(23, 21, 1, 1, ARMOR_WHITE);
         }
 
-        // --- HEAD & FACE ---
-        headBox(11, 6, 10, 1, SKIN_SHADOW); // Forehead shadow under hair
-        headBox(11, 7, 10, 5, SKIN); // Face base
-        headBox(13, 12, 6, 1, SKIN); // Pointed chin
+        // --- HEAD & FACE --- (Usando Goku como base + Widow's Peak)
+        headBox(12, 6, 8, 1, SKIN_SHADOW);
+        headBox(12, 7, 8, 6, SKIN_TONE);
         
-        // Angular cheek shading (Vegeta's gaunt look)
-        headBox(11, 6, 1, 6, SKIN_SHADOW);
-        headBox(20, 6, 1, 6, SKIN_SHADOW);
-        headBox(13, 10, 1, 2, SKIN_SHADOW);
-        headBox(18, 10, 1, 2, SKIN_SHADOW); // Cheekbone hollows
-        headBox(13, 12, 6, 1, SKIN_SHADOW); // Chin shadow
+        headDot(11, 9, SKIN_TONE);
+        headDot(20, 9, SKIN_TONE); 
+        headDot(11, 10, SKIN_SHADOW);
+        headDot(20, 10, SKIN_SHADOW); 
+        headBox(13, 12, 6, 1, SKIN_SHADOW); 
+
+        // Face
+        headDot(13, 9, WHITE);
+        headDot(17, 9, WHITE);
+        headDot(14, 9, eyeColor);
+        headDot(18, 9, eyeColor);
         
-        // Eyes & Angry Brow (Heavy furrow)
-        headBox(12, 8, 3, 1, WHITE);
-        headBox(17, 8, 3, 1, WHITE);
+        headDot(13, 7, SKIN_TONE);
+        headDot(14, 7, SKIN_TONE);
+        headDot(17, 7, SKIN_TONE);
+        headDot(18, 7, SKIN_TONE);
         
-        // Sharp, angled eyebrows for a deeper aggressive slant
-        headBox(12, 7, 3, 1, BROW);
-        headBox(17, 7, 3, 1, BROW);
-        headDot(14, 8, BROW); // Deep furrow
-        headDot(17, 8, BROW);
-        headBox(15, 8, 2, 1, SKIN_SHADOW); // bridge crease
+        headDot(13, 8, eyebrowColor);
+        headDot(14, 8, eyebrowColor);
+        headDot(17, 8, eyebrowColor);
+        headDot(18, 8, eyebrowColor);
         
-        // Pupils focused and intense
-        headDot(13, 8, EYE);
-        headDot(18, 8, EYE);
-        
-        // Angle cutoff to make them slant aggressively
-        headDot(12, 8, SKIN);
-        headDot(19, 8, SKIN);
-        
-        // Expressions (Fierce and Angry)
+        // Angry brow furrow
+        headDot(15, 8, SKIN_SHADOW);
+        headDot(16, 8, SKIN_SHADOW);
+        headDot(15, 11, 0xdca880); // Nose
+
+        // Cheek lines
+        headDot(13, 11, SKIN_SHADOW);
+        headDot(18, 11, SKIN_SHADOW);
+
+        // Expressions
         if (isAttack) {
-          headBox(14, 11, 4, 3, 0x440000); // Shouting wide open
-          headBox(14, 11, 4, 1, WHITE); // Upper teeth
-          headBox(15, 13, 2, 1, 0xff7777); // Tongue
+          headBox(15, 12, 2, 1, 0x440000); 
         } else if (isDefend) {
-          headBox(14, 11, 4, 2, WHITE); // Grit teeth
-          headBox(13, 11, 1, 2, SKIN_SHADOW);
-          headBox(18, 11, 1, 2, SKIN_SHADOW); // Tension lines
+          headBox(15, 12, 2, 1, WHITE); 
         } else {
-          // Angry scowl (not just a smirk)
-          headBox(14, 11, 4, 1, SKIN_SHADOW); // Scowl line
-          headDot(15, 11, 0x222222);
-          headDot(16, 11, 0x222222);
-          headDot(13, 12, SKIN_SHADOW); // Downward turned corners
-          headDot(18, 12, SKIN_SHADOW);
+          headDot(16, 12, 0x222222); 
         }
 
-        // --- HAIR (Iconic Flame & Widow's Peak) ---
-        // Sideburns
-        headBox(10, 5, 1, 3, HAIR);
-        headBox(21, 5, 1, 3, HAIR);
+        // --- HAIR ---
+        canvas.fillStyle(hairColor, 1);
+        if (isTransformed && !isUI) {
+          // SSJ Hair (Vegeta: mais ereto e sem franja)
+          headBox(10, -3, 12, 10, hairColor); 
+          headBox(11, -9, 10, 6, hairColor);
+          headBox(12, -14, 8, 5, hairColor);
+          headBox(13, -18, 6, 4, hairColor);
+          
+          // Pontas laterais
+          headBox(8, -5, 2, 8, hairColor);
+          headBox(7, -2, 1, 5, hairColor);
+          headBox(22, -5, 2, 8, hairColor);
+          headBox(24, -2, 1, 5, hairColor);
+          
+          headBox(13, -20, 2, 4, hairColor);
+          headBox(17, -20, 2, 4, hairColor);
 
-        if (isTransformed) {
-          // SUPER SAIYAN DYNAMIC HAIR
-          // Base volume (height 11 avoids y=5 gap over forehead)
-          headBox(10, -5, 12, 11, HAIR); 
-          headBox(10, -8, 12, 4, HAIR); // Fill corner gaps
-          headBox(11, -12, 10, 5, HAIR);
-          headBox(12, -15, 8, 5, HAIR);
-          headBox(13, -19, 6, 5, HAIR);
-          headBox(14, -22, 4, 4, HAIR);
+          // Hair shading
+          headBox(11, -5, 1, 10, HAIR_SSJ_SHADOW);
+          headBox(20, -5, 1, 10, HAIR_SSJ_SHADOW);
+          headBox(12, -11, 1, 6, HAIR_SSJ_SHADOW);
+          headBox(19, -11, 1, 6, HAIR_SSJ_SHADOW);
+          headBox(15, -14, 1, 10, HAIR_SSJ_SHADOW);
           
-          // Side flares tightly connected to center
-          headBox(8, -8, 2, 8, HAIR); 
-          headBox(7, -5, 1, 4, HAIR); 
-          headBox(22, -8, 2, 8, HAIR);
-          headBox(24, -5, 1, 4, HAIR);
+          // Highlights
+          headBox(13, -7, 1, 6, HAIR_SSJ_LIGHT);
+          headBox(18, -7, 1, 6, HAIR_SSJ_LIGHT);
+          headBox(16, -11, 1, 5, HAIR_SSJ_LIGHT);
+          
+        } else if (isUI) {
+          // UI Hair
+          headBox(10, 1, 12, 6, hairColor);
+          headBox(12, -3, 8, 4, hairColor); 
+          headBox(14, -6, 4, 3, hairColor); 
+          
+          headBox(8, 2, 2, 5, hairColor);
+          headBox(7, 3, 1, 4, hairColor);
+          headBox(22, 2, 2, 5, hairColor);
+          headBox(24, 3, 1, 4, hairColor);
 
-          // Hair highlights and shading for golden volume
-          const LIGHT = isUI ? 0xd2b4de : 0xffcf40;
-          const SHADE = isUI ? 0x732d91 : 0xcfa000;
+          headBox(11, 2, 1, 5, HAIR_UI_SHADOW);
+          headBox(20, 2, 1, 5, HAIR_UI_SHADOW);
+          headBox(14, -1, 1, 4, HAIR_UI_SHADOW);
           
-          // Inner highlights
-          headBox(14, -20, 2, 12, LIGHT);
-          headBox(12, -12, 2, 8, LIGHT);
-          headBox(18, -12, 2, 8, LIGHT);
+          headBox(13, 0, 1, 4, HAIR_UI_LIGHT);
+          headBox(18, 0, 1, 4, HAIR_UI_LIGHT);
           
-          // Shadows
-          headBox(16, -18, 1, 10, SHADE);
-          headBox(11, -12, 1, 10, SHADE);
-          headBox(20, -12, 1, 10, SHADE);
         } else {
-          // BASE FORM FLAME HAIR
-          headBox(10, -3, 12, 9, HAIR); // Base volume (height 9 to cover y=5)
-          headBox(10, -7, 12, 5, HAIR); // Fill corner gaps
-          headBox(11, -11, 10, 5, HAIR);
-          headBox(12, -15, 8, 5, HAIR);
-          headBox(13, -18, 6, 4, HAIR);
-          headBox(14, -20, 4, 3, HAIR);
+          // Base Hair (Vegeta: Flame shape)
+          headBox(10, -1, 12, 8, hairColor); 
+          headBox(11, -5, 10, 4, hairColor);
+          headBox(12, -9, 8, 4, hairColor);
+          headBox(13, -13, 6, 4, hairColor);
           
-          // Side flares tied in
-          headBox(8, -6, 2, 7, HAIR);
-          headBox(7, -3, 1, 4, HAIR);
-          headBox(22, -6, 2, 7, HAIR);
-          headBox(24, -3, 1, 4, HAIR);
+          headBox(8, 0, 2, 7, hairColor);
+          headBox(7, 2, 1, 4, hairColor);
+          headBox(22, 0, 2, 7, hairColor);
+          headBox(24, 2, 1, 4, hairColor);
 
-          // Hair Texture & Shading (Striated upwards flame lines)
-          const hairShadowC = 0x222222;
-          // Flame contouring
-          headBox(13, -16, 1, 14, hairShadowC);
-          headBox(17, -14, 1, 12, hairShadowC);
-          headBox(11, -9, 1, 10, hairShadowC);
-          headBox(20, -9, 1, 10, hairShadowC);
+          headBox(13, -11, 1, 10, 0x333333);
+          headBox(17, -9, 1, 8, 0x333333);
+          headBox(11, -4, 1, 8, 0x333333);
+          headBox(20, -4, 1, 8, 0x333333);
         }
 
-        // Deep Widow's Peak (Drawn LAST so it goes over the hair base)
-        headBox(13, 4, 6, 2, SKIN);
-        headBox(14, 3, 4, 1, SKIN);
-        headDot(15, 2, SKIN); // Point
-        headDot(16, 2, SKIN);
+        // Widow's Peak (Desenha a pele por cima do cabelo na testa)
+        headBox(13, 5, 6, 2, SKIN_TONE);
+        headBox(14, 4, 4, 1, SKIN_TONE);
+        headDot(15, 3, SKIN_TONE);
+        headDot(16, 3, SKIN_TONE);
       }
-    } // End Switch Equivalent
+    } 
 
     let textureName = key;
     if (isUI) textureName = `${key}_ui`;
@@ -533,7 +564,6 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
     canvas.generateTexture(textureName, sheetWidth, sheetHeight);
     canvas.destroy();
 
-    // Manually add frame data to the new texture so Phaser knows it's a spritesheet
     if (scene.textures.exists(textureName)) {
       const tex = scene.textures.get(textureName);
       const fw = FRAME_WIDTH * SCALE;

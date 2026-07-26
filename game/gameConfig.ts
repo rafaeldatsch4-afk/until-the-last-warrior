@@ -40,7 +40,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   ],
 
   scale: {
-    mode: Phaser.Scale.RESIZE,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: 960,
     height: 540,

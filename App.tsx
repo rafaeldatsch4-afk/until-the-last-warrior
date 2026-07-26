@@ -104,8 +104,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`fixed inset-0 bg-black text-white overflow-hidden flex flex-col ${isShaking ? 'animate-shake-screen' : ''}`}>
-      <main className="flex-1 flex items-center justify-center w-full p-0 relative overflow-hidden">
+    <div className={`fixed inset-0 bg-[#071026] text-white overflow-hidden flex flex-col ${isShaking ? 'animate-shake-screen' : ''}`}>
+      <main className="flex-1 w-full p-0 relative overflow-hidden">
         <AuthButton />
         <AchievementToast />
         {/* Buttons Container */}
@@ -198,7 +198,7 @@ const App: React.FC = () => {
           </div>
         )}
 
-        <div className="relative overflow-hidden bg-black flex items-center justify-center w-full h-full">
+        <div className="relative overflow-hidden bg-[#071026] w-full h-full">
           <GameCanvas />
         </div>
       </main>

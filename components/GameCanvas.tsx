@@ -124,22 +124,15 @@ const GameCanvas: React.FC = () => {
   return (
     <>
       {!isLoaded && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#071026]">
           <div className="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="text-yellow-500 font-retro tracking-widest animate-pulse">CARREGANDO...</p>
         </div>
       )}
-      <style>{`
-        #game-container canvas {
-          width: 100% !important;
-          height: 100% !important;
-          object-fit: fill !important;
-        }
-      `}</style>
       <div
           ref={containerRef}
           id="game-container"
-          className="w-full h-full bg-black overflow-hidden flex items-center justify-center touch-none overscroll-none"
+          className="w-full h-full bg-[#071026] overflow-hidden touch-none overscroll-none"
       />
     </>
   );

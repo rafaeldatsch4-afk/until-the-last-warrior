@@ -176,8 +176,12 @@ export default class BattleScene extends Phaser.Scene {
   public p2ChargeIndicator!: Phaser.GameObjects.Arc;
 
   public p1ComboCount: number = 0;
+  public p1HitCombo: number = 0;
+  public p1LastHitTime: number = 0;
   public p1LastAttackTime: number = 0;
   public p2ComboCount: number = 0;
+  public p2HitCombo: number = 0;
+  public p2LastHitTime: number = 0;
   public p2LastAttackTime: number = 0;
 
   public isBattleOver: boolean = false;
@@ -224,6 +228,8 @@ export default class BattleScene extends Phaser.Scene {
     this.enemyKi = 0;
     this.p1ComboCount = 0;
     this.p2ComboCount = 0;
+    this.p1HitCombo = 0;
+    this.p2HitCombo = 0;
 
     const chars = this.gameState.characters;
     this.playerData =
@@ -4712,25 +4718,44 @@ export default class BattleScene extends Phaser.Scene {
         triggerVibration(isCritical ? "critical" : "medium");
       }
 
-      // Update combo counter
+      // Update hit combo counter
+      const currentTime = this.time.now;
+      if (isP) { // Player took damage, so Enemy (P2) gets the combo
+        if (currentTime - this.p2LastHitTime < 2000) {
+          this.p2HitCombo++;
+        } else {
+          this.p2HitCombo = 1;
+        }
+        this.p2LastHitTime = currentTime;
+        this.p1HitCombo = 0; // Reset player's combo because they got hit
+      } else { // Enemy took damage, Player (P1) gets the combo
+        if (currentTime - this.p1LastHitTime < 2000) {
+          this.p1HitCombo++;
+        } else {
+          this.p1HitCombo = 1;
+        }
+        this.p1LastHitTime = currentTime;
+        this.p2HitCombo = 0; // Reset enemy's combo
+      }
+
       if (this.battleUI) {
-        if (isP && this.p2ComboCount > 1) {
-          this.battleUI.updateCombo(this.p2ComboCount, false);
+        if (isP && this.p2HitCombo > 1) {
+          this.battleUI.updateCombo(this.p2HitCombo, false);
           this.createFloatingComboMultiplier(
             target.x,
             target.y - 40,
-            this.p2ComboCount,
+            this.p2HitCombo,
           );
-        } else if (!isP && this.p1ComboCount > 1) {
-          this.battleUI.updateCombo(this.p1ComboCount, true);
+        } else if (!isP && this.p1HitCombo > 1) {
+          this.battleUI.updateCombo(this.p1HitCombo, true);
           this.createFloatingComboMultiplier(
             target.x,
             target.y - 40,
-            this.p1ComboCount,
+            this.p1HitCombo,
           );
         }
 
-        const comboCount = isP ? this.p2ComboCount : this.p1ComboCount;
+        const comboCount = isP ? this.p2HitCombo : this.p1HitCombo;
         if (comboCount > 1 && (this.gameState.gameMode === "online_pvp" || this.gameState.gameMode === "local_pvp")) {
             // PvP specific gratifying visual effects for combos
             // Screen flash effect depending on combo count
@@ -4758,7 +4783,7 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
 
-    // Reset combo count when hit
+    // Attack combo count reset is kept here just in case, but hit combo is now handled above.
     if (isP) {
       this.p1ComboCount = 0;
     } else {
