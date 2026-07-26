@@ -1,16 +1,9 @@
-import Phaser from "phaser";
-import { transitionTo } from "../utils/sceneTransition";
-import { syncCloudSaveImmediate } from "../systems/CloudSave";
-import { GameState } from "../types";
+import re
 
-export default class StoryHubScene extends Phaser.Scene {
-  private gameState!: GameState;
-  
-  constructor() {
-    super("StoryHubScene");
-  }
+with open('game/scenes/StoryHubScene.ts', 'r') as f:
+    content = f.read()
 
-    create() {
+new_create = """  create() {
     this.cameras.main.fadeIn(300, 0, 0, 0);
     this.gameState = this.registry.get("gameState");
 
@@ -58,9 +51,9 @@ export default class StoryHubScene extends Phaser.Scene {
     // LEFT PANEL (Character & Level)
     const leftPanel = this.add.graphics();
     leftPanel.fillStyle(0x000000, 0.6);
-    leftPanel.fillRoundedRect(50, 95, 380, 360, 12);
+    leftPanel.fillRoundedRect(50, 100, 380, 350, 12);
     leftPanel.lineStyle(2, 0x3498db, 0.8);
-    leftPanel.strokeRoundedRect(50, 95, 380, 360, 12);
+    leftPanel.strokeRoundedRect(50, 100, 380, 350, 12);
 
     const char = storyState.customCharacter;
     if (char) {
@@ -75,57 +68,47 @@ export default class StoryHubScene extends Phaser.Scene {
 
        let previewKey = "custom_999"; 
        if (this.anims.exists(previewKey + "_idle")) {
-          const sprite = this.add.sprite(240, 250, previewKey).setScale(2);
+          const sprite = this.add.sprite(240, 250, previewKey).setScale(3.5);
           sprite.play(previewKey + "_idle");
        } else {
           this.add.text(240, 250, "IMAGEM\nINDISPONÍVEL", { color: "#fff" }).setOrigin(0.5);
        }
     }
 
-    // Character Level & EXP Below Character (Just below feet)
-    const expNeeded = (storyState.level + 1) * 100;
-    
-    const uiY = 415; // Just below the character's feet
-
-    // Exp bar bg
-    const barWidth = 260;
-    const barX = 240; // Centered exactly under character
-    
-    // Level Badge (Centered above the EXP bar)
-    const badgeY = uiY - 28;
+    // Level Badge
     const lvlBadge = this.add.graphics();
-    lvlBadge.fillStyle(0x3498db, 1); // Blue to match the theme instead of red
-    lvlBadge.fillCircle(barX, badgeY, 18);
-    lvlBadge.lineStyle(2, 0xffffff, 1);
-    lvlBadge.strokeCircle(barX, badgeY, 18);
-    this.add.text(barX, badgeY - 8, "LVL", { fontSize: "10px", color: "#fff", fontStyle: "bold" }).setOrigin(0.5);
-    this.add.text(barX, badgeY + 6, `${storyState.level}`, { fontSize: "16px", color: "#fff", fontStyle: "900" }).setOrigin(0.5);
+    lvlBadge.fillStyle(0xe74c3c, 1);
+    lvlBadge.fillCircle(110, 140, 25);
+    lvlBadge.lineStyle(3, 0xffffff, 1);
+    lvlBadge.strokeCircle(110, 140, 25);
+    this.add.text(110, 128, "LVL", { fontSize: "12px", color: "#fff", fontStyle: "bold" }).setOrigin(0.5);
+    this.add.text(110, 145, `${storyState.level}`, { fontSize: "22px", color: "#fff", fontStyle: "900" }).setOrigin(0.5);
 
-    this.add.rectangle(barX, uiY, barWidth, 20, 0x222222).setOrigin(0.5).setStrokeStyle(2, 0x555555);
+    // EXP Bar
+    const expNeeded = (storyState.level + 1) * 100;
+    this.add.text(240, 375, "EXPERIÊNCIA", { fontSize: "14px", color: "#aaa", fontStyle: "bold" }).setOrigin(0.5);
+    
+    // Exp bar bg
+    const barWidth = 300;
+    this.add.rectangle(240, 400, barWidth, 20, 0x222222).setOrigin(0.5).setStrokeStyle(2, 0x555555);
     
     // Exp bar fill
     const expRatio = Math.min(1, storyState.exp / expNeeded);
     const expFillWidth = barWidth * expRatio;
     
+    // We create a graphics for the fill so we can do a gradient
     const expFill = this.add.graphics();
     expFill.fillGradientStyle(0x2ecc71, 0x27ae60, 0x2ecc71, 0x27ae60, 1);
-    expFill.fillRect(barX - barWidth/2, uiY - 10, expFillWidth, 20);
+    expFill.fillRect(240 - barWidth/2, 390, expFillWidth, 20);
     
-    // EXP Text (Centered on the bar)
-    this.add.text(barX, uiY, `EXP: ${storyState.exp} / ${expNeeded}`, { 
-        fontSize: "12px", 
-        color: "#fff", 
-        fontStyle: "bold",
-        stroke: "#000",
-        strokeThickness: 3 
-    }).setOrigin(0.5);
+    this.add.text(240, 400, `${storyState.exp} / ${expNeeded}`, { fontSize: "12px", color: "#fff", fontStyle: "bold" }).setOrigin(0.5);
 
     // RIGHT PANEL (Attributes)
     const rightPanel = this.add.graphics();
     rightPanel.fillStyle(0x000000, 0.6);
-    rightPanel.fillRoundedRect(470, 95, 440, 360, 12);
+    rightPanel.fillRoundedRect(470, 100, 440, 350, 12);
     rightPanel.lineStyle(2, 0xe67e22, 0.8);
-    rightPanel.strokeRoundedRect(470, 95, 440, 360, 12);
+    rightPanel.strokeRoundedRect(470, 100, 440, 350, 12);
 
     this.add.text(690, 130, "ATRIBUTOS", { 
         fontSize: "28px", 
@@ -316,99 +299,15 @@ export default class StoryHubScene extends Phaser.Scene {
         this.add.text(battleBtnX, battleBtnY + 35, "Você tem pontos de atributo não gastos!", { fontSize: "12px", color: "#f1c40f" }).setOrigin(0.5);
     }
   }
+"""
 
-  showConfigMenu() {
-    const overlay = this.add.rectangle(480, 270, 960, 540, 0x000000, 0.8).setInteractive();
-    const bg = this.add.rectangle(480, 270, 400, 300, 0x111111).setStrokeStyle(3, 0xf1c40f);
-    const title = this.add.text(480, 160, "OPÇÕES DA HISTÓRIA", { fontSize: "28px", color: "#fff", fontStyle: "bold" }).setOrigin(0.5);
+old_create = re.search(r'create\(\) \{.*?(?=\n  showConfigMenu\(\) \{)', content, re.DOTALL)
+if old_create:
+    content = content.replace(old_create.group(0), new_create)
+    print("Replaced create() method.")
+else:
+    print("Could not find create() method.")
 
-    const editBtn = this.createModalBtn(480, 220, 300, 50, "EDITAR VISUAL DO PERSONAGEM", 0x2ecc71, () => {
-       // Transition to CharacterCreatorScene to edit character visual
-       transitionTo(this, "CharacterCreatorScene");
-    });
+with open('game/scenes/StoryHubScene.ts', 'w') as f:
+    f.write(content)
 
-    const deleteBtn = this.createModalBtn(480, 290, 300, 50, "EXCLUIR PROGRESSO (RESET)", 0xe74c3c, () => {
-       // Excluir historia
-       this.gameState.storyState = undefined;
-       this.registry.set("gameState", this.gameState);
-       if (window.UTLW) window.UTLW.save();
-       transitionTo(this, "ModeSelectScene");
-    });
-
-    const closeBtn = this.createModalBtn(480, 360, 300, 50, "FECHAR", 0x7f8c8d, () => {
-       overlay.destroy();
-       bg.destroy();
-       title.destroy();
-       editBtn.destroy();
-       deleteBtn.destroy();
-       closeBtn.destroy();
-    });
-  }
-
-  createModalBtn(x: number, y: number, width: number, height: number, text: string, color: number, callback: () => void) {
-    const container = this.add.container(x, y);
-    const bg = this.add.rectangle(0, 0, width, height, color).setStrokeStyle(2, 0xffffff);
-    const txt = this.add.text(0, 0, text, { fontSize: Math.floor(height * 0.4) + "px", color: "#fff", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5);
-    container.add([bg, txt]);
-    const hitArea = this.add.rectangle(0, 0, width, height, 0x000, 0).setInteractive({ useHandCursor: true });
-    container.add(hitArea);
-    hitArea.on("pointerdown", () => {
-       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-       this.tweens.add({ targets: container, scale: 0.9, duration: 50, yoyo: true, onComplete: callback });
-    });
-    
-    // Create a destroy wrapper to clean up the container
-    const destroyObj = {
-       destroy: () => {
-           container.destroy();
-       }
-    };
-    return destroyObj;
-  }
-
-  startNextBattle() {
-     // Prepare the battle setup
-     const storyState = this.gameState.storyState!;
-     this.gameState.p1CharacterId = 999;
-     // Enemy character based on stage
-     const availableBaseChars = this.gameState.characters.filter(c => c.id !== 999);
-     const enemyIdx = (storyState.stage - 1) % availableBaseChars.length;
-     this.gameState.p2CharacterId = availableBaseChars[enemyIdx].id;
-     
-     // Set difficulty based on stage
-     this.gameState.difficulty = Math.min(2, Math.floor(storyState.stage / 5)); // gets harder every 5 stages
-     
-     this.registry.set("gameState", this.gameState);
-     if (window.UTLW) window.UTLW.save();
-     
-     transitionTo(this, "BattleScene");
-  }
-
-  createBtn(x: number, y: number, width: number, height: number, text: string, color: number, callback: () => void) {
-    const container = this.add.container(x, y);
-    
-    const bg = this.add.rectangle(0, 0, width, height, color).setStrokeStyle(2, 0xffffff);
-    const txt = this.add.text(0, 0, text, { fontSize: Math.floor(height * 0.4) + "px", color: "#fff", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5);
-    
-    container.add([bg, txt]);
-    
-    const hitArea = this.add.rectangle(0, 0, width, height, 0x000, 0).setInteractive({ useHandCursor: true });
-    container.add(hitArea);
-    
-    hitArea.on("pointerover", () => {
-       bg.setFillStyle(0xffffff);
-       txt.setColor("#000");
-    });
-    
-    hitArea.on("pointerout", () => {
-       bg.setFillStyle(color);
-       txt.setColor("#fff");
-    });
-    
-    hitArea.on("pointerdown", () => {
-       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-       this.tweens.add({ targets: container, scale: 0.9, duration: 50, yoyo: true, onComplete: callback });
-    });
-    return container;
-  }
-}
