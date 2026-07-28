@@ -949,19 +949,27 @@ export function generateCustomSprite(
           box(21, 11, 4, 2, ACC_1); // hilt guard
           box(22, 4, 2, 4, 0x8b4513); // cabo
         } else if (pAcc === "aura_blue") {
-          // Visual back aura
-          canvas.fillStyle(0x0088ff, 0.4);
-          canvas.fillRect((offsetX + 4) * SCALE, (DRAW_OFFSET_Y + 2) * SCALE, 24 * SCALE, 32 * SCALE);
-          canvas.fillStyle(0x00ffff, 0.6);
-          canvas.fillRect((offsetX + 6) * SCALE, (DRAW_OFFSET_Y + 4) * SCALE, 20 * SCALE, 28 * SCALE);
-          canvas.fillStyle(0xffffff, 1);
+          // Pixelated back aura
+          alphaBox(10, 4, 12, 28, 0x00ffff, 0.4);
+          alphaBox(12, 2, 8, 30, 0x00ffff, 0.6);
+          alphaBox(8, 8, 2, 20, 0x0088ff, 0.4);
+          alphaBox(22, 8, 2, 20, 0x0088ff, 0.4);
+          alphaBox(9, 6, 2, 22, 0x0088ff, 0.5);
+          alphaBox(21, 6, 2, 22, 0x0088ff, 0.5);
+          alphaBox(7, 12, 2, 8, 0x0088ff, 0.3);
+          alphaBox(23, 15, 2, 6, 0x0088ff, 0.3);
+          alphaBox(14, 0, 4, 4, 0x0088ff, 0.6);
         } else if (pAcc === "aura_red") {
-          // Visual back aura
-          canvas.fillStyle(0xaa0000, 0.4);
-          canvas.fillRect((offsetX + 4) * SCALE, (DRAW_OFFSET_Y + 2) * SCALE, 24 * SCALE, 32 * SCALE);
-          canvas.fillStyle(0xff0000, 0.6);
-          canvas.fillRect((offsetX + 6) * SCALE, (DRAW_OFFSET_Y + 4) * SCALE, 20 * SCALE, 28 * SCALE);
-          canvas.fillStyle(0xffffff, 1);
+          // Pixelated back aura
+          alphaBox(10, 4, 12, 28, 0xff0000, 0.4);
+          alphaBox(12, 2, 8, 30, 0xff0000, 0.6);
+          alphaBox(8, 8, 2, 20, 0xaa0000, 0.4);
+          alphaBox(22, 8, 2, 20, 0xaa0000, 0.4);
+          alphaBox(9, 6, 2, 22, 0xaa0000, 0.5);
+          alphaBox(21, 6, 2, 22, 0xaa0000, 0.5);
+          alphaBox(7, 12, 2, 8, 0xaa0000, 0.3);
+          alphaBox(23, 15, 2, 6, 0xaa0000, 0.3);
+          alphaBox(14, 0, 4, 4, 0xaa0000, 0.6);
         }
 
         const HEAD_1_SHADOW =

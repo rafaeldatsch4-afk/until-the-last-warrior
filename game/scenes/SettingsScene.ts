@@ -474,10 +474,12 @@ export default class SettingsScene extends Phaser.Scene {
       .text(
         260,
         260,
-        "Move: W, A, S, D\n\n" +
+        "Move: W, A, S, D\n" +
+          "Dash: Double A or D\n\n" +
           "Attack: E\n" +
           "Ki Blast: C\n" +
-          "Defend/Ki: Q\n" +
+          "Defend: Q\n" +
+          "Charge Ki: R\n" +
           "Special: V\n" +
           "Transform: X",
         {
@@ -504,10 +506,12 @@ export default class SettingsScene extends Phaser.Scene {
       .text(
         700,
         260,
-        "Move: Arrows\n\n" +
+        "Move: Arrows\n" +
+          "Dash: Double Left/Right\n\n" +
           "Attack: I\n" +
           "Ki Blast: L\n" +
-          "Defend/Ki: O\n" +
+          "Defend: O\n" +
+          "Charge Ki: U\n" +
           "Special: K\n" +
           "Transform: P",
         {

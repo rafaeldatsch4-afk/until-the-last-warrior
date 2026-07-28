@@ -133,6 +133,8 @@ export default class BattleScene extends Phaser.Scene {
   public p2DefendStartTime: number = 0;
   public p1InvulnerableUntil: number = 0;
   public p2InvulnerableUntil: number = 0;
+  public p1DashingUntil: number = 0;
+  public p2DashingUntil: number = 0;
 
   // Action Flags to prevent spamming
   public p1ActionActive: boolean = false;
@@ -1045,8 +1047,9 @@ export default class BattleScene extends Phaser.Scene {
       this.p1Shadow.setScale(Math.max(0.2, 1 - yDist / 200));
 
       if (this.p1Aura) {
+        const offsetY = this.player.displayHeight * 0.2;
         this.p1Aura.setX(this.player.x);
-        this.p1Aura.setY(this.player.y + 80);
+        this.p1Aura.setY(this.player.y + offsetY);
         if (this.playerTransformLevel > 0) {
           this.p1Aura.setVisible(true);
           const colors = this.getCharacterAuraColor(true);
@@ -1063,8 +1066,9 @@ export default class BattleScene extends Phaser.Scene {
         }
       }
       if (this.p1Shield) {
+        const offsetY = this.player.displayHeight * 0.2;
         this.p1Shield.setX(this.player.x);
-        this.p1Shield.setY(this.player.y + 80);
+        this.p1Shield.setY(this.player.y + offsetY);
         if (this.playerDefending) {
           this.p1Shield.setVisible(true);
           const colors = this.getCharacterAuraColor(true);
@@ -1087,8 +1091,9 @@ export default class BattleScene extends Phaser.Scene {
       this.p2Shadow.setScale(Math.max(0.2, 1 - yDist / 200));
 
       if (this.p2Aura) {
+        const offsetY = this.enemy.displayHeight * 0.2;
         this.p2Aura.setX(this.enemy.x);
-        this.p2Aura.setY(this.enemy.y + 80);
+        this.p2Aura.setY(this.enemy.y + offsetY);
         if (this.enemyTransformLevel > 0) {
           this.p2Aura.setVisible(true);
           const colors = this.getCharacterAuraColor(false);
@@ -1105,8 +1110,9 @@ export default class BattleScene extends Phaser.Scene {
         }
       }
       if (this.p2Shield) {
+        const offsetY = this.enemy.displayHeight * 0.2;
         this.p2Shield.setX(this.enemy.x);
-        this.p2Shield.setY(this.enemy.y + 80);
+        this.p2Shield.setY(this.enemy.y + offsetY);
         if (this.enemyDefending) {
           this.p2Shield.setVisible(true);
           const colors = this.getCharacterAuraColor(false);
@@ -1864,17 +1870,18 @@ export default class BattleScene extends Phaser.Scene {
       .setDepth(0);
 
     // FIX: Moved Aura down to +80 to center on body/chest (was +0, top of head)
+    const p1OffsetY = this.player.displayHeight * 0.2;
     this.p1DebugCircle = this.add
-      .circle(this.p1StartPos.x, this.p1StartPos.y + 80, 50, 0x3498db, 0.5)
+      .circle(this.p1StartPos.x, this.p1StartPos.y + p1OffsetY, 50, 0x3498db, 0.5)
       .setVisible(false);
     this.p1Aura = this.add
-      .circle(this.p1StartPos.x, this.p1StartPos.y + 80, 51, 0x3498db, 0.5)
+      .circle(this.p1StartPos.x, this.p1StartPos.y + p1OffsetY, 51, 0x3498db, 0.5)
       .setVisible(false)
       .setDepth(0);
     this.p1Shield = this.add
       .arc(
         this.p1StartPos.x,
-        this.p1StartPos.y + 80,
+        this.p1StartPos.y + p1OffsetY,
         60,
         0,
         360,
@@ -1926,17 +1933,18 @@ export default class BattleScene extends Phaser.Scene {
         0.5,
       )
       .setDepth(0);
+    const p2OffsetY = this.enemy.displayHeight * 0.2;
     this.p2DebugCircle = this.add
-      .circle(this.p2StartPos.x, this.p2StartPos.y + 80, 50, 0xe74c3c, 0.5)
+      .circle(this.p2StartPos.x, this.p2StartPos.y + p2OffsetY, 50, 0xe74c3c, 0.5)
       .setVisible(false);
     this.p2Aura = this.add
-      .circle(this.p2StartPos.x, this.p2StartPos.y + 80, 51, 0xe74c3c, 0.5)
+      .circle(this.p2StartPos.x, this.p2StartPos.y + p2OffsetY, 51, 0xe74c3c, 0.5)
       .setVisible(false)
       .setDepth(0);
     this.p2Shield = this.add
       .arc(
         this.p2StartPos.x,
-        this.p2StartPos.y + 80,
+        this.p2StartPos.y + p2OffsetY,
         60,
         0,
         360,
@@ -4478,7 +4486,7 @@ export default class BattleScene extends Phaser.Scene {
       Phaser.Math.Between(40, 80) * (Math.random() > 0.5 ? 1 : -1);
 
     const text = this.add
-      .text(x + jitterX, y - 60, `${comboCount}x COMBO!`, {
+      .text(x + jitterX, y - 60, `${comboCount} HITS! (x${multiplier})`, {
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         fontStyle: "italic",
@@ -4603,8 +4611,56 @@ export default class BattleScene extends Phaser.Scene {
     });
   }
 
+  triggerSuccessfulDodge(isPlayer: boolean) {
+    const target = isPlayer ? this.player : this.enemy;
+    
+    // Floating text
+    this.createFloatingDamage(target.x, target.y + 20, 0, false, true);
+    const floatText = this.add.text(target.x, target.y - 40, "ESQUIVA!", { 
+      fontSize: "36px", color: "#ffffff", fontStyle: "900", stroke: "#2ecc71", strokeThickness: 6 
+    }).setOrigin(0.5);
+    this.tweens.add({ targets: floatText, y: target.y - 80, alpha: 0, duration: 1000, onComplete: () => floatText.destroy() });
+    
+    // Smoke effect
+    for(let i=0; i<5; i++) {
+        const smoke = this.add.circle(target.x + Phaser.Math.Between(-30, 30), target.y + Phaser.Math.Between(-20, 60), Phaser.Math.Between(15, 30), 0xdddddd, 0.8);
+        this.tweens.add({
+            targets: smoke,
+            y: smoke.y - Phaser.Math.Between(40, 80),
+            scale: 2,
+            alpha: 0,
+            duration: Phaser.Math.Between(400, 700),
+            onComplete: () => smoke.destroy()
+        });
+    }
+
+    // Afterimage flash
+    const ghost = this.add.sprite(target.x, target.y, target.texture.key, target.frame.name)
+      .setFlipX(target.flipX)
+      .setTintFill(0x2ecc71)
+      .setAlpha(0.8)
+      .setDepth(target.depth - 1);
+    this.tweens.add({
+      targets: ghost,
+      alpha: 0,
+      scale: 1.5,
+      duration: 400,
+      onComplete: () => ghost.destroy(),
+    });
+
+    if (this.soundManager) this.soundManager.playStep();
+    triggerVibration("light");
+  }
+
   takeDamage(isP: boolean, baseDmg: number, fromNetwork = false) {
     if (this.isBattleOver || !this.scene.isActive()) return;
+    
+    // Check for successful dodge (dashing i-frames)
+    if (this.time.now < (isP ? this.p1DashingUntil : this.p2DashingUntil)) {
+      this.triggerSuccessfulDodge(isP);
+      return;
+    }
+
     if (this.time.now < (isP ? this.p1InvulnerableUntil : this.p2InvulnerableUntil)) return; // Wake-up I-frames
 
     if (this.gameState.gameMode === "online_pvp" && !fromNetwork) {
@@ -4627,10 +4683,30 @@ export default class BattleScene extends Phaser.Scene {
        }
     }
 
+    // Update hit combo counter (BEFORE damage application)
+    const currentTime = this.time.now;
+    if (isP) { // Player took damage, so Enemy (P2) gets the combo
+      if (currentTime - this.p2LastHitTime < 2000) {
+        this.p2HitCombo++;
+      } else {
+        this.p2HitCombo = 1;
+      }
+      this.p2LastHitTime = currentTime;
+      this.p1HitCombo = 0; // Reset player's combo because they got hit
+    } else { // Enemy took damage, Player (P1) gets the combo
+      if (currentTime - this.p1LastHitTime < 2000) {
+        this.p1HitCombo++;
+      } else {
+        this.p1HitCombo = 1;
+      }
+      this.p1LastHitTime = currentTime;
+      this.p2HitCombo = 0; // Reset enemy's combo
+    }
+
     // Apply combo multiplier ONLY if the target isn't defending
-    const attackerComboCount = isP ? this.p2ComboCount : this.p1ComboCount;
-    if (attackerComboCount > 1) {
-      const mult = Math.max(0.2, 1 - (attackerComboCount - 1) * 0.1);
+    const hitComboCount = isP ? this.p2HitCombo : this.p1HitCombo;
+    if (hitComboCount > 1) {
+      const mult = 1 + (hitComboCount - 1) * 0.1; // Increases damage by 10% per consecutive hit
       dmg = Math.floor(dmg * mult);
     }
 
@@ -4718,25 +4794,7 @@ export default class BattleScene extends Phaser.Scene {
         triggerVibration(isCritical ? "critical" : "medium");
       }
 
-      // Update hit combo counter
-      const currentTime = this.time.now;
-      if (isP) { // Player took damage, so Enemy (P2) gets the combo
-        if (currentTime - this.p2LastHitTime < 2000) {
-          this.p2HitCombo++;
-        } else {
-          this.p2HitCombo = 1;
-        }
-        this.p2LastHitTime = currentTime;
-        this.p1HitCombo = 0; // Reset player's combo because they got hit
-      } else { // Enemy took damage, Player (P1) gets the combo
-        if (currentTime - this.p1LastHitTime < 2000) {
-          this.p1HitCombo++;
-        } else {
-          this.p1HitCombo = 1;
-        }
-        this.p1LastHitTime = currentTime;
-        this.p2HitCombo = 0; // Reset enemy's combo
-      }
+      // Hit combo already updated above
 
       if (this.battleUI) {
         if (isP && this.p2HitCombo > 1) {
