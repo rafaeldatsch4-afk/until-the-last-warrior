@@ -46,6 +46,8 @@ export class BattleInput {
   mobileP1Transform = false;
   mobileP1Dash: number = 0;
   mobileP1SpecialJustUp = false;
+  isEditingHUD = false;
+  editHudTextObj: Phaser.GameObjects.Text | null = null;
 
   constructor(scene: BattleScene) {
     this.scene = scene;
@@ -246,14 +248,25 @@ export class BattleInput {
     const btnPos = cfg?.buttonsPos ?? { x: gw - 100 - safeRight, y: gh - 100 - safeBottom };
 
     const createBtn = (
-      x: number,
-      y: number,
+      defaultX: number,
+      defaultY: number,
       text: string,
       color: number,
       radius: number,
       onDown: () => void,
       onUp?: () => void,
     ) => {
+      // Check localStorage for saved position
+      const saved = localStorage.getItem(`hudPos_${text}`);
+      let x = defaultX;
+      let y = defaultY;
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          x = parsed.x;
+          y = parsed.y;
+        } catch (e) {}
+      }
       // Modern Glassy Button Setup
       const btnGroup = this.scene.add
         .container(x, y)
@@ -306,8 +319,21 @@ export class BattleInput {
 
       const hitArea = new Phaser.Geom.Circle(0, 0, radius * 1.5);
       btnGroup.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
+      this.scene.input.setDraggable(btnGroup);
+
+      btnGroup.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+        if (!this.isEditingHUD) return;
+        btnGroup.x = dragX;
+        btnGroup.y = dragY;
+      });
+      
+      btnGroup.on('dragend', () => {
+        if (!this.isEditingHUD) return;
+        localStorage.setItem(`hudPos_${text}`, JSON.stringify({ x: btnGroup.x, y: btnGroup.y }));
+      });
 
       btnGroup.on("pointerdown", () => {
+        if (this.isEditingHUD) return;
         press();
       });
 
@@ -323,8 +349,19 @@ export class BattleInput {
     };
 
     // --- Virtual Joystick ---
-    const defaultJoyX = dpadPos.x;
-    const defaultJoyY = dpadPos.y;
+    let defaultJoyX = dpadPos.x;
+    let defaultJoyY = dpadPos.y;
+    
+    // Check localStorage for saved joystick position
+    const savedJoy = localStorage.getItem(`hudPos_JOYSTICK`);
+    if (savedJoy) {
+      try {
+        const parsed = JSON.parse(savedJoy);
+        defaultJoyX = parsed.x;
+        defaultJoyY = parsed.y;
+      } catch (e) {}
+    }
+
     let joyRootX = defaultJoyX;
     let joyRootY = defaultJoyY;
 
@@ -343,6 +380,23 @@ export class BattleInput {
     joyContainer.setScale(dpadScale);
     joyBase.setAlpha(opacity);
     this.mobileControls.push(joyContainer);
+
+    // Make joystick draggable in HUD edit mode
+    joyContainer.setInteractive(new Phaser.Geom.Circle(0, 0, 75), Phaser.Geom.Circle.Contains);
+    this.scene.input.setDraggable(joyContainer);
+    
+    joyContainer.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+      if (!this.isEditingHUD) return;
+      joyContainer.x = dragX;
+      joyContainer.y = dragY;
+    });
+    
+    joyContainer.on('dragend', () => {
+      if (!this.isEditingHUD) return;
+      defaultJoyX = joyContainer.x;
+      defaultJoyY = joyContainer.y;
+      localStorage.setItem(`hudPos_JOYSTICK`, JSON.stringify({ x: joyContainer.x, y: joyContainer.y }));
+    });
 
     // Large invisible hit area on the bottom-left quadrant for the FLOATING joystick
     // We remove the old rectangle hit area and use global checking for this too.
@@ -380,6 +434,7 @@ export class BattleInput {
     };
 
     this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
+      if (this.isEditingHUD) return;
       if (currentlyOver && currentlyOver.length > 0) return; // Prevent triggering if clicking a button
       const loc = getLocalPnt(pointer);
       // Only trigger joystick if the pointer is on the left half of the screen
@@ -512,7 +567,36 @@ export class BattleInput {
       .setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(101);
-    this.mobileControls.push(pauseBtn, pauseTxt);
+
+    // Edit HUD Button
+    const editBtn = this.scene.add
+      .circle(550, 40, 30, 0x4a69bd, 0.6)
+      .setInteractive()
+      .setScrollFactor(0)
+      .setDepth(100);
+      
+    const editTxt = this.scene.add
+      .text(550, 40, "HUD", { fontSize: "16px", fontStyle: "bold", color: "#fff" })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(101);
+      
+    this.editHudTextObj = this.scene.add.text(this.scene.cameras.main.width / 2, 100, "HUD EDIT MODE\nDrag buttons to move\nClick HUD button to save", {
+        fontSize: "24px",
+        color: "#fffc00",
+        fontStyle: "bold",
+        stroke: "#000",
+        strokeThickness: 4,
+        align: "center"
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(105).setVisible(false);
+
+    editBtn.on("pointerdown", () => {
+      this.isEditingHUD = !this.isEditingHUD;
+      editBtn.setAlpha(this.isEditingHUD ? 1 : 0.6);
+      if (this.editHudTextObj) this.editHudTextObj.setVisible(this.isEditingHUD);
+    });
+
+    this.mobileControls.push(pauseBtn, pauseTxt, editBtn, editTxt, this.editHudTextObj);
 
     pauseBtn.on("pointerdown", () => {
       pauseBtn.setAlpha(0.9);

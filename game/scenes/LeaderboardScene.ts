@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { transitionTo } from "../utils/sceneTransition";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, limit } from "firebase/firestore";
 import { db } from "../../firebase/init";
 
 export default class LeaderboardScene extends Phaser.Scene {
@@ -102,9 +102,10 @@ export default class LeaderboardScene extends Phaser.Scene {
 
   loadLeaderboardLive() {
     const usersRef = collection(db, "leaderboard_public");
+    const topPlayersQuery = query(usersRef, orderBy("wins", "desc"), limit(10));
     
     // Live update onSnapshot
-    this.unsubscribe = onSnapshot(usersRef, (snapshot) => {
+    this.unsubscribe = onSnapshot(topPlayersQuery, (snapshot) => {
        this.players = [];
        snapshot.forEach(doc => {
            this.players.push(doc.data());
