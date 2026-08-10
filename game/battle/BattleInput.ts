@@ -557,26 +557,28 @@ export class BattleInput {
     }
 
     // Pause Button (Top Center)
+    const pauseX = gw / 2 - 35;
+    const pauseY = 40;
     const pauseBtn = this.scene.add
-      .circle(480, 40, 30, 0x333333, 0.6)
+      .circle(pauseX, pauseY, 30, 0x333333, 0.6)
       .setInteractive()
       .setScrollFactor(0)
       .setDepth(100);
     const pauseTxt = this.scene.add
-      .text(480, 40, "||", { fontSize: "24px", fontStyle: "bold" })
+      .text(pauseX, pauseY, "||", { fontSize: "24px", fontStyle: "bold" })
       .setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(101);
 
     // Edit HUD Button
     const editBtn = this.scene.add
-      .circle(550, 40, 30, 0x4a69bd, 0.6)
+      .circle(pauseX + 70, pauseY, 30, 0x4a69bd, 0.6)
       .setInteractive()
       .setScrollFactor(0)
       .setDepth(100);
       
     const editTxt = this.scene.add
-      .text(550, 40, "HUD", { fontSize: "16px", fontStyle: "bold", color: "#fff" })
+      .text(pauseX + 70, pauseY, "HUD", { fontSize: "16px", fontStyle: "bold", color: "#fff" })
       .setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(101);
