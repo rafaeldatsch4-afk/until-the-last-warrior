@@ -20,6 +20,8 @@ export class BattleUI {
   p1ComboBar!: Phaser.GameObjects.Rectangle;
   p2ComboBar!: Phaser.GameObjects.Rectangle;
   p1ComboHideTimer?: Phaser.Time.TimerEvent;
+  p1HudContainer!: Phaser.GameObjects.Container;
+  p2HudContainer!: Phaser.GameObjects.Container;
   p2ComboHideTimer?: Phaser.Time.TimerEvent;
   pingText?: Phaser.GameObjects.Text;
   pauseOverlay?: Phaser.GameObjects.Container;
@@ -44,6 +46,57 @@ export class BattleUI {
     const bs = this.scene as any;
     this.uiContainer = bs.add.container(0, 0).setScrollFactor(0).setDepth(10);
 
+    // HUD Draggable Containers
+    let p1HudX = 0, p1HudY = 0;
+    const savedP1 = localStorage.getItem(`hudPos_P1`);
+    if (savedP1) {
+      try {
+        const parsed = JSON.parse(savedP1);
+        p1HudX = parsed.x;
+        p1HudY = parsed.y;
+      } catch (e) {}
+    }
+    this.p1HudContainer = bs.add.container(p1HudX, p1HudY).setScrollFactor(0).setDepth(11);
+    this.uiContainer.add(this.p1HudContainer);
+
+    let p2HudX = 0, p2HudY = 0;
+    const savedP2 = localStorage.getItem(`hudPos_P2`);
+    if (savedP2) {
+      try {
+        const parsed = JSON.parse(savedP2);
+        p2HudX = parsed.x;
+        p2HudY = parsed.y;
+      } catch (e) {}
+    }
+    this.p2HudContainer = bs.add.container(p2HudX, p2HudY).setScrollFactor(0).setDepth(11);
+    this.uiContainer.add(this.p2HudContainer);
+
+    // Draggable setup for P1
+    this.p1HudContainer.setInteractive(new Phaser.Geom.Rectangle(25, 10, 250, 100), Phaser.Geom.Rectangle.Contains);
+    bs.input.setDraggable(this.p1HudContainer);
+    this.p1HudContainer.on('drag', (pointer: any, dragX: number, dragY: number) => {
+      if (!bs.battleInput?.isEditingHUD) return;
+      this.p1HudContainer.x = dragX;
+      this.p1HudContainer.y = dragY;
+    });
+    this.p1HudContainer.on('dragend', () => {
+      if (!bs.battleInput?.isEditingHUD) return;
+      localStorage.setItem(`hudPos_P1`, JSON.stringify({ x: this.p1HudContainer.x, y: this.p1HudContainer.y }));
+    });
+
+    // Draggable setup for P2
+    this.p2HudContainer.setInteractive(new Phaser.Geom.Rectangle(685, 10, 250, 100), Phaser.Geom.Rectangle.Contains);
+    bs.input.setDraggable(this.p2HudContainer);
+    this.p2HudContainer.on('drag', (pointer: any, dragX: number, dragY: number) => {
+      if (!bs.battleInput?.isEditingHUD) return;
+      this.p2HudContainer.x = dragX;
+      this.p2HudContainer.y = dragY;
+    });
+    this.p2HudContainer.on('dragend', () => {
+      if (!bs.battleInput?.isEditingHUD) return;
+      localStorage.setItem(`hudPos_P2`, JSON.stringify({ x: this.p2HudContainer.x, y: this.p2HudContainer.y }));
+    });
+
     // Player 1 HP/Ki Backgrounds
     const p1HpBg = bs.add
       .rectangle(150, 50, 250, 22, 0x111111)
@@ -51,7 +104,7 @@ export class BattleUI {
     const p1KiBg = bs.add
       .rectangle(150, 80, 250, 12, 0x111111)
       .setStrokeStyle(2, 0xaaaaaa, 0.6);
-    this.uiContainer.add([p1HpBg, p1KiBg]);
+    this.p1HudContainer.add([p1HpBg, p1KiBg]);
 
     // Player 2 HP/Ki Backgrounds
     const p2HpBg = bs.add
@@ -60,17 +113,17 @@ export class BattleUI {
     const p2KiBg = bs.add
       .rectangle(810, 80, 250, 12, 0x111111)
       .setStrokeStyle(2, 0xaaaaaa, 0.6);
-    this.uiContainer.add([p2HpBg, p2KiBg]);
+    this.p2HudContainer.add([p2HpBg, p2KiBg]);
 
     this.p1HpBar = bs.add
       .rectangle(25, 50, 250, 22, 0x2ecc71)
       .setOrigin(0, 0.5);
-    this.uiContainer.add(this.p1HpBar);
+    this.p1HudContainer.add(this.p1HpBar);
 
     this.p1KiBar = bs.add
       .rectangle(25, 80, 250, 12, 0x3498db)
       .setOrigin(0, 0.5);
-    this.uiContainer.add(this.p1KiBar);
+    this.p1HudContainer.add(this.p1KiBar);
     this.p1KiBar.scaleX = 0; // Starts with 0 Ki
 
     this.p1KiGlow = bs.add
@@ -78,17 +131,17 @@ export class BattleUI {
       .setOrigin(0, 0.5)
       .setAlpha(0)
       .setBlendMode(Phaser.BlendModes.ADD);
-    this.uiContainer.add(this.p1KiGlow);
+    this.p1HudContainer.add(this.p1KiGlow);
 
     this.p2HpBar = bs.add
       .rectangle(685, 50, 250, 22, 0xe74c3c)
       .setOrigin(0, 0.5);
-    this.uiContainer.add(this.p2HpBar);
+    this.p2HudContainer.add(this.p2HpBar);
 
     this.p2KiBar = bs.add
       .rectangle(685, 80, 250, 12, 0xf1c40f)
       .setOrigin(0, 0.5);
-    this.uiContainer.add(this.p2KiBar);
+    this.p2HudContainer.add(this.p2KiBar);
     this.p2KiBar.scaleX = 0; // Starts with 0 Ki
 
     this.p2KiGlow = bs.add
@@ -96,7 +149,7 @@ export class BattleUI {
       .setOrigin(0, 0.5)
       .setAlpha(0)
       .setBlendMode(Phaser.BlendModes.ADD);
-    this.uiContainer.add(this.p2KiGlow);
+    this.p2HudContainer.add(this.p2KiGlow);
 
     // Reset tracking state for new rounds
     this.lastP1HpP = 1;
@@ -115,7 +168,7 @@ export class BattleUI {
       shadow: { color: "#3498db", blur: 4, fill: true },
       resolution: 2,
     });
-    this.uiContainer.add(this.p1NameText);
+    this.p1HudContainer.add(this.p1NameText);
 
     // Player 2 Name
     this.p2NameText = bs.add
@@ -130,11 +183,11 @@ export class BattleUI {
         resolution: 2,
       })
       .setOrigin(1, 0);
-    this.uiContainer.add(this.p2NameText);
+    this.p2HudContainer.add(this.p2NameText);
 
     // Player 1 Combo Sub-Container
     this.p1ComboContainer = bs.add.container(25, 120).setAlpha(0);
-    this.uiContainer.add(this.p1ComboContainer);
+    this.p1HudContainer.add(this.p1ComboContainer);
 
     this.p1ComboBg = bs.add.graphics();
     this.p1ComboBg.fillStyle(0x000000, 0.65);
@@ -167,7 +220,7 @@ export class BattleUI {
 
     // Player 2 Combo Sub-Container
     this.p2ComboContainer = bs.add.container(935, 120).setAlpha(0);
-    this.uiContainer.add(this.p2ComboContainer);
+    this.p2HudContainer.add(this.p2ComboContainer);
 
     this.p2ComboBg = bs.add.graphics();
     this.p2ComboBg.fillStyle(0x000000, 0.65);

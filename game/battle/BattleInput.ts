@@ -598,7 +598,31 @@ export class BattleInput {
       if (this.editHudTextObj) this.editHudTextObj.setVisible(this.isEditingHUD);
     });
 
-    this.mobileControls.push(pauseBtn, pauseTxt, editBtn, editTxt, this.editHudTextObj);
+    // Toggle HUD Button
+    const toggleBtn = this.scene.add
+      .circle(pauseX + 140, pauseY, 30, 0x9b59b6, 0.6)
+      .setInteractive()
+      .setScrollFactor(0)
+      .setDepth(100);
+      
+    const toggleTxt = this.scene.add
+      .text(pauseX + 140, pauseY, "VIS", { fontSize: "16px", fontStyle: "bold", color: "#fff" })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(101);
+
+    let hudVisible = true;
+    toggleBtn.on("pointerdown", () => {
+      hudVisible = !hudVisible;
+      toggleBtn.setAlpha(hudVisible ? 0.6 : 1);
+      
+      if (this.scene.battleUI) {
+        if (this.scene.battleUI.p1HudContainer) this.scene.battleUI.p1HudContainer.setVisible(hudVisible);
+        if (this.scene.battleUI.p2HudContainer) this.scene.battleUI.p2HudContainer.setVisible(hudVisible);
+      }
+    });
+
+    this.mobileControls.push(pauseBtn, pauseTxt, editBtn, editTxt, toggleBtn, toggleTxt, this.editHudTextObj);
 
     pauseBtn.on("pointerdown", () => {
       pauseBtn.setAlpha(0.9);
