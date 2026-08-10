@@ -13,6 +13,8 @@ export class BattleUI {
 
   p1ComboText!: Phaser.GameObjects.Text;
   p2ComboText!: Phaser.GameObjects.Text;
+  p1ComboDmgText!: Phaser.GameObjects.Text;
+  p2ComboDmgText!: Phaser.GameObjects.Text;
   p1ComboContainer!: Phaser.GameObjects.Container;
   p2ComboContainer!: Phaser.GameObjects.Container;
   p1ComboBg!: Phaser.GameObjects.Graphics;
@@ -213,6 +215,19 @@ export class BattleUI {
       .setOrigin(0, 0.5);
     this.p1ComboContainer.add(this.p1ComboText);
 
+    this.p1ComboDmgText = bs.add
+      .text(20, 30, "", {
+        fontSize: "18px",
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        fontStyle: "bold",
+        color: "#ffff00",
+        stroke: "#000000",
+        strokeThickness: 4,
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
+    this.p1ComboContainer.add(this.p1ComboDmgText);
+
     this.p1ComboBar = bs.add
       .rectangle(20, 20, 200, 6, 0xffaa00)
       .setOrigin(0, 0.5);
@@ -245,6 +260,19 @@ export class BattleUI {
       })
       .setOrigin(1, 0.5);
     this.p2ComboContainer.add(this.p2ComboText);
+
+    this.p2ComboDmgText = bs.add
+      .text(-20, 30, "", {
+        fontSize: "18px",
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        fontStyle: "bold",
+        color: "#ffff00",
+        stroke: "#000000",
+        strokeThickness: 4,
+        resolution: 2,
+      })
+      .setOrigin(1, 0.5);
+    this.p2ComboContainer.add(this.p2ComboDmgText);
 
     this.p2ComboBar = bs.add
       .rectangle(-20, 20, 200, 6, 0xffaa00)
@@ -474,8 +502,8 @@ export class BattleUI {
     });
   }
 
-  updateCombo(comboCount: number, isP1: boolean) {
-    if (comboCount < 2) return;
+  updateCombo(comboCount: number, isP1: boolean, comboDamage?: number) {
+    if (comboCount < 2 && this.scene.gameState.gameMode !== "training") return;
 
     const container = isP1 ? this.p1ComboContainer : this.p2ComboContainer;
     const textObj = isP1 ? this.p1ComboText : this.p2ComboText;
@@ -484,6 +512,15 @@ export class BattleUI {
     if (!container || !container.active || !textObj || !textObj.active) return;
 
     textObj.setText(`${comboCount} HITS!`);
+    
+    const dmgTextObj = isP1 ? this.p1ComboDmgText : this.p2ComboDmgText;
+    if (dmgTextObj) {
+      if (this.scene.gameState.gameMode === "training" && comboDamage !== undefined) {
+        dmgTextObj.setText(`${comboDamage} DMG`);
+      } else {
+        dmgTextObj.setText("");
+      }
+    }
 
     // Kill any existing animations on the container or bar
     this.scene.tweens.killTweensOf(container);

@@ -22,6 +22,20 @@ export default class CharacterSelectScene extends Phaser.Scene {
   private fightBtn!: Phaser.GameObjects.Container;
 
   private tooltipContainer!: Phaser.GameObjects.Container;
+  private arenaSelectorContainer!: Phaser.GameObjects.Container;
+  private arenaText!: Phaser.GameObjects.Text;
+  private arenas = [
+    { id: "random", name: "Aleatório" },
+    { id: "arena", name: "Planeta Terra" },
+    { id: "arena_namek", name: "Namekusei" },
+    { id: "arena_city", name: "Cidade Destruída" },
+    { id: "arena_tournament", name: "Torneio" },
+    { id: "arena_ice", name: "Geleira" },
+    { id: "arena_lava", name: "Vulcão" },
+    { id: "arena_desert", name: "Deserto" },
+    { id: "arena_dark", name: "Reino das Trevas" }
+  ];
+  private selectedArenaIndex = 0;
   private tooltipName!: Phaser.GameObjects.Text;
   private tooltipStats!: Phaser.GameObjects.Text;
 
@@ -179,6 +193,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.charContainer = this.add.container(width / 2, 145);
 
     // Botão de Luta (Escondido até selecionar)
+    this.createArenaSelector();
     this.createFightButton();
 
     this.createTooltip();
@@ -226,6 +241,80 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   hideTooltip() {
     this.tooltipContainer.setVisible(false);
+  }
+
+  createArenaSelector() {
+    const { width, height } = this.cameras.main;
+    this.arenaSelectorContainer = this.add.container(width / 2, height - 105);
+
+    // Initial state
+    this.state.selectedArena = this.arenas[this.selectedArenaIndex].id;
+    this.registry.set("gameState", this.state);
+
+    const bg = this.add.rectangle(0, 0, 240, 40, 0x1a252f).setStrokeStyle(2, 0x34495e);
+    
+    this.add.text(0, -30, "CENÁRIO DA LUTA", {
+      fontSize: "14px",
+      color: "#aaa",
+      fontStyle: "bold",
+      fontFamily: "system-ui, sans-serif"
+    }).setOrigin(0.5);
+
+    this.arenaText = this.add.text(0, 0, this.arenas[this.selectedArenaIndex].name, {
+      fontSize: "16px",
+      color: "#fff",
+      fontStyle: "bold",
+      fontFamily: "system-ui, sans-serif"
+    }).setOrigin(0.5);
+
+    // Left Arrow
+    const leftBtn = this.add.text(-100, 0, "<", {
+      fontSize: "24px",
+      color: "#f1c40f",
+      fontStyle: "bold",
+      fontFamily: "monospace"
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+    leftBtn.on("pointerdown", () => {
+      if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      this.selectedArenaIndex--;
+      if (this.selectedArenaIndex < 0) this.selectedArenaIndex = this.arenas.length - 1;
+      this.updateArena();
+    });
+    
+    leftBtn.on("pointerover", () => leftBtn.setColor("#fff"));
+    leftBtn.on("pointerout", () => leftBtn.setColor("#f1c40f"));
+
+    // Right Arrow
+    const rightBtn = this.add.text(100, 0, ">", {
+      fontSize: "24px",
+      color: "#f1c40f",
+      fontStyle: "bold",
+      fontFamily: "monospace"
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+    rightBtn.on("pointerdown", () => {
+      if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      this.selectedArenaIndex++;
+      if (this.selectedArenaIndex >= this.arenas.length) this.selectedArenaIndex = 0;
+      this.updateArena();
+    });
+    
+    rightBtn.on("pointerover", () => rightBtn.setColor("#fff"));
+    rightBtn.on("pointerout", () => rightBtn.setColor("#f1c40f"));
+
+    this.arenaSelectorContainer.add([bg, this.arenaText, leftBtn, rightBtn]);
+    
+    // Hide it in story mode as arenas might be hardcoded, or hide in online PvP
+    if (this.state.gameMode === "story" || this.state.gameMode === "tournament") {
+        this.arenaSelectorContainer.setVisible(false);
+    }
+  }
+
+  updateArena() {
+    this.arenaText.setText(this.arenas[this.selectedArenaIndex].name);
+    this.state.selectedArena = this.arenas[this.selectedArenaIndex].id;
+    this.registry.set("gameState", this.state);
   }
 
   createFightButton() {
@@ -439,6 +528,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   updateUI() {
     this.headerText.setText(this.getSelectionText());
+    if (this.arenaSelectorContainer) {
+        if (this.state.gameMode === "local_pvp") {
+            this.arenaSelectorContainer.setVisible(this.selectionStep === 1);
+        }
+    }
     this.createCharacterSelector();
 
     const txt = this.fightBtn.list[3] as Phaser.GameObjects.Text;

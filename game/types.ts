@@ -68,6 +68,7 @@ export interface GameState {
   selectedCharacterId: number; // Legacy/Default P1
   p1CharacterId: number;
   p2CharacterId: number;
+  selectedArena?: string;
   characters: CharacterData[];
 
   // Arcade State

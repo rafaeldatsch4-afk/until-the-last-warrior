@@ -179,10 +179,12 @@ export default class BattleScene extends Phaser.Scene {
 
   public p1ComboCount: number = 0;
   public p1HitCombo: number = 0;
+  public p1HitComboDamage: number = 0;
   public p1LastHitTime: number = 0;
   public p1LastAttackTime: number = 0;
   public p2ComboCount: number = 0;
   public p2HitCombo: number = 0;
+  public p2HitComboDamage: number = 0;
   public p2LastHitTime: number = 0;
   public p2LastAttackTime: number = 0;
 
@@ -232,6 +234,8 @@ export default class BattleScene extends Phaser.Scene {
     this.p2ComboCount = 0;
     this.p1HitCombo = 0;
     this.p2HitCombo = 0;
+    this.p1HitComboDamage = 0;
+    this.p2HitComboDamage = 0;
 
     const chars = this.gameState.characters;
     this.playerData =
@@ -261,10 +265,15 @@ export default class BattleScene extends Phaser.Scene {
       "arena_desert",
       "arena_dark",
     ];
-    const randomArena = Phaser.Utils.Array.GetRandom(arenas);
+    let selectedArena = this.gameState.selectedArena;
+    if (this.gameState.gameMode === "tournament") {
+      selectedArena = "arena_tournament";
+    } else if (!selectedArena || selectedArena === "random") {
+      selectedArena = Phaser.Utils.Array.GetRandom(arenas);
+    }
     const mapWidth = 5000;
     const bgImage = this.add
-      .image(mapWidth / 2, 270, randomArena)
+      .image(mapWidth / 2, 270, selectedArena)
       .setDisplaySize(mapWidth * 1.5, 540 * 2.5) // Make it large enough so edges are not seen when zoomed out
       .setTint(0x888888)
       .setDepth(-10);
@@ -280,7 +289,7 @@ export default class BattleScene extends Phaser.Scene {
       bgImage.postFX.addBlur(0.3, 0.3, 0.3, 1);
     }
 
-    this.battleEnvironment = new BattleEnvironment(this, bgImage, randomArena);
+    this.battleEnvironment = new BattleEnvironment(this, bgImage, selectedArena);
 
     this.battleCamera = new BattleCamera(this);
     this.battleCamera.setupCamera(mapWidth);
@@ -329,6 +338,17 @@ export default class BattleScene extends Phaser.Scene {
       this.gameState.gameMode,
       this.gameState.arcadeRound,
     );
+
+    if (this.gameState.gameMode === "training") {
+      this.add.text(480, 50, "MODO TREINO", {
+        fontSize: "24px",
+        fontStyle: "bold",
+        color: "#2ecc71",
+        stroke: "#000",
+        strokeThickness: 4,
+        fontFamily: "system-ui, -apple-system, sans-serif"
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(15);
+    }
     this.battleInput = new BattleInput(this);
     this.battleInput.createInputs();
     this.battleInput.createMobileControls();
@@ -4715,6 +4735,7 @@ export default class BattleScene extends Phaser.Scene {
         this.p2HitCombo++;
       } else {
         this.p2HitCombo = 1;
+        this.p2HitComboDamage = 0;
       }
       this.p2LastHitTime = currentTime;
       this.p1HitCombo = 0; // Reset player's combo because they got hit
@@ -4723,6 +4744,7 @@ export default class BattleScene extends Phaser.Scene {
         this.p1HitCombo++;
       } else {
         this.p1HitCombo = 1;
+        this.p1HitComboDamage = 0;
       }
       this.p1LastHitTime = currentTime;
       this.p2HitCombo = 0; // Reset enemy's combo
@@ -4733,6 +4755,11 @@ export default class BattleScene extends Phaser.Scene {
     if (hitComboCount > 1) {
       const mult = 1 + (hitComboCount - 1) * 0.1; // Increases damage by 10% per consecutive hit
       dmg = Math.floor(dmg * mult);
+    }
+    if (isP) {
+      this.p2HitComboDamage += dmg;
+    } else {
+      this.p1HitComboDamage += dmg;
     }
 
     if (isP) this.isP1Jumping = false;
@@ -4822,20 +4849,24 @@ export default class BattleScene extends Phaser.Scene {
       // Hit combo already updated above
 
       if (this.battleUI) {
-        if (isP && this.p2HitCombo > 1) {
-          this.battleUI.updateCombo(this.p2HitCombo, false);
-          this.createFloatingComboMultiplier(
-            target.x,
-            target.y - 40,
-            this.p2HitCombo,
-          );
-        } else if (!isP && this.p1HitCombo > 1) {
-          this.battleUI.updateCombo(this.p1HitCombo, true);
-          this.createFloatingComboMultiplier(
-            target.x,
-            target.y - 40,
-            this.p1HitCombo,
-          );
+        if (isP && (this.p2HitCombo > 1 || this.gameState.gameMode === "training")) {
+          this.battleUI.updateCombo(this.p2HitCombo, false, this.p2HitComboDamage);
+          if (this.p2HitCombo > 1) {
+            this.createFloatingComboMultiplier(
+              target.x,
+              target.y - 40,
+              this.p2HitCombo,
+            );
+          }
+        } else if (!isP && (this.p1HitCombo > 1 || this.gameState.gameMode === "training")) {
+          this.battleUI.updateCombo(this.p1HitCombo, true, this.p1HitComboDamage);
+          if (this.p1HitCombo > 1) {
+            this.createFloatingComboMultiplier(
+              target.x,
+              target.y - 40,
+              this.p1HitCombo,
+            );
+          }
         }
 
         const comboCount = isP ? this.p2HitCombo : this.p1HitCombo;
