@@ -27,7 +27,7 @@ export class JotaroFighter extends Fighter {
 
     if (attackType === "melee") {
       // Jotaro Melee: ORA punches
-      attacker.play(bs.getAnimKey("jotaro", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("jotaro", transLevel, "punch"));
 
       // Dash forward
       bs.tweens.add({
@@ -105,7 +105,7 @@ export class JotaroFighter extends Fighter {
       });
     } else {
       // Jotaro Ki: Star Finger (or throwing something)
-      attacker.play(bs.getAnimKey("jotaro", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("jotaro", transLevel, "punch"));
       if (bs.cache.audio.exists("sfx_ki"))
         bs.sound.play("sfx_ki", { volume: 0.8 });
 
@@ -161,7 +161,7 @@ export class JotaroFighter extends Fighter {
     const dmg = Math.floor(45 * bs.getDamageMultiplier(transLevel));
 
     bs.log("STAR FINGER!");
-    attacker.play(bs.getAnimKey("jotaro", transLevel, "attack"));
+    attacker.play(bs.getAnimKey("jotaro", transLevel, "punch"));
     if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Stand aura
@@ -271,7 +271,7 @@ export class JotaroFighter extends Fighter {
     const dmg = Math.floor(110 * bs.getDamageMultiplier(transLevel));
 
     bs.log("ORA ORA ORA ORA ORA!");
-    attacker.play(bs.getAnimKey("jotaro", transLevel, "attack"));
+    attacker.play(bs.getAnimKey("jotaro", transLevel, "punch"));
     if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Stand aura

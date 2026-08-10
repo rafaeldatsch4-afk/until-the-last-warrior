@@ -29,7 +29,7 @@ export class MadaraFighter extends Fighter {
         duration: 100,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          attacker.play(bs.getAnimKey("madara", transformLevel, "attack"));
+          attacker.play(bs.getAnimKey("madara", transformLevel, "punch"));
           const hits = isComboFinisher ? 4 : 2;
           for (let i = 0; i < hits; i++) {
             bs.time.delayedCall(i * 100, () => {
@@ -59,7 +59,7 @@ export class MadaraFighter extends Fighter {
         },
       });
     } else {
-      attacker.play(bs.getAnimKey("madara", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("madara", transformLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

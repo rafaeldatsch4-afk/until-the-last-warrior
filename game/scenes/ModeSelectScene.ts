@@ -117,18 +117,8 @@ export default class ModeSelectScene extends Phaser.Scene {
         color: 0x2ecc71,
         desc: "Treine contra um oponente imóvel e imortal",
       },
-      {
-        text: "⚡ PARTIDA RÁPIDA",
-        mode: "online_pvp",
-        color: 0x27ae60,
-        desc: "Jogue online por diversão",
-      },
-      {
-        text: "🏆 RANQUEADA",
-        mode: "ranked_pvp",
-        color: 0xd35400,
-        desc: "Suba nas ligas lutando a sério",
-      },
+
+
       {
         text: "🕹️ ARCADE",
         mode: "arcade",

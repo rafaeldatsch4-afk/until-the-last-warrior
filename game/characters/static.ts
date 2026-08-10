@@ -25,7 +25,7 @@ export class StaticFighter extends Fighter {
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
-      attacker.play(bs.getAnimKey("static", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("static", transLevel, "punch"));
 
       bs.tweens.add({
         targets: attacker,
@@ -77,7 +77,7 @@ export class StaticFighter extends Fighter {
       });
     } else {
       // Ki Blast: Electric Bolt
-      attacker.play(bs.getAnimKey("static", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("static", transLevel, "punch"));
       bs.time.delayedCall(50, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

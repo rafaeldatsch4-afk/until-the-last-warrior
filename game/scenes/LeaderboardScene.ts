@@ -48,9 +48,8 @@ export default class LeaderboardScene extends Phaser.Scene {
 
     // Header da tabela
     this.add.text(260, 100, "JOGADOR", { fontSize: "16px", color: "#aaa", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0, 0.5);
-    this.add.text(550, 100, "ELO", { fontSize: "16px", color: "#aaa", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5, 0.5);
-    this.add.text(680, 100, "VITÓRIAS", { fontSize: "16px", color: "#aaa", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5, 0.5);
-    this.add.text(800, 100, "PARTIDAS", { fontSize: "16px", color: "#aaa", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5, 0.5);
+    this.add.text(600, 100, "VITÓRIAS", { fontSize: "16px", color: "#aaa", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5, 0.5);
+    this.add.text(780, 100, "PARTIDAS", { fontSize: "16px", color: "#aaa", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5, 0.5);
 
     this.loadingText = this.add.text(480, 270, "Carregando Ranking (24h/Ao Vivo)...", {
       fontSize: "24px",
@@ -123,14 +122,14 @@ export default class LeaderboardScene extends Phaser.Scene {
     }
     this.listContainer.removeAll(true);
 
-    // Ordenar: Elo (Desc) -> Wins (Desc)
+    // Ordenar: Wins (Desc) -> Matches como desempate reverso (menos partidas = melhor aproveitamento)
     this.players.sort((a, b) => {
-       const eloA = a.elo || 1000;
-       const eloB = b.elo || 1000;
-       if (eloB !== eloA) return eloB - eloA;
        const winsA = a.wins || 0;
        const winsB = b.wins || 0;
-       return winsB - winsA;
+       if (winsB !== winsA) return winsB - winsA;
+       const matchesA = a.matches || 0;
+       const matchesB = b.matches || 0;
+       return matchesA - matchesB;
     });
 
     if (this.players.length === 0) {

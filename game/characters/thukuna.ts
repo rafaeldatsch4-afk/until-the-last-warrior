@@ -25,7 +25,7 @@ export class ThukunaFighter extends Fighter {
 
     if (attackType === "melee") {
       // Thukuna Melee: Cleave (invisible slashes)
-      attacker.play(bs.getAnimKey("thukuna", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("thukuna", transLevel, "punch"));
 
       const slashCount = isComboFinisher ? 5 : 2;
       for (let i = 0; i < slashCount; i++) {
@@ -61,7 +61,7 @@ export class ThukunaFighter extends Fighter {
       });
     } else {
       // Thukuna Ki: Fire Arrow
-      attacker.play(bs.getAnimKey("thukuna", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("thukuna", transLevel, "punch"));
       bs.time.delayedCall(150, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

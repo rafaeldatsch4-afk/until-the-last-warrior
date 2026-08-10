@@ -137,7 +137,9 @@ export class BattleReward {
         subtitleMessage = `${s.playerData.name.toUpperCase()} WINS!`;
         color = "#f1c40f"; // Gold
         s.gameState.coins += coinsEarned;
-        AchievementSystem.addWin();
+        if (s.gameState.gameMode !== "training") {
+          AchievementSystem.addWin();
+        }
         (window as any).UTLW.save();
       } else {
         titleMessage = "DEFEAT...";
@@ -150,7 +152,7 @@ export class BattleReward {
       }
     }
 
-    if (s.gameState.gameMode !== "local_pvp") {
+    if (s.gameState.gameMode !== "local_pvp" && s.gameState.gameMode !== "training") {
       window.dispatchEvent(
         new CustomEvent("battle-ended", {
           detail: { win, gameMode: s.gameState.gameMode },

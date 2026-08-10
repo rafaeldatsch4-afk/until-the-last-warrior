@@ -24,7 +24,7 @@ export class PiccoloFighter extends Fighter {
 
     if (attackType === "melee") {
       // Piccolo Melee: Stretchy arm
-      attacker.play(bs.getAnimKey("piccolo", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("piccolo", transformLevel, "punch"));
 
       const hand = bs.getHandPosition(isPlayer);
       const arm = bs.add
@@ -63,7 +63,7 @@ export class PiccoloFighter extends Fighter {
       });
     } else {
       // Piccolo Ki: Eye laser
-      attacker.play(bs.getAnimKey("piccolo", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("piccolo", transformLevel, "punch"));
       bs.time.delayedCall(50, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

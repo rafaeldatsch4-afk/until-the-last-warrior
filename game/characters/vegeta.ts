@@ -30,7 +30,7 @@ export class VegetaFighter extends Fighter {
         duration: 100,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          attacker.play(bs.getAnimKey("vegeta", transformLevel, "attack"));
+          attacker.play(bs.getAnimKey("vegeta", transformLevel, "punch"));
           const hits = isComboFinisher ? 4 : 2;
           for (let i = 0; i < hits; i++) {
             bs.time.delayedCall(i * 100, () => {
@@ -64,7 +64,7 @@ export class VegetaFighter extends Fighter {
       });
     } else {
       // Vegeta Ki: Continuous energy bullets (Lucora Gun)
-      attacker.play(bs.getAnimKey("vegeta", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("vegeta", transformLevel, "punch"));
       const blastCount = isComboFinisher ? 8 : 4;
       for (let i = 0; i < blastCount; i++) {
         bs.time.delayedCall(i * 50, () => {

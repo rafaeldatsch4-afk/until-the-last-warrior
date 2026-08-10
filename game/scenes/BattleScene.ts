@@ -2037,7 +2037,7 @@ export default class BattleScene extends Phaser.Scene {
       : this.enemyTransformLevel;
 
     this.setActionState(isPlayer, true);
-    attacker.play(this.getAnimKey(attackerData.key, transLevel, "attack"));
+    attacker.play(this.getAnimKey(attackerData.key, transLevel, "punch"));
 
     this.tweens.add({
       targets: attacker,
@@ -2545,8 +2545,9 @@ export default class BattleScene extends Phaser.Scene {
           });
 
           // Lunge Forward
+          const animType = isComboFinisher ? "attack" : (comboCount % 2 === 0 ? "kick" : "punch");
           attacker.play(
-            this.getAnimKey(attackerData.key, transLevel, "attack"),
+            this.getAnimKey(attackerData.key, transLevel, animType),
           );
 
           const lungeDist = isComboFinisher

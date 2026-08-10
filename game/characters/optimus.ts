@@ -33,7 +33,7 @@ export class OptimusFighter extends Fighter {
         ease: "Power2",
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          attacker.play(bs.getAnimKey("optimus", transLevel, "attack"));
+          attacker.play(bs.getAnimKey("optimus", transLevel, "punch"));
 
           if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(target.x, target.y + 120, 0xffaa00);
@@ -61,7 +61,7 @@ export class OptimusFighter extends Fighter {
       });
     } else {
       // Optimus Ki: Ion Blaster
-      attacker.play(bs.getAnimKey("optimus", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("optimus", transLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

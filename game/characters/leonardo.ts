@@ -24,7 +24,7 @@ export class LeonardoFighter extends Fighter {
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
-      attacker.play(bs.getAnimKey("leonardo", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("leonardo", transLevel, "punch"));
       bs.tweens.add({
         targets: attacker,
         x: target.x + (attacker.x < target.x ? -40 : 40),
@@ -71,7 +71,7 @@ export class LeonardoFighter extends Fighter {
         },
       });
     } else {
-      attacker.play(bs.getAnimKey("leonardo", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("leonardo", transLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();
@@ -129,7 +129,7 @@ export class LeonardoFighter extends Fighter {
 
     const dmg = Math.floor(40 * bs.getDamageMultiplier(transformLevel));
 
-    attacker.play(bs.getAnimKey("leonardo", transformLevel, "attack"));
+    attacker.play(bs.getAnimKey("leonardo", transformLevel, "punch"));
 
     // Quick dash past enemy
     bs.tweens.add({
@@ -194,7 +194,7 @@ export class LeonardoFighter extends Fighter {
       .setDepth(18);
     bs.tweens.add({ targets: overlay, fillAlpha: 0.8, duration: 500 });
 
-    attacker.play(bs.getAnimKey("leonardo", transformLevel, "attack"));
+    attacker.play(bs.getAnimKey("leonardo", transformLevel, "punch"));
 
     let hits = 0;
     const slashInterval = bs.time.addEvent({

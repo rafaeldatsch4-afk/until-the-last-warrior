@@ -4,6 +4,7 @@ export interface CharacterData {
   id: number;
   key: string;
   name: string;
+  description?: string;
   price: number;
   unlocked: boolean;
   maxHp: number;

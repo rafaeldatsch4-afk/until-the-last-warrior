@@ -27,7 +27,7 @@ export class BatmanFighter extends Fighter {
 
     if (attackType === "melee") {
       // Batman Melee: Slide kick
-      attacker.play(bs.getAnimKey("batman", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("batman", transLevel, "punch"));
       bs.tweens.add({
         targets: attacker,
         x: target.x + (attacker.x < target.x ? -40 : 40),
@@ -70,7 +70,7 @@ export class BatmanFighter extends Fighter {
       });
     } else {
       // Batman Ki: Batarang throw
-      attacker.play(bs.getAnimKey("batman", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("batman", transLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

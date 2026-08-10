@@ -27,7 +27,7 @@ export class ItachiFighter extends Fighter {
 
     if (attackType === "melee") {
       // Itachi Melee: Kunai slash
-      attacker.play(bs.getAnimKey("itachi", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("itachi", transformLevel, "punch"));
 
       // Dash forward
       bs.tweens.add({
@@ -82,7 +82,7 @@ export class ItachiFighter extends Fighter {
       });
     } else {
       // Itachi Ki: Fireball (Katon)
-      attacker.play(bs.getAnimKey("itachi", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("itachi", transformLevel, "punch"));
 
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
@@ -158,7 +158,7 @@ export class ItachiFighter extends Fighter {
     const dmg = Math.floor(40 * bs.getDamageMultiplier(transformLevel));
 
     bs.log("AMATERASU!");
-    attacker.play(bs.getAnimKey("itachi", transformLevel, "attack"));
+    attacker.play(bs.getAnimKey("itachi", transformLevel, "punch"));
     if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Eye bleeding effect on attacker (Itachi)
@@ -285,7 +285,7 @@ export class ItachiFighter extends Fighter {
     const dmg = Math.floor(100 * bs.getDamageMultiplier(transformLevel));
 
     bs.log("TSUKUYOMI!");
-    attacker.play(bs.getAnimKey("itachi", transformLevel, "attack"));
+    attacker.play(bs.getAnimKey("itachi", transformLevel, "punch"));
     if (bs.soundManager) bs.soundManager.playBeamFire();
 
     // Screen turns red/black

@@ -32,7 +32,7 @@ export class GokuFighter extends Fighter {
         attacker.setAlpha(1);
         attacker.x = target.x + (attacker.x < target.x ? -40 : 40);
         attacker.y = target.y - (isComboFinisher ? 50 : 0); // Attack from above on finisher
-        attacker.play(bs.getAnimKey("goku", transformLevel, "attack"));
+        attacker.play(bs.getAnimKey("goku", transformLevel, "punch"));
 
         if (bs.soundManager) bs.soundManager.playPunchImpact(true);
         bs.takeDamage(
@@ -72,7 +72,7 @@ export class GokuFighter extends Fighter {
       });
     } else {
       // Goku Ki: Rapid small blasts
-      attacker.play(bs.getAnimKey("goku", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("goku", transformLevel, "punch"));
       const blastCount = isComboFinisher ? 5 : 3;
       for (let i = 0; i < blastCount; i++) {
         bs.time.delayedCall(i * 80, () => {
@@ -141,7 +141,7 @@ export class GokuFighter extends Fighter {
         aura.destroy();
         if (!bs.scene.isActive()) return;
 
-        attacker.play(bs.getAnimKey("goku", transformLevel, "attack"));
+        attacker.play(bs.getAnimKey("goku", transformLevel, "punch"));
         const newHand = bs.getHandPosition(isPlayer);
 
         const beam = bs.add
@@ -250,7 +250,7 @@ export class GokuFighter extends Fighter {
       ease: "Sine.easeInOut",
       onComplete: () => {
         if (!bs.scene.isActive()) return;
-        attacker.play(bs.getAnimKey("goku", transformLevel, "attack")); // Throw forward
+        attacker.play(bs.getAnimKey("goku", transformLevel, "punch")); // Throw forward
 
         bs.cameras.main.shake(300, 0.02);
 

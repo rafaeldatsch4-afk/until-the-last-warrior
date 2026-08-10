@@ -81,10 +81,12 @@ export class BattleAI {
     // SMARTER AI: Check player state
     const playerIsAttacking = s.p1ActionActive;
 
-    // 1. Reactive Guard: If player is attacking and close, HIGH chance to block
+    // 1. Reactive Guard: If player is attacking and close, chance to block
     if (playerIsAttacking && dist < 300 && r < 0.7) {
       s.enemyDefending = true;
       s.p2Aura.setVisible(true).setAlpha(0.4).setScale(1.1);
+      const defAnim = s.getAnimKey(s.enemyData.key, s.enemyTransformLevel, "defend");
+      if (s.enemy.anims.currentAnim?.key !== defAnim) s.enemy.play(defAnim);
       s.time.delayedCall(800, () => {
         if (s.scene.isActive()) {
           s.enemyDefending = false;
@@ -146,6 +148,8 @@ export class BattleAI {
         // Defend for 1.2 seconds against potential super
         s.enemyDefending = true;
         s.p2Aura.setVisible(true).setAlpha(0.6).setScale(1.2);
+        const defAnim = s.getAnimKey(s.enemyData.key, s.enemyTransformLevel, "defend");
+        if (s.enemy.anims.currentAnim?.key !== defAnim) s.enemy.play(defAnim);
         s.time.delayedCall(1200, () => {
           if (s.scene.isActive()) {
             s.enemyDefending = false;

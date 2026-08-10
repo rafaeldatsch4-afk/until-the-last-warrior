@@ -32,7 +32,7 @@ export class GohanFighter extends Fighter {
         ease: "Sine.easeOut",
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          attacker.play(bs.getAnimKey("gohan", transformLevel, "attack"));
+          attacker.play(bs.getAnimKey("gohan", transformLevel, "punch"));
 
           if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
@@ -62,7 +62,7 @@ export class GohanFighter extends Fighter {
       });
     } else {
       // Gohan Ki: Quick Masenko blast
-      attacker.play(bs.getAnimKey("gohan", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("gohan", transformLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

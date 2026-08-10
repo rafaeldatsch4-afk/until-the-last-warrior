@@ -26,7 +26,7 @@ export class CyberNinjaFighter extends Fighter {
 
     if (attackType === "melee") {
       // CyberNinja Melee: Katana dash
-      attacker.play(bs.getAnimKey("cyberninja", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("cyberninja", transLevel, "punch"));
 
       // Dash line
       const dashLine = bs.add.graphics().setDepth(5);
@@ -93,7 +93,7 @@ export class CyberNinjaFighter extends Fighter {
       });
     } else {
       // CyberNinja Ki: Shuriken throw
-      attacker.play(bs.getAnimKey("cyberninja", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("cyberninja", transLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

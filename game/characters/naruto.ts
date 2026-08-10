@@ -27,7 +27,7 @@ export class NarutoFighter extends Fighter {
 
     if (attackType === "melee") {
       // Naruto Melee: Shadow Clone combo
-      attacker.play(bs.getAnimKey("naruto", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("naruto", transLevel, "punch"));
 
       // Spawn clone
       const clone = bs.add
@@ -79,7 +79,7 @@ export class NarutoFighter extends Fighter {
       });
     } else {
       // Naruto Ki: Rasengan thrust
-      attacker.play(bs.getAnimKey("naruto", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("naruto", transLevel, "punch"));
 
       const hand = bs.getHandPosition(isPlayer);
       const rasengan = bs.add.circle(hand.x, hand.y, 15, 0x00ffff).setDepth(6);

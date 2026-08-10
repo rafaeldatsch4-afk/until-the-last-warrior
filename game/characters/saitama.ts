@@ -26,7 +26,7 @@ export class SaitamaFighter extends Fighter {
 
     if (attackType === "melee") {
       // Saitama Melee: Fast strikes that create shockwaves
-      attacker.play(bs.getAnimKey("saitama", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("saitama", transLevel, "punch"));
 
       // Dash effect
       const dashGlow = bs.add
@@ -110,7 +110,7 @@ export class SaitamaFighter extends Fighter {
       });
     } else {
       // Saitama Ki: He doesn't have "ki", so he just does a "Normal Punch" that creates a wind pressure blast
-      attacker.play(bs.getAnimKey("saitama", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("saitama", transLevel, "punch"));
 
       // Small dash forward
       bs.tweens.add({
@@ -259,7 +259,7 @@ export class SaitamaFighter extends Fighter {
         bs.time.delayedCall(300, () => {
           if (!bs.scene.isActive()) return;
 
-          attacker.play(bs.getAnimKey("saitama", transLevel, "attack"));
+          attacker.play(bs.getAnimKey("saitama", transLevel, "punch"));
 
           bs.time.delayedCall(100, () => {
             if (!bs.scene.isActive()) return;

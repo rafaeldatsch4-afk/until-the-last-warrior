@@ -31,7 +31,7 @@ export class CellFighter extends Fighter {
         attacker.setAlpha(1);
         attacker.x = target.x;
         attacker.y = target.y - 60;
-        attacker.play(bs.getAnimKey("cell", transformLevel, "attack"));
+        attacker.play(bs.getAnimKey("cell", transformLevel, "punch"));
 
         bs.tweens.add({
           targets: attacker,
@@ -68,7 +68,7 @@ export class CellFighter extends Fighter {
         });
       });
     } else {
-      attacker.play(bs.getAnimKey("cell", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("cell", transformLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

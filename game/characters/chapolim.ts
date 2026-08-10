@@ -26,7 +26,7 @@ export class ChapolimFighter extends Fighter {
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
-      attacker.play(bs.getAnimKey("chapolim", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("chapolim", transLevel, "punch"));
       bs.tweens.add({
         targets: attacker,
         x: target.x + (attacker.x < target.x ? -30 : 30),
@@ -72,7 +72,7 @@ export class ChapolimFighter extends Fighter {
         },
       });
     } else {
-      attacker.play(bs.getAnimKey("chapolim", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("chapolim", transLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

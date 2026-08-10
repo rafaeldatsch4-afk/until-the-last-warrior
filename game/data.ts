@@ -4,6 +4,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 0,
     key: "goku",
+    description: "Um guerreiro Saiyajin criado na Terra. Famoso por sua fome e por ficar mais forte após cada batalha.",
     name: "Goku",
     price: 0,
     unlocked: true,
@@ -19,6 +20,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 1,
     key: "vegeta",
+    description: "O príncipe da raça Saiyajin. Extremamente orgulhoso e rival declarado de Goku.",
     name: "Vegeta",
     price: 0,
     unlocked: true,
@@ -34,6 +36,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 2,
     key: "gohan",
+    description: "Filho de Goku. Tem um potencial oculto tremendo, especialmente quando provocado.",
     name: "Gohan",
     price: 300,
     unlocked: true,
@@ -49,6 +52,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 3,
     key: "piccolo",
+    description: "Um guerreiro Namekuseijin sábio e mestre de táticas em combate.",
     name: "Piccolo",
     price: 300,
     unlocked: true,
@@ -64,6 +68,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 18,
     key: "madara",
+    description: "Lenda do clã Uchiha, cujo nome causa terror em seus inimigos.",
     name: "Madara Uchiha",
     price: 2600,
     unlocked: true,
@@ -79,6 +84,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 5,
     key: "cell",
+    description: "A criação suprema, absorve seus inimigos para alcançar a perfeição.",
     name: "Cell",
     price: 550,
     unlocked: false,
@@ -94,6 +100,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 6,
     key: "leonardo",
+    description: "O líder das tartarugas. Combate com honra empunhando duas katanas.",
     name: "Leonardo",
     price: 600,
     unlocked: false,
@@ -109,6 +116,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 7,
     key: "frieren",
+    description: "Um poderoso lutador pronto para a batalha.",
     name: "Frieren",
     price: 700,
     unlocked: false,
@@ -124,6 +132,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 8,
     key: "optimus",
+    description: "Um poderoso lutador pronto para a batalha.",
     name: "Optimus Prime",
     price: 800,
     unlocked: true,
@@ -139,6 +148,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 9,
     key: "minipekka",
+    description: "Um poderoso lutador pronto para a batalha.",
     name: "Mini P.E.K.K.A",
     price: 900,
     unlocked: false,
@@ -154,6 +164,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 10,
     key: "cyberninja",
+    description: "Assassino do futuro. Velocidade extrema e ataques de plasma.",
     name: "Cyber Zero",
     price: 1000,
     unlocked: true,
@@ -169,6 +180,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 11,
     key: "chapolim",
+    description: "Um poderoso lutador pronto para a batalha.",
     name: "Chapolim",
     price: 1200,
     unlocked: true,
@@ -184,6 +196,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 12,
     key: "naruto",
+    description: "O ninja número um hiperativo e cabeça oca, com uma reserva de chakra imensa.",
     name: "Naruto",
     price: 1500,
     unlocked: true,
@@ -199,6 +212,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 13,
     key: "batman",
+    description: "Um poderoso lutador pronto para a batalha.",
     name: "Batman",
     price: 1800,
     unlocked: true,
@@ -214,6 +228,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 14,
     key: "thukuna",
+    description: "O Rei das Maldições. Desencadeia ataques cortantes impiedosos.",
     name: "Thukuna",
     price: 2000,
     unlocked: true,
@@ -229,6 +244,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 15,
     key: "gojo",
+    description: "Um poderoso lutador pronto para a batalha.",
     name: "Satoru Gojo",
     price: 2500,
     unlocked: true,
@@ -244,6 +260,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 16,
     key: "obito",
+    description: "Ninja mascarado com poderes oculares que manipulam o espaço-tempo.",
     name: "Obito Uchiha",
     price: 2200,
     unlocked: true,
@@ -259,6 +276,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 19,
     key: "itachi",
+    description: "Gênio pacifista que sacrificou tudo. Utiliza ilusões genjutsu mortais.",
     name: "Itachi Uchiha",
     price: 2400,
     unlocked: true,
@@ -274,6 +292,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 20,
     key: "jotaro",
+    description: "Usuário de stand frio e calculista, com golpes extremamente rápidos.",
     name: "Jotaro Kujo",
     price: 2000,
     unlocked: true,
@@ -289,6 +308,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 17,
     key: "spiderman",
+    description: "Um herói ágil de Nova York, usa teias para se mover rapidamente e prender inimigos.",
     name: "Spider-Man",
     price: 1900,
     unlocked: true,
@@ -304,6 +324,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 21,
     key: "saitama",
+    description: "Um herói por diversão. Capaz de derrotar qualquer inimigo com um único soco.",
     name: "Saitama",
     price: 3000,
     unlocked: true,
@@ -319,6 +340,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 22,
     key: "static",
+    description: "Um poderoso lutador pronto para a batalha.",
     name: "Super Choque",
     price: 2000,
     unlocked: true,

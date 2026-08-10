@@ -26,7 +26,7 @@ export class FrierenFighter extends Fighter {
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
-      attacker.play(bs.getAnimKey("frieren", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("frieren", transLevel, "punch"));
       bs.tweens.add({
         targets: attacker,
         x: target.x + (attacker.x < target.x ? -40 : 40),
@@ -57,7 +57,7 @@ export class FrierenFighter extends Fighter {
         },
       });
     } else {
-      attacker.play(bs.getAnimKey("frieren", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("frieren", transLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

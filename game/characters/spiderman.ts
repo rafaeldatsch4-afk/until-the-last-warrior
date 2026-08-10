@@ -26,7 +26,7 @@ export class SpidermanFighter extends Fighter {
 
     if (attackType === "melee") {
       // Swift kick/punch combo
-      attacker.play(bs.getAnimKey("spiderman", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("spiderman", transLevel, "punch"));
 
       bs.tweens.add({
         targets: attacker,
@@ -68,7 +68,7 @@ export class SpidermanFighter extends Fighter {
       });
     } else {
       // Ki Blast: Web Ball
-      attacker.play(bs.getAnimKey("spiderman", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("spiderman", transLevel, "punch"));
       bs.time.delayedCall(50, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();
@@ -156,7 +156,7 @@ export class SpidermanFighter extends Fighter {
           onComplete: () => {
             webLine.destroy();
             // BAM! Uppercut or heavy punch
-            attacker.play(bs.getAnimKey("spiderman", transLevel, "attack"));
+            attacker.play(bs.getAnimKey("spiderman", transLevel, "punch"));
             bs.cameras.main.shake(200, 0.03);
             if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
@@ -212,7 +212,7 @@ export class SpidermanFighter extends Fighter {
     bs.cameras.main.flash(500, 255, 255, 255);
 
     // Dash through screen multiple times! INSTANT KILL MODE
-    attacker.play(bs.getAnimKey("spiderman", transLevel, "attack"));
+    attacker.play(bs.getAnimKey("spiderman", transLevel, "punch"));
 
     let strikes = 0;
     const maxStrikes = isIron ? 8 : 5;

@@ -33,7 +33,7 @@ export class GojoFighter extends Fighter {
         if (!bs.scene.isActive()) return;
         attacker.setAlpha(1);
         attacker.x = target.x + (attacker.x < target.x ? -30 : 30);
-        attacker.play(bs.getAnimKey("gojo", transLevel, "attack"));
+        attacker.play(bs.getAnimKey("gojo", transLevel, "punch"));
 
         if (bs.soundManager) bs.soundManager.playPunchImpact(true);
         bs.createImpactEffect(target.x, target.y + 120, 0x00ffff);
@@ -59,7 +59,7 @@ export class GojoFighter extends Fighter {
         });
       });
     } else {
-      attacker.play(bs.getAnimKey("gojo", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("gojo", transLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

@@ -32,7 +32,7 @@ export class MiniPekkaFighter extends Fighter {
         duration: 150,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          attacker.play(bs.getAnimKey("minipekka", transLevel, "attack"));
+          attacker.play(bs.getAnimKey("minipekka", transLevel, "punch"));
 
           if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
@@ -82,7 +82,7 @@ export class MiniPekkaFighter extends Fighter {
       });
     } else {
       // MiniPekka Ki: Pancake throw
-      attacker.play(bs.getAnimKey("minipekka", transLevel, "attack"));
+      attacker.play(bs.getAnimKey("minipekka", transLevel, "punch"));
       bs.time.delayedCall(100, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

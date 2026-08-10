@@ -28,7 +28,7 @@ export class ObitoFighter extends Fighter {
 
     if (attackType === "melee") {
       // Obito Melee: Staff strike (Paulada)
-      attacker.play(bs.getAnimKey("obito", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("obito", transformLevel, "punch"));
 
       // Dash forward
       bs.tweens.add({
@@ -84,7 +84,7 @@ export class ObitoFighter extends Fighter {
       });
     } else {
       // Obito Ki: Fireball / Truth-Seeking Orb
-      attacker.play(bs.getAnimKey("obito", transformLevel, "attack"));
+      attacker.play(bs.getAnimKey("obito", transformLevel, "punch"));
       bs.time.delayedCall(150, () => {
         if (!bs.scene.isActive()) return;
         if (bs.soundManager) bs.soundManager.playBeamFire();

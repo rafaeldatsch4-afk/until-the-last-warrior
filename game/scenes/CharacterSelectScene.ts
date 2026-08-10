@@ -186,49 +186,42 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.updateUI();
   }
 
-  createTooltip() {
-    this.tooltipContainer = this.add.container(0, 0).setDepth(100).setVisible(false);
+  private infoDesc!: Phaser.GameObjects.Text;
 
-    const bg = this.add.rectangle(0, 0, 140, 60, 0x000000, 0.85).setStrokeStyle(1, 0xffffff);
-    this.tooltipName = this.add.text(-60, -20, "", {
-      fontSize: "14px",
+  createTooltip() {
+    const { width, height } = this.cameras.main;
+    this.tooltipContainer = this.add.container(width / 2, height - 120).setDepth(100).setVisible(false);
+    const bg = this.add.rectangle(0, 0, 500, 100, 0x111111, 0.95).setStrokeStyle(2, 0x3498db);
+    this.tooltipName = this.add.text(-230, -35, "", {
+      fontSize: "22px",
       fontStyle: "bold",
       color: "#ffd54a",
       fontFamily: "system-ui, -apple-system, sans-serif"
     });
-
-    this.tooltipStats = this.add.text(-60, 0, "", {
-      fontSize: "12px",
+    this.tooltipStats = this.add.text(230, -35, "", {
+      fontSize: "14px",
       color: "#ffffff",
-      fontFamily: "system-ui, -apple-system, sans-serif"
+      fontStyle: "bold",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+    }).setOrigin(1, 0);
+    this.infoDesc = this.add.text(-230, 0, "", {
+      fontSize: "16px",
+      color: "#cccccc",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      wordWrap: { width: 460 }
     });
-
-    this.tooltipContainer.add([bg, this.tooltipName, this.tooltipStats]);
+    this.tooltipContainer.add([bg, this.tooltipName, this.tooltipStats, this.infoDesc]);
   }
 
   showTooltip(char: any, x: number, y: number) {
     this.tooltipContainer.setVisible(true);
-    
-    // Position tooltip near cursor
-    let finalX = x;
-    let finalY = y - 60; // offset above the pointer
-    
-    // Keep within screen bounds
-    const { width } = this.cameras.main;
-    if (finalX + 70 > width) finalX = width - 70;
-    if (finalX - 70 < 0) finalX = 70;
-    if (finalY - 30 < 0) finalY = y + 60; // show below if at top
-    
-    this.tooltipContainer.setPosition(finalX, finalY);
-
     this.tooltipName.setText(char.name);
     
     const hp = char.maxHp || 200;
-    // Generate pseudo-random deterministic stats if not defined
     const str = char.strength ?? Math.floor(hp / 2.5);
     const spd = char.speed ?? Math.floor(300 - hp);
-
-    this.tooltipStats.setText(`HP: ${hp} | STR: ${str}\nSPD: ${spd}`);
+    this.tooltipStats.setText(`HP: ${hp} | STR: ${str} | SPD: ${spd}`);
+    this.infoDesc.setText(char.description || "Um formidável lutador.");
   }
 
   hideTooltip() {
