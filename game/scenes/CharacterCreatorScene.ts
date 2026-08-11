@@ -85,6 +85,20 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     grid.strokePath();
 
     this.add.image(width / 2, height / 2, "arena").setAlpha(0.15).setBlendMode(Phaser.BlendModes.SCREEN);
+    
+    // Add some cool ambient particles to make it feel premium
+    const particles = this.add.particles(0, 0, "particle", {
+      x: { min: 0, max: width },
+      y: { min: 0, max: height },
+      lifespan: 4000,
+      speedY: { min: -10, max: -30 },
+      speedX: { min: -10, max: 10 },
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 0.3, end: 0 },
+      quantity: 1,
+      blendMode: "ADD",
+      tint: 0x3498db
+    });
 
     if (this.cameras.main.postFX) {
       this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
@@ -155,7 +169,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       this.scene.restart(); 
     });
 
-    this.createStyledButton(700, 480, 150, 35, "TRANSFORMAR", 0xf39c12, () => {
+    this.createStyledButton(700, 490, 150, 35, "TRANSFORMAR", 0xf39c12, () => {
       this.previewIsTransformed = !this.previewIsTransformed;
       this.updatePreview();
     });
@@ -176,8 +190,8 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
   private setupNamesAndSpecials() {
     // Name
-    const nameTxt = this.add.text(700, 80, `Nome: ${this.builderData.name}`, { fontSize: "24px", color: "#f1c40f", fontStyle: "bold" }).setOrigin(0.5);
-    const editBtn = this.createStyledButton(700, 115, 90, 30, "EDITAR", 0x34495e, () => {
+    const nameTxt = this.add.text(560, 70, `Nome: ${this.builderData.name}`, { fontSize: "24px", color: "#f1c40f", fontStyle: "bold" }).setOrigin(0, 0.5);
+    const editBtn = this.createStyledButton(820, 70, 90, 30, "EDITAR", 0x34495e, () => {
       window.dispatchEvent(
         new CustomEvent("request-text-input", {
           detail: {

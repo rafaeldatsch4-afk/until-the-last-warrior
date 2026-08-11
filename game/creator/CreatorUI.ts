@@ -348,39 +348,6 @@ export class CreatorUI {
       () => state.nextColor("torso_2", giColors),
     );
 
-    const resetBtn = this.scene.add
-      .rectangle(545, currY, 75, 30, 0x7f8c8d)
-      .setStrokeStyle(2, 0x95a5a6)
-      .setInteractive({ useHandCursor: true });
-    
-    const resetTxt = this.scene.add
-      .text(545, currY, "Redefinir", {
-        fontSize: "12px",
-        fontFamily: "system-ui",
-        color: "#fff",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
-
-    resetBtn.on("pointerdown", () => {
-      state.style_idx.torso = 0;
-      state.p_idx.torso_1 = 0;
-      state.p_idx.torso_2 = 1;
-      torsoPartTxt.setText(`Tro: ${partOptions.torso[state.style_idx.torso]}`);
-      torsoC1Txt.setText(`C1: ${this.getColorName(giColors[state.p_idx.torso_1])}`);
-      torsoC2Txt.setText(`C2: ${this.getColorName(giColors[state.p_idx.torso_2])}`);
-      this.onUpdate();
-    });
-
-    resetBtn.on("pointerover", () => {
-      resetBtn.setFillStyle(0xc0392b);
-      resetBtn.setStrokeStyle(2, 0xe74c3c);
-    });
-
-    resetBtn.on("pointerout", () => {
-      resetBtn.setFillStyle(0x7f8c8d);
-      resetBtn.setStrokeStyle(2, 0x95a5a6);
-    });
     currY += 40;
 
     // Legs

@@ -2615,7 +2615,7 @@ export default class BattleScene extends Phaser.Scene {
                   this.battleUI.showCombo(target.x, target.y - 100);
               }
 
-              this.createImpactEffect(target.x, target.y + 60, 0xffffff);
+              this.createImpactEffect(target.x, target.y + 60, 0xffffff, "melee", damage);
 
               // Target hit flash
               this.tweens.add({
@@ -2792,6 +2792,7 @@ export default class BattleScene extends Phaser.Scene {
                         target.y + 60,
                         blastColor,
                         "beam",
+                        damage
                       );
 
                       // Target hit flash
@@ -4150,6 +4151,7 @@ export default class BattleScene extends Phaser.Scene {
     y: number,
     color: number,
     type: "melee" | "beam" | "block" | "super" | "clash" = "melee",
+    damage: number = 0
   ) {
     const isSuperMode =
       type === "super" || this.p1SuperActive || this.p2SuperActive;
@@ -4159,7 +4161,17 @@ export default class BattleScene extends Phaser.Scene {
     const isClash = type === "clash";
 
     if (!isBlock && typeof window !== "undefined") {
-      if (!this.gameState.settings?.lowPerformanceMode) window.dispatchEvent(new CustomEvent('shake-screen'));
+      if (!this.gameState.settings?.lowPerformanceMode) {
+        let intensity = "medium";
+        if (isClash || isSuperMode) intensity = "heavy";
+        else if (isBeam) intensity = "heavy";
+        else {
+          if (damage >= 25) intensity = "heavy";
+          else if (damage >= 10) intensity = "medium";
+          else intensity = "light";
+        }
+        window.dispatchEvent(new CustomEvent('shake-screen', { detail: { intensity } }));
+      }
     }
 
     // Main Flash - Make it bigger and punchier
@@ -4697,6 +4709,28 @@ export default class BattleScene extends Phaser.Scene {
     triggerVibration("light");
   }
 
+  private hitStopTimeout: NodeJS.Timeout | null = null;
+
+  triggerHitStop(duration: number) {
+    if (this.gameState.settings?.lowPerformanceMode) return;
+    
+    // Pause the entire scene (update loop, physics, tweens, animations)
+    this.scene.pause();
+    
+    if (this.hitStopTimeout) {
+      clearTimeout(this.hitStopTimeout);
+    }
+    
+    // Use a native setTimeout to resume it, since Phaser's timers are paused
+    this.hitStopTimeout = setTimeout(() => {
+      this.hitStopTimeout = null;
+      // Check if the scene is still alive
+      if (this.sys && this.sys.isActive() === false && this.scene.isPaused()) {
+         this.scene.resume();
+      }
+    }, duration);
+  }
+
   takeDamage(isP: boolean, baseDmg: number, fromNetwork = false) {
     if (this.isBattleOver || !this.scene.isActive()) return;
     
@@ -4718,6 +4752,11 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     let dmg = baseDmg;
+
+    // Trigger hit stop effect for heavy hits
+    if (baseDmg >= 15) {
+      this.triggerHitStop(baseDmg >= 30 ? 120 : 60);
+    }
     if (this.gameState.gameMode === "story") {
        if (isP) {
           const defenseStat = this.gameState.storyState?.stats.defense || 0;
@@ -4823,7 +4862,7 @@ export default class BattleScene extends Phaser.Scene {
       // Add requested screen-shake and particle burst
       if (targetActing) {
         // CLASH EFFECT! (Both attacking / exchanging blows)
-        this.createImpactEffect(target.x, target.y + 60, 0xfffc00, "clash");
+        this.createImpactEffect(target.x, target.y + 60, 0xfffc00, "clash", dmg);
         if (this.soundManager) this.soundManager.playClash();
 
         // Haptic feedback: Quick double pulse for clash
@@ -4839,7 +4878,7 @@ export default class BattleScene extends Phaser.Scene {
             if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(150, 0.02);
           }
         }
-        this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee");
+        this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee", dmg);
         if (this.soundManager) this.soundManager.playPunchImpact(isCritical);
 
         // Haptic feedback: Standard vs Critical hits
@@ -4886,7 +4925,7 @@ export default class BattleScene extends Phaser.Scene {
 
             // Extra particle burst
             if (comboCount % 2 === 0) {
-               this.createImpactEffect(target.x + Phaser.Math.Between(-30, 30), target.y + 60 + Phaser.Math.Between(-30, 30), 0x00ffff, "super");
+               this.createImpactEffect(target.x + Phaser.Math.Between(-30, 30), target.y + 60 + Phaser.Math.Between(-30, 30), 0x00ffff, "super", dmg);
             }
 
             // Shake camera more for higher combos

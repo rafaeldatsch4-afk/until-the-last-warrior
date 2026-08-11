@@ -8,6 +8,8 @@ export class BattleUI {
   logText!: Phaser.GameObjects.Text;
   p1KiPulseTween?: Phaser.Tweens.Tween;
   p2KiPulseTween?: Phaser.Tweens.Tween;
+  p1KiReadyGlow!: Phaser.GameObjects.Rectangle;
+  p2KiReadyGlow!: Phaser.GameObjects.Rectangle;
   p1NameText!: Phaser.GameObjects.Text;
   p2NameText!: Phaser.GameObjects.Text;
 
@@ -134,6 +136,14 @@ export class BattleUI {
       .setAlpha(0)
       .setBlendMode(Phaser.BlendModes.ADD);
     this.p1HudContainer.add(this.p1KiGlow);
+    
+    this.p1KiReadyGlow = bs.add
+      .rectangle(25, 80, 250, 12, 0x00ffff)
+      .setOrigin(0, 0.5)
+      .setAlpha(0)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.p1HudContainer.add(this.p1KiReadyGlow);
+    this.p1KiReadyGlow.scaleX = 0;
 
     this.p2HpBar = bs.add
       .rectangle(685, 50, 250, 22, 0xe74c3c)
@@ -152,6 +162,14 @@ export class BattleUI {
       .setAlpha(0)
       .setBlendMode(Phaser.BlendModes.ADD);
     this.p2HudContainer.add(this.p2KiGlow);
+    
+    this.p2KiReadyGlow = bs.add
+      .rectangle(685, 80, 250, 12, 0x00ffff)
+      .setOrigin(0, 0.5)
+      .setAlpha(0)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.p2HudContainer.add(this.p2KiReadyGlow);
+    this.p2KiReadyGlow.scaleX = 0;
 
     // Reset tracking state for new rounds
     this.lastP1HpP = 1;
@@ -379,7 +397,7 @@ export class BattleUI {
 
         // Smoothly animate the horizontal fill of the bar and glow overlay
         this.scene.tweens.add({
-          targets: [this.p1KiBar, this.p1KiGlow],
+          targets: [this.p1KiBar, this.p1KiGlow, this.p1KiReadyGlow],
           scaleX: Math.max(0, p1KiP),
           duration: 250,
           ease: "Quad.easeOut",
@@ -390,7 +408,7 @@ export class BattleUI {
         if (isGain) {
           // A) SWELL EFFECT: briefly swell the height (scaleY) and snap back with a bouncy ease
           this.scene.tweens.add({
-            targets: [this.p1KiBar, this.p1KiGlow],
+            targets: [this.p1KiBar, this.p1KiGlow, this.p1KiReadyGlow],
             scaleY: { from: 2.2, to: 1.0 },
             duration: 300,
             ease: "Back.easeOut",
@@ -416,7 +434,7 @@ export class BattleUI {
 
         // Smoothly animate the horizontal fill of the bar and glow overlay
         this.scene.tweens.add({
-          targets: [this.p2KiBar, this.p2KiGlow],
+          targets: [this.p2KiBar, this.p2KiGlow, this.p2KiReadyGlow],
           scaleX: Math.max(0, p2KiP),
           duration: 250,
           ease: "Quad.easeOut",
@@ -427,7 +445,7 @@ export class BattleUI {
         if (isGain) {
           // A) SWELL EFFECT: briefly swell the height (scaleY) and snap back with a bouncy ease
           this.scene.tweens.add({
-            targets: [this.p2KiBar, this.p2KiGlow],
+            targets: [this.p2KiBar, this.p2KiGlow, this.p2KiReadyGlow],
             scaleY: { from: 2.2, to: 1.0 },
             duration: 300,
             ease: "Back.easeOut",
@@ -448,13 +466,27 @@ export class BattleUI {
         this.lastP2KiP = p2KiP;
       }
 
-      // Pulse Player 1 Ki Bar at 100% (p1KiP >= 1.0)
-      if (p1KiP >= 1) {
+      // Dynamic Pulse Player 1 Ki Bar for Special (>= 0.5) and Super (>= 1.0)
+
+      if (p1KiP >= 0.5) {
+        let isSuper = p1KiP >= 1;
+        let pulseDuration = isSuper ? 150 : 400;
+        let pulseAlpha = isSuper ? 0.8 : 0.4;
+        let glowColor = isSuper ? 0xffaa00 : 0x00ffff; // Yellow/Orange for super, Cyan for special
+        
+        this.p1KiReadyGlow.fillColor = glowColor;
+        
+        // If the tween exists but the duration needs to change
+        if (this.p1KiPulseTween && (this.p1KiPulseTween.data[0].duration !== pulseDuration)) {
+           this.p1KiPulseTween.stop();
+           this.p1KiPulseTween = undefined;
+        }
+
         if (!this.p1KiPulseTween) {
           this.p1KiPulseTween = this.scene.tweens.add({
-            targets: this.p1KiBar,
-            alpha: { from: 1, to: 0.4 },
-            duration: 350,
+            targets: this.p1KiReadyGlow,
+            alpha: { from: 0, to: pulseAlpha },
+            duration: pulseDuration,
             yoyo: true,
             repeat: -1,
             ease: "Sine.easeInOut",
@@ -464,17 +496,30 @@ export class BattleUI {
         if (this.p1KiPulseTween) {
           this.p1KiPulseTween.stop();
           this.p1KiPulseTween = undefined;
-          this.p1KiBar.setAlpha(1);
+          this.p1KiReadyGlow.setAlpha(0);
         }
       }
 
-      // Pulse Player 2 Ki Bar at 100% (p2KiP >= 1.0)
-      if (p2KiP >= 1) {
+      // Dynamic Pulse Player 2 Ki Bar for Special (>= 0.5) and Super (>= 1.0)
+
+      if (p2KiP >= 0.5) {
+        let isSuper = p2KiP >= 1;
+        let pulseDuration = isSuper ? 150 : 400;
+        let pulseAlpha = isSuper ? 0.8 : 0.4;
+        let glowColor = isSuper ? 0xffaa00 : 0x00ffff; // Yellow/Orange for super, Cyan for special
+        
+        this.p2KiReadyGlow.fillColor = glowColor;
+
+        if (this.p2KiPulseTween && (this.p2KiPulseTween.data[0].duration !== pulseDuration)) {
+           this.p2KiPulseTween.stop();
+           this.p2KiPulseTween = undefined;
+        }
+
         if (!this.p2KiPulseTween) {
           this.p2KiPulseTween = this.scene.tweens.add({
-            targets: this.p2KiBar,
-            alpha: { from: 1, to: 0.4 },
-            duration: 350,
+            targets: this.p2KiReadyGlow,
+            alpha: { from: 0, to: pulseAlpha },
+            duration: pulseDuration,
             yoyo: true,
             repeat: -1,
             ease: "Sine.easeInOut",
@@ -484,7 +529,7 @@ export class BattleUI {
         if (this.p2KiPulseTween) {
           this.p2KiPulseTween.stop();
           this.p2KiPulseTween = undefined;
-          this.p2KiBar.setAlpha(1);
+          this.p2KiReadyGlow.setAlpha(0);
         }
       }
     }

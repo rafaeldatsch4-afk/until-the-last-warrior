@@ -19,6 +19,7 @@ export function generateCustomSprite(
     let torsoMinY = 999;
     let torsoMaxY = -999;
     let isDrawingTorso = false;
+    let isDrawingLegs = false;
 
     const isTransformed = form > 0;
     const isUI = form === 2;
@@ -119,7 +120,7 @@ export function generateCustomSprite(
       const dot = (x: number, y: number, color: number) => {
         const finalY = y < 24 ? y + breatheOffset : y;
         const { ox, oy } =
-          typeof getWalkOffsets === "function"
+          isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
             : { ox: 0, oy: 0 };
         const finalX =
@@ -150,7 +151,7 @@ export function generateCustomSprite(
       ) => {
         const finalY = y < 24 ? y + breatheOffset : y;
         const { ox, oy } =
-          typeof getWalkOffsets === "function"
+          isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
             : { ox: 0, oy: 0 };
         const finalX =
@@ -180,7 +181,7 @@ export function generateCustomSprite(
       ) => {
         const finalY = y < 24 ? y + breatheOffset : y;
         const { ox, oy } =
-          typeof getWalkOffsets === "function"
+          isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
             : { ox: 0, oy: 0 };
         const finalX =
@@ -209,7 +210,7 @@ export function generateCustomSprite(
         color: number,
       ) => {
         const { ox, oy } =
-          typeof getWalkOffsets === "function"
+          isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
             : { ox: 0, oy: 0 };
         const finalX =
@@ -229,7 +230,7 @@ export function generateCustomSprite(
 
       const headDot = (x: number, y: number, color: number) => {
         const { ox, oy } =
-          typeof getWalkOffsets === "function"
+          isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
             : { ox: 0, oy: 0 };
         const finalX =
@@ -314,6 +315,7 @@ export function generateCustomSprite(
         // ====================
         // LEGS
         // ====================
+        isDrawingLegs = true;
         if (pLegs === "spiderman") {
           // Spiderman tight pants (blue with red boots later)
           box(10, 23, 4, 6, LEGS_2);
@@ -367,6 +369,35 @@ export function generateCustomSprite(
           box(14, 23, 4, 3, LEGS_2);
           box(10, 23, 1, 3, TORSO_2_SHADOW);
           box(21, 23, 1, 3, TORSO_2_SHADOW);
+        } else if (pLegs === "naruto") {
+          // Orange baggy pants with bandage wrap on right leg
+          box(10, 23, 5, 6, LEGS_1); // Orange
+          box(17, 23, 5, 6, LEGS_1); // Orange
+          box(10, 23, 1, 6, LEGS_1_SHADOW);
+          box(21, 23, 1, 6, LEGS_1_SHADOW);
+          // Bandage and kunai holster on right leg
+          box(10, 26, 4, 2, 0xffffff); // White bandage
+          box(9, 26, 1, 2, 0x111111); // Holster shadow
+        } else if (pLegs === "sasuke") {
+          // Grey/Dark blue shorts or baggy pants
+          box(10, 23, 5, 6, LEGS_2); // Dark
+          box(17, 23, 5, 6, LEGS_2); // Dark
+          // Skirt/Robe flap
+          box(8, 23, 3, 5, LEGS_1); // Light color flap
+          box(21, 23, 3, 5, LEGS_1); // Light color flap
+          box(10, 23, 1, 6, LEGS_2_SHADOW);
+          box(21, 23, 1, 6, LEGS_2_SHADOW);
+          box(11, 23, 10, 2, 0x5a2d6b); // Purple rope belt
+          box(10, 24, 2, 4, 0x5a2d6b);
+        } else if (pLegs === "luffy") {
+          // Rolled up blue jeans
+          box(10, 23, 5, 4, LEGS_2); // Blue
+          box(17, 23, 5, 4, LEGS_2);
+          box(10, 27, 5, 1, 0xe0e0e0); // White fluff
+          box(17, 27, 5, 1, 0xe0e0e0);
+          // Bare legs below
+          box(11, 28, 3, 1, SKIN_TONE); 
+          box(18, 28, 3, 1, SKIN_TONE);
         } else {
           // Goku baggy pants (orange)
           // Belt
@@ -424,6 +455,23 @@ export function generateCustomSprite(
           box(18, 29, 5, 5, BLACK);
           box(11, 29, 1, 5, 0x333333); // shine
           box(19, 29, 1, 5, 0x333333);
+        } else if (pFeet === "naruto" || pFeet === "sasuke") {
+          // Shinobi sandals (open toe)
+          box(10, 29, 5, 5, SKIN_TONE); // Skin
+          box(17, 29, 5, 5, SKIN_TONE);
+          // Sandal straps
+          box(10, 31, 5, 2, FEET_1); // Blue/Black
+          box(17, 31, 5, 2, FEET_1);
+          box(10, 33, 5, 1, FEET_1_SHADOW); // sole
+          box(17, 33, 5, 1, FEET_1_SHADOW);
+        } else if (pFeet === "luffy") {
+          // Bare feet with sandals
+          box(10, 29, 5, 5, SKIN_TONE); 
+          box(17, 29, 5, 5, SKIN_TONE);
+          box(10, 33, 5, 1, 0x8b4513); // Brown strap
+          box(17, 33, 5, 1, 0x8b4513);
+          box(10, 34, 5, 1, 0x5c4033); // Sole
+          box(17, 34, 5, 1, 0x5c4033);
         } else {
           box(10, 29, 5, 4, FEET_1); // Blue boots
           box(17, 29, 5, 4, FEET_1);
@@ -438,6 +486,7 @@ export function generateCustomSprite(
         // ====================
         // TORSO
         // ====================
+        isDrawingLegs = false;
         isDrawingTorso = true;
         if (pTorso === "spiderman") {
           const SPIDER_OUTLINE = 0x1a0a00;
@@ -819,6 +868,106 @@ export function generateCustomSprite(
             box(8, 22, 3, 2, SKIN_TONE); // Hands
             box(21, 22, 3, 2, SKIN_TONE);
           }
+        } else if (pTorso === "naruto") {
+          // Orange jacket with blue collar and shoulders
+          box(11, 14, 10, 9, TORSO_1); // Core orange
+          box(11, 14, 1, 9, TORSO_1_SHADOW);
+          box(20, 14, 1, 9, TORSO_1_SHADOW);
+          box(11, 14, 10, 2, TORSO_2); // Blue collar/shoulder
+          // Zipper
+          box(15, 14, 2, 9, 0x111111); // Black zipper line
+          if (isCharge) {
+            box(20, 4, 3, 13, TORSO_1); // Full sleeve
+            box(20, 2, 3, 3, SKIN_TONE); // Hands
+            box(9, 4, 3, 13, TORSO_1); // Full sleeve
+            box(9, 2, 3, 3, SKIN_TONE); // Hands
+          } else if (isAttack) {
+            box(21, 13, 5, 4, TORSO_1); // Shoulder
+            box(26, 14, 5, 3, TORSO_1); // Arm extending
+            box(30, 14, 2, 3, TORSO_1); // Wrist
+            box(32, 13, 4, 4, SKIN_TONE); // Hand Punching
+            
+            box(7, 14, 4, 3, TORSO_1); // Back Shoulder
+            box(6, 17, 4, 5, TORSO_1); // Back Arm 
+            box(6, 22, 4, 2, SKIN_TONE); // Back Hand
+          } else {
+            box(8, 14, 3, 10, TORSO_1); // Arm Orange
+            box(21, 14, 3, 10, TORSO_1);
+            box(8, 14, 1, 10, TORSO_1_SHADOW);
+            box(23, 14, 1, 10, TORSO_1_SHADOW);
+            box(8, 24, 3, 2, SKIN_TONE); // Hands
+            box(21, 24, 3, 2, SKIN_TONE);
+          }
+        } else if (pTorso === "sasuke") {
+          // High collar blue shirt
+          box(11, 14, 10, 9, TORSO_1);
+          box(11, 12, 10, 2, TORSO_1); // High collar
+          box(11, 14, 1, 9, TORSO_1_SHADOW);
+          box(20, 14, 1, 9, TORSO_1_SHADOW);
+          box(15, 14, 2, 9, TORSO_1_SHADOW); // center line
+          if (isCharge) {
+            box(20, 8, 3, 6, SKIN_TONE); // Forearm
+            box(20, 14, 3, 3, TORSO_1); // Shoulder sleeve
+            box(20, 4, 3, 4, 0xffffff); // Arm warmer
+            box(20, 2, 3, 3, SKIN_TONE); // Hands
+            
+            box(9, 8, 3, 6, SKIN_TONE);
+            box(9, 14, 3, 3, TORSO_1);
+            box(9, 4, 3, 4, 0xffffff);
+            box(9, 2, 3, 3, SKIN_TONE); // Hands
+          } else if (isAttack) {
+            box(21, 13, 5, 4, TORSO_1); // Shoulder
+            box(26, 14, 2, 3, SKIN_TONE); // Forearm
+            box(28, 14, 4, 3, 0xffffff); // Arm warmer
+            box(32, 13, 4, 4, SKIN_TONE); // Hand
+            
+            box(7, 14, 4, 3, TORSO_1); // Back Shoulder
+            box(6, 15, 4, 2, SKIN_TONE); // Back Forearm
+            box(6, 17, 4, 3, 0xffffff); // Arm warmer
+            box(6, 20, 4, 2, SKIN_TONE); // Back Hand
+          } else {
+             // Arm warmers (White)
+             box(8, 14, 3, 6, TORSO_1); // Sleeves
+             box(21, 14, 3, 6, TORSO_1);
+             box(8, 20, 3, 4, 0xffffff); // Arm warmers
+             box(21, 20, 3, 4, 0xffffff);
+             box(8, 24, 3, 2, SKIN_TONE); // Hands
+             box(21, 24, 3, 2, SKIN_TONE);
+          }
+        } else if (pTorso === "luffy") {
+          // Open red vest, bare chest
+          box(11, 14, 10, 9, SKIN_TONE); // Bare chest
+          box(15, 14, 2, 9, SKIN_SHADOW); // Abs/chest lines
+          box(11, 14, 3, 9, TORSO_1); // Red vest left
+          box(18, 14, 3, 9, TORSO_1); // Red vest right
+          box(10, 14, 1, 9, TORSO_1_SHADOW);
+          box(21, 14, 1, 9, TORSO_1_SHADOW);
+          // Scar on chest
+          box(13, 17, 3, 1, 0xff0000);
+          box(14, 16, 1, 3, 0xff0000);
+          if (isCharge) {
+            box(20, 4, 3, 10, SKIN_TONE); // Bare arms
+            box(20, 14, 3, 3, TORSO_1); // Vest shoulder
+            box(20, 2, 3, 3, SKIN_TONE); // Hands
+            box(9, 4, 3, 10, SKIN_TONE);
+            box(9, 14, 3, 3, TORSO_1);
+            box(9, 2, 3, 3, SKIN_TONE); // Hands
+          } else if (isAttack) {
+            box(21, 13, 5, 4, TORSO_1); // Vest shoulder
+            box(26, 14, 6, 3, SKIN_TONE); // Arm extending
+            box(32, 13, 4, 4, SKIN_TONE); // Hand
+            
+            box(7, 14, 4, 3, TORSO_1); // Back vest shoulder
+            box(6, 17, 4, 5, SKIN_TONE); // Back arm
+            box(6, 22, 4, 2, SKIN_TONE); // Back hand
+          } else {
+            box(8, 14, 3, 4, TORSO_1); // Vest sleeve
+            box(21, 14, 3, 4, TORSO_1);
+            box(8, 18, 3, 6, SKIN_TONE); // Bare arms
+            box(21, 18, 3, 6, SKIN_TONE);
+            box(8, 24, 3, 2, SKIN_TONE); // Hands
+            box(21, 24, 3, 2, SKIN_TONE);
+          }
         } else if (pTorso === "muscle") {
           // Bare chest / Muscles
           box(11, 14, 10, 9, SKIN_TONE);
@@ -933,6 +1082,7 @@ export function generateCustomSprite(
         isDrawingTorso = false;
 
         // ====================
+        isDrawingLegs = false;
         // ACCESSORY (Back layer)
         // ====================
         if (pAcc === "cape" && pTorso !== "jotaro") {
@@ -1130,6 +1280,106 @@ export function generateCustomSprite(
             headDot(15, 11, 0x222222);
             headDot(16, 11, 0x222222);
           }
+        } else if (pHead === "naruto") {
+          headBox(12, 6, 8, 7, SKIN_TONE);
+          headBox(14, 13, 4, 1, SKIN_TONE); // Neck
+          headDot(11, 9, SKIN_TONE);
+          headDot(20, 9, SKIN_TONE);
+          headBox(13, 12, 6, 1, SKIN_SHADOW);
+
+          // Headband
+          headBox(11, 5, 10, 2, HEAD_1); // Blue cloth
+          headBox(13, 5, 6, 2, 0xaaaaaa); // Metal plate
+          headDot(15, 6, BLACK); // Leaf symbol dot
+
+          // Hair (Spiky yellow)
+          headBox(10, 2, 12, 3, hairColor); // base hair
+          headBox(11, -1, 3, 3, hairColor); // left spike
+          headBox(15, -2, 2, 4, hairColor); // center spike
+          headBox(18, -1, 3, 3, hairColor); // right spike
+          headBox(11, 4, 10, 1, hairColor); // bangs
+
+          // Whiskers
+          headDot(12, 10, 0x555555);
+          headDot(19, 10, 0x555555);
+
+          // Eyes
+          headBox(13, 9, 2, 1, WHITE);
+          headBox(17, 9, 2, 1, WHITE);
+          headDot(14, 9, eyeColor);
+          headDot(17, 9, eyeColor);
+
+          // Mouth
+          if (isAttack) {
+            headBox(14, 11, 4, 2, 0x440000); // Shouting
+          } else if (isDefend) {
+            headBox(14, 11, 4, 1, WHITE); // Clenched teeth
+          } else if (isCharge) {
+            headBox(14, 11, 4, 2, 0x000000); // Open mouth yelling
+          } else {
+            headBox(14, 12, 4, 1, SKIN_SHADOW); // Smile
+            headDot(13, 11, SKIN_SHADOW);
+            headDot(18, 11, SKIN_SHADOW);
+          }
+        } else if (pHead === "sasuke") {
+          headBox(12, 6, 8, 7, SKIN_TONE);
+          headBox(14, 13, 4, 1, SKIN_TONE); // Neck
+          headBox(13, 12, 6, 1, SKIN_SHADOW);
+
+          // Hair (Spiky black, back and front bangs)
+          headBox(10, 2, 12, 5, hairColor); // Big hair block
+          headBox(11, -1, 10, 3, hairColor);
+          headBox(17, -3, 3, 3, hairColor); // back ducktail spike
+          headBox(9, 5, 2, 4, hairColor); // side burns
+          headBox(21, 5, 2, 4, hairColor); // side burns
+          // Middle bang
+          headBox(15, 6, 2, 3, hairColor);
+
+          // Eyes
+          headBox(13, 9, 2, 1, WHITE);
+          headBox(17, 9, 2, 1, WHITE);
+          headDot(14, 9, 0xff0000); // Sharingan red
+          headDot(17, 9, 0xff0000);
+
+          // Mouth
+          if (isAttack) {
+            headBox(14, 11, 4, 1, 0x440000);
+          } else if (isDefend) {
+            headBox(14, 11, 4, 1, WHITE);
+          } else if (isCharge) {
+            headBox(15, 11, 2, 2, 0x000000);
+          } else {
+            headBox(15, 11, 2, 1, SKIN_SHADOW); // Serious
+          }
+        } else if (pHead === "luffy") {
+          headBox(12, 6, 8, 7, SKIN_TONE);
+          headBox(14, 13, 4, 1, SKIN_TONE); // Neck
+          headDot(11, 9, SKIN_TONE);
+          headDot(20, 9, SKIN_TONE);
+
+          // Hair
+          headBox(11, 6, 10, 2, hairColor);
+          
+          // Straw hat
+          headBox(9, 5, 14, 1, 0xffd700); // Brim
+          headBox(11, 2, 10, 3, 0xffd700); // Top
+          headBox(11, 4, 10, 1, 0xff0000); // Red ribbon
+
+          // Eyes
+          headBox(13, 9, 2, 1, WHITE);
+          headBox(17, 9, 2, 1, WHITE);
+          headDot(14, 9, BLACK);
+          headDot(17, 9, BLACK);
+          // Scar under left eye (viewer right)
+          headDot(18, 11, 0xff0000);
+          
+          // Big smile
+          if (!isCharge) {
+            headBox(14, 11, 4, 1, WHITE);
+            headBox(14, 10, 4, 1, BLACK); // line above teeth
+          } else {
+             headBox(14, 11, 4, 2, BLACK);
+          }
         } else if (pHead === "jotaro") {
           headBox(12, 6, 8, 7, SKIN_TONE);
           headBox(14, 13, 4, 1, SKIN_TONE); // Neck
@@ -1236,21 +1486,38 @@ export function generateCustomSprite(
         }
 
         // ====================
+        isDrawingLegs = false;
         // ACCESSORY (Front layer)
         // ====================
-        if (pAcc === "sword") {
+        if (pAcc === "straw_hat") {
+          headBox(8, 5, 16, 1, 0xd4a000); // Brim Shadow
+          headBox(9, 5, 14, 1, 0xffd700); // Brim
+          headBox(11, 2, 10, 3, 0xffd700); // Top
+          headBox(11, 2, 1, 3, 0xd4a000); // Top Shadow Left
+          headBox(20, 2, 1, 3, 0xd4a000); // Top Shadow Right
+          headBox(11, 4, 10, 1, 0xff0000); // Red ribbon
+          headBox(11, 4, 1, 1, 0xaa0000); // Ribbon shadow
+          headBox(20, 4, 1, 1, 0xaa0000); // Ribbon shadow
+        } else if (pAcc === "headband") {
+          headBox(11, 5, 10, 2, ACC_1); // Cloth
+          headBox(13, 5, 6, 2, 0xaaaaaa); // Metal plate
+          headDot(15, 6, BLACK); // Symbol
+        } else if (pAcc === "sword") {
           if (isCharge) {
-            box(23, 6, 1, 12, 0xaaaaaa);
-            box(22, 13, 3, 1, 0xffd700);
-            box(23, 14, 1, 3, 0x552200);
+            // Raised front hand
+            box(21, -10, 2, 12, 0xaaaaaa); // blade pointing up
+            box(20, 2, 4, 2, 0xffd700); // guard
+            box(21, 4, 2, 3, 0x552200); // hilt
           } else if (isAttack) {
-            box(32, 10, 12, 1, 0xaaaaaa);
-            box(31, 9, 1, 3, 0xffd700);
-            box(29, 10, 2, 1, 0x552200);
+            // Forward front hand
+            box(34, 14, 14, 2, 0xaaaaaa); // blade pointing forward
+            box(32, 13, 2, 4, 0xffd700); // guard
+            box(29, 14, 3, 2, 0x552200); // hilt
           } else {
-            box(7, 10, 1, 12, 0xaaaaaa);
-            box(6, 17, 3, 1, 0xffd700);
-            box(7, 18, 1, 3, 0x552200);
+            // Resting in front hand
+            box(21, 6, 2, 12, 0xaaaaaa); // blade pointing up
+            box(20, 17, 4, 2, 0xffd700); // guard
+            box(21, 19, 2, 3, 0x552200); // hilt
           }
         }
       }

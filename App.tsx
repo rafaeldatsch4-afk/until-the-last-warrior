@@ -9,7 +9,7 @@ const App: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isMenuScene, setIsMenuScene] = useState(true); // Default to true, assuming we start near menu
   const [textInputPrompt, setTextInputPrompt] = useState<{ title: string; currentValue: string; onComplete: (val: string) => void } | null>(null);
-  const [isShaking, setIsShaking] = useState(false);
+  const [isShaking, setIsShaking] = useState<string | false>(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
@@ -32,9 +32,15 @@ const App: React.FC = () => {
     };
     window.addEventListener('request-text-input', handleTextInput);
 
-    const handleShakeScreen = () => {
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 400); // 400ms matches animation duration
+    const handleShakeScreen = (e: any) => {
+      const intensity = e.detail?.intensity || 'medium';
+      setIsShaking(intensity);
+      
+      let duration = 400;
+      if (intensity === 'light') duration = 200;
+      if (intensity === 'heavy') duration = 600;
+      
+      setTimeout(() => setIsShaking(false), duration);
     };
     window.addEventListener('shake-screen', handleShakeScreen);
 
@@ -104,7 +110,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`fixed inset-0 bg-[#071026] text-white overflow-hidden flex flex-col ${isShaking ? 'animate-shake-screen' : ''}`}>
+    <div className={`fixed inset-0 bg-[#071026] text-white overflow-hidden flex flex-col ${isShaking ? `animate-shake-screen-${isShaking}` : ''}`}>
       <main className="flex-1 w-full p-0 relative overflow-hidden">
         <AuthButton />
         <AchievementToast />
