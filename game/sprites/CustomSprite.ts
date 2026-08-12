@@ -1,3 +1,4 @@
+import { ColorPalette } from "../utils/ColorPalette";
 import Phaser from "phaser";
 import { CharacterData } from "../types";
 
@@ -7,10 +8,10 @@ export function generateCustomSprite(
 ) {
   const key = charData.key;
   const colors: CharacterData["customData"] = charData.customData || {
-    gi1: 0xff5a00,
-    gi2: 0x003399,
-    hair: 0x1a1a1a,
-    skin: 0xffce9e,
+    gi1: ColorPalette.gi[0],
+    gi2: ColorPalette.gi[1],
+    hair: ColorPalette.hair[0],
+    skin: ColorPalette.skin[0],
   };
 
   const generateForm = (form: number) => {

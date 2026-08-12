@@ -1,3 +1,4 @@
+import { Responsive } from "../utils/Responsive";
 export class BattleUI {
   scene: any;
   uiContainer!: Phaser.GameObjects.Container;
@@ -54,8 +55,10 @@ export class BattleUI {
     const bs = this.scene as any;
     this.uiContainer = bs.add.container(0, 0).setScrollFactor(0).setDepth(10);
 
+    const visible = Responsive.getVisibleBounds(this.scene);
+    
     // HUD Draggable Containers
-    let p1HudX = 0, p1HudY = 0;
+    let p1HudX = visible.left, p1HudY = visible.top;
     const savedP1 = localStorage.getItem(`hudPos_P1`);
     if (savedP1) {
       try {
@@ -67,7 +70,7 @@ export class BattleUI {
     this.p1HudContainer = bs.add.container(p1HudX, p1HudY).setScrollFactor(0).setDepth(11);
     this.uiContainer.add(this.p1HudContainer);
 
-    let p2HudX = 0, p2HudY = 0;
+    let p2HudX = -(960 - visible.right), p2HudY = visible.top;
     const savedP2 = localStorage.getItem(`hudPos_P2`);
     if (savedP2) {
       try {

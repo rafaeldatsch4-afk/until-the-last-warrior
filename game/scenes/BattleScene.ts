@@ -3,6 +3,7 @@ import { BattleCamera } from "../battle/BattleCamera";
 import { BattleReward } from "../battle/BattleReward";
 import { BattleEffects } from "../battle/BattleEffects";
 import { CombatMath } from "../utils/CombatMath";
+import { Responsive } from "../utils/Responsive";
 import { BattleInput } from "../battle/BattleInput";
 import { BattleUI } from "../battle/BattleUI";
 import { BattleAI } from "../battle/BattleAI";
@@ -341,7 +342,8 @@ export default class BattleScene extends Phaser.Scene {
     );
 
     if (this.gameState.gameMode === "training") {
-      this.add.text(480, 50, "MODO TREINO", {
+      const visible = Responsive.getVisibleBounds(this);
+      this.add.text(visible.centerX, visible.top + 30, "MODO TREINO", {
         fontSize: "24px",
         fontStyle: "bold",
         color: "#2ecc71",

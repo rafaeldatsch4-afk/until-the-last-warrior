@@ -1,3 +1,4 @@
+import { Responsive } from "../utils/Responsive";
 import Phaser from "phaser";
 
 import type BattleScene from "../scenes/BattleScene";
@@ -225,27 +226,11 @@ export class BattleInput {
     const opacity = cfg?.opacity ?? 0.5;
     const dpadScale = cfg?.dpadScale ?? 1.0;
     const btnScale = cfg?.buttonsScale ?? 1.0;
-    const getSafeArea = () => {
-      const div = document.createElement('div');
-      div.style.padding = 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
-      div.style.position = 'absolute';
-      div.style.visibility = 'hidden';
-      document.body.appendChild(div);
-      const style = getComputedStyle(div);
-      const top = parseInt(style.paddingTop) || 0;
-      const right = parseInt(style.paddingRight) || 0;
-      const bottom = parseInt(style.paddingBottom) || 0;
-      const left = parseInt(style.paddingLeft) || 0;
-      document.body.removeChild(div);
-      return { top, right, bottom, left };
-    };
-    const safeArea = getSafeArea();
-    const safeLeft = safeArea.left;
-    const safeRight = safeArea.right;
-    const safeBottom = safeArea.bottom;
 
-    const dpadPos = cfg?.dpadPos ?? { x: 100 + safeLeft, y: gh - 100 - safeBottom };
-    const btnPos = cfg?.buttonsPos ?? { x: gw - 100 - safeRight, y: gh - 100 - safeBottom };
+    const visible = Responsive.getVisibleBounds(this.scene);
+
+    const dpadPos = cfg?.dpadPos ?? { x: visible.left + 120, y: visible.bottom - 100 };
+    const btnPos = cfg?.buttonsPos ?? { x: visible.right - 120, y: visible.bottom - 100 };
 
     const createBtn = (
       defaultX: number,
