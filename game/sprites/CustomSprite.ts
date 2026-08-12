@@ -341,14 +341,29 @@ export function generateCustomSprite(
           box(12, 24, 1, 4, LEGS_2_SHADOW); // Inner thigh definition
           box(19, 24, 1, 4, LEGS_2_SHADOW);
         } else if (pLegs === "jotaro") {
-          // Jotaro long coat flares and slacks (black)
-          box(9, 23, 5, 6, LEGS_1); // Thicker legs
-          box(18, 23, 5, 6, LEGS_1);
-          box(14, 23, 4, 2, LEGS_1);
-          box(10, 23, 1, 6, LEGS_1_SHADOW);
-          box(21, 23, 1, 6, LEGS_1_SHADOW);
-          // Belt is already handled in torso for jotaro, but we can add pocket chains
-          box(10, 24, 1, 3, 0xffd700); // Gold chain left
+          // --- FULL HD JOTARO LEGS ---
+          // Thick, structured slacks
+          box(9, 24, 6, 6, LEGS_1_SHADOW); // Left leg base
+          box(17, 24, 6, 6, LEGS_1_SHADOW); // Right leg base
+          box(13, 24, 6, 2, LEGS_1_SHADOW); // Crotch bridge
+          
+          // Leg volumes and crisp folds
+          box(10, 24, 4, 6, LEGS_1); // Left thigh volume
+          box(18, 24, 4, 6, LEGS_1); // Right thigh volume
+          
+          // Fabric creases (sharp anime shading)
+          alphaBox(11, 25, 1, 4, 0x000000, 0.4); // Deep crease L
+          alphaBox(19, 25, 1, 4, 0x000000, 0.4); // Deep crease R
+          alphaBox(13, 27, 2, 1, 0x000000, 0.3); // Knee fold L
+          alphaBox(17, 27, 2, 1, 0x000000, 0.3); // Knee fold R
+          
+          // Thigh highlights for material texture
+          alphaBox(10, 24, 1, 5, 0xffffff, 0.15);
+          alphaBox(21, 24, 1, 5, 0xffffff, 0.15);
+
+          // Pocket chains
+          box(9, 25, 1, 3, 0xffd700); // Outer chain
+          box(10, 26, 1, 2, 0xffd700); // Inner loop
         } else if (pLegs === "saitama") {
           // Saitama yellow suit legs
           box(10, 23, 4, 6, LEGS_1);
@@ -360,17 +375,26 @@ export function generateCustomSprite(
           box(11, 26, 2, 1, LEGS_1_SHADOW);
           box(19, 26, 2, 1, LEGS_1_SHADOW);
         } else if (pLegs === "vegeta") {
-          // Tight blue suit pants
-          box(10, 23, 4, 6, LEGS_2);
-          box(18, 23, 4, 6, LEGS_2);
-          box(14, 23, 4, 2, LEGS_2);
-          box(10, 23, 1, 6, LEGS_2_SHADOW);
-          box(21, 23, 1, 6, LEGS_2_SHADOW);
-          // Ribbing continued
-          box(10, 25, 4, 1, LEGS_2_SHADOW);
-          box(18, 25, 4, 1, LEGS_2_SHADOW);
-          box(10, 27, 4, 1, LEGS_2_SHADOW);
-          box(18, 27, 4, 1, LEGS_2_SHADOW);
+          // --- FULL HD VEGETA LEGS ---
+          // Tight Spandex with heavy quad definitions
+          box(9, 23, 5, 7, LEGS_2_SHADOW); // L leg base
+          box(18, 23, 5, 7, LEGS_2_SHADOW); // R leg base
+          box(10, 23, 3, 7, LEGS_2); // L core
+          box(19, 23, 3, 7, LEGS_2); // R core
+          
+          box(13, 23, 6, 3, LEGS_2_SHADOW); // Crotch
+
+          // Spandex Ribbing (Horizontal tension lines)
+          alphaBox(9, 24, 5, 1, 0x000000, 0.4);
+          alphaBox(18, 24, 5, 1, 0x000000, 0.4);
+          alphaBox(9, 26, 5, 1, 0x000000, 0.4);
+          alphaBox(18, 26, 5, 1, 0x000000, 0.4);
+          alphaBox(9, 28, 5, 1, 0x000000, 0.4);
+          alphaBox(18, 28, 5, 1, 0x000000, 0.4);
+          
+          // Specular highlight on spandex (Shiny)
+          alphaBox(10, 23, 1, 7, 0xffffff, 0.3);
+          alphaBox(21, 23, 1, 7, 0xffffff, 0.3);
         } else if (pLegs === "chapolim") {
           // Red tight pants
           box(10, 23, 4, 6, LEGS_1);
@@ -466,19 +490,52 @@ export function generateCustomSprite(
           box(10, 33, 4, 1, 0xffd700); // gold toe
           box(18, 33, 4, 1, 0xffd700); // gold toe
         } else if (pFeet === "jotaro") {
-          box(9, 29, 5, 5, BLACK); // black shoes, slightly wider
-          box(18, 29, 5, 5, BLACK);
-          box(11, 29, 1, 5, 0x333333); // shine
-          box(19, 29, 1, 5, 0x333333);
+          // --- FULL HD JOTARO SHOES ---
+          // Expensive polished dress shoes
+          box(8, 30, 6, 4, FEET_1_SHADOW); // Base silhouette L
+          box(18, 30, 6, 4, FEET_1_SHADOW); // Base silhouette R
+          
+          // Leather upper volume
+          box(9, 30, 4, 3, FEET_1);
+          box(19, 30, 4, 3, FEET_1);
+          
+          // Sharp glossy shine
+          box(10, 30, 2, 2, FEET_2); // White/bright gloss
+          box(20, 30, 2, 2, FEET_2);
+          
+          // Shoe soles (Thick)
+          box(8, 33, 6, 1, 0x111111);
+          box(18, 33, 6, 1, 0x111111);
+          // Heel bump
+          box(8, 33, 2, 2, 0x000000);
+          box(18, 33, 2, 2, 0x000000);
         } else if (pFeet === "naruto" || pFeet === "sasuke") {
-          // Shinobi sandals (open toe)
-          box(10, 29, 5, 5, SKIN_TONE); // Skin
-          box(17, 29, 5, 5, SKIN_TONE);
-          // Sandal straps
-          box(10, 31, 5, 2, FEET_1); // Blue/Black
-          box(17, 31, 5, 2, FEET_1);
-          box(10, 33, 5, 1, FEET_1_SHADOW); // sole
-          box(17, 33, 5, 1, FEET_1_SHADOW);
+          // --- FULL HD SHINOBI SANDALS ---
+          // Base Skin (Bare foot and ankle)
+          box(9, 29, 6, 5, SKIN_SHADOW);
+          box(17, 29, 6, 5, SKIN_SHADOW);
+          box(10, 29, 4, 4, SKIN_TONE);
+          box(18, 29, 4, 4, SKIN_TONE);
+          
+          // Fabric calf warmer (Blue/Black)
+          box(9, 29, 6, 2, FEET_1_SHADOW);
+          box(10, 29, 4, 1, FEET_1);
+          
+          // Sandal straps crossing
+          box(9, 31, 6, 2, FEET_1_SHADOW);
+          box(10, 31, 4, 1, FEET_1);
+          alphaBox(10, 32, 1, 1, 0x000000, 0.5); // strap hole exposing skin
+          alphaBox(18, 32, 1, 1, 0x000000, 0.5);
+          
+          // Wooden/Rubber Sole
+          box(9, 33, 6, 1, 0x222222); // Dark rim
+          box(9, 34, 6, 1, 0x111111); // Bottom tread
+          box(17, 33, 6, 1, 0x222222);
+          box(17, 34, 6, 1, 0x111111);
+          
+          // Toes peeking out
+          box(10, 33, 2, 1, SKIN_TONE);
+          box(18, 33, 2, 1, SKIN_TONE);
         } else if (pFeet === "luffy") {
           // Bare feet with sandals
           box(10, 29, 5, 5, SKIN_TONE); 
@@ -488,14 +545,30 @@ export function generateCustomSprite(
           box(10, 34, 5, 1, 0x5c4033); // Sole
           box(17, 34, 5, 1, 0x5c4033);
         } else {
-          box(10, 29, 5, 4, FEET_1); // Blue boots
-          box(17, 29, 5, 4, FEET_1);
-          box(10, 29, 5, 1, 0xeaddcf); // rope / yellow line
-          box(17, 29, 5, 1, 0xeaddcf);
-          box(12, 29, 2, 4, FEET_2); // Red stripe in middle
-          box(19, 29, 2, 4, FEET_2);
-          box(10, 32, 5, 1, FEET_1_SHADOW); // sole
-          box(17, 32, 5, 1, FEET_1_SHADOW);
+          // --- FULL HD GOKU BOOTS ---
+          // Thick combat boots with straps
+          box(9, 30, 6, 5, FEET_1_SHADOW); // L boot shadow base
+          box(17, 30, 6, 5, FEET_1_SHADOW); // R boot shadow base
+          box(10, 30, 4, 4, FEET_1); // L volume
+          box(18, 30, 4, 4, FEET_1); // R volume
+          
+          // Yellow rope ties at the top
+          box(9, 30, 6, 1, 0xd4a000); 
+          box(10, 30, 4, 1, 0xffea00);
+          box(17, 30, 6, 1, 0xd4a000);
+          box(18, 30, 4, 1, 0xffea00);
+          
+          // Red Stripe running down
+          box(11, 31, 2, 4, FEET_2);
+          box(19, 31, 2, 4, FEET_2);
+          
+          // Boot tip highlights
+          alphaBox(9, 33, 2, 1, 0xffffff, 0.3);
+          alphaBox(21, 33, 2, 1, 0xffffff, 0.3);
+          
+          // Thick soles
+          box(9, 34, 6, 1, 0x111111);
+          box(17, 34, 6, 1, 0x111111);
         }
 
         // ====================
@@ -574,84 +647,106 @@ export function generateCustomSprite(
             box(23, 23, 1, 2, TORSO_1_SHADOW);
           }
         } else if (pTorso === "jotaro") {
-          // Coat flares at back sides (Abas do casaco) - Behind body
-          box(9, 14, 2, 11, TORSO_1_SHADOW); // Coat flair left
-          box(21, 14, 2, 11, TORSO_1_SHADOW); // Coat flair right
-          // Volume shading for flares
-          box(10, 14, 1, 11, TORSO_1); // Inner highlight left
-          box(21, 14, 1, 11, TORSO_1); // Inner highlight right
-
-          // Gakuran / Heavy coat
-          box(11, 14, 10, 8, TORSO_1_SHADOW); // base coat shadow (Volume edges)
-          box(12, 14, 8, 8, TORSO_1); // Core coat
-
-          // Inner Shirt
-          box(13, 14, 6, 8, TORSO_2_SHADOW); // shirt shadow edge
-          box(14, 14, 4, 8, TORSO_2); // shirt core
+          // --- FULL HD JOTARO TORSO ---
+          // Giant fluttering Gakuran Coat (Base/Back layer)
+          box(7, 14, 4, 12, TORSO_1_SHADOW); // Huge left flair
+          box(21, 14, 4, 12, TORSO_1_SHADOW); // Huge right flair
+          box(8, 15, 2, 10, TORSO_1); // Flair volume highlight L
+          box(22, 15, 2, 10, TORSO_1); // Flair volume highlight R
           
-          // Shirt wrinkles for legibility
-          box(15, 16, 2, 1, TORSO_2_SHADOW);
-          box(14, 19, 2, 1, TORSO_2_SHADOW);
-          box(16, 20, 2, 1, TORSO_2_SHADOW);
+          // Wind flutter folds
+          alphaBox(7, 20, 3, 2, 0x000000, 0.4);
+          alphaBox(22, 18, 3, 2, 0x000000, 0.4);
 
-          // Exposed chest/neck
-          box(14, 14, 4, 2, SKIN_SHADOW);
-          box(15, 14, 2, 1, SKIN_TONE);
-
-          // Open coat lapels (Lapelas abertas)
-          box(11, 14, 2, 8, TORSO_1); // Lapela esquerda
-          box(11, 14, 1, 8, TORSO_1_SHADOW); // Linha externa lapela esquerda
-          box(12, 14, 1, 8, TORSO_1); // Volume lapela esquerda
+          // Broad Shoulders & Main Coat Body
+          box(10, 13, 12, 10, TORSO_1_SHADOW); // Thick shadow base
+          box(11, 14, 10, 9, TORSO_1); // Coat core
           
-          box(19, 14, 2, 8, TORSO_1); // Lapela direita
-          box(20, 14, 1, 8, TORSO_1_SHADOW); // Linha externa lapela direita
-          box(19, 14, 1, 8, TORSO_1); // Volume lapela direita
+          // Collar (High stiff collar)
+          box(11, 12, 10, 3, TORSO_1);
+          box(11, 12, 2, 3, TORSO_1_SHADOW); // L shadow
+          box(19, 12, 2, 3, TORSO_1_SHADOW); // R shadow
+          box(11, 12, 10, 1, 0xffd700); // Gold trim on collar
 
-          // High collar (Gola alta rígida)
-          box(12, 11, 8, 3, TORSO_1_SHADOW);
-          box(13, 12, 6, 2, TORSO_1);
-          box(13, 11, 6, 1, TORSO_1_SHADOW); // Collar top rim
+          // Inner tight shirt (Muscle fit)
+          box(13, 14, 6, 9, TORSO_2_SHADOW);
+          box(14, 14, 4, 9, TORSO_2);
+          
+          // Pectoral and Abdominal definition through the tight shirt
+          alphaBox(14, 16, 4, 1, 0x000000, 0.3); // Pec under-shadow
+          alphaBox(15, 18, 2, 1, 0x000000, 0.2); // Upper abs
+          alphaBox(15, 20, 2, 1, 0x000000, 0.2); // Lower abs
+          
+          // Exposed chest/neck window
+          box(14, 13, 4, 3, SKIN_SHADOW);
+          box(15, 13, 2, 2, SKIN_TONE);
+          
+          // Massive Gold Chain
+          box(12, 14, 2, 1, 0xffd700);
+          box(13, 15, 1, 1, 0xffd700);
+          box(12, 16, 2, 1, 0xffd700);
+          box(11, 17, 1, 1, 0xffd700);
+          alphaBox(12, 14, 2, 4, 0xffffff, 0.4); // Chain glint
 
-          // Golden metal chain (Corrente dourada em argolas) - Refined
-          dot(12, 13, 0xd4a000); // Gold dark
-          dot(13, 13, 0xffea00); // Gold light
-          dot(12, 14, 0xffea00);
-          dot(13, 15, 0xd4a000);
-          dot(12, 16, 0xffea00);
-          dot(13, 17, 0xd4a000);
-          dot(12, 18, 0xffea00);
+          // Thick Open Lapels overlapping the shirt
+          // Left Lapel
+          box(11, 14, 2, 9, TORSO_1);
+          box(12, 14, 1, 9, TORSO_2_SHADOW); // Lapel depth
+          alphaBox(11, 14, 1, 9, 0xffffff, 0.15); // Edge highlight
+          
+          // Right Lapel
+          box(19, 14, 2, 9, TORSO_1);
+          box(19, 14, 1, 9, TORSO_2_SHADOW);
+          alphaBox(20, 14, 1, 9, 0xffffff, 0.15);
 
-          // Double belts / Cinto duplo de Jotaro
-          box(11, 22, 10, 2, TORSO_1_SHADOW);
-          box(11, 22, 10, 1, 0x27ae60); // Green belt
-          box(11, 23, 10, 1, 0xc0392b); // Red belt
-          box(14, 22, 2, 2, 0xffd700); // Gold buckle
-          dot(15, 22, 0xd4a000); // Buckle detail
-          dot(14, 23, 0xd4a000);
+          // Double Belts (JoJo trademark)
+          // Belt 1
+          box(12, 22, 8, 1, 0x111111); // Black leather
+          box(14, 22, 2, 1, 0xffd700); // Buckle
+          box(18, 22, 2, 1, 0xaaaaaa); // Studs
+          // Belt 2 (tilted)
+          box(11, 23, 10, 1, 0x773311); // Brown leather
+          box(16, 23, 2, 1, 0xffd700); // Buckle
+          box(13, 23, 1, 1, 0xaaaaaa); // Studs
 
           if (isCharge) {
-            // Arms
-            box(20, 4, 3, 10, TORSO_1);
-            box(20, 2, 3, 3, SKIN_TONE); // Hands
-            box(9, 4, 3, 10, TORSO_1);
-            box(9, 2, 3, 3, SKIN_TONE);
+            // Arms raised for Stand summoning / shouting
+            box(20, 4, 4, 10, TORSO_1_SHADOW); // Front arm sleeve
+            box(21, 5, 2, 8, TORSO_1); // Sleeve volume
+            box(20, 2, 3, 3, SKIN_TONE); // Front hand
+            
+            box(8, 4, 4, 10, TORSO_1_SHADOW); // Back arm sleeve
+            box(9, 5, 2, 8, TORSO_1);
+            box(9, 2, 3, 3, SKIN_SHADOW); // Back hand (darker)
           } else if (isAttack) {
-            // Braço de ataque Jotaro style
-            box(18, 13, 10, 5, TORSO_1);
-            box(18, 13, 10, 1, TORSO_1_SHADOW); // Edge shadow
-            box(28, 13, 4, 4, SKIN_TONE);
-            box(28, 13, 2, 2, SKIN_SHADOW);
-            box(8, 14, 4, 8, TORSO_1);
+            // Dynamic attack pose pointing forward / punching
+            box(18, 13, 12, 5, TORSO_1_SHADOW); // Front arm stretched
+            box(19, 14, 10, 3, TORSO_1); // Stretched sleeve volume
+            
+            // Fists/Hands
+            box(30, 13, 4, 4, SKIN_TONE);
+            box(30, 14, 2, 2, SKIN_SHADOW); // knuckles
+            
+            // Back arm pulled back
+            box(6, 14, 5, 7, TORSO_1_SHADOW);
+            box(7, 15, 3, 5, TORSO_1);
           } else {
-            // Braços Jotaro style no bolso/cruzados
-            box(8, 14, 3, 3, TORSO_1); // Ombro Trás
-            box(21, 14, 3, 3, TORSO_1); // Ombro Frente
+            // Stoic pose - hands in pockets (Jotaro signature)
+            // Back Shoulder
+            box(7, 14, 4, 4, TORSO_1);
+            box(7, 14, 1, 4, 0xffffff); // Shoulder highlight
             
-            box(8, 16, 3, 7, TORSO_1_SHADOW); // Braço trás Base
-            box(9, 17, 1, 5, TORSO_1); // Braço trás Volume
+            // Back arm digging into pocket
+            box(8, 17, 3, 6, TORSO_1_SHADOW); 
+            box(9, 18, 1, 4, TORSO_1);
             
-            box(21, 16, 3, 7, TORSO_1_SHADOW); // Braço frente Base
-            box(22, 17, 1, 5, TORSO_1); // Braço frente Volume
+            // Front Shoulder
+            box(21, 14, 4, 4, TORSO_1); 
+            box(21, 14, 1, 4, 0xffffff); // Shoulder highlight
+            
+            // Front arm digging into pocket
+            box(21, 17, 3, 6, TORSO_1_SHADOW); 
+            box(22, 18, 1, 4, TORSO_1);
           }
         } else if (pTorso === "vegeta") {
           // Bodysuit underneath
@@ -914,40 +1009,77 @@ export function generateCustomSprite(
             box(21, 24, 3, 2, SKIN_TONE);
           }
         } else if (pTorso === "sasuke") {
-          // High collar blue shirt
-          box(11, 14, 10, 9, TORSO_1);
-          box(11, 12, 10, 2, TORSO_1); // High collar
-          box(11, 14, 1, 9, TORSO_1_SHADOW);
-          box(20, 14, 1, 9, TORSO_1_SHADOW);
-          box(15, 14, 2, 9, TORSO_1_SHADOW); // center line
+          // --- FULL HD SASUKE TORSO ---
+          // Iconic High-collar blue shirt
+          box(10, 14, 12, 9, TORSO_1_SHADOW); 
+          box(11, 14, 10, 9, TORSO_1); 
+          
+          // High collar (Standing up behind/around neck)
+          box(10, 11, 12, 4, TORSO_1_SHADOW);
+          box(11, 11, 10, 3, TORSO_1);
+          alphaBox(11, 11, 10, 1, 0xffffff, 0.2); // Collar edge
+          
+          // Zipper / center split line
+          box(15, 14, 2, 9, TORSO_1_SHADOW);
+          box(15, 14, 1, 9, 0x444444); // Zipper teeth
+
+          // Subtle fabric creases
+          alphaBox(12, 18, 2, 1, 0x000000, 0.2);
+          alphaBox(18, 17, 2, 1, 0x000000, 0.2);
+          
+          // Uchiha Crest on the back? Invisible here, but we can imply collar shape.
+
           if (isCharge) {
-            box(20, 8, 3, 6, SKIN_TONE); // Forearm
-            box(20, 14, 3, 3, TORSO_1); // Shoulder sleeve
-            box(20, 4, 3, 4, 0xffffff); // Arm warmer
-            box(20, 2, 3, 3, SKIN_TONE); // Hands
+            // Chidori charging pose
+            box(20, 14, 5, 4, TORSO_1_SHADOW); // T-shirt sleeve
+            box(21, 14, 3, 3, TORSO_1); 
+            box(20, 10, 5, 4, SKIN_SHADOW); // Bare bicep
+            box(21, 11, 3, 3, SKIN_TONE);
+            box(20, 4, 5, 6, 0xaaaaaa); // White arm warmer shadow
+            box(21, 4, 3, 5, 0xffffff); // Arm warmer
+            box(20, 2, 4, 3, SKIN_SHADOW); // Hand
             
-            box(9, 8, 3, 6, SKIN_TONE);
-            box(9, 14, 3, 3, TORSO_1);
-            box(9, 4, 3, 4, 0xffffff);
-            box(9, 2, 3, 3, SKIN_TONE); // Hands
+            box(7, 14, 5, 4, TORSO_1_SHADOW);
+            box(8, 14, 3, 3, TORSO_1);
+            box(7, 10, 5, 4, SKIN_SHADOW);
+            box(8, 11, 3, 3, SKIN_TONE);
+            box(7, 4, 5, 6, 0xaaaaaa);
+            box(8, 4, 3, 5, 0xffffff);
+            box(7, 2, 4, 3, SKIN_SHADOW);
           } else if (isAttack) {
-            box(21, 13, 5, 4, TORSO_1); // Shoulder
-            box(26, 14, 2, 3, SKIN_TONE); // Forearm
-            box(28, 14, 4, 3, 0xffffff); // Arm warmer
-            box(32, 13, 4, 4, SKIN_TONE); // Hand
+            box(19, 13, 6, 5, TORSO_1_SHADOW);
+            box(20, 13, 4, 4, TORSO_1);
             
-            box(7, 14, 4, 3, TORSO_1); // Back Shoulder
-            box(6, 15, 4, 2, SKIN_TONE); // Back Forearm
-            box(6, 17, 4, 3, 0xffffff); // Arm warmer
-            box(6, 20, 4, 2, SKIN_TONE); // Back Hand
+            box(24, 14, 3, 4, SKIN_SHADOW); // Bicep
+            box(25, 14, 2, 3, SKIN_TONE);
+            
+            box(27, 13, 6, 5, 0xaaaaaa); // Arm warmer
+            box(28, 14, 4, 3, 0xffffff);
+            
+            box(33, 13, 4, 4, SKIN_SHADOW); // Hand
+            
+            box(6, 14, 5, 4, TORSO_1_SHADOW);
+            box(7, 14, 3, 3, TORSO_1);
+            box(5, 17, 5, 3, SKIN_SHADOW);
+            box(5, 19, 5, 5, 0xaaaaaa); // Arm warmer
+            box(6, 19, 3, 4, 0xffffff);
           } else {
-             // Arm warmers (White)
-             box(8, 14, 3, 6, TORSO_1); // Sleeves
-             box(21, 14, 3, 6, TORSO_1);
-             box(8, 20, 3, 4, 0xffffff); // Arm warmers
-             box(21, 20, 3, 4, 0xffffff);
-             box(8, 24, 3, 2, SKIN_TONE); // Hands
-             box(21, 24, 3, 2, SKIN_TONE);
+             // Cool, calm stance
+             box(7, 14, 5, 5, TORSO_1_SHADOW); // Sleeve
+             box(8, 14, 3, 4, TORSO_1);
+             box(7, 18, 5, 3, SKIN_SHADOW); // Bare bicep gap
+             box(8, 19, 3, 2, SKIN_TONE);
+             box(7, 21, 5, 5, 0xaaaaaa); // Arm warmer
+             box(8, 21, 3, 4, 0xffffff);
+             box(7, 26, 4, 3, SKIN_SHADOW); // Hand
+             
+             box(20, 14, 5, 5, TORSO_1_SHADOW); 
+             box(21, 14, 3, 4, TORSO_1);
+             box(20, 18, 5, 3, SKIN_SHADOW); 
+             box(21, 19, 3, 2, SKIN_TONE);
+             box(20, 21, 5, 5, 0xaaaaaa); 
+             box(21, 21, 3, 4, 0xffffff);
+             box(21, 26, 4, 3, SKIN_SHADOW);
           }
         } else if (pTorso === "luffy") {
           // Open red vest, bare chest
@@ -1067,57 +1199,93 @@ export function generateCustomSprite(
             box(21, 24, 3, 1, SKIN_SHADOW);
           }
         } else {
-          // Goku Gi
-          // Blue undershirt
-          box(14, 14, 4, 9, TORSO_2); 
-          // Chest skin (V-neck of the blue shirt)
-          box(14, 14, 4, 3, SKIN_TONE); 
-          box(15, 14, 2, 2, SKIN_SHADOW); // Pec cleavage
-          box(14, 16, 1, 1, SKIN_SHADOW); // Left pec bottom curve
-          box(17, 16, 1, 1, SKIN_SHADOW); // Right pec bottom curve
+          // --- FULL HD GOKU GI (TORSO) ---
+          // Deep Blue Undershirt with heavy muscle definition
+          box(13, 14, 6, 9, TORSO_2_SHADOW); // Base dark blue
+          box(14, 14, 4, 9, TORSO_2); // Mid tone
+          alphaBox(14, 16, 4, 1, 0x000000, 0.3); // Pec under-shadow on shirt
+          alphaBox(15, 18, 2, 4, 0x000000, 0.2); // Abs definition through shirt
           
-          // Orange Gi Main
-          box(11, 14, 3, 9, TORSO_1); // Left side
-          box(18, 14, 3, 9, TORSO_1); // Right side
-          box(11, 14, 1, 9, TORSO_1_SHADOW);
-          box(20, 14, 1, 9, TORSO_1_SHADOW);
-
-          // Belt (now uses LEGS_2 instead of TORSO_2, and is drawn here or in Legs)
-          // We will draw it in LEGS block to avoid confusion, so we don't draw it here.
+          // Deep V-Neck Chest Window
+          box(14, 14, 4, 4, SKIN_SHADOW); 
+          box(15, 14, 2, 3, SKIN_TONE); 
+          box(15, 14, 2, 1, SKIN_SHADOW); // Cleavage line
+          box(14, 17, 1, 1, SKIN_SHADOW); // Pec curve L
+          box(17, 17, 1, 1, SKIN_SHADOW); // Pec curve R
+          
+          // Orange Gi Main (Thick fabric with heavy folds)
+          box(10, 14, 4, 9, TORSO_1_SHADOW); // Left flap base
+          box(18, 14, 4, 9, TORSO_1_SHADOW); // Right flap base
+          box(11, 14, 2, 9, TORSO_1); // Left flap core
+          box(19, 14, 2, 9, TORSO_1); // Right flap core
+          
+          // Gi wrinkles (Iconic Dragon Ball folds)
+          alphaBox(11, 16, 2, 1, 0x000000, 0.3);
+          alphaBox(11, 19, 2, 1, 0x000000, 0.3);
+          alphaBox(19, 15, 2, 1, 0x000000, 0.3);
+          alphaBox(19, 18, 2, 1, 0x000000, 0.3);
+          
+          // Gi Edge Highlights
+          alphaBox(12, 14, 1, 9, 0xffffff, 0.2);
+          alphaBox(19, 14, 1, 9, 0xffffff, 0.2);
 
           if (isCharge) {
-            box(20, 4, 3, 10, SKIN_TONE);
-            box(20, 14, 3, 3, TORSO_1);
-            box(20, 4, 3, 3, TORSO_2);
-            box(20, 2, 3, 3, SKIN_TONE);
-            box(9, 4, 3, 10, SKIN_TONE);
-            box(9, 14, 3, 3, TORSO_1);
-            box(9, 4, 3, 3, TORSO_2);
-            box(9, 2, 3, 3, SKIN_TONE);
+            // Charging - Arms spread out
+            box(20, 4, 5, 10, SKIN_SHADOW); // Back arm base
+            box(21, 5, 3, 8, SKIN_TONE); // Core muscle
+            box(20, 14, 4, 4, TORSO_1_SHADOW); // Orange sleeve
+            box(21, 14, 2, 3, TORSO_1); 
+            box(20, 4, 5, 3, TORSO_2_SHADOW); // Blue wristband
+            box(21, 4, 3, 2, TORSO_2);
+            box(20, 2, 4, 3, SKIN_TONE); // Fist
+            
+            box(7, 4, 5, 10, SKIN_SHADOW); 
+            box(8, 5, 3, 8, SKIN_TONE); 
+            box(8, 14, 4, 4, TORSO_1_SHADOW); 
+            box(9, 14, 2, 3, TORSO_1);
+            box(7, 4, 5, 3, TORSO_2_SHADOW);
+            box(8, 4, 3, 2, TORSO_2);
+            box(8, 2, 4, 3, SKIN_TONE); 
           } else if (isAttack) {
-            box(21, 13, 5, 4, SKIN_TONE);
-            box(21, 13, 3, 4, TORSO_1);
-            box(21, 13, 1, 4, TORSO_1_SHADOW);
-            box(26, 14, 5, 3, SKIN_TONE);
-            box(30, 14, 2, 3, TORSO_2);
-            box(31, 13, 4, 4, SKIN_TONE);
-            box(31, 13, 2, 2, 0xffffff);
-            alphaBox(33, 13, 6, 4, SKIN_TONE, 0.4);
-            box(6, 15, 4, 5, SKIN_TONE);
-            box(7, 14, 4, 3, TORSO_1);
-            box(6, 18, 4, 2, TORSO_2);
+            // Punching Forward
+            box(18, 13, 5, 5, TORSO_1_SHADOW); // Shoulder
+            box(19, 13, 3, 4, TORSO_1);
+            
+            box(23, 14, 7, 4, SKIN_SHADOW); // Arm stretching
+            box(24, 14, 5, 2, SKIN_TONE); // Muscle highlight
+            
+            box(28, 13, 3, 5, TORSO_2_SHADOW); // Wristband
+            box(29, 14, 2, 3, TORSO_2); 
+            
+            box(31, 13, 5, 5, SKIN_TONE); // Fist
+            box(31, 14, 2, 2, SKIN_SHADOW); // Knuckles
+            
+            // Back arm pulled back
+            box(6, 14, 4, 4, TORSO_1_SHADOW); 
+            box(7, 14, 2, 3, TORSO_1);
+            box(5, 16, 4, 5, SKIN_SHADOW);
+            box(6, 17, 2, 3, SKIN_TONE);
+            box(5, 20, 4, 3, TORSO_2_SHADOW); // Wristband
+            box(6, 20, 2, 2, TORSO_2);
           } else {
+            // Combat Stance (Front & Back Arm details)
             // BACK ARM
-            box(8, 14, 3, 3, TORSO_2); // Blue short sleeve
-            box(8, 17, 3, 5, SKIN_TONE); // Bare arm
-            box(8, 20, 3, 2, TORSO_2); // Wristband
-            box(8, 22, 3, 3, SKIN_TONE); // Hand
-
+            box(7, 14, 5, 4, TORSO_1_SHADOW); // Orange sleeve
+            box(8, 14, 3, 3, TORSO_1);
+            box(7, 17, 5, 6, SKIN_SHADOW); // Bare arm
+            box(8, 18, 3, 4, SKIN_TONE); // Bicep/Forearm highlight
+            box(7, 22, 5, 3, TORSO_2_SHADOW); // Wristband
+            box(8, 22, 3, 2, TORSO_2);
+            box(7, 25, 4, 3, SKIN_SHADOW); // Hand
+            
             // FRONT ARM
-            box(21, 14, 3, 3, TORSO_2); // Blue short sleeve
-            box(21, 17, 3, 5, SKIN_TONE);
-            box(21, 20, 3, 2, TORSO_2);
-            box(21, 22, 3, 3, SKIN_TONE); // Hand
+            box(20, 14, 5, 4, TORSO_1_SHADOW); // Orange sleeve
+            box(21, 14, 3, 3, TORSO_1);
+            box(20, 17, 5, 6, SKIN_SHADOW); // Bare arm
+            box(21, 18, 3, 4, SKIN_TONE); 
+            box(20, 22, 5, 3, TORSO_2_SHADOW); // Wristband
+            box(21, 22, 3, 2, TORSO_2);
+            box(21, 25, 4, 3, SKIN_SHADOW); // Hand
           }
         }
         isDrawingTorso = false;
@@ -1367,34 +1535,57 @@ export function generateCustomSprite(
             headDot(18, 11, SKIN_SHADOW);
           }
         } else if (pHead === "sasuke") {
+          // --- FULL HD SASUKE HEAD ---
           headBox(12, 6, 8, 7, SKIN_TONE);
-          headBox(14, 13, 4, 1, SKIN_TONE); // Neck
-          headBox(13, 12, 6, 1, SKIN_SHADOW);
+          headBox(14, 13, 4, 2, SKIN_TONE); 
+          
+          headBox(12, 9, 8, 4, SKIN_SHADOW); 
+          headBox(13, 9, 6, 3, SKIN_TONE); 
+          headBox(15, 10, 2, 2, SKIN_SHADOW); // Nose
+          
+          // Hair (Spiky black, back and front bangs - highly detailed duck-butt style)
+          const S_HAIR_SHADOW = 0x111111;
+          headBox(9, 0, 14, 7, S_HAIR_SHADOW); 
+          headBox(10, 1, 12, 6, hairColor); 
+          
+          // Back ducktail spikes
+          headBox(16, -2, 4, 4, S_HAIR_SHADOW);
+          headBox(17, -1, 2, 3, hairColor);
+          headBox(11, -1, 3, 3, S_HAIR_SHADOW);
+          headBox(12, 0, 1, 2, hairColor);
 
-          // Hair (Spiky black, back and front bangs)
-          headBox(10, 2, 12, 5, hairColor); // Big hair block
-          headBox(11, -1, 10, 3, hairColor);
-          headBox(17, -3, 3, 3, hairColor); // back ducktail spike
-          headBox(9, 5, 2, 4, hairColor); // side burns
-          headBox(21, 5, 2, 4, hairColor); // side burns
-          // Middle bang
-          headBox(15, 6, 2, 3, hairColor);
+          // Side bangs framing the face
+          headBox(8, 4, 3, 6, S_HAIR_SHADOW);
+          headBox(9, 5, 2, 4, hairColor);
+          headBox(21, 4, 3, 6, S_HAIR_SHADOW);
+          headBox(21, 5, 2, 4, hairColor);
+          
+          // Middle V-bang
+          headBox(14, 5, 4, 4, S_HAIR_SHADOW);
+          headBox(15, 6, 2, 2, hairColor);
 
           // Eyes
+          headBox(12, 7, 3, 2, eyebrowColor); // intense brow
+          headBox(17, 7, 3, 2, eyebrowColor);
+          
           headBox(13, 9, 2, 1, WHITE);
           headBox(17, 9, 2, 1, WHITE);
-          headDot(14, 9, 0xff0000); // Sharingan red
-          headDot(17, 9, 0xff0000);
+          
+          // Sharingan (Red pupil with black dot)
+          headBox(14, 9, 1, 1, 0xff0000); 
+          headBox(17, 9, 1, 1, 0xff0000);
+          alphaBox(14, 9, 1, 1, 0x000000, 0.5); // tomoe center
+          alphaBox(17, 9, 1, 1, 0x000000, 0.5);
 
           // Mouth
           if (isAttack) {
-            headBox(14, 11, 4, 1, 0x440000);
+            headBox(14, 12, 4, 1, 0x440000);
           } else if (isDefend) {
-            headBox(14, 11, 4, 1, WHITE);
+            headBox(14, 12, 4, 1, WHITE);
           } else if (isCharge) {
-            headBox(15, 11, 2, 2, 0x000000);
+            headBox(14, 12, 4, 2, 0x000000);
           } else {
-            headBox(15, 11, 2, 1, SKIN_SHADOW); // Serious
+            headBox(15, 12, 2, 1, SKIN_SHADOW); // Serious line
           }
         } else if (pHead === "luffy") {
           headBox(12, 6, 8, 7, SKIN_TONE);
@@ -1426,33 +1617,74 @@ export function generateCustomSprite(
              headBox(14, 11, 4, 2, BLACK);
           }
         } else if (pHead === "jotaro") {
+          // --- FULL HD JOTARO HEAD ---
+          // Base Skin & Neck
           headBox(12, 6, 8, 7, SKIN_TONE);
-          headBox(14, 13, 4, 1, SKIN_TONE); // Neck
-          headDot(11, 9, SKIN_TONE);
-          headDot(20, 9, SKIN_TONE);
+          headBox(14, 13, 4, 2, SKIN_TONE); 
+          headBox(12, 9, 8, 4, SKIN_SHADOW); // lower face shadow (JoJo strong jaw)
+          headBox(13, 9, 6, 3, SKIN_TONE); // bring back cheek highlight
+          
+          // Ears
+          headBox(11, 8, 1, 3, SKIN_TONE);
+          headBox(11, 9, 1, 1, SKIN_SHADOW);
+          headBox(20, 8, 1, 3, SKIN_TONE);
+          headBox(20, 9, 1, 1, SKIN_SHADOW);
 
-          // Jotaro Hat
-          headBox(10, 4, 12, 3, HEAD_1); // Brim
-          headBox(11, 1, 10, 3, HEAD_1); // Top
-          // Hat decor
-          headBox(12, 3, 3, 1, 0xffd700); // Gold pin
-          headBox(16, 2, 2, 2, HEAD_1_SHADOW);
+          // Jawline contour
+          headBox(13, 12, 1, 1, 0x000000);
+          headBox(18, 12, 1, 1, 0x000000);
 
-          // Hair blending (integrating with hat at the back)
-          headBox(10, 6, 2, 5, hairColor);
-          headBox(20, 6, 2, 5, hairColor);
-          headBox(11, 10, 10, 3, hairColor); // back hair (fused with hat)
-          headBox(11, 12, 10, 1, 0x111111); // hair shadow
+          // Jotaro Iconic Torn Hat (fuses into hair)
+          // Crown of the hat
+          headBox(11, 1, 10, 3, HEAD_1); 
+          headBox(11, 1, 1, 3, HEAD_1_SHADOW); // left shade
+          headBox(19, 1, 2, 3, HEAD_2); // right highlight
+          
+          // Visor / Brim
+          headBox(9, 4, 14, 2, HEAD_1); 
+          headBox(9, 4, 1, 2, HEAD_1_SHADOW);
+          headBox(22, 4, 1, 2, HEAD_2);
+          headBox(10, 5, 12, 1, 0x111111); // under-brim shadow on face
+          
+          // Hat Decor (Gold Badge + Hand)
+          headBox(12, 2, 4, 2, 0xffd700); // Gold palm/anchor base
+          headBox(13, 3, 2, 1, 0xb8860b); // inner badge shade
+          headBox(17, 2, 2, 2, HEAD_1_SHADOW); // Button pin
 
-          headBox(13, 8, 2, 1, eyebrowColor); // angry brow
-          headBox(17, 8, 2, 1, eyebrowColor);
-          headDot(14, 9, eyeColor);
-          headDot(18, 9, eyeColor);
+          // Torn back / Hair fusion
+          // The hat slowly transitions into spiky hair at the back/bottom
+          headBox(9, 6, 2, 6, hairColor); // Left hair side
+          headBox(21, 6, 2, 6, hairColor); // Right hair side
+          headBox(10, 10, 12, 4, hairColor); // Back hair mass
+          
+          // Hair spikes & highlights
+          headBox(9, 10, 1, 2, 0x000000); 
+          headBox(22, 10, 1, 2, 0x000000); 
+          headBox(11, 11, 2, 3, HEAD_1_SHADOW); // Blend hat color into hair
+          headBox(19, 11, 2, 3, HEAD_1_SHADOW);
+          
+          // Face details - JoJo style thick brows & sharp eyes
+          headBox(12, 7, 3, 2, eyebrowColor); // angry thick brow L
+          headBox(17, 7, 3, 2, eyebrowColor); // angry thick brow R
+          headBox(13, 8, 2, 1, 0x000000); // lower brow depth
+          headBox(17, 8, 2, 1, 0x000000); 
+          
+          // Eyes
+          headBox(13, 9, 2, 1, 0xffffff); // Sclera L
+          headBox(17, 9, 2, 1, 0xffffff); // Sclera R
+          headBox(14, 9, 1, 1, eyeColor); // Pupil L
+          headBox(17, 9, 1, 1, eyeColor); // Pupil R
+          
+          // Nose line (JoJo shadow)
+          headBox(15, 9, 1, 3, SKIN_SHADOW);
+          headBox(16, 11, 1, 1, SKIN_SHADOW);
 
           if (isCharge) {
-            headBox(15, 12, 2, 2, 0x000000);
+            headBox(14, 12, 4, 2, 0x000000); // open shouting mouth
+            headBox(15, 12, 2, 1, 0xffffff); // teeth
           } else {
-            headBox(14, 12, 4, 1, 0x000000);
+            headBox(14, 12, 4, 1, 0x000000); // stoic line
+            headBox(15, 13, 2, 1, SKIN_SHADOW); // lip shadow
           }
         } else {
           // Generic anime head (Goku base)
