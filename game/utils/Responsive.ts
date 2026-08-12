@@ -33,13 +33,17 @@ export class Responsive {
       document.body.removeChild(div);
     } catch (e) {}
 
+    // Internal Safe Margin (5%)
+    const marginX = 960 * 0.05;
+    const marginY = 540 * 0.05;
+
     return {
-      left: gameBleedX + safeLeft,
-      right: 960 - gameBleedX - safeRight,
-      top: gameBleedY + safeTop,
-      bottom: 540 - gameBleedY - safeBottom,
-      width: 960 - (gameBleedX * 2) - safeLeft - safeRight,
-      height: 540 - (gameBleedY * 2) - safeTop - safeBottom,
+      left: gameBleedX + safeLeft + marginX,
+      right: 960 - gameBleedX - safeRight - marginX,
+      top: gameBleedY + safeTop + marginY,
+      bottom: 540 - gameBleedY - safeBottom - marginY,
+      width: 960 - (gameBleedX * 2) - safeLeft - safeRight - (marginX * 2),
+      height: 540 - (gameBleedY * 2) - safeTop - safeBottom - (marginY * 2),
       centerX: 960 / 2,
       centerY: 540 / 2,
     };
