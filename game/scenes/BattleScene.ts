@@ -2,6 +2,7 @@ import { transitionTo } from "../utils/sceneTransition";
 import { BattleCamera } from "../battle/BattleCamera";
 import { BattleReward } from "../battle/BattleReward";
 import { BattleEffects } from "../battle/BattleEffects";
+import { CombatMath } from "../utils/CombatMath";
 import { BattleInput } from "../battle/BattleInput";
 import { BattleUI } from "../battle/BattleUI";
 import { BattleAI } from "../battle/BattleAI";
