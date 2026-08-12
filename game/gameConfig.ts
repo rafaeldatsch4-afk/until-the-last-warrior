@@ -40,7 +40,13 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   ],
 
   scale: {
-    mode: Phaser.Scale.FIT,
+    // NÃO MUDE ISSO PARA FIT: FIT deixa barras pretas em celulares que não são 16:9.
+    // NÃO MUDE ISSO PARA RESIZE: RESIZE muda a resolução interna dinamicamente e
+    // quebra todo o posicionamento de botões em BattleInput.ts (bug já confirmado antes).
+    // ENVELOP preenche 100% da tela SEM mudar a resolução interna fixa (960x540),
+    // por isso é a única opção segura aqui. Se precisar mexer nisso, avise que essa
+    // decisão foi testada e revertida 2 vezes antes de chegar em ENVELOP.
+    mode: Phaser.Scale.ENVELOP,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: 960,
     height: 540,
