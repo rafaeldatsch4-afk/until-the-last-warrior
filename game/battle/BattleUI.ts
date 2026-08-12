@@ -2,6 +2,10 @@ export class BattleUI {
   scene: any;
   uiContainer!: Phaser.GameObjects.Container;
   p1HpBar!: Phaser.GameObjects.Rectangle;
+  p1DmgBar!: Phaser.GameObjects.Rectangle;
+  p2DmgBar!: Phaser.GameObjects.Rectangle;
+  p1HpText!: Phaser.GameObjects.Text;
+  p2HpText!: Phaser.GameObjects.Text;
   p1KiBar!: Phaser.GameObjects.Rectangle;
   p2HpBar!: Phaser.GameObjects.Rectangle;
   p2KiBar!: Phaser.GameObjects.Rectangle;
@@ -119,10 +123,20 @@ export class BattleUI {
       .setStrokeStyle(2, 0xaaaaaa, 0.6);
     this.p2HudContainer.add([p2HpBg, p2KiBg]);
 
+    this.p1DmgBar = bs.add
+      .rectangle(25, 50, 250, 22, 0xffaa00)
+      .setOrigin(0, 0.5);
+    this.p1HudContainer.add(this.p1DmgBar);
+
     this.p1HpBar = bs.add
       .rectangle(25, 50, 250, 22, 0x2ecc71)
       .setOrigin(0, 0.5);
     this.p1HudContainer.add(this.p1HpBar);
+
+    this.p1HpText = bs.add
+      .text(150, 50, "100%", { fontSize: "14px", fontStyle: "bold", fontFamily: "system-ui", color: "#ffffff", stroke: "#000000", strokeThickness: 3 })
+      .setOrigin(0.5, 0.5);
+    this.p1HudContainer.add(this.p1HpText);
 
     this.p1KiBar = bs.add
       .rectangle(25, 80, 250, 12, 0x3498db)
@@ -145,10 +159,20 @@ export class BattleUI {
     this.p1HudContainer.add(this.p1KiReadyGlow);
     this.p1KiReadyGlow.scaleX = 0;
 
+    this.p2DmgBar = bs.add
+      .rectangle(685, 50, 250, 22, 0xffaa00)
+      .setOrigin(0, 0.5);
+    this.p2HudContainer.add(this.p2DmgBar);
+
     this.p2HpBar = bs.add
       .rectangle(685, 50, 250, 22, 0xe74c3c)
       .setOrigin(0, 0.5);
     this.p2HudContainer.add(this.p2HpBar);
+
+    this.p2HpText = bs.add
+      .text(810, 50, "100%", { fontSize: "14px", fontStyle: "bold", fontFamily: "system-ui", color: "#ffffff", stroke: "#000000", strokeThickness: 3 })
+      .setOrigin(0.5, 0.5);
+    this.p2HudContainer.add(this.p2HpText);
 
     this.p2KiBar = bs.add
       .rectangle(685, 80, 250, 12, 0xf1c40f)
@@ -368,6 +392,13 @@ export class BattleUI {
   updateBars(p1HpP: number, p2HpP: number, p1KiP: number, p2KiP: number) {
 
     if (this.p1HpBar && this.p1HpBar.active) {
+      if (this.p1HpText) {
+        this.p1HpText.setText(`${Math.round(Math.max(0, p1HpP) * 100)}%`);
+      }
+      if (this.p2HpText) {
+        this.p2HpText.setText(`${Math.round(Math.max(0, p2HpP) * 100)}%`);
+      }
+
       // Liquid HP Bars (only update when actual target value changes)
       if (p1HpP !== this.lastP1HpP) {
         this.scene.tweens.add({
@@ -377,6 +408,21 @@ export class BattleUI {
           ease: "Cubic.easeOut",
           overwrite: true,
         });
+        
+        // Damage overlay logic for P1
+        if (p1HpP < this.lastP1HpP) {
+            this.scene.tweens.add({
+                targets: this.p1DmgBar,
+                scaleX: Math.max(0, p1HpP),
+                duration: 1000,
+                delay: 400,
+                ease: "Cubic.easeOut",
+                overwrite: true,
+            });
+        } else {
+            this.p1DmgBar.scaleX = Math.max(0, p1HpP);
+        }
+
         this.lastP1HpP = p1HpP;
       }
 
@@ -388,6 +434,21 @@ export class BattleUI {
           ease: "Cubic.easeOut",
           overwrite: true,
         });
+        
+        // Damage overlay logic for P2
+        if (p2HpP < this.lastP2HpP) {
+            this.scene.tweens.add({
+                targets: this.p2DmgBar,
+                scaleX: Math.max(0, p2HpP),
+                duration: 1000,
+                delay: 400,
+                ease: "Cubic.easeOut",
+                overwrite: true,
+            });
+        } else {
+            this.p2DmgBar.scaleX = Math.max(0, p2HpP);
+        }
+
         this.lastP2HpP = p2HpP;
       }
 

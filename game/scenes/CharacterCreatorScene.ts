@@ -108,7 +108,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.ui = new CreatorUI(this, () => this.updatePreview());
 
     // Back button
-    this.createStyledButton(80, 40, 120, 40, "VOLTAR", 0xe74c3c, () => {
+    this.createStyledButton(100, 40, 120, 40, "VOLTAR", 0xe74c3c, () => {
       const gs = this.registry.get("gameState");
       if (gs && gs.gameMode === "story") {
         transitionTo(this, "ModeSelectScene");
@@ -118,7 +118,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     });
 
     // Title
-    this.add.text(480, 50, "CRIAR PERSONAGEM", { fontSize: "32px", fontStyle: "italic bold", color: "#f39c12", fontFamily: "system-ui, sans-serif", stroke: "#000", strokeThickness: 4, shadow: { offsetX: 0, offsetY: 0, color: "#f39c12", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
+    this.add.text(480, 40, "CRIAR PERSONAGEM", { fontSize: "32px", fontStyle: "italic bold", color: "#f39c12", fontFamily: "system-ui, sans-serif", stroke: "#000", strokeThickness: 4, shadow: { offsetX: 0, offsetY: 0, color: "#f39c12", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
 
     // Build Selectors using the extracted UI
     this.ui.buildAllSelectors(this.state);
@@ -129,7 +129,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     // Box
     const previewBox = this.add.rectangle(700, 280, 300, 360, 0x1a1a24, 0.8).setStrokeStyle(2, 0x3498db);
     this.tweens.add({ targets: previewBox, alpha: 0.5, yoyo: true, repeat: -1, duration: 2000 });
-    this.add.text(700, 130, "PREVIEW", { fontSize: "24px", fontStyle: "italic bold", color: "#3498db", stroke: "#000", strokeThickness: 2, shadow: { offsetX: 0, offsetY: 0, color: "#3498db", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
+    this.add.text(700, 160, "PREVIEW", { fontSize: "24px", fontStyle: "italic bold", color: "#3498db", stroke: "#000", strokeThickness: 2, shadow: { offsetX: 0, offsetY: 0, color: "#3498db", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
     
     // Pedestal
     const pedestal = this.add.ellipse(700, 420, 120, 40, 0x3498db, 0.3);
@@ -137,7 +137,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
 
     // Randomize button
-    this.createStyledButton(880, 40, 150, 40, "ALEATÓRIO", 0x8e44ad, () => {
+    this.createStyledButton(860, 40, 150, 40, "ALEATÓRIO", 0x8e44ad, () => {
       // Randomize styles
       this.state.style_idx.head = Phaser.Math.Between(0, partOptions.head.length - 1);
       this.state.style_idx.torso = Phaser.Math.Between(0, partOptions.torso.length - 1);
@@ -190,8 +190,9 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
   private setupNamesAndSpecials() {
     // Name
-    const nameTxt = this.add.text(560, 70, `Nome: ${this.builderData.name}`, { fontSize: "24px", color: "#f1c40f", fontStyle: "bold" }).setOrigin(0, 0.5);
-    const editBtn = this.createStyledButton(820, 70, 90, 30, "EDITAR", 0x34495e, () => {
+    // Centralized under Preview
+    const nameTxt = this.add.text(700, 80, `Nome: ${this.builderData.name}`, { fontSize: "22px", color: "#f1c40f", fontStyle: "bold" }).setOrigin(0.5, 0.5);
+    const editBtn = this.createStyledButton(700, 120, 120, 30, "EDITAR NOME", 0x34495e, () => {
       window.dispatchEvent(
         new CustomEvent("request-text-input", {
           detail: {

@@ -14,6 +14,8 @@ export function generateCustomSprite(
   };
 
   const generateForm = (form: number) => {
+    const pAcc = colors.part_accessory || "none";
+    let isDrawingHat = false;
     let torsoMinX = 999;
     let torsoMaxX = -999;
     let torsoMinY = 999;
@@ -128,7 +130,7 @@ export function generateCustomSprite(
           shiftX +
           ox;
         const finalYPose =
-          (isAttack || isDefend || isCharge
+          (isAttack || isDefend || isCharge || isWalk
             ? finalY + poseOffsetY / 2
             : finalY) + oy;
         trackBounds(finalX, finalYPose + DRAW_OFFSET_Y, 1, 1);
@@ -159,7 +161,7 @@ export function generateCustomSprite(
           shiftX +
           ox;
         const finalYPose =
-          (isAttack || isDefend || isCharge
+          (isAttack || isDefend || isCharge || isWalk
             ? finalY + poseOffsetY / 2
             : finalY) + oy;
         trackBounds(finalX, finalYPose + DRAW_OFFSET_Y, w, h);
@@ -189,7 +191,7 @@ export function generateCustomSprite(
           shiftX +
           ox;
         const finalYPose =
-          (isAttack || isDefend || isCharge
+          (isAttack || isDefend || isCharge || isWalk
             ? finalY + poseOffsetY / 2
             : finalY) + oy;
         trackBounds(finalX, finalYPose + DRAW_OFFSET_Y, w, h);
@@ -209,26 +211,40 @@ export function generateCustomSprite(
         h: number,
         color: number,
       ) => {
+        let drawY = y;
+        let drawH = h;
+        if (pAcc === "straw_hat" && !isDrawingHat && drawY < 5) {
+          const diff = 5 - drawY;
+          drawY = 5;
+          drawH -= diff;
+          if (drawH <= 0) return;
+        }
+        
         const { ox, oy } =
           isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
             : { ox: 0, oy: 0 };
+            
         const finalX =
           (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) +
           shiftX +
           ox;
+          
         const finalYPose =
-          isAttack || isDefend || isCharge ? y + poseOffsetY / 2 : y;
+          isAttack || isDefend || isCharge || isWalk ? drawY + poseOffsetY / 2 : drawY;
+          
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
           (finalYPose + breatheOffset + DRAW_OFFSET_Y) * SCALE,
           w * SCALE,
-          h * SCALE,
+          drawH * SCALE,
         );
       };
 
       const headDot = (x: number, y: number, color: number) => {
+        if (pAcc === "straw_hat" && !isDrawingHat && y < 5) return;
+        
         const { ox, oy } =
           isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
@@ -238,16 +254,15 @@ export function generateCustomSprite(
           shiftX +
           ox;
         const finalYPose =
-          isAttack || isDefend || isCharge ? y + poseOffsetY / 2 : y;
+          isAttack || isDefend || isCharge || isWalk ? y + poseOffsetY / 2 : y;
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
           (finalYPose + breatheOffset + DRAW_OFFSET_Y) * SCALE,
-          SCALE,
-          SCALE,
+          1 * SCALE,
+          1 * SCALE,
         );
       };
-
       const WHITE = 0xffffff;
       const BLACK = 0x111111;
 
@@ -310,7 +325,6 @@ export function generateCustomSprite(
         // @ts-ignore
         const pHead = colors.part_head || "goku";
         // @ts-ignore
-        const pAcc = colors.part_accessory || "none";
 
         // ====================
         // LEGS
@@ -937,12 +951,20 @@ export function generateCustomSprite(
         } else if (pTorso === "luffy") {
           // Open red vest, bare chest
           box(11, 14, 10, 9, SKIN_TONE); // Bare chest
-          box(15, 14, 2, 9, SKIN_SHADOW); // Abs/chest lines
+          
+          // Chest & Abs details
+          box(15, 14, 2, 4, SKIN_SHADOW); // Pec cleavage
+          box(14, 17, 1, 1, SKIN_SHADOW); // left pec bottom
+          box(17, 17, 1, 1, SKIN_SHADOW); // right pec bottom
+          box(15, 19, 2, 4, SKIN_SHADOW); // Abs center
+          box(14, 20, 4, 1, SKIN_SHADOW); // Abs horizontal
+
           box(11, 14, 3, 9, TORSO_1); // Red vest left
           box(18, 14, 3, 9, TORSO_1); // Red vest right
           box(10, 14, 1, 9, TORSO_1_SHADOW);
           box(21, 14, 1, 9, TORSO_1_SHADOW);
-          // Scar on chest
+          
+          // Scar on chest (drawn above the chest lines)
           box(13, 17, 3, 1, 0xff0000);
           box(14, 16, 1, 3, 0xff0000);
           if (isCharge) {
@@ -969,28 +991,42 @@ export function generateCustomSprite(
             box(21, 24, 3, 2, SKIN_TONE);
           }
         } else if (pTorso === "muscle") {
-          // Bare chest / Muscles
+          // Bare chest / Muscles base
           box(11, 14, 10, 9, SKIN_TONE);
 
-          // Lateral Shading (Side muscle definition)
+          // Lateral Shading (Side muscle definition / latissimus dorsi)
           box(11, 14, 1, 9, SKIN_SHADOW);
           box(20, 14, 1, 9, SKIN_SHADOW);
+          box(12, 18, 1, 5, SKIN_SHADOW); // V-taper left
+          box(19, 18, 1, 5, SKIN_SHADOW); // V-taper right
 
-          // Pectorals / Chest definition
-          box(12, 17, 3, 1, SKIN_SHADOW); // left pec bottom
-          box(17, 17, 3, 1, SKIN_SHADOW); // right pec bottom
-          box(15, 14, 2, 5, SKIN_SHADOW); // central cleavage line
+          // Collarbones and Trapezius
+          box(12, 14, 3, 1, SKIN_SHADOW);
+          box(17, 14, 3, 1, SKIN_SHADOW);
 
-          // Collarbones (Clavículas)
-          box(12, 14, 2, 1, SKIN_SHADOW);
-          box(18, 14, 2, 1, SKIN_SHADOW);
+          // Pectorals / Chest definition (Refined)
+          box(15, 14, 2, 4, SKIN_SHADOW); // central cleavage line deeper
+          box(13, 17, 3, 1, SKIN_SHADOW); // left pec bottom curve
+          box(12, 16, 1, 1, SKIN_SHADOW); // left pec outer curve
+          box(16, 17, 3, 1, SKIN_SHADOW); // right pec bottom curve
+          box(19, 16, 1, 1, SKIN_SHADOW); // right pec outer curve
 
-          // Abs (6-pack / 8-pack muscle lines)
+          // Pectoral Highlights (Volume)
+          const SKIN_HIGH = Phaser.Display.Color.IntegerToColor(SKIN_TONE).lighten(15).color;
+          box(13, 15, 2, 2, SKIN_HIGH); // left pec highlight
+          box(17, 15, 2, 2, SKIN_HIGH); // right pec highlight
+
+          // Abs (6-pack refined)
           box(15, 19, 2, 4, SKIN_SHADOW); // Center abs division
-          box(13, 19, 1, 3, SKIN_SHADOW); // Left abs outline
-          box(18, 19, 1, 3, SKIN_SHADOW); // Right abs outline
-          box(13, 20, 6, 1, SKIN_SHADOW); // Upper pack horizontal break
-          box(13, 22, 6, 1, SKIN_SHADOW); // Lower pack horizontal break
+          box(14, 19, 4, 1, SKIN_SHADOW); // Upper pack horizontal break
+          box(14, 21, 4, 1, SKIN_SHADOW); // Mid pack horizontal break
+          box(14, 23, 4, 1, SKIN_SHADOW); // Lower pack horizontal break
+          
+          // Abs volume (Highlights on the blocks)
+          box(13, 18, 1, 1, SKIN_HIGH); // Upper left
+          box(18, 18, 1, 1, SKIN_HIGH); // Upper right
+          box(13, 20, 1, 1, SKIN_HIGH); // Mid left
+          box(18, 20, 1, 1, SKIN_HIGH); // Mid right
 
           if (isCharge) {
             box(20, 4, 3, 10, SKIN_TONE);
@@ -1034,7 +1070,11 @@ export function generateCustomSprite(
           // Blue undershirt
           box(14, 14, 4, 9, TORSO_2); 
           // Chest skin (V-neck of the blue shirt)
-          box(14, 14, 4, 2, SKIN_TONE); 
+          box(14, 14, 4, 3, SKIN_TONE); 
+          box(15, 14, 2, 2, SKIN_SHADOW); // Pec cleavage
+          box(14, 16, 1, 1, SKIN_SHADOW); // Left pec bottom curve
+          box(17, 16, 1, 1, SKIN_SHADOW); // Right pec bottom curve
+          
           // Orange Gi Main
           box(11, 14, 3, 9, TORSO_1); // Left side
           box(18, 14, 3, 9, TORSO_1); // Right side
@@ -1093,11 +1133,15 @@ export function generateCustomSprite(
           box(8, 15, 1, 14, ACC_1_SHADOW); // sombra da dobra
           box(23, 15, 1, 14, ACC_1_SHADOW);
         } else if (pAcc === "sword") {
-          // Sword sheathed on back
-          box(23, 6, 2, 16, 0xdcdcdc); // lâmina na lateral, não sobre o peito
-          box(22, 6, 1, 16, 0xaaaaaa); // sombra da lâmina
+          // Sword sheath on back
+          box(23, 6, 2, 16, 0x444444); // bainha
+          box(22, 6, 1, 16, 0x222222); // sombra da bainha
           box(21, 11, 4, 2, ACC_1); // hilt guard
-          box(22, 4, 2, 4, 0x8b4513); // cabo
+          // Only draw handle in sheath if not holding it? 
+          // Actually, since they always hold it in front, we leave the sheath empty or keep handle?
+          // Let's keep a small hilt so it looks like a secondary sword or just sheath top.
+          box(22, 4, 2, 4, 0x222222); // cabo escuro
+
         } else if (pAcc === "aura_blue") {
           // Pixelated back aura
           alphaBox(10, 4, 12, 28, 0x00ffff, 0.4);
@@ -1487,9 +1531,10 @@ export function generateCustomSprite(
 
         // ====================
         isDrawingLegs = false;
-        // ACCESSORY (Front layer)
+                // ACCESSORY (Front layer)
         // ====================
         if (pAcc === "straw_hat") {
+          isDrawingHat = true;
           headBox(8, 5, 16, 1, 0xd4a000); // Brim Shadow
           headBox(9, 5, 14, 1, 0xffd700); // Brim
           headBox(11, 2, 10, 3, 0xffd700); // Top
@@ -1498,10 +1543,42 @@ export function generateCustomSprite(
           headBox(11, 4, 10, 1, 0xff0000); // Red ribbon
           headBox(11, 4, 1, 1, 0xaa0000); // Ribbon shadow
           headBox(20, 4, 1, 1, 0xaa0000); // Ribbon shadow
+          isDrawingHat = false;
         } else if (pAcc === "headband") {
           headBox(11, 5, 10, 2, ACC_1); // Cloth
           headBox(13, 5, 6, 2, 0xaaaaaa); // Metal plate
           headDot(15, 6, BLACK); // Symbol
+          
+          // Redraw front hair bangs to cover the headband
+          isDrawingHat = true; // prevent straw_hat clipping logic just in case
+          if (pHead === "goku") {
+            if (isTransformed && !isUI) {
+              headBox(14, 6, 2, 2, hairColor);
+              headBox(17, 6, 1, 1, hairColor);
+            } else if (isUI) {
+              headBox(13, 6, 2, 3, hairColor);
+              headBox(16, 6, 3, 3, hairColor);
+            } else {
+              headBox(13, 6, 2, 2, hairColor);
+              headBox(17, 6, 2, 2, hairColor);
+              headBox(15, 6, 1, 3, hairColor);
+            }
+          } else if (pHead === "vegeta") {
+            headDot(15, 6, hairColor);
+            headDot(16, 6, hairColor);
+            headBox(11, 5, 2, 3, hairColor); // thicker side burns
+            headBox(19, 5, 2, 3, hairColor);
+          } else if (pHead === "sasuke") {
+            headBox(9, 5, 2, 4, hairColor); // side burns
+            headBox(21, 5, 2, 4, hairColor); // side burns
+            headBox(15, 6, 2, 3, hairColor); // Middle bang
+          } else if (pHead === "luffy") {
+            headBox(11, 6, 10, 2, hairColor);
+          } else if (pHead === "jotaro") {
+            headBox(10, 6, 2, 5, hairColor);
+            headBox(20, 6, 2, 5, hairColor);
+          }
+          isDrawingHat = false;
         } else if (pAcc === "sword") {
           if (isCharge) {
             // Raised front hand
@@ -1558,3 +1635,4 @@ export function generateCustomSprite(
 
   return { torsoBounds: bounds };
 }
+

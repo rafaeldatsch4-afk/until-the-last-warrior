@@ -276,7 +276,7 @@ export class CreatorUI {
 
   public buildAllSelectors(state: CreatorState) {
     const col1X = 140; // Parts
-    const col2X = 300; // Col 1
+    const col2X = 310; // Col 1
     const col3X = 460; // Col 2
 
     let currY = 150;
@@ -288,7 +288,7 @@ export class CreatorUI {
       () => `Pele: ${this.getColorName(skinColors[state.p_idx.skin])}`,
       () => state.prevColor("skin", skinColors),
       () => state.nextColor("skin", skinColors),
-      140,
+      150
     );
 
     this.createSelector(
@@ -297,7 +297,7 @@ export class CreatorUI {
       () => `Cab.: ${this.getColorName(hairColors[state.p_idx.hair])}`,
       () => state.prevColor("hair", hairColors),
       () => state.nextColor("hair", hairColors),
-      140,
+      130
     );
     currY += 40;
 
@@ -305,47 +305,53 @@ export class CreatorUI {
     this.createSelector(
       col1X,
       currY,
-      () => `Cabç: ${partOptions.head[state.style_idx.head]}`,
+      () => `Cabeça: ${partOptions.head[state.style_idx.head]}`,
       () => state.prevPart("head", partOptions.head),
       () => state.nextPart("head", partOptions.head),
+      150
     );
     this.createSelector(
       col2X,
       currY,
-      () => `C1: ${this.getColorName(giColors[state.p_idx.head_1])}`,
+      () => `Cor 1: ${this.getColorName(giColors[state.p_idx.head_1])}`,
       () => state.prevColor("head_1", giColors),
       () => state.nextColor("head_1", giColors),
+      130
     );
     this.createSelector(
       col3X,
       currY,
-      () => `C2: ${this.getColorName(giColors[state.p_idx.head_2])}`,
+      () => `Cor 2: ${this.getColorName(giColors[state.p_idx.head_2])}`,
       () => state.prevColor("head_2", giColors),
       () => state.nextColor("head_2", giColors),
+      130
     );
     currY += 40;
 
     // Torso
-    const torsoPartTxt = this.createSelector(
+    this.createSelector(
       col1X,
       currY,
-      () => `Tro: ${partOptions.torso[state.style_idx.torso]}`,
+      () => `Tronco: ${partOptions.torso[state.style_idx.torso]}`,
       () => state.prevPart("torso", partOptions.torso),
       () => state.nextPart("torso", partOptions.torso),
+      150
     );
-    const torsoC1Txt = this.createSelector(
+    this.createSelector(
       col2X,
       currY,
-      () => `C1: ${this.getColorName(giColors[state.p_idx.torso_1])}`,
+      () => `Cor 1: ${this.getColorName(giColors[state.p_idx.torso_1])}`,
       () => state.prevColor("torso_1", giColors),
       () => state.nextColor("torso_1", giColors),
+      130
     );
-    const torsoC2Txt = this.createSelector(
+    this.createSelector(
       col3X,
       currY,
-      () => `C2: ${this.getColorName(giColors[state.p_idx.torso_2])}`,
+      () => `Cor 2: ${this.getColorName(giColors[state.p_idx.torso_2])}`,
       () => state.prevColor("torso_2", giColors),
       () => state.nextColor("torso_2", giColors),
+      130
     );
 
     currY += 40;
@@ -354,23 +360,26 @@ export class CreatorUI {
     this.createSelector(
       col1X,
       currY,
-      () => `Cal: ${partOptions.legs[state.style_idx.legs]}`,
+      () => `Pernas: ${partOptions.legs[state.style_idx.legs]}`,
       () => state.prevPart("legs", partOptions.legs),
       () => state.nextPart("legs", partOptions.legs),
+      150
     );
     this.createSelector(
       col2X,
       currY,
-      () => `C1: ${this.getColorName(giColors[state.p_idx.legs_1])}`,
+      () => `Cor 1: ${this.getColorName(giColors[state.p_idx.legs_1])}`,
       () => state.prevColor("legs_1", giColors),
       () => state.nextColor("legs_1", giColors),
+      130
     );
     this.createSelector(
       col3X,
       currY,
-      () => `C2: ${this.getColorName(giColors[state.p_idx.legs_2])}`,
+      () => `Cor 2: ${this.getColorName(giColors[state.p_idx.legs_2])}`,
       () => state.prevColor("legs_2", giColors),
       () => state.nextColor("legs_2", giColors),
+      130
     );
     currY += 40;
 
@@ -378,23 +387,26 @@ export class CreatorUI {
     this.createSelector(
       col1X,
       currY,
-      () => `Bot: ${partOptions.feet[state.style_idx.feet]}`,
+      () => `Pés: ${partOptions.feet[state.style_idx.feet]}`,
       () => state.prevPart("feet", partOptions.feet),
       () => state.nextPart("feet", partOptions.feet),
+      150
     );
     this.createSelector(
       col2X,
       currY,
-      () => `C1: ${this.getColorName(giColors[state.p_idx.feet_1])}`,
+      () => `Cor 1: ${this.getColorName(giColors[state.p_idx.feet_1])}`,
       () => state.prevColor("feet_1", giColors),
       () => state.nextColor("feet_1", giColors),
+      130
     );
     this.createSelector(
       col3X,
       currY,
-      () => `C2: ${this.getColorName(giColors[state.p_idx.feet_2])}`,
+      () => `Cor 2: ${this.getColorName(giColors[state.p_idx.feet_2])}`,
       () => state.prevColor("feet_2", giColors),
       () => state.nextColor("feet_2", giColors),
+      130
     );
     currY += 40;
 
@@ -402,16 +414,18 @@ export class CreatorUI {
     this.createSelector(
       col1X,
       currY,
-      () => `Acs: ${partOptions.accessory[state.style_idx.accessory]}`,
+      () => `Aces.: ${partOptions.accessory[state.style_idx.accessory]}`,
       () => state.prevPart("accessory", partOptions.accessory),
       () => state.nextPart("accessory", partOptions.accessory),
+      150
     );
     this.createSelector(
       col2X,
       currY,
-      () => `C1: ${this.getColorName(giColors[state.p_idx.acc_1])}`,
+      () => `Cor 1: ${this.getColorName(giColors[state.p_idx.acc_1])}`,
       () => state.prevColor("acc_1", giColors),
       () => state.nextColor("acc_1", giColors),
+      130
     );
   }
 }

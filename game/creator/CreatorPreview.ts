@@ -102,7 +102,7 @@ export class CreatorPreview {
     createAnim("custom_preview_ssj_idle", "custom_preview_ssj", 0, 3, 10, -1);
 
     this.previewAura = this.scene.add
-      .ellipse(700, 250, 150, 250, builderData.auraColor)
+      .ellipse(700, 290, 150, 250, builderData.auraColor)
       .setAlpha(0.3)
       .setBlendMode(Phaser.BlendModes.ADD);
     
@@ -110,7 +110,7 @@ export class CreatorPreview {
     const animName = isTransformed ? "custom_preview_ssj_idle" : "custom_preview_idle";
 
     this.previewSprite = this.scene.add
-      .sprite(700, 250, texName)
+      .sprite(700, 310, texName)
       .setScale(3.5);
     if (this.scene.textures.exists(texName)) {
       this.previewSprite.play(animName);
