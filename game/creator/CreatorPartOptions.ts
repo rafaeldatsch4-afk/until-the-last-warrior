@@ -16,7 +16,7 @@ export const partOptions = {
   ],
   legs: ["goku", "spiderman", "jotaro", "saitama", "vegeta", "chapolim", "naruto", "sasuke", "luffy"],
   feet: ["goku", "spiderman", "chapolim", "saitama", "vegeta", "jotaro", "naruto", "sasuke", "luffy"],
-  accessory: ["none", "sword", "straw_hat", "headband"],
+  accessory: ["none", "straw_hat", "sword", "headband", "cape", "scouter", "scarf"],
 };
 
 export const auraColors = ColorPalette.aura;

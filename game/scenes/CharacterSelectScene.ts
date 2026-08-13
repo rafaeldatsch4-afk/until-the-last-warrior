@@ -96,26 +96,28 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     // Background
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1a0b2e, 0x000000, 0x1a0b2e, 0x000000, 1);
+    bg.fillGradientStyle(0x060814, 0x0a0f24, 0x04060f, 0x020308, 1);
     bg.fillRect(0, 0, width, height);
 
+    const selectedArena = this.state?.selectedArena || "arena";
     this.add
-      .image(width / 2, height / 2, "arena")
-      .setAlpha(0.15)
-      .setBlendMode(Phaser.BlendModes.ADD);
+      .image(width / 2, height / 2, selectedArena)
+      .setDisplaySize(width * 1.1, height * 1.1)
+      .setAlpha(0.25)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
 
     // Animated particles
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 25; i++) {
       const p = this.add.circle(
         Phaser.Math.Between(0, width),
         Phaser.Math.Between(0, height),
-        Phaser.Math.FloatBetween(1, 4),
-        0x3498db,
+        Phaser.Math.FloatBetween(1, 3),
+        0x60a5fa,
         Phaser.Math.FloatBetween(0.2, 0.6),
       );
       this.tweens.add({
         targets: p,
-        y: p.y - Phaser.Math.Between(50, 150),
+        y: p.y - Phaser.Math.Between(40, 100),
         alpha: 0,
         duration: Phaser.Math.Between(2000, 4000),
         repeat: -1,
@@ -126,34 +128,55 @@ export default class CharacterSelectScene extends Phaser.Scene {
       });
     }
 
-    // Botão Voltar
     const bounds = ResponsiveUtils.getSafeBounds();
-    const backBtnContainer = this.add.container(bounds.left + 70, bounds.top + 40);
-    const backBg = this.add
-      .rectangle(0, 0, 120, 40, 0x333333)
-      .setStrokeStyle(2, 0xffffff);
+
+    // 1. Botão Voltar (Top Left, Highest Depth, Clean Hit Area)
+    const backBtnContainer = this.add
+      .container(bounds.left + 65, bounds.top + 26)
+      .setDepth(500);
+
+    const backBg = this.add.graphics();
+    const btnW = 110;
+    const btnH = 34;
+    const radius = 6;
+
+    const drawBackBtn = (isHover: boolean) => {
+      backBg.clear();
+      backBg.fillStyle(0x000000, 0.6);
+      backBg.fillRoundedRect(-btnW / 2 + 2, -btnH / 2 + 3, btnW, btnH, radius);
+
+      backBg.fillStyle(isHover ? 0x475569 : 0x1e293b, 0.95);
+      backBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
+
+      backBg.lineStyle(1.5, isHover ? 0x60a5fa : 0x94a3b8, 0.9);
+      backBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
+    };
+
+    drawBackBtn(false);
+
     const backTxt = this.add
       .text(0, 0, "← VOLTAR", {
-        fontSize: "16px",
+        fontSize: "14px",
         fontStyle: "bold",
         color: "#ffffff",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         resolution: 2,
       })
       .setOrigin(0.5);
+
     backBtnContainer.add([backBg, backTxt]);
 
     const backHit = this.add
-      .rectangle(0, 0, 120, 40, 0x000000, 0)
+      .rectangle(0, 0, btnW, btnH, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
     backBtnContainer.add(backHit);
 
     backHit.on("pointerover", () => {
-      backBg.setFillStyle(0x555555);
-      this.tweens.add({ targets: backBtnContainer, scale: 1.1, duration: 100 });
+      drawBackBtn(true);
+      this.tweens.add({ targets: backBtnContainer, scale: 1.08, duration: 100 });
     });
     backHit.on("pointerout", () => {
-      backBg.setFillStyle(0x333333);
+      drawBackBtn(false);
       this.tweens.add({ targets: backBtnContainer, scale: 1, duration: 100 });
     });
     backHit.on("pointerdown", () => {
@@ -161,19 +184,20 @@ export default class CharacterSelectScene extends Phaser.Scene {
       transitionTo(this, "MenuScene");
     });
 
-    // Header
+    // 2. Header Title (Centered, Safe From Back Button)
     this.headerText = this.add
-      .text(width / 2, bounds.top + 40, "", {
-        fontSize: "36px",
+      .text(width / 2, bounds.top + 26, "", {
+        fontSize: "26px",
         color: "#ffd54a",
-        fontStyle: "bold",
+        fontStyle: "900",
         stroke: "#000",
-        strokeThickness: 6,
+        strokeThickness: 5,
+        letterSpacing: 2,
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         shadow: {
           offsetX: 0,
-          offsetY: 4,
+          offsetY: 3,
           color: "#000000",
           blur: 4,
           stroke: true,
@@ -185,19 +209,19 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: this.headerText,
-      y: bounds.top + 35,
+      y: bounds.top + 24,
       duration: 1500,
       yoyo: true,
       repeat: -1,
       ease: "Sine.easeInOut",
     });
 
-    this.charContainer = this.add.container(width / 2, 145);
+    // 3. Character Grid Container (Spaced Safely Below Header)
+    this.charContainer = this.add.container(width / 2, bounds.top + 92);
 
-    // Botão de Luta (Escondido até selecionar)
+    // Botão de Luta e Seletor de Arena
     this.createArenaSelector();
     this.createFightButton();
-
     this.createTooltip();
 
     this.updateUI();
@@ -206,40 +230,55 @@ export default class CharacterSelectScene extends Phaser.Scene {
   private infoDesc!: Phaser.GameObjects.Text;
 
   createTooltip() {
-    const { width, height } = this.cameras.main;
+    const { width } = this.cameras.main;
     const bounds = ResponsiveUtils.getSafeBounds();
-    this.tooltipContainer = this.add.container(width / 2, bounds.bottom - 110).setDepth(100).setVisible(false);
-    const bg = this.add.rectangle(0, 0, 500, 100, 0x111111, 0.95).setStrokeStyle(2, 0x3498db);
-    this.tooltipName = this.add.text(-230, -35, "", {
-      fontSize: "22px",
+    this.tooltipContainer = this.add
+      .container(width / 2, bounds.bottom - 100)
+      .setDepth(200)
+      .setVisible(false);
+    const bg = this.add
+      .rectangle(0, 0, Math.min(520, width - 40), 75, 0x0a0f1d, 0.95)
+      .setStrokeStyle(1.5, 0x3b82f6);
+    this.tooltipName = this.add.text(-240, -25, "", {
+      fontSize: "18px",
       fontStyle: "bold",
       color: "#ffd54a",
-      fontFamily: "system-ui, -apple-system, sans-serif"
-    });
-    this.tooltipStats = this.add.text(230, -35, "", {
-      fontSize: "14px",
-      color: "#ffffff",
-      fontStyle: "bold",
       fontFamily: "system-ui, -apple-system, sans-serif",
-    }).setOrigin(1, 0);
-    this.infoDesc = this.add.text(-230, 0, "", {
-      fontSize: "16px",
-      color: "#cccccc",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-      wordWrap: { width: 460 }
+      resolution: 2,
     });
-    this.tooltipContainer.add([bg, this.tooltipName, this.tooltipStats, this.infoDesc]);
+    this.tooltipStats = this.add
+      .text(240, -25, "", {
+        fontSize: "13px",
+        color: "#60a5fa",
+        fontStyle: "bold",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(1, 0);
+    this.infoDesc = this.add.text(-240, 4, "", {
+      fontSize: "13px",
+      color: "#cbd5e1",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      wordWrap: { width: 480 },
+      resolution: 2,
+    });
+    this.tooltipContainer.add([
+      bg,
+      this.tooltipName,
+      this.tooltipStats,
+      this.infoDesc,
+    ]);
   }
 
   showTooltip(char: any, x: number, y: number) {
     this.tooltipContainer.setVisible(true);
     this.tooltipName.setText(char.name);
-    
+
     const hp = char.maxHp || 200;
     const str = char.strength ?? Math.floor(hp / 2.5);
     const spd = char.speed ?? Math.floor(300 - hp);
-    this.tooltipStats.setText(`HP: ${hp} | STR: ${str} | SPD: ${spd}`);
-    this.infoDesc.setText(char.description || "Um formidável lutador.");
+    this.tooltipStats.setText(`HP: ${hp} | FOR: ${str} | VEL: ${spd}`);
+    this.infoDesc.setText(char.description || "Um formidável guerreiro supremo.");
   }
 
   hideTooltip() {
@@ -247,71 +286,103 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   createArenaSelector() {
-    const { width, height } = this.cameras.main;
+    const { width } = this.cameras.main;
     const bounds = ResponsiveUtils.getSafeBounds();
-    this.arenaSelectorContainer = this.add.container(width / 2, bounds.bottom - 95);
+    this.arenaSelectorContainer = this.add.container(
+      width / 2,
+      bounds.bottom - 74,
+    );
 
     // Initial state
     this.state.selectedArena = this.arenas[this.selectedArenaIndex].id;
     this.registry.set("gameState", this.state);
 
-    const bg = this.add.rectangle(0, 0, 240, 40, 0x1a252f).setStrokeStyle(2, 0x34495e);
-    
-    this.add.text(0, -30, "CENÁRIO DA LUTA", {
-      fontSize: "14px",
-      color: "#aaa",
-      fontStyle: "bold",
-      fontFamily: "system-ui, sans-serif"
-    }).setOrigin(0.5);
+    const bg = this.add.graphics();
+    const w = 240;
+    const h = 32;
+    bg.fillStyle(0x0a0f1d, 0.9);
+    bg.fillRoundedRect(-w / 2, -h / 2, w, h, 16);
+    bg.lineStyle(1.5, 0x475569, 0.8);
+    bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 16);
 
-    this.arenaText = this.add.text(0, 0, this.arenas[this.selectedArenaIndex].name, {
-      fontSize: "16px",
-      color: "#fff",
-      fontStyle: "bold",
-      fontFamily: "system-ui, sans-serif"
-    }).setOrigin(0.5);
+    const labelText = this.add
+      .text(0, -22, "CENÁRIO DA BATALHA", {
+        fontSize: "11px",
+        color: "#94a3b8",
+        fontStyle: "bold",
+        letterSpacing: 1,
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    this.arenaText = this.add
+      .text(0, 0, this.arenas[this.selectedArenaIndex].name, {
+        fontSize: "13px",
+        color: "#ffffff",
+        fontStyle: "bold",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
 
     // Left Arrow
-    const leftBtn = this.add.text(-100, 0, "<", {
-      fontSize: "24px",
-      color: "#f1c40f",
-      fontStyle: "bold",
-      fontFamily: "monospace"
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const leftBtn = this.add
+      .text(-w / 2 + 18, 0, "◀", {
+        fontSize: "13px",
+        color: "#f1c40f",
+        fontStyle: "bold",
+        fontFamily: "system-ui, sans-serif",
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
 
     leftBtn.on("pointerdown", () => {
       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
       this.selectedArenaIndex--;
-      if (this.selectedArenaIndex < 0) this.selectedArenaIndex = this.arenas.length - 1;
+      if (this.selectedArenaIndex < 0)
+        this.selectedArenaIndex = this.arenas.length - 1;
       this.updateArena();
     });
-    
+
     leftBtn.on("pointerover", () => leftBtn.setColor("#fff"));
     leftBtn.on("pointerout", () => leftBtn.setColor("#f1c40f"));
 
     // Right Arrow
-    const rightBtn = this.add.text(100, 0, ">", {
-      fontSize: "24px",
-      color: "#f1c40f",
-      fontStyle: "bold",
-      fontFamily: "monospace"
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const rightBtn = this.add
+      .text(w / 2 - 18, 0, "▶", {
+        fontSize: "13px",
+        color: "#f1c40f",
+        fontStyle: "bold",
+        fontFamily: "system-ui, sans-serif",
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
 
     rightBtn.on("pointerdown", () => {
       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
       this.selectedArenaIndex++;
-      if (this.selectedArenaIndex >= this.arenas.length) this.selectedArenaIndex = 0;
+      if (this.selectedArenaIndex >= this.arenas.length)
+        this.selectedArenaIndex = 0;
       this.updateArena();
     });
-    
+
     rightBtn.on("pointerover", () => rightBtn.setColor("#fff"));
     rightBtn.on("pointerout", () => rightBtn.setColor("#f1c40f"));
 
-    this.arenaSelectorContainer.add([bg, this.arenaText, leftBtn, rightBtn]);
-    
-    // Hide it in story mode as arenas might be hardcoded, or hide in online PvP
-    if (this.state.gameMode === "story" || this.state.gameMode === "tournament") {
-        this.arenaSelectorContainer.setVisible(false);
+    this.arenaSelectorContainer.add([
+      bg,
+      labelText,
+      this.arenaText,
+      leftBtn,
+      rightBtn,
+    ]);
+
+    if (
+      this.state.gameMode === "story" ||
+      this.state.gameMode === "tournament"
+    ) {
+      this.arenaSelectorContainer.setVisible(false);
     }
   }
 
@@ -322,43 +393,59 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   createFightButton() {
-    const { width, height } = this.cameras.main;
+    const { width } = this.cameras.main;
     const bounds = ResponsiveUtils.getSafeBounds();
     this.fightBtn = this.add
-      .container(width / 2, bounds.bottom - 35)
+      .container(width / 2, bounds.bottom - 28)
+      .setDepth(300)
       .setVisible(false);
 
-    const btnW = 190;
-    const btnH = 46;
+    const btnW = 180;
+    const btnH = 40;
+    const radius = 8;
 
-    const shadow = this.add
-      .rectangle(3, 3, btnW, btnH, 0x000000, 0.5)
-      .setOrigin(0.5);
-    const bg = this.add
-      .rectangle(0, 0, btnW, btnH, 0x27ae60)
-      .setStrokeStyle(2, 0xffffff);
-    const innerBg = this.add
-      .rectangle(0, 0, btnW - 8, btnH - 8, 0x000000, 0.2)
-      .setOrigin(0.5);
+    const graphics = this.add.graphics();
+    const drawFightBtn = (isHover: boolean) => {
+      graphics.clear();
+      graphics.fillStyle(0x000000, 0.6);
+      graphics.fillRoundedRect(-btnW / 2 + 2, -btnH / 2 + 3, btnW, btnH, radius);
+
+      graphics.fillStyle(isHover ? 0x2ecc71 : 0x27ae60, 1);
+      graphics.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
+
+      graphics.fillStyle(0xffffff, isHover ? 0.25 : 0.1);
+      graphics.fillRoundedRect(
+        -btnW / 2 + 2,
+        -btnH / 2 + 2,
+        btnW - 4,
+        btnH / 2,
+        radius - 2,
+      );
+
+      graphics.lineStyle(2, 0xffffff, isHover ? 1 : 0.8);
+      graphics.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
+    };
+
+    drawFightBtn(false);
+
     const txt = this.add
       .text(0, 0, "LUTAR!", {
-        fontSize: "20px",
+        fontSize: "18px",
         fontStyle: "bold",
         stroke: "#000",
         strokeThickness: 4,
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        shadow: { offsetX: 2, offsetY: 2, color: "#000", blur: 2, fill: true },
+        shadow: { offsetX: 1, offsetY: 1, color: "#000", blur: 2, fill: true },
         resolution: 2,
       })
       .setOrigin(0.5);
 
-    this.fightBtn.add([shadow, bg, innerBg, txt]);
+    this.fightBtn.add([graphics, txt]);
 
-    // Pulsing effect for the fight button
     this.tweens.add({
       targets: this.fightBtn,
-      scale: 1.05,
+      scale: 1.04,
       duration: 800,
       yoyo: true,
       repeat: -1,
@@ -371,8 +458,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.fightBtn.add(hitArea);
 
     hitArea
-      .on("pointerover", () => bg.setFillStyle(0x2ecc71))
-      .on("pointerout", () => bg.setFillStyle(0x27ae60))
+      .on("pointerover", () => drawFightBtn(true))
+      .on("pointerout", () => drawFightBtn(false))
       .on("pointerdown", () => this.handleConfirm());
   }
 
@@ -402,17 +489,18 @@ export default class CharacterSelectScene extends Phaser.Scene {
       }
     }
 
-    if (this.state.gameMode === "online_pvp" || this.state.gameMode === "ranked_pvp") {
+    if (
+      this.state.gameMode === "online_pvp" ||
+      this.state.gameMode === "ranked_pvp"
+    ) {
       transitionTo(this, "MultiplayerLobbyScene");
       return;
     }
 
-    // Single Player Modes (Arcade, Tournament, Training) -> Select Difficulty First
     this.showDifficultyDialog();
   }
 
   showDifficultyDialog() {
-    // Create an overlay background
     const overlay = this.add
       .rectangle(0, 0, 800, 600, 0x000000, 0.8)
       .setOrigin(0, 0)
@@ -420,8 +508,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
       .setInteractive();
 
     const dialog = this.add.container(400, 300).setDepth(101);
-    
-    // Dialog Background
+
     const bg = this.add.graphics();
     bg.lineStyle(4, 0x3498db);
     bg.fillStyle(0x1a1a24, 1);
@@ -447,8 +534,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     difficulties.forEach((diff, i) => {
       const btnY = -30 + i * 60;
-      
-      const btnBg = this.add.rectangle(0, btnY, 200, 40, diff.color).setInteractive({ useHandCursor: true });
+
+      const btnBg = this.add
+        .rectangle(0, btnY, 200, 40, diff.color)
+        .setInteractive({ useHandCursor: true });
       const btnText = this.add
         .text(0, btnY, diff.label, {
           fontSize: "20px",
@@ -462,7 +551,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
         .on("pointerover", () => btnBg.setAlpha(0.8))
         .on("pointerout", () => btnBg.setAlpha(1))
         .on("pointerdown", () => {
-          if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+          if (this.cache.audio.exists("sfx_select"))
+            this.sound.play("sfx_select");
           this.state.difficulty = diff.value;
           this.registry.set("gameState", this.state);
           dialog.destroy();
@@ -473,7 +563,6 @@ export default class CharacterSelectScene extends Phaser.Scene {
       dialog.add([btnBg, btnText]);
     });
 
-    // Close button
     const closeBtn = this.add
       .text(175, -135, "X", {
         fontSize: "24px",
@@ -496,7 +585,6 @@ export default class CharacterSelectScene extends Phaser.Scene {
     if (this.state.gameMode === "tournament") {
       this.state.tournamentPlayerCharId = this.state.p1CharacterId;
 
-      // Generate Bracket
       const chars = this.state.characters;
       const participants = [this.state.p1CharacterId];
       const available = chars.filter((c) => c.id !== this.state.p1CharacterId);
@@ -534,13 +622,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
   updateUI() {
     this.headerText.setText(this.getSelectionText());
     if (this.arenaSelectorContainer) {
-        if (this.state.gameMode === "local_pvp") {
-            this.arenaSelectorContainer.setVisible(this.selectionStep === 1);
-        }
+      if (this.state.gameMode === "local_pvp") {
+        this.arenaSelectorContainer.setVisible(this.selectionStep === 1);
+      }
     }
     this.createCharacterSelector();
 
-    const txt = this.fightBtn.list[3] as Phaser.GameObjects.Text;
+    const txt = this.fightBtn.list[1] as Phaser.GameObjects.Text;
 
     if (this.state.gameMode !== "local_pvp") {
       txt.setText("LUTAR!");
@@ -566,21 +654,25 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const unlockedChars = this.state.characters.filter((c) => c.unlocked);
 
     const { width } = this.cameras.main;
-    const cardSize = width < 600 ? 70 : 92; // Responsive card size
-    const gapX = 12;
-    const gapY = 18;
-    let itemsPerRow = Math.floor((width - 40) / (cardSize + gapX));
+    const isSmall = width < 680;
+    const cardW = isSmall ? 64 : 76;
+    const cardH = isSmall ? 74 : 84;
+    const gapX = isSmall ? 6 : 8;
+    const gapY = isSmall ? 8 : 10;
+
+    let itemsPerRow = Math.floor((width - 60) / (cardW + gapX));
     if (itemsPerRow < 1) itemsPerRow = 1;
+    if (itemsPerRow > 10) itemsPerRow = 10;
 
     const colsInRow = Math.min(unlockedChars.length, itemsPerRow);
-    const totalWidth = colsInRow * cardSize + Math.max(0, colsInRow - 1) * gapX;
-    const startX = -(totalWidth / 2) + cardSize / 2;
+    const totalWidth = colsInRow * cardW + Math.max(0, colsInRow - 1) * gapX;
+    const startX = -(totalWidth / 2) + cardW / 2;
 
     unlockedChars.forEach((char, index) => {
       const col = index % itemsPerRow;
       const row = Math.floor(index / itemsPerRow);
-      const x = startX + col * (cardSize + gapX);
-      const y = row * (cardSize + gapY);
+      const x = startX + col * (cardW + gapX);
+      const y = row * (cardH + gapY) + cardH / 2;
 
       const isP1 = this.state.p1CharacterId === char.id;
       const isP2 =
@@ -591,59 +683,61 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
       const card = this.add.container(x, y);
 
-      let bgColor = 0x2a2a35;
-      let strokeColor = 0x555566;
+      let strokeColor = 0x475569;
+      let bgColor = 0x111827;
       if (isP1) {
-        strokeColor = 0x3498db;
-        bgColor = 0x152535;
+        strokeColor = 0x3b82f6;
+        bgColor = 0x1e3a8a;
       } else if (isP2) {
-        strokeColor = 0xe74c3c;
-        bgColor = 0x351515;
+        strokeColor = 0xef4444;
+        bgColor = 0x7f1d1d;
       }
 
-      // GLOW EFFECT
-      if (isSelected) {
-        const glow = this.add
-          .rectangle(0, 0, cardSize + 12, cardSize + 12, strokeColor)
-          .setAlpha(0.4)
-          .setDepth(-1);
+      // Card Graphics
+      const cardGraphics = this.add.graphics();
+      const radius = 6;
 
-        card.add(glow);
+      const drawCardBg = (isHover: boolean) => {
+        cardGraphics.clear();
+        // Shadow
+        cardGraphics.fillStyle(0x000000, 0.5);
+        cardGraphics.fillRoundedRect(
+          -cardW / 2 + 2,
+          -cardH / 2 + 3,
+          cardW,
+          cardH,
+          radius,
+        );
 
-        this.tweens.add({
-          targets: glow,
-          alpha: { from: 0.3, to: 0.6 },
-          scale: { from: 0.95, to: 1.05 },
-          duration: 800,
-          yoyo: true,
-          repeat: -1,
-          ease: "Sine.easeInOut",
-        });
-      }
+        // Main fill
+        cardGraphics.fillStyle(bgColor, isHover ? 1 : 0.85);
+        cardGraphics.fillRoundedRect(
+          -cardW / 2,
+          -cardH / 2,
+          cardW,
+          cardH,
+          radius,
+        );
 
-      // Card Background
-      const shadow = this.add.rectangle(
-        4,
-        4,
-        cardSize,
-        cardSize,
-        0x000000,
-        0.5,
-      );
-      const bg = this.add
-        .rectangle(0, 0, cardSize, cardSize, bgColor)
-        .setStrokeStyle(isSelected ? 4 : 2, strokeColor);
-      const innerBg = this.add.rectangle(
-        0,
-        0,
-        cardSize - 6,
-        cardSize - 6,
-        0x000000,
-        0.2,
-      );
+        // Border
+        cardGraphics.lineStyle(
+          isSelected ? 3 : isHover ? 2 : 1.5,
+          isSelected ? (isP1 ? 0x60a5fa : 0xf87171) : isHover ? 0xffffff : strokeColor,
+          1,
+        );
+        cardGraphics.strokeRoundedRect(
+          -cardW / 2,
+          -cardH / 2,
+          cardW,
+          cardH,
+          radius,
+        );
+      };
 
-      // Character Sprite - ALIGNED AND SCALED TO FIT
-      const spriteScale = width < 600 ? 0.7 : 0.9;
+      drawCardBg(false);
+
+      // Character Sprite
+      const spriteScale = isSmall ? 0.65 : 0.8;
       const sprite = this.add
         .sprite(0, -6, char.key, "0")
         .setOrigin(0.5, 0.75)
@@ -653,83 +747,72 @@ export default class CharacterSelectScene extends Phaser.Scene {
         sprite.play(`${char.key}_idle`, true);
       }
 
-      // Name plate
-      const nameBg = this.add.rectangle(
-        0,
-        cardSize / 2 - 12,
-        cardSize - 4,
-        24,
-        0x000000,
-        0.8,
-      );
+      // Name banner on card footer
+      const nameBg = this.add.graphics();
+      nameBg.fillStyle(0x000000, 0.8);
+      nameBg.fillRoundedRect(-cardW / 2 + 2, cardH / 2 - 20, cardW - 4, 18, 4);
+
       const nameTxt = this.add
-        .text(0, cardSize / 2 - 12, char.name, {
-          fontSize: width < 600 ? "9px" : "11px",
+        .text(0, cardH / 2 - 11, char.name, {
+          fontSize: isSmall ? "8.5px" : "10px",
           fontStyle: "bold",
-          color: isSelected ? "#fff" : "#ccc",
+          color: isSelected ? "#ffffff" : "#cbd5e1",
           fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-          wordWrap: { width: cardSize - 6, useAdvancedWrap: true },
-          align: "center",
           resolution: 2,
         })
         .setOrigin(0.5);
 
-      card.add([shadow, bg, innerBg, sprite, nameBg, nameTxt]);
+      card.add([cardGraphics, sprite, nameBg, nameTxt]);
 
-      let p1BadgeX = 0,
-        p2BadgeX = 0;
+      // Badges for P1 / P2
+      let p1BadgeX = 0;
+      let p2BadgeX = 0;
       if (isP1 && isP2) {
-        p1BadgeX = -20;
-        p2BadgeX = 20;
+        p1BadgeX = -18;
+        p2BadgeX = 18;
       }
 
-      const badgeScale = width < 600 ? 0.7 : 1;
-
       if (isP1) {
-        const p1Badge = this.add
-          .rectangle(
-            p1BadgeX,
-            -cardSize / 2 - 12,
-            40 * badgeScale,
-            24 * badgeScale,
-            0x3498db,
-          )
-          .setStrokeStyle(2, 0xffffff);
+        const p1Badge = this.add.graphics();
+        p1Badge.fillStyle(0x2563eb, 1);
+        p1Badge.fillRoundedRect(p1BadgeX - 16, -cardH / 2 - 8, 32, 16, 4);
+        p1Badge.lineStyle(1.5, 0xffffff, 1);
+        p1Badge.strokeRoundedRect(p1BadgeX - 16, -cardH / 2 - 8, 32, 16, 4);
+
         const p1Txt = this.add
-          .text(p1BadgeX, -cardSize / 2 - 12, "P1", {
-            fontSize: width < 600 ? "10px" : "14px",
+          .text(p1BadgeX, -cardH / 2, "P1", {
+            fontSize: "10px",
             color: "#ffffff",
             fontStyle: "bold",
-            fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+            fontFamily: "system-ui, -apple-system, sans-serif",
             resolution: 2,
           })
           .setOrigin(0.5);
         card.add([p1Badge, p1Txt]);
       }
+
       if (isP2) {
-        const p2Badge = this.add
-          .rectangle(
-            p2BadgeX,
-            -cardSize / 2 - 12,
-            40 * badgeScale,
-            24 * badgeScale,
-            0xe74c3c,
-          )
-          .setStrokeStyle(2, 0xffffff);
+        const p2Badge = this.add.graphics();
+        p2Badge.fillStyle(0xdc2626, 1);
+        p2Badge.fillRoundedRect(p2BadgeX - 16, -cardH / 2 - 8, 32, 16, 4);
+        p2Badge.lineStyle(1.5, 0xffffff, 1);
+        p2Badge.strokeRoundedRect(p2BadgeX - 16, -cardH / 2 - 8, 32, 16, 4);
+
         const p2Txt = this.add
-          .text(p2BadgeX, -cardSize / 2 - 12, "P2", {
-            fontSize: width < 600 ? "10px" : "14px",
+          .text(p2BadgeX, -cardH / 2, "P2", {
+            fontSize: "10px",
             color: "#ffffff",
             fontStyle: "bold",
-            fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+            fontFamily: "system-ui, -apple-system, sans-serif",
             resolution: 2,
           })
           .setOrigin(0.5);
         card.add([p2Badge, p2Txt]);
       }
 
+      // Hit Area
       const hitArea = this.add
-        .rectangle(0, 0, cardSize, cardSize, 0x000000, 0)
+        .rectangle(0, 0, cardW, cardH, 0x000000, 0)
         .setInteractive({ useHandCursor: true });
       card.add(hitArea);
 
@@ -737,15 +820,14 @@ export default class CharacterSelectScene extends Phaser.Scene {
         .on("pointerdown", () => this.selectCharacter(char.id))
         .on("pointerover", (pointer: Phaser.Input.Pointer) => {
           if (!isSelected) {
+            drawCardBg(true);
             this.tweens.add({
               targets: card,
-              scale: 1.1,
-              duration: 100,
+              scale: 1.08,
+              duration: 80,
               ease: "Sine.easeInOut",
             });
-            bg.setStrokeStyle(3, 0xaaaaaa);
-            card.setAlpha(1);
-            nameTxt.setColor("#fff");
+            nameTxt.setColor("#ffffff");
           }
           this.showTooltip(char, pointer.x, pointer.y);
         })
@@ -754,15 +836,14 @@ export default class CharacterSelectScene extends Phaser.Scene {
         })
         .on("pointerout", () => {
           if (!isSelected) {
+            drawCardBg(false);
             this.tweens.add({
               targets: card,
               scale: 1.0,
-              duration: 100,
+              duration: 80,
               ease: "Sine.easeInOut",
             });
-            bg.setStrokeStyle(2, strokeColor);
-            card.setAlpha(0.8);
-            nameTxt.setColor("#ccc");
+            nameTxt.setColor("#cbd5e1");
           }
           this.hideTooltip();
         });
@@ -770,13 +851,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
       if (isSelected) {
         this.tweens.add({
           targets: card,
-          scale: 1.05,
-          duration: 800,
+          scale: 1.04,
+          duration: 700,
           yoyo: true,
           repeat: -1,
         });
-      } else {
-        card.setAlpha(0.8);
       }
 
       this.charContainer.add(card);

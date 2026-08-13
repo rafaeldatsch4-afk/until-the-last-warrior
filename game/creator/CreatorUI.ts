@@ -281,6 +281,80 @@ export class CreatorUI {
 
     let currY = 150;
 
+    const getHeadName = (id: string) => {
+      const map: { [key: string]: string } = {
+        goku: "Goku (Saiyajin)",
+        vegeta: "Vegeta (Príncipe)",
+        naruto: "Naruto (Shinobi)",
+        sasuke: "Sasuke (Uchiha)",
+        jotaro: "Jotaro (Gakuran)",
+        spiderman: "Spiderman (Aranha)",
+        saitama: "Saitama (Careca)",
+        chapolim: "Chapolim (Capuz)",
+        luffy: "Luffy (Pirata)",
+      };
+      return map[id] || id;
+    };
+
+    const getTorsoName = (id: string) => {
+      const map: { [key: string]: string } = {
+        goku: "Kimono Z",
+        spiderman: "Traje Aranha",
+        jotaro: "Sobretudo JoJo",
+        vegeta: "Armadura Saiyajin",
+        saitama: "Uniforme Herói",
+        chapolim: "Uniforme CH",
+        muscle: "Sem Camisa",
+        naruto: "Jaqueta Shinobi",
+        sasuke: "Gola Alta Uchiha",
+        luffy: "Colete Pirata",
+      };
+      return map[id] || id;
+    };
+
+    const getLegsName = (id: string) => {
+      const map: { [key: string]: string } = {
+        goku: "Calça Dogi",
+        spiderman: "Lycra Aranha",
+        jotaro: "Calça Gakuran",
+        saitama: "Calça Herói",
+        vegeta: "Spandex Saiyajin",
+        chapolim: "Bermuda CH",
+        naruto: "Calça Shinobi",
+        sasuke: "Hakama Uchiha",
+        luffy: "Jeans Pirata",
+      };
+      return map[id] || id;
+    };
+
+    const getFeetName = (id: string) => {
+      const map: { [key: string]: string } = {
+        goku: "Botas Z",
+        spiderman: "Botas Aranha",
+        chapolim: "Tênis Retrô",
+        saitama: "Botas Herói",
+        vegeta: "Botas Saiyajin",
+        jotaro: "Sapatos Couro",
+        naruto: "Sandálias Ninja",
+        sasuke: "Sandálias Ninja",
+        luffy: "Sandálias Palha",
+      };
+      return map[id] || id;
+    };
+
+    const getAccName = (id: string) => {
+      const map: { [key: string]: string } = {
+        none: "Nenhum",
+        straw_hat: "Chapéu de Palha",
+        sword: "Katana Suprema",
+        headband: "Bandana Ninja",
+        cape: "Capa Heroica",
+        scouter: "Scouter Saiyajin",
+        scarf: "Cachecol Shinobi",
+      };
+      return map[id] || id;
+    };
+
     // Body
     this.createSelector(
       col1X,
@@ -305,7 +379,7 @@ export class CreatorUI {
     this.createSelector(
       col1X,
       currY,
-      () => `Cabeça: ${partOptions.head[state.style_idx.head]}`,
+      () => `Cabeça: ${getHeadName(partOptions.head[state.style_idx.head])}`,
       () => state.prevPart("head", partOptions.head),
       () => state.nextPart("head", partOptions.head),
       150
@@ -332,7 +406,7 @@ export class CreatorUI {
     this.createSelector(
       col1X,
       currY,
-      () => `Tronco: ${partOptions.torso[state.style_idx.torso]}`,
+      () => `Tronco: ${getTorsoName(partOptions.torso[state.style_idx.torso])}`,
       () => state.prevPart("torso", partOptions.torso),
       () => state.nextPart("torso", partOptions.torso),
       150
@@ -360,7 +434,7 @@ export class CreatorUI {
     this.createSelector(
       col1X,
       currY,
-      () => `Pernas: ${partOptions.legs[state.style_idx.legs]}`,
+      () => `Pernas: ${getLegsName(partOptions.legs[state.style_idx.legs])}`,
       () => state.prevPart("legs", partOptions.legs),
       () => state.nextPart("legs", partOptions.legs),
       150
@@ -387,7 +461,7 @@ export class CreatorUI {
     this.createSelector(
       col1X,
       currY,
-      () => `Pés: ${partOptions.feet[state.style_idx.feet]}`,
+      () => `Pés: ${getFeetName(partOptions.feet[state.style_idx.feet])}`,
       () => state.prevPart("feet", partOptions.feet),
       () => state.nextPart("feet", partOptions.feet),
       150
@@ -414,7 +488,7 @@ export class CreatorUI {
     this.createSelector(
       col1X,
       currY,
-      () => `Aces.: ${partOptions.accessory[state.style_idx.accessory]}`,
+      () => `Aces.: ${getAccName(partOptions.accessory[state.style_idx.accessory])}`,
       () => state.prevPart("accessory", partOptions.accessory),
       () => state.nextPart("accessory", partOptions.accessory),
       150

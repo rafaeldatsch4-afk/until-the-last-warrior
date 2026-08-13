@@ -171,11 +171,63 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       this.scene.restart(); 
     });
 
-    this.createStyledButton(700, bounds.bottom - 45, 150, 35, "TRANSFORMAR", 0xf39c12, () => {
+    this.createStyledButton(700, bounds.bottom - 45, 140, 35, "TRANSFORMAR", 0xf39c12, () => {
       this.previewIsTransformed = !this.previewIsTransformed;
       this.updatePreview();
     });
 
+    // Debug: Force Alignment Validation & Guide Lines
+    this.createStyledButton(850, bounds.bottom - 45, 140, 35, "DEBUG GUIAS", 0x16a085, () => {
+      this.preview.showDebugGuides = !this.preview.showDebugGuides;
+      this.updatePreview();
+    });
+
+    // Debug: Force Preset Quick-Tester (Cycles through all new torso/legs combos with heads)
+    let debugPresetIndex = 0;
+    const debugPresets = [
+      { name: "Kimono Z + Goku", torso: "goku", legs: "goku", head: "goku", feet: "goku" },
+      { name: "Colete Pirata + Luffy", torso: "luffy", legs: "luffy", head: "luffy", feet: "luffy" },
+      { name: "Sobretudo JoJo + Jotaro", torso: "jotaro", legs: "jotaro", head: "jotaro", feet: "jotaro" },
+      { name: "Sem Camisa + Sasuke", torso: "muscle", legs: "sasuke", head: "sasuke", feet: "sasuke" },
+      { name: "Shinobi + Naruto", torso: "naruto", legs: "naruto", head: "naruto", feet: "naruto" },
+      { name: "Armadura Saiyajin + Vegeta", torso: "vegeta", legs: "vegeta", head: "vegeta", feet: "vegeta" },
+      { name: "Traje Aranha + Spiderman", torso: "spiderman", legs: "spiderman", head: "spiderman", feet: "spiderman" },
+      { name: "Herói + Saitama", torso: "saitama", legs: "saitama", head: "saitama", feet: "saitama" },
+      { name: "Uniforme CH + Chapolim", torso: "chapolim", legs: "chapolim", head: "chapolim", feet: "chapolim" },
+      { name: "Gola Alta + Goku Head", torso: "sasuke", legs: "goku", head: "goku", feet: "goku" },
+    ];
+
+    const debugPresetBtn = this.createStyledButton(700, bounds.bottom - 85, 290, 30, "DEBUG: TESTAR SPRITE NOVO", 0x2980b9, () => {
+      const p = debugPresets[debugPresetIndex];
+      this.forceDebugSpriteParts(p.torso, p.legs, p.head, p.feet);
+      
+      const debugTxt = this.add.text(700, 200, `[DEBUG] Carregado: ${p.name}`, {
+        fontSize: "13px",
+        color: "#00ffff",
+        backgroundColor: "#000000cc",
+        padding: { x: 6, y: 3 },
+        fontStyle: "bold"
+      }).setOrigin(0.5).setDepth(300);
+      this.tweens.add({ targets: debugTxt, alpha: 0, y: 180, duration: 1500, onComplete: () => debugTxt.destroy() });
+
+      debugPresetIndex = (debugPresetIndex + 1) % debugPresets.length;
+    });
+
+    this.updatePreview();
+  }
+
+  public forceDebugSpriteParts(torsoId: string, legsId: string, headId: string, feetId: string) {
+    const tIdx = partOptions.torso.indexOf(torsoId);
+    const lIdx = partOptions.legs.indexOf(legsId);
+    const hIdx = partOptions.head.indexOf(headId);
+    const fIdx = partOptions.feet.indexOf(feetId);
+
+    if (tIdx !== -1) this.state.style_idx.torso = tIdx;
+    if (lIdx !== -1) this.state.style_idx.legs = lIdx;
+    if (hIdx !== -1) this.state.style_idx.head = hIdx;
+    if (fIdx !== -1) this.state.style_idx.feet = fIdx;
+
+    this.preview.showDebugGuides = true;
     this.updatePreview();
   }
 

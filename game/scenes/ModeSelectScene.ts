@@ -4,6 +4,17 @@ import { GameState } from "../types";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 
 export default class ModeSelectScene extends Phaser.Scene {
+  declare registry: Phaser.Data.DataManager;
+  declare cameras: Phaser.Cameras.Scene2D.CameraManager;
+  declare sound:
+    | Phaser.Sound.NoAudioSoundManager
+    | Phaser.Sound.HTML5AudioSoundManager
+    | Phaser.Sound.WebAudioSoundManager;
+  declare add: Phaser.GameObjects.GameObjectFactory;
+  declare scene: Phaser.Scenes.ScenePlugin;
+  declare tweens: Phaser.Tweens.TweenManager;
+  declare cache: Phaser.Cache.CacheManager;
+
   private gameState!: GameState;
 
   constructor() {
@@ -12,7 +23,7 @@ export default class ModeSelectScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.fadeIn(300, 0, 0, 0);
-    this.gameState = this.registry.get("gameState");
+    this.gameState = this.registry.get("gameState") as GameState;
 
     if (this.cache.audio.exists("bgm_battle")) {
       this.sound.stopByKey("bgm_battle");
@@ -23,60 +34,76 @@ export default class ModeSelectScene extends Phaser.Scene {
         if (s.isPlaying) isPlaying = true;
       });
       if (!isPlaying) {
-        const bgmEnabled = this.registry.get("bgmEnabled") !== false; const bgmVol = this.registry.get("bgmVolume") ?? 0.5; this.sound.play("bgm_menu", { loop: true, volume: bgmEnabled ? bgmVol : 0 });
+        const bgmEnabled = this.registry.get("bgmEnabled") !== false;
+        const bgmVol = this.registry.get("bgmVolume") ?? 0.5;
+        this.sound.play("bgm_menu", { loop: true, volume: bgmEnabled ? bgmVol : 0 });
       }
     }
 
-    // Background (Gradient)
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0x0f0c29, 0x302b63, 0x0f0c29, 0x24243e, 1);
-    bg.fillRect(0, 0, 960, 540);
+    const { width, height } = this.cameras.main;
+    const bounds = ResponsiveUtils.getSafeBounds();
 
-    // Add postFX to main camera
+    // 1. Dark Base Background
+    const bg = this.add.graphics();
+    bg.fillGradientStyle(0x060814, 0x0a0f24, 0x04060f, 0x020308, 1);
+    bg.fillRect(0, 0, width, height);
+
+    // 2. Arena/World Backdrop
+    const selectedArena = this.gameState?.selectedArena || "arena";
+    const bgArena = this.add
+      .image(width / 2, height / 2, selectedArena)
+      .setDisplaySize(width * 1.1, height * 1.1)
+      .setAlpha(0.25)
+      .setBlendMode(Phaser.BlendModes.SCREEN);
+
+    // Vignette
     if (this.cameras.main.postFX) {
-      this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
-      const cm = this.cameras.main.postFX.addColorMatrix();
-      // saturation removed
+      this.cameras.main.postFX.addVignette(0.5, 0.5, 0.7, 0.5);
     }
 
-    // Animated grid or particles in background
-    for (let i = 0; i < 20; i++) {
+    // Atmospheric particles
+    for (let i = 0; i < 25; i++) {
       const star = this.add.circle(
-        Phaser.Math.Between(0, 960),
-        Phaser.Math.Between(0, 540),
+        Phaser.Math.Between(0, width),
+        Phaser.Math.Between(0, height),
         Phaser.Math.FloatBetween(1, 3),
-        0xffffff,
-        Phaser.Math.FloatBetween(0.1, 0.5),
+        0x60a5fa,
+        Phaser.Math.FloatBetween(0.2, 0.6),
       );
       this.tweens.add({
         targets: star,
-        y: star.y - 50,
+        y: star.y - Phaser.Math.Between(40, 100),
         alpha: 0,
-        duration: Phaser.Math.Between(2000, 5000),
+        duration: Phaser.Math.Between(2500, 5000),
         repeat: -1,
-        yoyo: false,
         onRepeat: () => {
-          star.y = 540;
-          star.x = Phaser.Math.Between(0, 960);
-          star.alpha = Phaser.Math.FloatBetween(0.1, 0.5);
+          star.y = height + 10;
+          star.x = Phaser.Math.Between(0, width);
+          star.alpha = Phaser.Math.FloatBetween(0.2, 0.6);
         },
       });
     }
 
-    // Title
-    const bounds = ResponsiveUtils.getSafeBounds();
+    // 3. Top Back Button (High Depth, Pristine Positioning)
+    this.createBackBtn(bounds.left + 70, bounds.top + 28, "← VOLTAR", () => {
+      transitionTo(this, "MenuScene");
+    });
+
+    // 4. Header Title (Centered with generous breathing space)
     const title = this.add
-      .text(480, bounds.top + 50, "MODO DE JOGO", {
-        fontSize: "48px",
+      .text(width / 2, bounds.top + 28, "MODO DE JOGO", {
+        fontSize: "28px",
         color: "#ffffff",
         fontStyle: "900",
+        letterSpacing: 2,
         fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        stroke: "#000000",
+        strokeThickness: 5,
         shadow: {
           offsetX: 0,
-          offsetY: 6,
+          offsetY: 4,
           color: "#f1c40f",
-          blur: 0,
-          stroke: true,
+          blur: 4,
           fill: true,
         },
         resolution: 2,
@@ -85,8 +112,8 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: title,
-      y: 55,
-      duration: 2000,
+      y: bounds.top + 26,
+      duration: 1800,
       yoyo: true,
       repeat: -1,
       ease: "Sine.easeInOut",
@@ -104,47 +131,50 @@ export default class ModeSelectScene extends Phaser.Scene {
       {
         text: "🤖 1 VS 1 (CPU)",
         mode: "single",
-        color: 0x3498db,
+        color: 0x2980b9,
         desc: "Lute contra a inteligência artificial",
       },
       {
         text: "👥 1 VS 1 (LOCAL)",
         mode: "local_pvp",
-        color: 0xe74c3c,
+        color: 0xc0392b,
         desc: "Jogue contra um amigo no mesmo teclado",
       },
       {
         text: "🥋 TREINAMENTO",
         mode: "training",
-        color: 0x2ecc71,
+        color: 0x27ae60,
         desc: "Treine contra um oponente imóvel e imortal",
       },
-
-
       {
         text: "🕹️ ARCADE",
         mode: "arcade",
         color: 0x9b59b6,
-        desc: "Enfrente uma série de oponentes",
+        desc: "Enfrente uma série consecutiva de oponentes",
       },
       {
         text: "🏅 TORNEIO",
         mode: "tournament",
-        color: 0xf1c40f,
-        desc: "Chaveamento de 8 lutadores",
+        color: 0xd4ac0d,
+        desc: "Chaveamento oficial de 8 lutadores",
       },
     ];
 
-    // Filter out local pvp if mobile
     if (isMobile) {
-      const idx = modes.findIndex(m => m.mode === "local_pvp");
+      const idx = modes.findIndex((m) => m.mode === "local_pvp");
       if (idx !== -1) modes.splice(idx, 1);
     }
 
+    // Calculate vertical spacing dynamically to fit all screen sizes smoothly
+    const startY = bounds.top + 72;
+    const availableHeight = bounds.bottom - startY - 15;
+    const modeCount = modes.length;
+    const itemGap = Math.min(56, Math.floor(availableHeight / modeCount));
+
     modes.forEach((m, index) => {
-      const yPos = 120 + index * 52;
+      const yPos = startY + index * itemGap + itemGap / 2;
       this.createBtn(
-        480,
+        width / 2,
         yPos,
         m.text,
         m.desc,
@@ -157,10 +187,13 @@ export default class ModeSelectScene extends Phaser.Scene {
 
           this.registry.set("gameState", this.gameState);
           if (m.mode === "story") {
-            if (!this.gameState.storyState || !this.gameState.storyState.customCharacter) {
-               transitionTo(this, "CharacterCreatorScene");
+            if (
+              !this.gameState.storyState ||
+              !this.gameState.storyState.customCharacter
+            ) {
+              transitionTo(this, "CharacterCreatorScene");
             } else {
-               transitionTo(this, "StoryHubScene");
+              transitionTo(this, "StoryHubScene");
             }
           } else {
             transitionTo(this, "CharacterSelectScene");
@@ -168,11 +201,6 @@ export default class ModeSelectScene extends Phaser.Scene {
         },
         m.color,
       );
-    });
-
-    // Back Button
-    this.createBackBtn(bounds.left + 70, bounds.top + 40, "VOLTAR", () => {
-      transitionTo(this, "MenuScene");
     });
   }
 
@@ -186,62 +214,94 @@ export default class ModeSelectScene extends Phaser.Scene {
   ) {
     const container = this.add.container(x, y);
 
-    // Using graphics to draw a more stylish rounded button
     const graphics = this.add.graphics();
-    const btnWidth = 420;
-    const btnHeight = 46;
+    const btnWidth = Math.min(500, this.cameras.main.width - 60);
+    const btnHeight = 44;
     const radius = 8;
-    
-    // Draw initial state
+
     const drawBtn = (isHover: boolean) => {
       graphics.clear();
-      
+
       // Shadow
       graphics.fillStyle(0x000000, 0.6);
-      graphics.fillRoundedRect(-btnWidth/2 + 4, -btnHeight/2 + 6, btnWidth, btnHeight, radius);
-      
-      // Background (brighter on hover)
+      graphics.fillRoundedRect(
+        -btnWidth / 2 + 3,
+        -btnHeight / 2 + 4,
+        btnWidth,
+        btnHeight,
+        radius,
+      );
+
+      // Background color
       const r = (color >> 16) & 255;
       const g = (color >> 8) & 255;
       const b = color & 255;
-      
+
       let fillColor = color;
       if (isHover) {
-         fillColor = (Math.min(255, r + 40) << 16) | (Math.min(255, g + 40) << 8) | Math.min(255, b + 40);
+        fillColor =
+          (Math.min(255, r + 35) << 16) |
+          (Math.min(255, g + 35) << 8) |
+          Math.min(255, b + 35);
       }
-      
-      graphics.fillStyle(fillColor, 1);
-      graphics.fillRoundedRect(-btnWidth/2, -btnHeight/2, btnWidth, btnHeight, radius);
-      
-      // Inner dark gradient/glow
-      graphics.fillStyle(0x000000, 0.2);
-      graphics.fillRoundedRect(-btnWidth/2 + 2, -btnHeight/2 + 2, btnWidth - 4, btnHeight / 2, radius - 2);
-      
+
+      graphics.fillStyle(fillColor, 0.95);
+      graphics.fillRoundedRect(
+        -btnWidth / 2,
+        -btnHeight / 2,
+        btnWidth,
+        btnHeight,
+        radius,
+      );
+
+      // Inner highlight
+      graphics.fillStyle(0xffffff, isHover ? 0.2 : 0.08);
+      graphics.fillRoundedRect(
+        -btnWidth / 2 + 2,
+        -btnHeight / 2 + 2,
+        btnWidth - 4,
+        btnHeight / 2,
+        radius - 2,
+      );
+
       // Border
-      graphics.lineStyle(2, isHover ? 0xffffff : 0x000000, isHover ? 0.8 : 0.5);
-      graphics.strokeRoundedRect(-btnWidth/2, -btnHeight/2, btnWidth, btnHeight, radius);
+      graphics.lineStyle(
+        2,
+        isHover ? 0xffffff : 0x000000,
+        isHover ? 0.9 : 0.4,
+      );
+      graphics.strokeRoundedRect(
+        -btnWidth / 2,
+        -btnHeight / 2,
+        btnWidth,
+        btnHeight,
+        radius,
+      );
     };
-    
+
     drawBtn(false);
 
     const txt = this.add
       .text(0, -8, text, {
-        fontSize: "20px",
+        fontSize: "17px",
         color: "#ffffff",
         fontStyle: "bold",
         stroke: "#000",
         strokeThickness: 3,
-        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontFamily:
+          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         resolution: 2,
       })
       .setOrigin(0.5);
 
     const descTxt = this.add
-      .text(0, 12, desc, {
-        fontSize: "12px",
-        color: "#eeeeee",
+      .text(0, 11, desc, {
+        fontSize: "11px",
+        color: "#f1f5f9",
         fontStyle: "italic",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        stroke: "#000",
+        strokeThickness: 2,
         resolution: 2,
       })
       .setOrigin(0.5);
@@ -256,20 +316,20 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     hitArea.on("pointerover", () => {
       drawBtn(true);
-      this.tweens.add({ targets: container, scale: 1.05, duration: 100 });
+      this.tweens.add({ targets: container, scale: 1.03, duration: 100 });
     });
-    
+
     hitArea.on("pointerout", () => {
       drawBtn(false);
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
-    
+
     hitArea.on("pointerdown", () => {
       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
       this.tweens.add({
         targets: container,
-        scale: 0.95,
-        duration: 50,
+        scale: 0.96,
+        duration: 60,
         yoyo: true,
         onComplete: onClick,
       });
@@ -277,30 +337,48 @@ export default class ModeSelectScene extends Phaser.Scene {
   }
 
   createBackBtn(x: number, y: number, text: string, onClick: () => void) {
-    const container = this.add.container(x, y);
-    
+    const container = this.add.container(x, y).setDepth(200);
+
     const graphics = this.add.graphics();
-    const btnWidth = 120;
-    const btnHeight = 40;
+    const btnWidth = 110;
+    const btnHeight = 36;
     const radius = 6;
-    
+
     const drawBtn = (isHover: boolean) => {
       graphics.clear();
       graphics.fillStyle(0x000000, 0.6);
-      graphics.fillRoundedRect(-btnWidth/2 + 2, -btnHeight/2 + 3, btnWidth, btnHeight, radius);
-      
-      graphics.fillStyle(isHover ? 0x777777 : 0x555555, 1);
-      graphics.fillRoundedRect(-btnWidth/2, -btnHeight/2, btnWidth, btnHeight, radius);
-      
-      graphics.lineStyle(2, 0xffffff, 0.8);
-      graphics.strokeRoundedRect(-btnWidth/2, -btnHeight/2, btnWidth, btnHeight, radius);
+      graphics.fillRoundedRect(
+        -btnWidth / 2 + 2,
+        -btnHeight / 2 + 3,
+        btnWidth,
+        btnHeight,
+        radius,
+      );
+
+      graphics.fillStyle(isHover ? 0x475569 : 0x1e293b, 0.95);
+      graphics.fillRoundedRect(
+        -btnWidth / 2,
+        -btnHeight / 2,
+        btnWidth,
+        btnHeight,
+        radius,
+      );
+
+      graphics.lineStyle(1.5, isHover ? 0x60a5fa : 0x94a3b8, 0.9);
+      graphics.strokeRoundedRect(
+        -btnWidth / 2,
+        -btnHeight / 2,
+        btnWidth,
+        btnHeight,
+        radius,
+      );
     };
-    
+
     drawBtn(false);
 
     const txt = this.add
       .text(0, 0, text, {
-        fontSize: "18px",
+        fontSize: "14px",
         color: "#ffffff",
         fontStyle: "bold",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
@@ -317,20 +395,20 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     hitArea.on("pointerover", () => {
       drawBtn(true);
-      this.tweens.add({ targets: container, scale: 1.1, duration: 100 });
+      this.tweens.add({ targets: container, scale: 1.08, duration: 100 });
     });
-    
+
     hitArea.on("pointerout", () => {
       drawBtn(false);
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
-    
+
     hitArea.on("pointerdown", () => {
       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
       this.tweens.add({
         targets: container,
-        scale: 0.9,
-        duration: 50,
+        scale: 0.92,
+        duration: 60,
         yoyo: true,
         onComplete: onClick,
       });
