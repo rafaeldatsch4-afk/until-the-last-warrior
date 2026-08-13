@@ -23,8 +23,8 @@ export default class LeaderboardScene extends Phaser.Scene {
       this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
     }
 
-    const backBtn = this.add.rectangle(80, 40, 100, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
-    this.add.text(80, 40, "VOLTAR", {
+    const backBtn = this.add.rectangle(140, 75, 100, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
+    this.add.text(140, 75, "VOLTAR", {
       fontSize: "18px",
       fontStyle: "bold",
       fontFamily: "system-ui",

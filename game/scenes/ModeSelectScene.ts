@@ -169,7 +169,7 @@ export default class ModeSelectScene extends Phaser.Scene {
     });
 
     // Back Button
-    this.createBackBtn(100, 50, "VOLTAR", () => {
+    this.createBackBtn(140, 75, "VOLTAR", () => {
       transitionTo(this, "MenuScene");
     });
   }

@@ -118,7 +118,7 @@ export default class TournamentScene extends Phaser.Scene {
 
       this.createBtn(
         480,
-        550,
+        470,
         "VOLTAR AO MENU",
         () => {
           transitionTo(this, "MenuScene");
@@ -307,7 +307,7 @@ export default class TournamentScene extends Phaser.Scene {
 
       this.createBtn(
         480,
-        480,
+        450,
         "LUTAR!",
         () => {
           transitionTo(this, "BattleScene");

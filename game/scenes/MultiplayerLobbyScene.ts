@@ -94,7 +94,7 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     this.drawMainMenu();
 
     // Back / Exit Button
-    this.createBackBtn(120, 50, "VOLTAR", () => {
+    this.createBackBtn(140, 75, "VOLTAR", () => {
       MultiplayerManager.getInstance().leaveLobby();
       MultiplayerManager.getInstance().disconnect();
       transitionTo(this, "CharacterSelectScene");

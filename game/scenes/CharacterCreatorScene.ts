@@ -108,7 +108,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.ui = new CreatorUI(this, () => this.updatePreview());
 
     // Back button
-    this.createStyledButton(100, 40, 120, 40, "VOLTAR", 0xe74c3c, () => {
+    this.createStyledButton(140, 75, 120, 40, "VOLTAR", 0xe74c3c, () => {
       const gs = this.registry.get("gameState");
       if (gs && gs.gameMode === "story") {
         transitionTo(this, "ModeSelectScene");
@@ -137,7 +137,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
 
     // Randomize button
-    this.createStyledButton(860, 40, 150, 40, "ALEATÓRIO", 0x8e44ad, () => {
+    this.createStyledButton(820, 75, 150, 40, "ALEATÓRIO", 0x8e44ad, () => {
       // Randomize styles
       this.state.style_idx.head = Phaser.Math.Between(0, partOptions.head.length - 1);
       this.state.style_idx.torso = Phaser.Math.Between(0, partOptions.torso.length - 1);
@@ -169,7 +169,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       this.scene.restart(); 
     });
 
-    this.createStyledButton(700, 490, 150, 35, "TRANSFORMAR", 0xf39c12, () => {
+    this.createStyledButton(700, 465, 150, 35, "TRANSFORMAR", 0xf39c12, () => {
       this.previewIsTransformed = !this.previewIsTransformed;
       this.updatePreview();
     });
@@ -233,7 +233,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   }
 
   private setupSaveButton() {
-    this.createStyledButton(300, 490, 350, 50, "SALVAR E EQUIPAR", 0x27ae60, () => {
+    this.createStyledButton(300, 465, 350, 50, "SALVAR E EQUIPAR", 0x27ae60, () => {
       const customData = {
         gi1: 0,
         gi2: 0,

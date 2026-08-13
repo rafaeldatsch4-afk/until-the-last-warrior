@@ -220,7 +220,7 @@ export default class MenuScene extends Phaser.Scene {
     ]);
 
     // Botões Alinhados à Esquerda (Staggered Menu)
-    const startX = 20;
+    const startX = 140;
     const startY = 180;
     const spacing = 50;
 

@@ -42,13 +42,13 @@ export default class StoryHubScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Back Button (Top Left)
-    this.createBtn(100, 45, 140, 40, "VOLTAR", 0x34495e, () => {
+    this.createBtn(140, 75, 140, 40, "VOLTAR", 0x34495e, () => {
       syncCloudSaveImmediate();
       transitionTo(this, "ModeSelectScene");
     });
     
     // Config Button (Top Right)
-    this.createBtn(860, 45, 140, 40, "OPÇÕES", 0x34495e, () => {
+    this.createBtn(820, 75, 140, 40, "OPÇÕES", 0x34495e, () => {
       this.showConfigMenu();
     });
 
