@@ -410,47 +410,57 @@ export function generateCustomSprite(
           box(21, 23, 1, 3, TORSO_2_SHADOW);
         } else if (pLegs === "naruto") {
           // Orange baggy pants with bandage wrap on right leg
-          box(10, 23, 5, 6, LEGS_1); // Orange
-          box(17, 23, 5, 6, LEGS_1); // Orange
-          box(10, 23, 1, 6, LEGS_1_SHADOW);
-          box(21, 23, 1, 6, LEGS_1_SHADOW);
+          box(9, 23, 7, 6, LEGS_1); // Orange
+          box(16, 23, 7, 6, LEGS_1); // Orange
+          box(9, 23, 1, 6, LEGS_1_SHADOW);
+          box(22, 23, 1, 6, LEGS_1_SHADOW);
           // Bandage and kunai holster on right leg
-          box(10, 26, 4, 2, 0xffffff); // White bandage
+          box(9, 26, 5, 2, 0xffffff); // White bandage
           box(9, 26, 1, 2, 0x111111); // Holster shadow
         } else if (pLegs === "sasuke") {
           // Grey/Dark blue shorts or baggy pants
-          box(10, 23, 5, 6, LEGS_2); // Dark
-          box(17, 23, 5, 6, LEGS_2); // Dark
+          box(9, 23, 7, 6, LEGS_2); // Dark
+          box(16, 23, 7, 6, LEGS_2); // Dark
           // Skirt/Robe flap
           box(8, 23, 3, 5, LEGS_1); // Light color flap
           box(21, 23, 3, 5, LEGS_1); // Light color flap
-          box(10, 23, 1, 6, LEGS_2_SHADOW);
-          box(21, 23, 1, 6, LEGS_2_SHADOW);
-          box(11, 23, 10, 2, 0x5a2d6b); // Purple rope belt
+          box(9, 23, 1, 6, LEGS_2_SHADOW);
+          box(22, 23, 1, 6, LEGS_2_SHADOW);
+          box(10, 23, 12, 2, 0x5a2d6b); // Purple rope belt
           box(10, 24, 2, 4, 0x5a2d6b);
         } else if (pLegs === "luffy") {
           // Rolled up blue jeans
-          box(10, 23, 5, 4, LEGS_2); // Blue
-          box(17, 23, 5, 4, LEGS_2);
-          box(10, 27, 5, 1, 0xe0e0e0); // White fluff
-          box(17, 27, 5, 1, 0xe0e0e0);
+          box(9, 23, 7, 4, LEGS_2); // Blue
+          box(16, 23, 7, 4, LEGS_2);
+          box(9, 27, 7, 1, 0xe0e0e0); // White fluff
+          box(16, 27, 7, 1, 0xe0e0e0);
           // Bare legs below
-          box(11, 28, 3, 1, SKIN_TONE); 
-          box(18, 28, 3, 1, SKIN_TONE);
+          box(10, 28, 4, 1, SKIN_TONE); 
+          box(18, 28, 4, 1, SKIN_TONE);
         } else {
-          // Goku baggy pants (orange)
-          // Belt
+          // --- FULL HD GOKU LEGS ---
+          // Baggy pants base shadow
+          box(9, 25, 7, 5, LEGS_1_SHADOW); // Left leg base
+          box(16, 25, 7, 5, LEGS_1_SHADOW); // Right leg base
+          
+          // Baggy pants volume
+          box(10, 25, 5, 5, LEGS_1); // Left thigh
+          box(17, 25, 5, 5, LEGS_1); // Right thigh
+          box(13, 25, 6, 3, LEGS_1); // Crotch bridge
+
+          // Folds/creases
+          alphaBox(11, 25, 1, 5, 0x000000, 0.2); // inner crease L
+          alphaBox(20, 25, 1, 5, 0x000000, 0.2); // inner crease R
+          alphaBox(14, 26, 1, 4, 0x000000, 0.2); // middle fold L
+          alphaBox(17, 26, 1, 4, 0x000000, 0.2); // middle fold R
+
+          // Belt (Thick Obi)
+          box(10, 23, 12, 2, LEGS_2_SHADOW); // Belt base shadow
           box(11, 23, 10, 2, LEGS_2); // Blue belt
-          // Belt folds/knot
-          box(11, 24, 2, 4, LEGS_2);
           
-          // Baggy pants
-          box(10, 25, 5, 4, LEGS_1);
-          box(17, 25, 5, 4, LEGS_1);
-          
-          // Folds
-          box(10, 25, 1, 4, LEGS_1_SHADOW);
-          box(17, 25, 1, 4, LEGS_1_SHADOW);
+          // Belt knot dangling
+          box(12, 25, 3, 4, LEGS_2_SHADOW);
+          box(13, 25, 2, 4, LEGS_2);
         }
 
         // ====================

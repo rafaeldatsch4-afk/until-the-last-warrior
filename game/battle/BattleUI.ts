@@ -238,11 +238,11 @@ export class BattleUI {
 
     this.p1ComboBg = bs.add.graphics();
     this.p1ComboBg.fillStyle(0x000000, 0.65);
-    this.p1ComboBg.fillRoundedRect(0, -30, 240, 60, 8);
+    this.p1ComboBg.fillRoundedRect(0, -35, 240, 76, 8);
     this.p1ComboBg.lineStyle(2, 0xffaa00, 0.9);
-    this.p1ComboBg.strokeRoundedRect(0, -30, 240, 60, 8);
+    this.p1ComboBg.strokeRoundedRect(0, -35, 240, 76, 8);
     this.p1ComboBg.fillStyle(0xff3300, 1.0);
-    this.p1ComboBg.fillRect(0, -30, 8, 60);
+    this.p1ComboBg.fillRect(0, -35, 8, 76);
     this.p1ComboContainer.add(this.p1ComboBg);
 
     this.p1ComboText = bs.add
@@ -261,20 +261,20 @@ export class BattleUI {
     this.p1ComboContainer.add(this.p1ComboText);
 
     this.p1ComboDmgText = bs.add
-      .text(20, 30, "", {
-        fontSize: "18px",
+      .text(20, 26, "", {
+        fontSize: "24px",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        fontStyle: "bold",
-        color: "#ffff00",
+        fontStyle: "italic bold",
+        color: "#ff5500",
         stroke: "#000000",
-        strokeThickness: 4,
+        strokeThickness: 5,
         resolution: 2,
       })
       .setOrigin(0, 0.5);
     this.p1ComboContainer.add(this.p1ComboDmgText);
 
     this.p1ComboBar = bs.add
-      .rectangle(20, 20, 200, 6, 0xffaa00)
+      .rectangle(20, 14, 200, 4, 0xffaa00)
       .setOrigin(0, 0.5);
     this.p1ComboContainer.add(this.p1ComboBar);
 
@@ -284,11 +284,11 @@ export class BattleUI {
 
     this.p2ComboBg = bs.add.graphics();
     this.p2ComboBg.fillStyle(0x000000, 0.65);
-    this.p2ComboBg.fillRoundedRect(-240, -30, 240, 60, 8);
+    this.p2ComboBg.fillRoundedRect(-240, -35, 240, 76, 8);
     this.p2ComboBg.lineStyle(2, 0xffaa00, 0.9);
-    this.p2ComboBg.strokeRoundedRect(-240, -30, 240, 60, 8);
+    this.p2ComboBg.strokeRoundedRect(-240, -35, 240, 76, 8);
     this.p2ComboBg.fillStyle(0xff3300, 1.0);
-    this.p2ComboBg.fillRect(-8, -30, 8, 60);
+    this.p2ComboBg.fillRect(-8, -35, 8, 76);
     this.p2ComboContainer.add(this.p2ComboBg);
 
     this.p2ComboText = bs.add
@@ -307,20 +307,20 @@ export class BattleUI {
     this.p2ComboContainer.add(this.p2ComboText);
 
     this.p2ComboDmgText = bs.add
-      .text(-20, 30, "", {
-        fontSize: "18px",
+      .text(-20, 26, "", {
+        fontSize: "24px",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        fontStyle: "bold",
-        color: "#ffff00",
+        fontStyle: "italic bold",
+        color: "#ff5500",
         stroke: "#000000",
-        strokeThickness: 4,
+        strokeThickness: 5,
         resolution: 2,
       })
       .setOrigin(1, 0.5);
     this.p2ComboContainer.add(this.p2ComboDmgText);
 
     this.p2ComboBar = bs.add
-      .rectangle(-20, 20, 200, 6, 0xffaa00)
+      .rectangle(-20, 14, 200, 4, 0xffaa00)
       .setOrigin(1, 0.5);
     this.p2ComboContainer.add(this.p2ComboBar);
 
@@ -624,7 +624,7 @@ export class BattleUI {
     
     const dmgTextObj = isP1 ? this.p1ComboDmgText : this.p2ComboDmgText;
     if (dmgTextObj) {
-      if (this.scene.gameState.gameMode === "training" && comboDamage !== undefined) {
+      if (comboDamage !== undefined && comboDamage > 0) {
         dmgTextObj.setText(`${comboDamage} DMG`);
       } else {
         dmgTextObj.setText("");
