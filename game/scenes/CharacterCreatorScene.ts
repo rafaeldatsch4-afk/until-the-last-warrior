@@ -2,6 +2,7 @@ import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { INITIAL_CHARACTERS } from "../data";
 import { CharacterData } from "../types";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import { CreatorState } from "../creator/CreatorState";
 import { CreatorPreview } from "../creator/CreatorPreview";
 import { CreatorUI } from "../creator/CreatorUI";
@@ -106,9 +107,10 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     this.preview = new CreatorPreview(this);
     this.ui = new CreatorUI(this, () => this.updatePreview());
+    const bounds = ResponsiveUtils.getSafeBounds();
 
     // Back button
-    this.createStyledButton(140, 75, 120, 40, "VOLTAR", 0xe74c3c, () => {
+    this.createStyledButton(bounds.left + 70, bounds.top + 40, 120, 40, "VOLTAR", 0xe74c3c, () => {
       const gs = this.registry.get("gameState");
       if (gs && gs.gameMode === "story") {
         transitionTo(this, "ModeSelectScene");
@@ -118,7 +120,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     });
 
     // Title
-    this.add.text(480, 40, "CRIAR PERSONAGEM", { fontSize: "32px", fontStyle: "italic bold", color: "#f39c12", fontFamily: "system-ui, sans-serif", stroke: "#000", strokeThickness: 4, shadow: { offsetX: 0, offsetY: 0, color: "#f39c12", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
+    this.add.text(480, bounds.top + 40, "CRIAR PERSONAGEM", { fontSize: "32px", fontStyle: "italic bold", color: "#f39c12", fontFamily: "system-ui, sans-serif", stroke: "#000", strokeThickness: 4, shadow: { offsetX: 0, offsetY: 0, color: "#f39c12", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
 
     // Build Selectors using the extracted UI
     this.ui.buildAllSelectors(this.state);
@@ -137,7 +139,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
 
     // Randomize button
-    this.createStyledButton(820, 75, 150, 40, "ALEATÓRIO", 0x8e44ad, () => {
+    this.createStyledButton(bounds.right - 75, bounds.top + 40, 150, 40, "ALEATÓRIO", 0x8e44ad, () => {
       // Randomize styles
       this.state.style_idx.head = Phaser.Math.Between(0, partOptions.head.length - 1);
       this.state.style_idx.torso = Phaser.Math.Between(0, partOptions.torso.length - 1);
@@ -169,7 +171,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       this.scene.restart(); 
     });
 
-    this.createStyledButton(700, 465, 150, 35, "TRANSFORMAR", 0xf39c12, () => {
+    this.createStyledButton(700, bounds.bottom - 45, 150, 35, "TRANSFORMAR", 0xf39c12, () => {
       this.previewIsTransformed = !this.previewIsTransformed;
       this.updatePreview();
     });
@@ -233,7 +235,8 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   }
 
   private setupSaveButton() {
-    this.createStyledButton(300, 465, 350, 50, "SALVAR E EQUIPAR", 0x27ae60, () => {
+    const bounds = ResponsiveUtils.getSafeBounds();
+    this.createStyledButton(300, bounds.bottom - 45, 350, 50, "SALVAR E EQUIPAR", 0x27ae60, () => {
       const customData = {
         gi1: 0,
         gi2: 0,

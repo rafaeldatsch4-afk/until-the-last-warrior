@@ -3,6 +3,7 @@ import Phaser from "phaser";
 import { GameState } from "../types";
 import { auth } from "../../firebase/init";
 import { MultiplayerManager } from "../systems/MultiplayerManager";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 
 export default class MultiplayerLobbyScene extends Phaser.Scene {
   private gameState!: GameState;
@@ -94,7 +95,8 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     this.drawMainMenu();
 
     // Back / Exit Button
-    this.createBackBtn(140, 75, "VOLTAR", () => {
+    const bounds = ResponsiveUtils.getSafeBounds();
+    this.createBackBtn(bounds.left + 70, bounds.top + 40, "VOLTAR", () => {
       MultiplayerManager.getInstance().leaveLobby();
       MultiplayerManager.getInstance().disconnect();
       transitionTo(this, "CharacterSelectScene");

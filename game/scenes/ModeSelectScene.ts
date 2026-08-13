@@ -1,6 +1,7 @@
 import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 
 export default class ModeSelectScene extends Phaser.Scene {
   private gameState!: GameState;
@@ -63,8 +64,9 @@ export default class ModeSelectScene extends Phaser.Scene {
     }
 
     // Title
+    const bounds = ResponsiveUtils.getSafeBounds();
     const title = this.add
-      .text(480, 60, "MODO DE JOGO", {
+      .text(480, bounds.top + 50, "MODO DE JOGO", {
         fontSize: "48px",
         color: "#ffffff",
         fontStyle: "900",
@@ -169,7 +171,7 @@ export default class ModeSelectScene extends Phaser.Scene {
     });
 
     // Back Button
-    this.createBackBtn(140, 75, "VOLTAR", () => {
+    this.createBackBtn(bounds.left + 70, bounds.top + 40, "VOLTAR", () => {
       transitionTo(this, "MenuScene");
     });
   }

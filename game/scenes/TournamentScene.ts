@@ -2,6 +2,7 @@ import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState, CharacterData, TournamentMatch } from "../types";
 import { INITIAL_CHARACTERS } from "../data";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 
 export default class TournamentScene extends Phaser.Scene {
   private gameState!: GameState;
@@ -116,9 +117,10 @@ export default class TournamentScene extends Phaser.Scene {
           .setOrigin(0.5);
       }
 
+      const bounds = ResponsiveUtils.getSafeBounds();
       this.createBtn(
         480,
-        470,
+        bounds.bottom - 40,
         "VOLTAR AO MENU",
         () => {
           transitionTo(this, "MenuScene");
@@ -305,9 +307,10 @@ export default class TournamentScene extends Phaser.Scene {
       this.gameState.p2CharacterId = enemyId;
       this.registry.set("gameState", this.gameState);
 
+      const bounds = ResponsiveUtils.getSafeBounds();
       this.createBtn(
         480,
-        450,
+        bounds.bottom - 45,
         "LUTAR!",
         () => {
           transitionTo(this, "BattleScene");

@@ -2,6 +2,7 @@ import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
 import { DailyChallenges, CHALLENGES } from "../systems/DailyChallenges";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 
 export default class MenuScene extends Phaser.Scene {
   declare registry: Phaser.Data.DataManager;
@@ -220,7 +221,8 @@ export default class MenuScene extends Phaser.Scene {
     ]);
 
     // Botões Alinhados à Esquerda (Staggered Menu)
-    const startX = 140;
+    const bounds = ResponsiveUtils.getSafeBounds();
+    const startX = bounds.left + 40;
     const startY = 180;
     const spacing = 50;
 

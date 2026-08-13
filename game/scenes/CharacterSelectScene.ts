@@ -1,6 +1,7 @@
 import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 
 export default class CharacterSelectScene extends Phaser.Scene {
   declare registry: Phaser.Data.DataManager;
@@ -126,7 +127,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
 
     // Botão Voltar
-    const backBtnContainer = this.add.container(140, 75);
+    const bounds = ResponsiveUtils.getSafeBounds();
+    const backBtnContainer = this.add.container(bounds.left + 70, bounds.top + 40);
     const backBg = this.add
       .rectangle(0, 0, 120, 40, 0x333333)
       .setStrokeStyle(2, 0xffffff);
@@ -161,7 +163,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     // Header
     this.headerText = this.add
-      .text(width / 2, 50, "", {
+      .text(width / 2, bounds.top + 40, "", {
         fontSize: "36px",
         color: "#ffd54a",
         fontStyle: "bold",
@@ -183,7 +185,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: this.headerText,
-      y: 45,
+      y: bounds.top + 35,
       duration: 1500,
       yoyo: true,
       repeat: -1,
@@ -205,7 +207,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   createTooltip() {
     const { width, height } = this.cameras.main;
-    this.tooltipContainer = this.add.container(width / 2, height - 160).setDepth(100).setVisible(false);
+    const bounds = ResponsiveUtils.getSafeBounds();
+    this.tooltipContainer = this.add.container(width / 2, bounds.bottom - 110).setDepth(100).setVisible(false);
     const bg = this.add.rectangle(0, 0, 500, 100, 0x111111, 0.95).setStrokeStyle(2, 0x3498db);
     this.tooltipName = this.add.text(-230, -35, "", {
       fontSize: "22px",
@@ -245,7 +248,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   createArenaSelector() {
     const { width, height } = this.cameras.main;
-    this.arenaSelectorContainer = this.add.container(width / 2, height - 145);
+    const bounds = ResponsiveUtils.getSafeBounds();
+    this.arenaSelectorContainer = this.add.container(width / 2, bounds.bottom - 95);
 
     // Initial state
     this.state.selectedArena = this.arenas[this.selectedArenaIndex].id;
@@ -319,8 +323,9 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   createFightButton() {
     const { width, height } = this.cameras.main;
+    const bounds = ResponsiveUtils.getSafeBounds();
     this.fightBtn = this.add
-      .container(width / 2, height - 85)
+      .container(width / 2, bounds.bottom - 35)
       .setVisible(false);
 
     const btnW = 190;

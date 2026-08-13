@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { transitionTo } from "../utils/sceneTransition";
 import { collection, onSnapshot, query, orderBy, limit } from "firebase/firestore";
 import { db } from "../../firebase/init";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 
 export default class LeaderboardScene extends Phaser.Scene {
   private unsubscribe: any = null;
@@ -23,8 +24,9 @@ export default class LeaderboardScene extends Phaser.Scene {
       this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
     }
 
-    const backBtn = this.add.rectangle(140, 75, 100, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
-    this.add.text(140, 75, "VOLTAR", {
+    const bounds = ResponsiveUtils.getSafeBounds();
+    const backBtn = this.add.rectangle(bounds.left + 70, bounds.top + 40, 100, 40, 0xe74c3c).setStrokeStyle(2, 0xffffff);
+    this.add.text(bounds.left + 70, bounds.top + 40, "VOLTAR", {
       fontSize: "18px",
       fontStyle: "bold",
       fontFamily: "system-ui",
@@ -37,7 +39,7 @@ export default class LeaderboardScene extends Phaser.Scene {
         transitionTo(this, "MenuScene");
       });
 
-    this.add.text(480, 50, "TOP GLOBAL 🌍", {
+    this.add.text(480, bounds.top + 50, "TOP GLOBAL 🌍", {
       fontSize: "36px",
       fontStyle: "bold",
       color: "#f1c40f",

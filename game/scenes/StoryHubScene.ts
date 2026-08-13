@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { transitionTo } from "../utils/sceneTransition";
 import { syncCloudSaveImmediate } from "../systems/CloudSave";
 import { GameState } from "../types";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 
 export default class StoryHubScene extends Phaser.Scene {
   private gameState!: GameState;
@@ -31,7 +32,8 @@ export default class StoryHubScene extends Phaser.Scene {
       .setAlpha(0.15)
       .setBlendMode(Phaser.BlendModes.SCREEN);
 
-    const title = this.add.text(480, 45, "MODO HISTÓRIA", {
+    const bounds = ResponsiveUtils.getSafeBounds();
+    const title = this.add.text(480, bounds.top + 45, "MODO HISTÓRIA", {
       fontSize: "36px",
       color: "#f1c40f",
       fontStyle: "900",
@@ -42,13 +44,13 @@ export default class StoryHubScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Back Button (Top Left)
-    this.createBtn(140, 75, 140, 40, "VOLTAR", 0x34495e, () => {
+    this.createBtn(bounds.left + 70, bounds.top + 40, 140, 40, "VOLTAR", 0x34495e, () => {
       syncCloudSaveImmediate();
       transitionTo(this, "ModeSelectScene");
     });
     
     // Config Button (Top Right)
-    this.createBtn(820, 75, 140, 40, "OPÇÕES", 0x34495e, () => {
+    this.createBtn(bounds.right - 70, bounds.top + 40, 140, 40, "OPÇÕES", 0x34495e, () => {
       this.showConfigMenu();
     });
 
