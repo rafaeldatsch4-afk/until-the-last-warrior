@@ -51,6 +51,8 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     width: 960,
     height: 540,
   },
+  // Enforce a 1920x1080 physical resolution base-layer (2x 960x540) for high-quality HD rendering
+  resolution: 2,
   fps: {
     target: 60,
   },

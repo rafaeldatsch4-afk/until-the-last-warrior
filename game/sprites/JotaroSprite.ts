@@ -584,6 +584,7 @@ export function generateJotaroSprite(scene: Phaser.Scene) {
     // Manually add frame data to the new texture so Phaser knows it's a spritesheet
     if (scene.textures.exists(textureName)) {
       const tex = scene.textures.get(textureName);
+      tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
       const fw = FRAME_WIDTH * SCALE;
       const fh = FRAME_HEIGHT * SCALE;
       for (let i = 0; i < FRAMES; i++) {

@@ -29,7 +29,7 @@ export function generateCustomSprite(
     const SCALE = 2;
     const FRAME_WIDTH = 96;
     const FRAME_HEIGHT = 64;
-    const DRAW_OFFSET_Y = 32;
+    const DRAW_OFFSET_Y = 28;
     const FRAMES = 12;
 
     const sheetWidth = FRAME_WIDTH * SCALE * FRAMES;
@@ -457,38 +457,94 @@ export function generateCustomSprite(
         // FEET
         // ====================
         if (pFeet === "spiderman") {
-          box(10, 29, 4, 5, FEET_2);
-          box(18, 29, 4, 5, FEET_2);
-          box(10, 29, 1, 5, FEET_2_SHADOW);
-          box(18, 29, 1, 5, FEET_2_SHADOW);
-          box(10, 30, 4, 1, BLACK); // Web lines
-          box(18, 30, 4, 1, BLACK);
-          box(10, 32, 4, 1, BLACK); // Web lines
-          box(18, 32, 4, 1, BLACK);
+          // --- FULL HD SPIDER-MAN BOOTS ---
+          // Base shape
+          box(9, 29, 6, 5, FEET_2_SHADOW);
+          box(17, 29, 6, 5, FEET_2_SHADOW);
+          box(10, 29, 4, 4, FEET_2);
+          box(18, 29, 4, 4, FEET_2);
+          
+          // Web lines (intricate)
+          alphaBox(9, 30, 6, 1, 0x000000, 0.6);
+          alphaBox(17, 30, 6, 1, 0x000000, 0.6);
+          alphaBox(9, 32, 6, 1, 0x000000, 0.6);
+          alphaBox(17, 32, 6, 1, 0x000000, 0.6);
+          
+          // Boot soles
+          box(9, 34, 6, 1, 0x111111);
+          box(17, 34, 6, 1, 0x111111);
+          
+          // Boot tip highlights
+          alphaBox(9, 33, 2, 1, 0xffffff, 0.3);
+          alphaBox(21, 33, 2, 1, 0xffffff, 0.3);
         } else if (pFeet === "chapolim") {
-          box(10, 29, 4, 3, FEET_1); // yellow top
-          box(18, 29, 4, 3, FEET_1);
-          box(10, 29, 1, 3, FEET_1_SHADOW); 
-          box(18, 29, 1, 3, FEET_1_SHADOW); 
-          box(10, 32, 4, 2, FEET_2); // red bottom
-          box(18, 32, 4, 2, FEET_2);
+          // --- FULL HD CHAPOLIM SHOES ---
+          // Yellow socks / calves
+          box(9, 29, 6, 3, FEET_1_SHADOW);
+          box(17, 29, 6, 3, FEET_1_SHADOW);
+          box(10, 29, 4, 2, FEET_1);
+          box(18, 29, 4, 2, FEET_1);
+          
+          // Red sneakers with yellow laces
+          box(8, 32, 7, 3, FEET_2_SHADOW);
+          box(17, 32, 7, 3, FEET_2_SHADOW);
+          box(9, 32, 5, 2, FEET_2);
+          box(18, 32, 5, 2, FEET_2);
+          
+          // Laces
+          box(10, 32, 2, 2, FEET_1);
+          box(19, 32, 2, 2, FEET_1);
+          
+          // Soles
+          box(8, 34, 7, 1, 0x333333);
+          box(17, 34, 7, 1, 0x333333);
+          
+          // Tip highlights
+          alphaBox(8, 33, 2, 1, 0xffffff, 0.3);
+          alphaBox(22, 33, 2, 1, 0xffffff, 0.3);
         } else if (pFeet === "saitama") {
-          box(10, 29, 4, 5, FEET_2); // red boots
-          box(18, 29, 4, 5, FEET_2);
-          box(10, 29, 1, 5, FEET_2_SHADOW);
-          box(18, 29, 1, 5, FEET_2_SHADOW);
-          // boot top folds
-          box(9, 28, 6, 2, FEET_2);
-          box(17, 28, 6, 2, FEET_2);
-          box(9, 29, 6, 1, FEET_2_SHADOW);
-          box(17, 29, 6, 1, FEET_2_SHADOW);
+          // --- FULL HD SAITAMA BOOTS ---
+          // Red boots with folds
+          box(8, 28, 7, 2, FEET_2_SHADOW); // Boot top fold
+          box(17, 28, 7, 2, FEET_2_SHADOW);
+          box(9, 28, 5, 1, FEET_2);
+          box(18, 28, 5, 1, FEET_2);
+          
+          box(9, 30, 6, 4, FEET_2_SHADOW);
+          box(17, 30, 6, 4, FEET_2_SHADOW);
+          box(10, 30, 4, 3, FEET_2);
+          box(18, 30, 4, 3, FEET_2);
+          
+          // Sole
+          box(9, 34, 6, 1, 0x111111);
+          box(17, 34, 6, 1, 0x111111);
+          
+          // Reflections
+          alphaBox(13, 31, 1, 2, 0xffffff, 0.4);
+          alphaBox(21, 31, 1, 2, 0xffffff, 0.4);
         } else if (pFeet === "vegeta") {
-          box(10, 29, 4, 5, WHITE); // white boots
-          box(18, 29, 4, 5, WHITE);
-          box(10, 29, 1, 5, 0xdddddd);
-          box(18, 29, 1, 5, 0xdddddd);
-          box(10, 33, 4, 1, 0xffd700); // gold toe
-          box(18, 33, 4, 1, 0xffd700); // gold toe
+          // --- FULL HD VEGETA BOOTS ---
+          // White saiyan armor boots
+          box(9, 29, 6, 5, 0xcccccc); // Base shadow
+          box(17, 29, 6, 5, 0xcccccc);
+          box(10, 29, 4, 4, 0xffffff); // Volume
+          box(18, 29, 4, 4, 0xffffff);
+          
+          // Gold ribbed toes
+          box(9, 33, 6, 1, 0xb8860b); // Gold shadow
+          box(17, 33, 6, 1, 0xb8860b);
+          box(10, 33, 4, 1, 0xffd700); // Gold toe
+          box(18, 33, 4, 1, 0xffd700);
+          
+          // Ribbed lines on gold
+          alphaBox(11, 33, 1, 1, 0x000000, 0.3);
+          alphaBox(13, 33, 1, 1, 0x000000, 0.3);
+          alphaBox(19, 33, 1, 1, 0x000000, 0.3);
+          alphaBox(21, 33, 1, 1, 0x000000, 0.3);
+          
+          // Soles
+          box(9, 34, 6, 1, 0x333333);
+          box(17, 34, 6, 1, 0x333333);
         } else if (pFeet === "jotaro") {
           // --- FULL HD JOTARO SHOES ---
           // Expensive polished dress shoes
@@ -537,13 +593,28 @@ export function generateCustomSprite(
           box(10, 33, 2, 1, SKIN_TONE);
           box(18, 33, 2, 1, SKIN_TONE);
         } else if (pFeet === "luffy") {
+          // --- FULL HD LUFFY SANDALS ---
           // Bare feet with sandals
-          box(10, 29, 5, 5, SKIN_TONE); 
-          box(17, 29, 5, 5, SKIN_TONE);
-          box(10, 33, 5, 1, 0x8b4513); // Brown strap
-          box(17, 33, 5, 1, 0x8b4513);
-          box(10, 34, 5, 1, 0x5c4033); // Sole
-          box(17, 34, 5, 1, 0x5c4033);
+          box(9, 29, 6, 5, SKIN_SHADOW);
+          box(17, 29, 6, 5, SKIN_SHADOW);
+          box(10, 29, 4, 4, SKIN_TONE); 
+          box(18, 29, 4, 4, SKIN_TONE);
+          
+          // Straps (Y-shape)
+          box(10, 32, 4, 1, 0x8b4513); // Across
+          box(18, 32, 4, 1, 0x8b4513);
+          box(11, 33, 2, 1, 0x5c4033); // Down to toes
+          box(19, 33, 2, 1, 0x5c4033);
+          
+          // Toes
+          box(10, 33, 1, 1, SKIN_TONE);
+          box(13, 33, 1, 1, SKIN_TONE);
+          box(18, 33, 1, 1, SKIN_TONE);
+          box(21, 33, 1, 1, SKIN_TONE);
+
+          // Sole
+          box(9, 34, 6, 1, 0x5c4033); // Dark wood sole
+          box(17, 34, 6, 1, 0x5c4033);
         } else {
           // --- FULL HD GOKU BOOTS ---
           // Thick combat boots with straps
@@ -1847,6 +1918,7 @@ export function generateCustomSprite(
 
     if (scene.textures.exists(textureName)) {
       const tex = scene.textures.get(textureName);
+      tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
       const fw = FRAME_WIDTH * SCALE;
       const fh = FRAME_HEIGHT * SCALE;
       for (let i = 0; i < FRAMES; i++) {

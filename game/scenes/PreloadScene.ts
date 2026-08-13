@@ -84,7 +84,7 @@ export default class PreloadScene extends Phaser.Scene {
       // Deixamos a limpeza da UI para ser feita no final do processo em finishPreload()
     });
 
-    this.load.image("arena", "/assets/arenas/space3.png");
+    this.load.image("arena", "assets/arenas/space3.png");
     this.load.image("utlw_logo", "icon.png");
 
     // Generate particle texture
@@ -101,31 +101,31 @@ export default class PreloadScene extends Phaser.Scene {
 
     this.load.image(
       "arena_namek",
-      "/assets/arenas/sky4.png",
+      "assets/arenas/sky4.png",
     );
     this.load.image(
       "arena_city",
-      "/assets/arenas/sunset.png",
+      "assets/arenas/sunset.png",
     );
     this.load.image(
       "arena_tournament",
-      "/assets/arenas/clouds.png",
+      "assets/arenas/clouds.png",
     );
     this.load.image(
       "arena_ice",
-      "/assets/arenas/sky1.png",
+      "assets/arenas/sky1.png",
     );
     this.load.image(
       "arena_lava",
-      "/assets/arenas/underwater3.png",
+      "assets/arenas/underwater3.png",
     );
     this.load.image(
       "arena_desert",
-      "/assets/arenas/sky2.png",
+      "assets/arenas/sky2.png",
     );
     this.load.image(
       "arena_dark",
-      "/assets/arenas/deepblue.png",
+      "assets/arenas/deepblue.png",
     );
   }
 

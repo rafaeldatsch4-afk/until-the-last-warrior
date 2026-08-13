@@ -110,7 +110,7 @@ export class CreatorPreview {
     const animName = isTransformed ? "custom_preview_ssj_idle" : "custom_preview_idle";
 
     this.previewSprite = this.scene.add
-      .sprite(700, 310, texName)
+      .sprite(700, 350, texName)
       .setScale(3.5);
     if (this.scene.textures.exists(texName)) {
       this.previewSprite.play(animName);
