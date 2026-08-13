@@ -69,7 +69,6 @@ export class CreatorPreview {
 
     const { torsoBounds } = generateCustomSprite(this.scene, {
       ...(builderData.base as CharacterData),
-      form: isTransformed ? 1 : 0,
       key: "custom_preview",
       customData: customData,
     });

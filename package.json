@@ -17,6 +17,7 @@
     "firebase": "^12.13.0",
     "motion": "^12.42.2",
     "phaser": "^3.90.0",
+    "puppeteer": "^25.6.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "socket.io": "^4.8.3",

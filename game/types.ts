@@ -18,6 +18,7 @@ export interface CharacterData {
   superName: string;
   specialColor: number;
   baseKey?: string;
+  form?: number;
   customData?: {
     gi1: number;
     gi2: number;

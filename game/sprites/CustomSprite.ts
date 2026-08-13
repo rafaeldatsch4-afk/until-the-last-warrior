@@ -1375,46 +1375,6 @@ export function generateCustomSprite(
         isDrawingLegs = false;
         // ACCESSORY (Back layer)
         // ====================
-        if (pAcc === "cape" && pTorso !== "jotaro") {
-          box(8, 15, 3, 14, ACC_1); // aba esquerda
-          box(21, 15, 3, 14, ACC_1); // aba direita
-          box(9, 27, 14, 2, ACC_1); // dobra inferior conectando
-          const ACC_1_SHADOW = Phaser.Display.Color.IntegerToColor(ACC_1).darken(20).color;
-          box(8, 15, 1, 14, ACC_1_SHADOW); // sombra da dobra
-          box(23, 15, 1, 14, ACC_1_SHADOW);
-        } else if (pAcc === "sword") {
-          // Sword sheath on back
-          box(23, 6, 2, 16, 0x444444); // bainha
-          box(22, 6, 1, 16, 0x222222); // sombra da bainha
-          box(21, 11, 4, 2, ACC_1); // hilt guard
-          // Only draw handle in sheath if not holding it? 
-          // Actually, since they always hold it in front, we leave the sheath empty or keep handle?
-          // Let's keep a small hilt so it looks like a secondary sword or just sheath top.
-          box(22, 4, 2, 4, 0x222222); // cabo escuro
-
-        } else if (pAcc === "aura_blue") {
-          // Pixelated back aura
-          alphaBox(10, 4, 12, 28, 0x00ffff, 0.4);
-          alphaBox(12, 2, 8, 30, 0x00ffff, 0.6);
-          alphaBox(8, 8, 2, 20, 0x0088ff, 0.4);
-          alphaBox(22, 8, 2, 20, 0x0088ff, 0.4);
-          alphaBox(9, 6, 2, 22, 0x0088ff, 0.5);
-          alphaBox(21, 6, 2, 22, 0x0088ff, 0.5);
-          alphaBox(7, 12, 2, 8, 0x0088ff, 0.3);
-          alphaBox(23, 15, 2, 6, 0x0088ff, 0.3);
-          alphaBox(14, 0, 4, 4, 0x0088ff, 0.6);
-        } else if (pAcc === "aura_red") {
-          // Pixelated back aura
-          alphaBox(10, 4, 12, 28, 0xff0000, 0.4);
-          alphaBox(12, 2, 8, 30, 0xff0000, 0.6);
-          alphaBox(8, 8, 2, 20, 0xaa0000, 0.4);
-          alphaBox(22, 8, 2, 20, 0xaa0000, 0.4);
-          alphaBox(9, 6, 2, 22, 0xaa0000, 0.5);
-          alphaBox(21, 6, 2, 22, 0xaa0000, 0.5);
-          alphaBox(7, 12, 2, 8, 0xaa0000, 0.3);
-          alphaBox(23, 15, 2, 6, 0xaa0000, 0.3);
-          alphaBox(14, 0, 4, 4, 0xaa0000, 0.6);
-        }
 
         const HEAD_1_SHADOW =
           Phaser.Display.Color.IntegerToColor(HEAD_1).darken(20).color;
@@ -1848,67 +1808,160 @@ export function generateCustomSprite(
                 // ACCESSORY (Front layer)
         // ====================
         if (pAcc === "straw_hat") {
+          // --- FULL HD STRAW HAT ---
           isDrawingHat = true;
-          headBox(8, 5, 16, 1, 0xd4a000); // Brim Shadow
-          headBox(9, 5, 14, 1, 0xffd700); // Brim
-          headBox(11, 2, 10, 3, 0xffd700); // Top
-          headBox(11, 2, 1, 3, 0xd4a000); // Top Shadow Left
-          headBox(20, 2, 1, 3, 0xd4a000); // Top Shadow Right
-          headBox(11, 4, 10, 1, 0xff0000); // Red ribbon
-          headBox(11, 4, 1, 1, 0xaa0000); // Ribbon shadow
-          headBox(20, 4, 1, 1, 0xaa0000); // Ribbon shadow
+          // Back rim shadow
+          headBox(7, 5, 18, 2, 0xa07100); 
+          // Main wide brim
+          headBox(6, 4, 20, 1, 0xffd700); 
+          headBox(7, 3, 18, 1, 0xffd700);
+          
+          // Dome
+          headBox(10, 0, 12, 3, 0xffd700); 
+          // Dome shading
+          headBox(10, 0, 2, 3, 0xa07100);
+          headBox(20, 0, 2, 3, 0xa07100);
+          
+          // Texture lines (Straw weave)
+          headBox(11, 1, 10, 1, 0xd4a000);
+          headBox(12, 2, 8, 1, 0xd4a000);
+          
+          // Red ribbon
+          headBox(10, 3, 12, 1, 0xff0000); 
+          headBox(10, 3, 2, 1, 0xaa0000); 
+          headBox(20, 3, 2, 1, 0xaa0000); 
+          
+          // Neck string
+          headBox(11, 13, 1, 3, 0x8b4513);
+          headBox(20, 13, 1, 3, 0x8b4513);
+          headBox(12, 15, 8, 1, 0x8b4513);
+          
+          // Face shadow from brim (draw top of the face dark)
+          headBox(12, 6, 8, 2, SKIN_SHADOW);
+          
           isDrawingHat = false;
         } else if (pAcc === "headband") {
-          headBox(11, 5, 10, 2, ACC_1); // Cloth
-          headBox(13, 5, 6, 2, 0xaaaaaa); // Metal plate
-          headDot(15, 6, BLACK); // Symbol
+          // --- SASUKE / ITACHI KONOHA ROGUE HEADBAND (ULTRA PIXEL DETAIL) ---
+          const CLOTH_COLOR = ACC_1 || 0x182238; // Dark navy blue cloth
+          const CLOTH_SHADOW = Phaser.Display.Color.IntegerToColor(CLOTH_COLOR).darken(25).color;
+
+          // 1. Cloth Band wrapping forehead (x=10 to 21, y=3 to 6)
+          headBox(10, 3, 12, 4, CLOTH_COLOR); 
+          headBox(10, 6, 12, 1, CLOTH_SHADOW); 
+
+          // 2. Metal Plate Base (10x4 pixels centered on forehead: x=11 to 20, y=3 to 6)
+          headBox(11, 3, 10, 4, 0xd1d5db); // Bright steel silver base
+          headBox(11, 3, 10, 1, 0xf8fafc); // Top edge metallic specular shine
+          headBox(11, 6, 10, 1, 0x64748b); // Bottom bevel shadow
           
-          // Redraw front hair bangs to cover the headband
-          isDrawingHat = true; // prevent straw_hat clipping logic just in case
-          if (pHead === "goku") {
-            if (isTransformed && !isUI) {
-              headBox(14, 6, 2, 2, hairColor);
-              headBox(17, 6, 1, 1, hairColor);
-            } else if (isUI) {
-              headBox(13, 6, 2, 3, hairColor);
-              headBox(16, 6, 3, 3, hairColor);
-            } else {
-              headBox(13, 6, 2, 2, hairColor);
-              headBox(17, 6, 2, 2, hairColor);
-              headBox(15, 6, 1, 3, hairColor);
-            }
-          } else if (pHead === "vegeta") {
-            headDot(15, 6, hairColor);
-            headDot(16, 6, hairColor);
-            headBox(11, 5, 2, 3, hairColor); // thicker side burns
-            headBox(19, 5, 2, 3, hairColor);
-          } else if (pHead === "sasuke") {
-            headBox(9, 5, 2, 4, hairColor); // side burns
-            headBox(21, 5, 2, 4, hairColor); // side burns
-            headBox(15, 6, 2, 3, hairColor); // Middle bang
-          } else if (pHead === "luffy") {
-            headBox(11, 6, 10, 2, hairColor);
-          } else if (pHead === "jotaro") {
-            headBox(10, 6, 2, 5, hairColor);
-            headBox(20, 6, 2, 5, hairColor);
-          }
-          isDrawingHat = false;
+          // Plate Corner Bevels / Dark Border
+          headDot(11, 3, 0x334155);
+          headDot(11, 6, 0x334155);
+          headDot(20, 3, 0x334155);
+          headDot(20, 6, 0x334155);
+
+          // 3. Rivets (6 studs total - 3 on each side)
+          const RIVET = 0x1e293b;
+          headDot(12, 4, RIVET);
+          headDot(12, 5, RIVET);
+          headDot(12, 6, RIVET);
+          headDot(19, 4, RIVET);
+          headDot(19, 5, RIVET);
+          headDot(19, 6, RIVET);
+
+          // 4. Konoha Leaf Symbol (Símbolo da Folha de Konoha)
+          // Engraved dark emblem: Spiral + Arch + Pointer tip
+          const LEAF = 0x0f172a;
+          headDot(15, 3, LEAF); headDot(16, 3, LEAF); headDot(17, 3, LEAF); // Top arch
+          headDot(17, 4, LEAF); // Right curve
+          headDot(16, 4, LEAF); headDot(15, 4, LEAF); // Inner swirl top
+          headDot(15, 5, LEAF); headDot(16, 5, LEAF); // Inner swirl bottom
+          headDot(13, 5, LEAF); headDot(14, 5, LEAF); // Leaf tip extension pointing left
+          headDot(14, 6, LEAF); headDot(15, 6, LEAF); // Base stem
+
+          // 5. Rogue Diagonal Slash (Cut line across entire emblem from bottom-left to top-right)
+          const CUT = 0x000000;
+          headDot(12, 6, CUT);
+          headDot(13, 6, CUT);
+          headDot(14, 5, CUT);
+          headDot(15, 5, CUT);
+          headDot(16, 4, CUT);
+          headDot(17, 4, CUT);
+          headDot(18, 3, CUT);
+          headDot(19, 3, CUT);
+
+          // 6. Cut Highlight (3D Gouge metallic reflection under the slash)
+          const HIGHLIGHT = 0xffffff;
+          headDot(13, 7, HIGHLIGHT);
+          headDot(14, 6, HIGHLIGHT);
+          headDot(15, 6, HIGHLIGHT);
+          headDot(16, 5, HIGHLIGHT);
+          headDot(17, 5, HIGHLIGHT);
+          headDot(18, 4, HIGHLIGHT);
+          
         } else if (pAcc === "sword") {
+          // --- PROPER KATANA / SWORD ---
+          let handColor = SKIN_TONE;
+          if (pTorso === "vegeta" || pTorso === "saitama") handColor = WHITE;
+          else if (pTorso === "spiderman") handColor = TORSO_1;
+
           if (isCharge) {
             // Raised front hand
-            box(21, -10, 2, 12, 0xaaaaaa); // blade pointing up
-            box(20, 2, 4, 2, 0xffd700); // guard
-            box(21, 4, 2, 3, 0x552200); // hilt
+            box(20, -16, 4, 16, 0xcccccc); // Blade base
+            box(22, -16, 1, 16, 0xffffff); // Edge highlight
+            box(21, -16, 1, 16, 0x777777); // Fuller/shadow
+            
+            box(19, 0, 6, 2, 0xffd700); // Guard
+            box(21, 2, 2, 6, 0x552200); // Hilt leather
+            box(21, 8, 2, 1, 0xffd700); // Pommel
+
+            // Redraw fingers over hilt
+            box(20, 3, 4, 3, handColor);
           } else if (isAttack) {
+            // VFX: Sword Slash Trail (Sweep arc)
+            // Outer glow (cyan)
+            alphaBox(22, 24, 8, 4, 0x00ffff, 0.15); 
+            alphaBox(28, 19, 12, 4, 0x00ffff, 0.3);
+            alphaBox(36, 14, 16, 5, 0x00ffff, 0.45);
+            alphaBox(46, 9, 12, 6, 0x00ffff, 0.6);
+
+            // Inner bright core (white)
+            alphaBox(28, 20, 6, 2, 0xffffff, 0.4);
+            alphaBox(38, 15, 10, 2, 0xffffff, 0.6);
+            alphaBox(48, 11, 10, 2, 0xffffff, 0.8);
+
             // Forward front hand
-            box(34, 14, 14, 2, 0xaaaaaa); // blade pointing forward
-            box(32, 13, 2, 4, 0xffd700); // guard
-            box(29, 14, 3, 2, 0x552200); // hilt
+            box(34, 12, 18, 4, 0xcccccc); // Blade base
+            box(34, 12, 18, 1, 0xffffff); // Edge
+            box(34, 14, 18, 1, 0x777777); // Fuller
+            
+            box(32, 11, 2, 6, 0xffd700); // Guard
+            box(28, 13, 4, 2, 0x552200); // Hilt leather
+            box(27, 13, 1, 2, 0xffd700); // Pommel
+
+            // Redraw fingers over hilt
+            box(29, 13, 3, 3, handColor);
           } else {
-            // Resting in front hand
-            box(21, 6, 2, 12, 0xaaaaaa); // blade pointing up
-            box(20, 17, 4, 2, 0xffd700); // guard
-            box(21, 19, 2, 3, 0x552200); // hilt
+            // Resting in front hand, pointing forward (right)
+            // Pommel
+            box(16, 22, 2, 4, 0xffd700);
+            // Hilt
+            box(18, 23, 6, 2, 0x552200); 
+            // Guard
+            box(24, 21, 2, 6, 0xffd700);
+            
+            // Blade Base (Horizontal)
+            box(26, 22, 16, 4, 0xcccccc);
+            box(26, 22, 16, 1, 0xffffff); // Top edge shine
+            box(26, 25, 16, 1, 0x777777); // Bottom shadow
+            
+            // Tip (Curve)
+            box(42, 23, 2, 3, 0xcccccc);
+            box(42, 23, 2, 1, 0xffffff); // Top edge shine
+            box(44, 24, 2, 2, 0xcccccc);
+
+            // Redraw fingers overlapping hilt to create grip
+            box(20, 23, 3, 2, handColor);
           }
         }
       }
