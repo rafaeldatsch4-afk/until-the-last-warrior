@@ -3,6 +3,8 @@ import Phaser from "phaser";
 import { GameState } from "../types";
 import { DailyChallenges, CHALLENGES } from "../systems/DailyChallenges";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
+import { UniverseDisplay } from "../components/UniverseDisplay";
+import { UniverseInfo } from "../systems/UniverseManager";
 
 export default class MenuScene extends Phaser.Scene {
   declare registry: Phaser.Data.DataManager;
@@ -18,6 +20,7 @@ export default class MenuScene extends Phaser.Scene {
 
   private state!: GameState;
   private coinText!: Phaser.GameObjects.Text;
+  private universeDisplay!: UniverseDisplay;
   private menuItems: { over: () => void, out: () => void, click: () => void }[] = [];
   private selectedMenuIndex: number = -1;
   private navListener: any;
@@ -122,7 +125,9 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     // Title Section
-    const titleContainer = this.add.container(width - 340, height / 2 - 20); // Logo on the right side
+    const bounds = ResponsiveUtils.getSafeBounds();
+    const rightColX = Math.min(width - 340, bounds.right - 260);
+    const titleContainer = this.add.container(rightColX, height / 2 - 80); // Logo on the right side
 
     // Add postFX to main camera in Menu
     if (this.cameras.main.postFX) {
@@ -130,8 +135,8 @@ export default class MenuScene extends Phaser.Scene {
       const cm = this.cameras.main.postFX.addColorMatrix();
     }
 
-    const logoImg = this.add.image(0, 0, "utlw_logo");
-    logoImg.setScale(0.35); // Sharp rendering representing the game title and warrior
+    const logoImg = this.add.image(0, -10, "utlw_logo");
+    logoImg.setScale(0.30); // Sharp rendering representing the game title and warrior
     logoImg.setAlpha(0);
     this.tweens.add({
       targets: logoImg,
@@ -141,11 +146,11 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     const subtitle = this.add
-      .text(0, 190, "A BATALHA FINAL COMEÇA AQUI", {
-        fontSize: "20px",
+      .text(0, 125, "A BATALHA FINAL COMEÇA AQUI", {
+        fontSize: "15px",
         color: "#ffd54a",
         fontStyle: "bold",
-        letterSpacing: 4,
+        letterSpacing: 3,
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         stroke: "#000000",
         strokeThickness: 4,
@@ -166,12 +171,37 @@ export default class MenuScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: titleContainer,
-      y: titleContainer.y - 15,
+      y: titleContainer.y - 10,
       duration: 3000,
       yoyo: true,
       repeat: -1,
       ease: "Sine.easeInOut",
     });
+
+    // Universe Display Component (Current Universe showcase with thematic transition animation)
+    this.universeDisplay = new UniverseDisplay(
+      this,
+      rightColX,
+      bounds.bottom - 82,
+      (universe: UniverseInfo) => {
+        const c = Phaser.Display.Color.IntegerToColor(universe.primaryColor);
+        if (this.cameras.main) {
+          this.cameras.main.flash(220, Math.floor(c.red * 0.4), Math.floor(c.green * 0.4), Math.floor(c.blue * 0.4), true);
+        }
+        if (this.state) {
+          (this.state as any).selectedUniverse = universe.id;
+          this.registry.set("selectedUniverse", universe.id);
+        }
+      }
+    );
+
+    // Keyboard shortcuts for universe cycling
+    if (this.input.keyboard) {
+      this.input.keyboard.on("keydown-LEFT", () => this.universeDisplay?.changeUniverse(-1));
+      this.input.keyboard.on("keydown-RIGHT", () => this.universeDisplay?.changeUniverse(1));
+      this.input.keyboard.on("keydown-A", () => this.universeDisplay?.changeUniverse(-1));
+      this.input.keyboard.on("keydown-D", () => this.universeDisplay?.changeUniverse(1));
+    }
 
     // Coins Display (Top Right)
     const coinDisplay = this.add.container(width - 120, 32);
@@ -221,7 +251,6 @@ export default class MenuScene extends Phaser.Scene {
     ]);
 
     // Botões Alinhados à Esquerda (Staggered Menu)
-    const bounds = ResponsiveUtils.getSafeBounds();
     const startX = bounds.left + 40;
     const startY = 180;
     const spacing = 50;
@@ -590,6 +619,12 @@ export default class MenuScene extends Phaser.Scene {
     } else if (key === 'ArrowUp') {
       this.selectedMenuIndex = (this.selectedMenuIndex - 1 + this.menuItems.length) % this.menuItems.length;
       if (this.cache.audio.exists("sfx_step")) this.sound.play("sfx_step", { volume: 0.5 });
+    } else if (key === 'ArrowLeft' || key === 'KeyA') {
+      this.universeDisplay?.changeUniverse(-1);
+      return;
+    } else if (key === 'ArrowRight' || key === 'KeyD') {
+      this.universeDisplay?.changeUniverse(1);
+      return;
     } else if (key === 'Enter') {
       if (this.selectedMenuIndex >= 0 && this.selectedMenuIndex < this.menuItems.length) {
         this.menuItems[this.selectedMenuIndex].click();
