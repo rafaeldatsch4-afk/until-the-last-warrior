@@ -6,6 +6,7 @@ import Phaser from "phaser";
 import { INITIAL_CHARACTERS } from "../data";
 import { AchievementSystem } from "../systems/Achievements";
 import { GameState } from "../types";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 
 export default class BootScene extends Phaser.Scene {
   declare registry: Phaser.Data.DataManager;
@@ -16,6 +17,7 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create() {
+    ResponsiveUtils.init(this);
     this.cameras.main.fadeIn(300, 0, 0, 0);
     // Initialize Global Game State if it doesn't exist
     if (!window.UTLW) {
