@@ -50,9 +50,10 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: 960,
     height: 540,
+    // Renderiza em 2x (1920x1080 físico) para nitidez em telas HD, mantendo a
+    // resolução lógica em 960x540 (todos os cálculos de posição continuam iguais).
+    zoom: 2,
   },
-  // Enforce a 1920x1080 physical resolution base-layer (2x 960x540) for high-quality HD rendering
-  resolution: 2,
   fps: {
     target: 60,
   },
