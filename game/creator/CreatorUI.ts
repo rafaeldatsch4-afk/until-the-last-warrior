@@ -8,17 +8,30 @@ import {
   giColors,
 } from "./CreatorPartOptions";
 
+export type CreatorTab = "style" | "colors" | "skills";
+
 export class CreatorUI {
   private scene: Phaser.Scene;
   private onUpdate: () => void;
+  private currentTab: CreatorTab = "style";
+  private panelContainer?: Phaser.GameObjects.Container;
+  private tabButtons: Phaser.GameObjects.Container[] = [];
+  private stateRef?: CreatorState;
+
+  // Attack selection state
+  public customSp1Id: string = "";
+  public customSp1Name: string = "";
+  public customSp2Id: string = "";
+  public customSp2Name: string = "";
+  public availableSpecials: { id: string; name: string }[] = [];
+  public availableSupers: { id: string; name: string }[] = [];
 
   constructor(scene: Phaser.Scene, onUpdate: () => void) {
     this.scene = scene;
     this.onUpdate = onUpdate;
   }
 
-  // Define getColorName outside to use it locally in CreatorUI
-  private getColorName(hex: number): string {
+  public getColorName(hex: number): string {
     const map: { [key: number]: string } = {
       0xffffff: "Branco",
       0xff0000: "Vermelho",
@@ -37,249 +50,200 @@ export class CreatorUI {
       0xc68642: "Escura 2",
       0xffce9e: "Claro",
       0xe0ac69: "Médio",
-      0xf1c27d: "Amarelo",
+      0xf1c27d: "Bronze",
       0x5c3a21: "Mto Escuro",
       0x4aa37a: "Alien",
       0x1a1a1a: "Preto",
       0xe0e0e0: "Platina",
       0xffea00: "Loiro",
-      0xd92525: "Vermelho",
-      0x003399: "Azul E.",
-      0x2ecc71: "Verde E.",
-      0x9b59b6: "Roxo",
+      0xd92525: "Rubi",
+      0x003399: "Azul Escuro",
+      0x2ecc71: "Verde Esmeralda",
+      0x9b59b6: "Púrpura",
       0xff5a00: "Laranja",
-      0x111111: "Negro",
+      0x111111: "Ônix",
       0xf1c40f: "Dourado",
-      0x8e44ad: "Roxo E.",
+      0x8e44ad: "Roxo Escuro",
     };
-    return map[hex] || `#${hex.toString(16)}`;
+    return map[hex] || `#${hex.toString(16).toUpperCase()}`;
   }
 
-  public createSelector(
+  public initStudioPanel(
+    panelX: number,
+    panelY: number,
+    panelW: number,
+    panelH: number,
+    state: CreatorState,
+    specials: { id: string; name: string }[],
+    supers: { id: string; name: string }[]
+  ) {
+    this.stateRef = state;
+    this.availableSpecials = specials;
+    this.availableSupers = supers;
+
+    if (this.panelContainer) {
+      this.panelContainer.destroy();
+    }
+
+    this.panelContainer = this.scene.add.container(panelX, panelY);
+
+    // 1. Studio Card Glass Background
+    const bg = this.scene.add.graphics();
+    bg.fillStyle(0x0a0f1d, 0.88);
+    bg.fillRoundedRect(0, 0, panelW, panelH, 12);
+    bg.lineStyle(1.5, 0x1e293b, 0.9);
+    bg.strokeRoundedRect(0, 0, panelW, panelH, 12);
+
+    // Corner accents
+    bg.lineStyle(2, 0x38bdf8, 0.7);
+    const bLen = 14;
+    // Top-Left
+    bg.moveTo(0, bLen).lineTo(0, 0).lineTo(bLen, 0);
+    // Top-Right
+    bg.moveTo(panelW - bLen, 0).lineTo(panelW, 0).lineTo(panelW, bLen);
+    // Bottom-Left
+    bg.moveTo(0, panelH - bLen).lineTo(0, panelH).lineTo(bLen, panelH);
+    // Bottom-Right
+    bg.moveTo(panelW - bLen, panelH).lineTo(panelW, panelH).lineTo(panelW, panelH - bLen);
+    bg.strokePath();
+
+    this.panelContainer.add(bg);
+
+    // 2. Tab Switcher Header
+    const tabH = 36;
+    const tabY = 16;
+    const tabWidth = (panelW - 32) / 3;
+
+    this.tabButtons = [];
+
+    const tabs: { key: CreatorTab; label: string; icon: string }[] = [
+      { key: "style", label: "ESTILO & PEÇAS", icon: "👕" },
+      { key: "colors", label: "PALETA & CORES", icon: "🎨" },
+      { key: "skills", label: "GOLPES & MAGIAS", icon: "⚡" },
+    ];
+
+    tabs.forEach((tab, index) => {
+      const tabX = 16 + index * tabWidth + tabWidth / 2;
+      const tabBtn = this.createTabButton(
+        tabX,
+        tabY + tabH / 2,
+        tabWidth - 6,
+        tabH,
+        `${tab.icon} ${tab.label}`,
+        tab.key === this.currentTab,
+        () => {
+          this.currentTab = tab.key;
+          this.refreshTabs(panelW, panelH);
+        }
+      );
+      this.tabButtons.push(tabBtn);
+      this.panelContainer!.add(tabBtn);
+    });
+
+    // Content container
+    this.renderCurrentTabContent(panelW, panelH);
+  }
+
+  private createTabButton(
     x: number,
     y: number,
-    getLabel: () => string,
-    onPrev: () => void,
-    onNext: () => void,
-    width: number = 140,
-  ) {
-    const bg = this.scene.add
-      .rectangle(x, y, width, 30, 0x1a252f, 0.8)
-      .setStrokeStyle(1, 0x34495e);
-    
-    // Add glow effect on hover for the entire selector
-    const glow = this.scene.add
-      .rectangle(x, y, width, 30, 0x3498db, 0.2)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setAlpha(0);
-      
+    w: number,
+    h: number,
+    label: string,
+    isActive: boolean,
+    onClick: () => void
+  ): Phaser.GameObjects.Container {
+    const container = this.scene.add.container(x, y);
+
+    const bg = this.scene.add.graphics();
+    this.drawTabBg(bg, w, h, isActive, false);
+
     const txt = this.scene.add
-      .text(x, y, getLabel(), {
-        fontSize: "13px",
-        fontFamily: "system-ui",
-        color: "#ecf0f1",
+      .text(0, 0, label, {
+        fontSize: "11px",
+        fontStyle: "bold",
+        color: isActive ? "#38bdf8" : "#94a3b8",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        letterSpacing: 0.5,
+        resolution: 2,
       })
       .setOrigin(0.5);
 
-    const btnL = this.scene.add
-      .text(x - width / 2 + 15, y, "<", {
-        fontSize: "18px",
-        color: "#3498db",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .on("pointerdown", () => {
-        onPrev();
-        txt.setText(getLabel());
-        this.onUpdate();
-        this.scene.tweens.add({ targets: btnL, scale: 0.8, yoyo: true, duration: 50 });
-      })
-      .on("pointerover", () => {
-         btnL.setColor("#f1c40f").setScale(1.2);
-         this.scene.tweens.add({ targets: glow, alpha: 1, duration: 200 });
-         bg.setStrokeStyle(1, 0x3498db);
-      })
-      .on("pointerout", () => {
-         btnL.setColor("#3498db").setScale(1);
-         this.scene.tweens.add({ targets: glow, alpha: 0, duration: 200 });
-         bg.setStrokeStyle(1, 0x34495e);
-      });
+    const hit = this.scene.add
+      .rectangle(0, 0, w, h, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
 
-    const btnR = this.scene.add
-      .text(x + width / 2 - 15, y, ">", {
-        fontSize: "18px",
-        color: "#3498db",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .on("pointerdown", () => {
-        onNext();
-        txt.setText(getLabel());
-        this.onUpdate();
-        this.scene.tweens.add({ targets: btnR, scale: 0.8, yoyo: true, duration: 50 });
-      })
-      .on("pointerover", () => {
-         btnR.setColor("#f1c40f").setScale(1.2);
-         this.scene.tweens.add({ targets: glow, alpha: 1, duration: 200 });
-         bg.setStrokeStyle(1, 0x3498db);
-      })
-      .on("pointerout", () => {
-         btnR.setColor("#3498db").setScale(1);
-         this.scene.tweens.add({ targets: glow, alpha: 0, duration: 200 });
-         bg.setStrokeStyle(1, 0x34495e);
-      });
+    hit.on("pointerover", () => {
+      if (this.currentTab !== label) {
+        this.drawTabBg(bg, w, h, isActive, true);
+        txt.setColor("#ffffff");
+      }
+    });
 
-    return txt;
+    hit.on("pointerout", () => {
+      this.drawTabBg(bg, w, h, isActive, false);
+      txt.setColor(isActive ? "#38bdf8" : "#94a3b8");
+    });
+
+    hit.on("pointerdown", () => {
+      onClick();
+    });
+
+    container.add([bg, txt, hit]);
+    return container;
   }
 
-  public showAttackSelectModal(
-    isSuper: boolean,
-    specials: { id: string; name: string }[],
-    supers: { id: string; name: string }[],
-    onSelect: (id: string, name: string) => void,
+  private drawTabBg(
+    graphics: Phaser.GameObjects.Graphics,
+    w: number,
+    h: number,
+    isActive: boolean,
+    isHover: boolean
   ) {
-    const bg = this.scene.add
-      .rectangle(480, 270, 960, 540, 0x000000, 0.8)
-      .setInteractive()
-      .setDepth(100);
-    const panel = this.scene.add
-      .rectangle(480, 270, 560, 480, 0x2c3e50)
-      .setStrokeStyle(4, 0x34495e)
-      .setDepth(100);
-    const title = this.scene.add
-      .text(
-        480,
-        60,
-        isSuper ? "Selecionar Especial 2 (Super)" : "Selecionar Especial 1",
-        { fontSize: "24px", fontStyle: "bold", fontFamily: "system-ui" },
-      )
-      .setOrigin(0.5)
-      .setDepth(100);
-
-    const listContainer = this.scene.add.container(230, 100).setDepth(100);
-    const list = isSuper ? supers : specials;
-
-    let currentPage = 0;
-    const itemsPerPage = 14;
-    const totalPages = Math.ceil(list.length / itemsPerPage);
-
-    let cancelBtn: Phaser.GameObjects.Rectangle;
-    let cancelTxt: Phaser.GameObjects.Text;
-    let prevBtn: Phaser.GameObjects.Rectangle | undefined;
-    let prevTxt: Phaser.GameObjects.Text | undefined;
-    let nextBtn: Phaser.GameObjects.Rectangle | undefined;
-    let nextTxt: Phaser.GameObjects.Text | undefined;
-    let pageTxt: Phaser.GameObjects.Text | undefined;
-
-    const cleanup = () => {
-      bg.destroy();
-      panel.destroy();
-      title.destroy();
-      listContainer.destroy();
-      cancelBtn.destroy();
-      cancelTxt.destroy();
-      if (prevBtn) {
-        prevBtn.destroy();
-        prevTxt!.destroy();
-        nextBtn!.destroy();
-        nextTxt!.destroy();
-        pageTxt!.destroy();
-      }
-    };
-
-    const renderPage = () => {
-      listContainer.removeAll(true);
-      const startStr = currentPage * itemsPerPage;
-      const pageItems = list.slice(startStr, startStr + itemsPerPage);
-
-      pageItems.forEach((atk, i) => {
-        const col = i % 2;
-        const row = Math.floor(i / 2);
-        const btn = this.scene.add
-          .rectangle(col * 260 + 120, row * 45, 240, 35, 0x34495e)
-          .setInteractive({ useHandCursor: true });
-        const txt = this.scene.add
-          .text(col * 260 + 120, row * 45, atk.name, {
-            fontSize: "14px",
-            fontFamily: "system-ui",
-          })
-          .setOrigin(0.5);
-
-        btn.on("pointerover", () => btn.setFillStyle(0x2980b9));
-        btn.on("pointerout", () => btn.setFillStyle(0x34495e));
-        btn.on("pointerdown", () => {
-          onSelect(atk.id, atk.name);
-          cleanup();
-        });
-
-        listContainer.add([btn, txt]);
-      });
-    };
-
-    cancelBtn = this.scene.add
-      .rectangle(480, 490, 200, 30, 0xe74c3c)
-      .setInteractive({ useHandCursor: true })
-      .setDepth(100);
-    cancelTxt = this.scene.add
-      .text(480, 490, "CANCELAR", {
-        fontSize: "18px",
-        fontStyle: "bold",
-        fontFamily: "system-ui",
-      })
-      .setOrigin(0.5)
-      .setDepth(100);
-    cancelBtn.on("pointerdown", cleanup);
-
-    prevBtn = this.scene.add
-      .rectangle(330, 440, 80, 30, 0x7f8c8d)
-      .setInteractive({ useHandCursor: true })
-      .setDepth(100);
-    prevTxt = this.scene.add
-      .text(330, 440, "< ANT", { fontSize: "16px", fontFamily: "system-ui" })
-      .setOrigin(0.5)
-      .setDepth(100);
-    nextBtn = this.scene.add
-      .rectangle(630, 440, 80, 30, 0x7f8c8d)
-      .setInteractive({ useHandCursor: true })
-      .setDepth(100);
-    nextTxt = this.scene.add
-      .text(630, 440, "PROX >", { fontSize: "16px", fontFamily: "system-ui" })
-      .setOrigin(0.5)
-      .setDepth(100);
-    pageTxt = this.scene.add
-      .text(480, 440, `Pág 1/${totalPages}`, {
-        fontSize: "16px",
-        fontFamily: "system-ui",
-      })
-      .setOrigin(0.5)
-      .setDepth(100);
-
-    prevBtn.on("pointerdown", () => {
-      if (currentPage > 0) {
-        currentPage--;
-        renderPage();
-        pageTxt!.setText(`Pág ${currentPage + 1}/${totalPages}`);
-      }
-    });
-    nextBtn.on("pointerdown", () => {
-      if (currentPage < totalPages - 1) {
-        currentPage++;
-        renderPage();
-        pageTxt!.setText(`Pág ${currentPage + 1}/${totalPages}`);
-      }
-    });
-
-    renderPage();
+    graphics.clear();
+    if (isActive) {
+      graphics.fillStyle(0x0f2942, 0.95);
+      graphics.fillRoundedRect(-w / 2, -h / 2, w, h, 6);
+      graphics.lineStyle(1.5, 0x38bdf8, 1);
+      graphics.strokeRoundedRect(-w / 2, -h / 2, w, h, 6);
+    } else {
+      graphics.fillStyle(isHover ? 0x1e293b : 0x0f172a, 0.8);
+      graphics.fillRoundedRect(-w / 2, -h / 2, w, h, 6);
+      graphics.lineStyle(1, isHover ? 0x475569 : 0x1e293b, 0.8);
+      graphics.strokeRoundedRect(-w / 2, -h / 2, w, h, 6);
+    }
   }
 
-  public buildAllSelectors(state: CreatorState) {
-    const col1X = 140; // Parts
-    const col2X = 310; // Col 1
-    const col3X = 460; // Col 2
+  private refreshTabs(panelW: number, panelH: number) {
+    if (!this.stateRef) return;
+    this.initStudioPanel(
+      this.panelContainer!.x,
+      this.panelContainer!.y,
+      panelW,
+      panelH,
+      this.stateRef,
+      this.availableSpecials,
+      this.availableSupers
+    );
+  }
 
-    let currY = 150;
+  private renderCurrentTabContent(panelW: number, panelH: number) {
+    if (!this.stateRef) return;
+    const contentContainer = this.scene.add.container(0, 68);
+    this.panelContainer!.add(contentContainer);
+
+    if (this.currentTab === "style") {
+      this.renderStyleTab(contentContainer, panelW);
+    } else if (this.currentTab === "colors") {
+      this.renderColorsTab(contentContainer, panelW);
+    } else if (this.currentTab === "skills") {
+      this.renderSkillsTab(contentContainer, panelW);
+    }
+  }
+
+  // --- TAB 1: ESTILO & PEÇAS ---
+  private renderStyleTab(container: Phaser.GameObjects.Container, panelW: number) {
+    const state = this.stateRef!;
 
     const getHeadName = (id: string) => {
       const map: { [key: string]: string } = {
@@ -304,7 +268,7 @@ export class CreatorUI {
         vegeta: "Armadura Saiyajin",
         saitama: "Uniforme Herói",
         chapolim: "Uniforme CH",
-        muscle: "Sem Camisa",
+        muscle: "Sem Camisa (Músculos)",
         naruto: "Jaqueta Shinobi",
         sasuke: "Gola Alta Uchiha",
         luffy: "Colete Pirata",
@@ -322,7 +286,7 @@ export class CreatorUI {
         chapolim: "Bermuda CH",
         naruto: "Calça Shinobi",
         sasuke: "Hakama Uchiha",
-        luffy: "Jeans Pirata",
+        luffy: "Shorts Jeans Pirata",
       };
       return map[id] || id;
     };
@@ -334,17 +298,17 @@ export class CreatorUI {
         chapolim: "Tênis Retrô",
         saitama: "Botas Herói",
         vegeta: "Botas Saiyajin",
-        jotaro: "Sapatos Couro",
+        jotaro: "Sapatos de Couro",
         naruto: "Sandálias Ninja",
         sasuke: "Sandálias Ninja",
-        luffy: "Sandálias Palha",
+        luffy: "Sandálias de Palha",
       };
       return map[id] || id;
     };
 
     const getAccName = (id: string) => {
       const map: { [key: string]: string } = {
-        none: "Nenhum",
+        none: "Nenhum Acessório",
         straw_hat: "Chapéu de Palha",
         sword: "Katana Suprema",
         headband: "Bandana Ninja",
@@ -355,151 +319,631 @@ export class CreatorUI {
       return map[id] || id;
     };
 
-    // Body
-    this.createSelector(
-      col1X,
-      currY,
-      () => `Pele: ${this.getColorName(skinColors[state.p_idx.skin])}`,
-      () => state.prevColor("skin", skinColors),
-      () => state.nextColor("skin", skinColors),
-      150
+    const rows = [
+      {
+        label: "CABEÇA / ROSTO",
+        icon: "👤",
+        getVal: () => getHeadName(partOptions.head[state.style_idx.head]),
+        onPrev: () => state.prevPart("head", partOptions.head),
+        onNext: () => state.nextPart("head", partOptions.head),
+      },
+      {
+        label: "TRONCO / TRAJE",
+        icon: "🥋",
+        getVal: () => getTorsoName(partOptions.torso[state.style_idx.torso]),
+        onPrev: () => state.prevPart("torso", partOptions.torso),
+        onNext: () => state.nextPart("torso", partOptions.torso),
+      },
+      {
+        label: "PERNAS / CALÇA",
+        icon: "👖",
+        getVal: () => getLegsName(partOptions.legs[state.style_idx.legs]),
+        onPrev: () => state.prevPart("legs", partOptions.legs),
+        onNext: () => state.nextPart("legs", partOptions.legs),
+      },
+      {
+        label: "PÉS / CALÇADO",
+        icon: "🥾",
+        getVal: () => getFeetName(partOptions.feet[state.style_idx.feet]),
+        onPrev: () => state.prevPart("feet", partOptions.feet),
+        onNext: () => state.nextPart("feet", partOptions.feet),
+      },
+      {
+        label: "ACESSÓRIO EXTRA",
+        icon: "⚔️",
+        getVal: () => getAccName(partOptions.accessory[state.style_idx.accessory]),
+        onPrev: () => state.prevPart("accessory", partOptions.accessory),
+        onNext: () => state.nextPart("accessory", partOptions.accessory),
+      },
+    ];
+
+    const rowH = 62;
+    const startY = 12;
+
+    rows.forEach((row, idx) => {
+      const rowY = startY + idx * rowH;
+
+      // Row Container
+      const rowBox = this.scene.add.graphics();
+      rowBox.fillStyle(0x0f172a, 0.7);
+      rowBox.fillRoundedRect(16, rowY, panelW - 32, 54, 8);
+      rowBox.lineStyle(1, 0x1e293b, 0.8);
+      rowBox.strokeRoundedRect(16, rowY, panelW - 32, 54, 8);
+
+      // Label
+      const txtLabel = this.scene.add
+        .text(32, rowY + 27, `${row.icon} ${row.label}`, {
+          fontSize: "12px",
+          fontStyle: "bold",
+          color: "#94a3b8",
+          fontFamily: "system-ui, sans-serif",
+          resolution: 2,
+        })
+        .setOrigin(0, 0.5);
+
+      // Selector Pill on the right
+      const pillW = Math.min(270, panelW - 200);
+      const pillX = panelW - 24 - pillW / 2;
+      const pillY = rowY + 27;
+
+      const pillBg = this.scene.add.graphics();
+      pillBg.fillStyle(0x1e293b, 0.95);
+      pillBg.fillRoundedRect(pillX - pillW / 2, pillY - 18, pillW, 36, 6);
+      pillBg.lineStyle(1.5, 0x334155, 0.9);
+      pillBg.strokeRoundedRect(pillX - pillW / 2, pillY - 18, pillW, 36, 6);
+
+      const valTxt = this.scene.add
+        .text(pillX, pillY, row.getVal(), {
+          fontSize: "12px",
+          fontStyle: "bold",
+          color: "#f8fafc",
+          fontFamily: "system-ui, sans-serif",
+          resolution: 2,
+        })
+        .setOrigin(0.5);
+
+      // Left Arrow
+      const arrowL = this.scene.add
+        .text(pillX - pillW / 2 + 16, pillY, "◀", {
+          fontSize: "13px",
+          color: "#38bdf8",
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+
+      arrowL.on("pointerdown", () => {
+        row.onPrev();
+        valTxt.setText(row.getVal());
+        this.onUpdate();
+      });
+      arrowL.on("pointerover", () => arrowL.setColor("#facc15").setScale(1.2));
+      arrowL.on("pointerout", () => arrowL.setColor("#38bdf8").setScale(1));
+
+      // Right Arrow
+      const arrowR = this.scene.add
+        .text(pillX + pillW / 2 - 16, pillY, "▶", {
+          fontSize: "13px",
+          color: "#38bdf8",
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+
+      arrowR.on("pointerdown", () => {
+        row.onNext();
+        valTxt.setText(row.getVal());
+        this.onUpdate();
+      });
+      arrowR.on("pointerover", () => arrowR.setColor("#facc15").setScale(1.2));
+      arrowR.on("pointerout", () => arrowR.setColor("#38bdf8").setScale(1));
+
+      container.add([rowBox, txtLabel, pillBg, valTxt, arrowL, arrowR]);
+    });
+  }
+
+  // --- TAB 2: PALETA & CORES ---
+  private renderColorsTab(container: Phaser.GameObjects.Container, panelW: number) {
+    const state = this.stateRef!;
+
+    const colorItems = [
+      {
+        label: "Tom de Pele",
+        getHex: () => skinColors[state.p_idx.skin],
+        onPrev: () => state.prevColor("skin", skinColors),
+        onNext: () => state.nextColor("skin", skinColors),
+      },
+      {
+        label: "Cabelo",
+        getHex: () => hairColors[state.p_idx.hair],
+        onPrev: () => state.prevColor("hair", hairColors),
+        onNext: () => state.nextColor("hair", hairColors),
+      },
+      {
+        label: "Tronco - Primária",
+        getHex: () => giColors[state.p_idx.torso_1],
+        onPrev: () => state.prevColor("torso_1", giColors),
+        onNext: () => state.nextColor("torso_1", giColors),
+      },
+      {
+        label: "Tronco - Secundária",
+        getHex: () => giColors[state.p_idx.torso_2],
+        onPrev: () => state.prevColor("torso_2", giColors),
+        onNext: () => state.nextColor("torso_2", giColors),
+      },
+      {
+        label: "Pernas - Primária",
+        getHex: () => giColors[state.p_idx.legs_1],
+        onPrev: () => state.prevColor("legs_1", giColors),
+        onNext: () => state.nextColor("legs_1", giColors),
+      },
+      {
+        label: "Pernas - Secundária",
+        getHex: () => giColors[state.p_idx.legs_2],
+        onPrev: () => state.prevColor("legs_2", giColors),
+        onNext: () => state.nextColor("legs_2", giColors),
+      },
+      {
+        label: "Pés / Botas",
+        getHex: () => giColors[state.p_idx.feet_1],
+        onPrev: () => state.prevColor("feet_1", giColors),
+        onNext: () => state.nextColor("feet_1", giColors),
+      },
+      {
+        label: "Acessório",
+        getHex: () => giColors[state.p_idx.acc_1],
+        onPrev: () => state.prevColor("acc_1", giColors),
+        onNext: () => state.nextColor("acc_1", giColors),
+      },
+    ];
+
+    const colW = (panelW - 44) / 2;
+    const cardH = 68;
+
+    colorItems.forEach((item, index) => {
+      const col = index % 2;
+      const row = Math.floor(index / 2);
+      const cardX = 16 + col * (colW + 12);
+      const cardY = 8 + row * (cardH + 8);
+
+      const card = this.scene.add.graphics();
+      card.fillStyle(0x0f172a, 0.8);
+      card.fillRoundedRect(cardX, cardY, colW, cardH, 8);
+      card.lineStyle(1, 0x1e293b, 0.8);
+      card.strokeRoundedRect(cardX, cardY, colW, cardH, 8);
+
+      // Title
+      const titleTxt = this.scene.add
+        .text(cardX + 12, cardY + 16, item.label, {
+          fontSize: "11px",
+          fontStyle: "bold",
+          color: "#94a3b8",
+          fontFamily: "system-ui, sans-serif",
+          resolution: 2,
+        })
+        .setOrigin(0, 0.5);
+
+      // Color Swatch Box
+      const swatch = this.scene.add.graphics();
+      const drawSwatch = () => {
+        swatch.clear();
+        swatch.fillStyle(item.getHex(), 1);
+        swatch.fillRoundedRect(cardX + 12, cardY + 32, 22, 22, 4);
+        swatch.lineStyle(1, 0xffffff, 0.6);
+        swatch.strokeRoundedRect(cardX + 12, cardY + 32, 22, 22, 4);
+      };
+      drawSwatch();
+
+      // Color Name & Selector Pill
+      const pillW = colW - 50;
+      const pillCenterX = cardX + 42 + pillW / 2;
+      const pillCenterY = cardY + 43;
+
+      const pillBg = this.scene.add.graphics();
+      pillBg.fillStyle(0x1e293b, 0.9);
+      pillBg.fillRoundedRect(cardX + 40, cardY + 32, pillW, 22, 4);
+      pillBg.lineStyle(1, 0x334155, 0.7);
+      pillBg.strokeRoundedRect(cardX + 40, cardY + 32, pillW, 22, 4);
+
+      const colorTxt = this.scene.add
+        .text(pillCenterX, pillCenterY, this.getColorName(item.getHex()), {
+          fontSize: "11px",
+          fontStyle: "bold",
+          color: "#f8fafc",
+          fontFamily: "system-ui, sans-serif",
+          resolution: 2,
+        })
+        .setOrigin(0.5);
+
+      // Left Arrow
+      const arrowL = this.scene.add
+        .text(cardX + 48, pillCenterY, "◀", {
+          fontSize: "10px",
+          color: "#38bdf8",
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+
+      arrowL.on("pointerdown", () => {
+        item.onPrev();
+        drawSwatch();
+        colorTxt.setText(this.getColorName(item.getHex()));
+        this.onUpdate();
+      });
+
+      // Right Arrow
+      const arrowR = this.scene.add
+        .text(cardX + 40 + pillW - 8, pillCenterY, "▶", {
+          fontSize: "10px",
+          color: "#38bdf8",
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+
+      arrowR.on("pointerdown", () => {
+        item.onNext();
+        drawSwatch();
+        colorTxt.setText(this.getColorName(item.getHex()));
+        this.onUpdate();
+      });
+
+      container.add([card, titleTxt, swatch, pillBg, colorTxt, arrowL, arrowR]);
+    });
+  }
+
+  // --- TAB 3: GOLPES & MAGIAS ---
+  private renderSkillsTab(container: Phaser.GameObjects.Container, panelW: number) {
+    const cardW = panelW - 32;
+    const cardH = 120;
+
+    // Card 1: Especial 1
+    const sp1CardY = 14;
+    const sp1Card = this.scene.add.graphics();
+    sp1Card.fillStyle(0x0f172a, 0.85);
+    sp1Card.fillRoundedRect(16, sp1CardY, cardW, cardH, 10);
+    sp1Card.lineStyle(1.5, 0x0284c7, 0.9);
+    sp1Card.strokeRoundedRect(16, sp1CardY, cardW, cardH, 10);
+
+    const sp1Tag = this.scene.add
+      .text(32, sp1CardY + 22, "⚡ GOLPE ESPECIAL 1", {
+        fontSize: "12px",
+        fontStyle: "900",
+        color: "#38bdf8",
+        letterSpacing: 1,
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
+
+    const sp1NameTxt = this.scene.add
+      .text(32, sp1CardY + 56, this.customSp1Name || "Kamehameha", {
+        fontSize: "18px",
+        fontStyle: "bold",
+        color: "#ffffff",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
+
+    const sp1Desc = this.scene.add
+      .text(32, sp1CardY + 84, "Ataque rápido de energia concentrada com dano moderado.", {
+        fontSize: "11px",
+        color: "#94a3b8",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
+
+    const sp1Btn = this.createCompactButton(
+      panelW - 90,
+      sp1CardY + 56,
+      110,
+      36,
+      "ALTERAR",
+      0x0284c7,
+      () => {
+        this.showAttackSelectModal(false, this.availableSpecials, this.availableSupers, (id, name) => {
+          this.customSp1Id = id;
+          this.customSp1Name = name;
+          sp1NameTxt.setText(name);
+          this.onUpdate();
+        });
+      }
     );
 
-    this.createSelector(
-      col2X,
-      currY,
-      () => `Cab.: ${this.getColorName(hairColors[state.p_idx.hair])}`,
-      () => state.prevColor("hair", hairColors),
-      () => state.nextColor("hair", hairColors),
-      130
-    );
-    currY += 40;
+    // Card 2: Super Especial 2
+    const sp2CardY = sp1CardY + cardH + 16;
+    const sp2Card = this.scene.add.graphics();
+    sp2Card.fillStyle(0x0f172a, 0.85);
+    sp2Card.fillRoundedRect(16, sp2CardY, cardW, cardH, 10);
+    sp2Card.lineStyle(1.5, 0xeab308, 0.9);
+    sp2Card.strokeRoundedRect(16, sp2CardY, cardW, cardH, 10);
 
-    // Head
-    this.createSelector(
-      col1X,
-      currY,
-      () => `Cabeça: ${getHeadName(partOptions.head[state.style_idx.head])}`,
-      () => state.prevPart("head", partOptions.head),
-      () => state.nextPart("head", partOptions.head),
-      150
-    );
-    this.createSelector(
-      col2X,
-      currY,
-      () => `Cor 1: ${this.getColorName(giColors[state.p_idx.head_1])}`,
-      () => state.prevColor("head_1", giColors),
-      () => state.nextColor("head_1", giColors),
-      130
-    );
-    this.createSelector(
-      col3X,
-      currY,
-      () => `Cor 2: ${this.getColorName(giColors[state.p_idx.head_2])}`,
-      () => state.prevColor("head_2", giColors),
-      () => state.nextColor("head_2", giColors),
-      130
-    );
-    currY += 40;
+    const sp2Tag = this.scene.add
+      .text(32, sp2CardY + 22, "🔥 SUPER GOLPE SUPREMO (ULTIMATE)", {
+        fontSize: "12px",
+        fontStyle: "900",
+        color: "#facc15",
+        letterSpacing: 1,
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
 
-    // Torso
-    this.createSelector(
-      col1X,
-      currY,
-      () => `Tronco: ${getTorsoName(partOptions.torso[state.style_idx.torso])}`,
-      () => state.prevPart("torso", partOptions.torso),
-      () => state.nextPart("torso", partOptions.torso),
-      150
-    );
-    this.createSelector(
-      col2X,
-      currY,
-      () => `Cor 1: ${this.getColorName(giColors[state.p_idx.torso_1])}`,
-      () => state.prevColor("torso_1", giColors),
-      () => state.nextColor("torso_1", giColors),
-      130
-    );
-    this.createSelector(
-      col3X,
-      currY,
-      () => `Cor 2: ${this.getColorName(giColors[state.p_idx.torso_2])}`,
-      () => state.prevColor("torso_2", giColors),
-      () => state.nextColor("torso_2", giColors),
-      130
+    const sp2NameTxt = this.scene.add
+      .text(32, sp2CardY + 56, this.customSp2Name || "Spirit Bomb", {
+        fontSize: "18px",
+        fontStyle: "bold",
+        color: "#fef08a",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
+
+    const sp2Desc = this.scene.add
+      .text(32, sp2CardY + 84, "Ataque devastador em área consumindo barra cheia de Ki.", {
+        fontSize: "11px",
+        color: "#94a3b8",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
+
+    const sp2Btn = this.createCompactButton(
+      panelW - 90,
+      sp2CardY + 56,
+      110,
+      36,
+      "ALTERAR",
+      0xca8a04,
+      () => {
+        this.showAttackSelectModal(true, this.availableSpecials, this.availableSupers, (id, name) => {
+          this.customSp2Id = id;
+          this.customSp2Name = name;
+          sp2NameTxt.setText(name);
+          this.onUpdate();
+        });
+      }
     );
 
-    currY += 40;
+    container.add([
+      sp1Card,
+      sp1Tag,
+      sp1NameTxt,
+      sp1Desc,
+      sp1Btn,
+      sp2Card,
+      sp2Tag,
+      sp2NameTxt,
+      sp2Desc,
+      sp2Btn,
+    ]);
+  }
 
-    // Legs
-    this.createSelector(
-      col1X,
-      currY,
-      () => `Pernas: ${getLegsName(partOptions.legs[state.style_idx.legs])}`,
-      () => state.prevPart("legs", partOptions.legs),
-      () => state.nextPart("legs", partOptions.legs),
-      150
-    );
-    this.createSelector(
-      col2X,
-      currY,
-      () => `Cor 1: ${this.getColorName(giColors[state.p_idx.legs_1])}`,
-      () => state.prevColor("legs_1", giColors),
-      () => state.nextColor("legs_1", giColors),
-      130
-    );
-    this.createSelector(
-      col3X,
-      currY,
-      () => `Cor 2: ${this.getColorName(giColors[state.p_idx.legs_2])}`,
-      () => state.prevColor("legs_2", giColors),
-      () => state.nextColor("legs_2", giColors),
-      130
-    );
-    currY += 40;
+  private createCompactButton(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    label: string,
+    colorHex: number,
+    onClick: () => void
+  ): Phaser.GameObjects.Container {
+    const container = this.scene.add.container(x, y);
 
-    // Feet
-    this.createSelector(
-      col1X,
-      currY,
-      () => `Pés: ${getFeetName(partOptions.feet[state.style_idx.feet])}`,
-      () => state.prevPart("feet", partOptions.feet),
-      () => state.nextPart("feet", partOptions.feet),
-      150
-    );
-    this.createSelector(
-      col2X,
-      currY,
-      () => `Cor 1: ${this.getColorName(giColors[state.p_idx.feet_1])}`,
-      () => state.prevColor("feet_1", giColors),
-      () => state.nextColor("feet_1", giColors),
-      130
-    );
-    this.createSelector(
-      col3X,
-      currY,
-      () => `Cor 2: ${this.getColorName(giColors[state.p_idx.feet_2])}`,
-      () => state.prevColor("feet_2", giColors),
-      () => state.nextColor("feet_2", giColors),
-      130
-    );
-    currY += 40;
+    const bg = this.scene.add.graphics();
+    const drawBtn = (isHover: boolean) => {
+      bg.clear();
+      bg.fillStyle(isHover ? colorHex : 0x1e293b, 0.95);
+      bg.fillRoundedRect(-w / 2, -h / 2, w, h, 6);
+      bg.lineStyle(1.5, isHover ? 0xffffff : colorHex, 0.9);
+      bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 6);
+    };
+    drawBtn(false);
 
-    // Accessory
-    this.createSelector(
-      col1X,
-      currY,
-      () => `Aces.: ${getAccName(partOptions.accessory[state.style_idx.accessory])}`,
-      () => state.prevPart("accessory", partOptions.accessory),
-      () => state.nextPart("accessory", partOptions.accessory),
-      150
+    const txt = this.scene.add
+      .text(0, 0, label, {
+        fontSize: "12px",
+        fontStyle: "bold",
+        color: "#ffffff",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    const hit = this.scene.add
+      .rectangle(0, 0, w, h, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+
+    hit.on("pointerover", () => {
+      drawBtn(true);
+      this.scene.tweens.add({ targets: container, scale: 1.05, duration: 100 });
+    });
+    hit.on("pointerout", () => {
+      drawBtn(false);
+      this.scene.tweens.add({ targets: container, scale: 1, duration: 100 });
+    });
+    hit.on("pointerdown", () => {
+      onClick();
+    });
+
+    container.add([bg, txt, hit]);
+    return container;
+  }
+
+  public showAttackSelectModal(
+    isSuper: boolean,
+    specials: { id: string; name: string }[],
+    supers: { id: string; name: string }[],
+    onSelect: (id: string, name: string) => void
+  ) {
+    const { width, height } = this.scene.cameras.main;
+    const modalContainer = this.scene.add.container(0, 0).setDepth(1000);
+
+    const backdrop = this.scene.add
+      .rectangle(width / 2, height / 2, width, height, 0x000000, 0.8)
+      .setInteractive();
+
+    const panelW = 580;
+    const panelH = 430;
+    const panelX = width / 2;
+    const panelY = height / 2;
+
+    const panelBg = this.scene.add.graphics();
+    panelBg.fillStyle(0x0a0f1d, 0.98);
+    panelBg.fillRoundedRect(panelX - panelW / 2, panelY - panelH / 2, panelW, panelH, 12);
+    panelBg.lineStyle(2, isSuper ? 0xeab308 : 0x0284c7, 1);
+    panelBg.strokeRoundedRect(panelX - panelW / 2, panelY - panelH / 2, panelW, panelH, 12);
+
+    const title = this.scene.add
+      .text(
+        panelX,
+        panelY - panelH / 2 + 28,
+        isSuper ? "🔥 SELECIONAR SUPER GOLPE" : "⚡ SELECIONAR GOLPE ESPECIAL",
+        {
+          fontSize: "17px",
+          fontStyle: "900",
+          color: isSuper ? "#facc15" : "#38bdf8",
+          fontFamily: "system-ui, sans-serif",
+          letterSpacing: 1,
+          resolution: 2,
+        }
+      )
+      .setOrigin(0.5);
+
+    // Close Button
+    const closeBtn = this.scene.add
+      .text(panelX + panelW / 2 - 24, panelY - panelH / 2 + 24, "✕", {
+        fontSize: "18px",
+        fontStyle: "bold",
+        color: "#94a3b8",
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    closeBtn.on("pointerover", () => closeBtn.setColor("#ef4444"));
+    closeBtn.on("pointerout", () => closeBtn.setColor("#94a3b8"));
+    closeBtn.on("pointerdown", () => modalContainer.destroy());
+
+    const list = isSuper ? supers : specials;
+    const itemsPerPage = 8;
+    let currentPage = 0;
+    const totalPages = Math.ceil(list.length / itemsPerPage);
+
+    const gridContainer = this.scene.add.container(0, 0);
+
+    const renderGrid = () => {
+      gridContainer.removeAll(true);
+      const startIdx = currentPage * itemsPerPage;
+      const pageItems = list.slice(startIdx, startIdx + itemsPerPage);
+
+      const cols = 2;
+      const btnW = 250;
+      const btnH = 48;
+      const gapX = 18;
+      const gapY = 12;
+      const gridStartX = panelX - (cols * btnW + (cols - 1) * gapX) / 2 + btnW / 2;
+      const gridStartY = panelY - 110;
+
+      pageItems.forEach((item, idx) => {
+        const c = idx % cols;
+        const r = Math.floor(idx / cols);
+        const bx = gridStartX + c * (btnW + gapX);
+        const by = gridStartY + r * (btnH + gapY);
+
+        const card = this.scene.add.container(bx, by);
+
+        const bBg = this.scene.add.graphics();
+        bBg.fillStyle(0x0f172a, 0.9);
+        bBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+        bBg.lineStyle(1, 0x1e293b, 0.9);
+        bBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+
+        const bTxt = this.scene.add
+          .text(0, 0, item.name, {
+            fontSize: "13px",
+            fontStyle: "bold",
+            color: "#f8fafc",
+            fontFamily: "system-ui, sans-serif",
+            resolution: 2,
+          })
+          .setOrigin(0.5);
+
+        const hit = this.scene.add
+          .rectangle(0, 0, btnW, btnH, 0x000000, 0)
+          .setInteractive({ useHandCursor: true });
+
+        hit.on("pointerover", () => {
+          bBg.clear();
+          bBg.fillStyle(isSuper ? 0x2e2008 : 0x0c2742, 1);
+          bBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+          bBg.lineStyle(1.5, isSuper ? 0xfacc15 : 0x38bdf8, 1);
+          bBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+          bTxt.setColor(isSuper ? "#fef08a" : "#7dd3fc");
+        });
+
+        hit.on("pointerout", () => {
+          bBg.clear();
+          bBg.fillStyle(0x0f172a, 0.9);
+          bBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+          bBg.lineStyle(1, 0x1e293b, 0.9);
+          bBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+          bTxt.setColor("#f8fafc");
+        });
+
+        hit.on("pointerdown", () => {
+          onSelect(item.id, item.name);
+          modalContainer.destroy();
+        });
+
+        card.add([bBg, bTxt, hit]);
+        gridContainer.add(card);
+      });
+    };
+
+    renderGrid();
+
+    // Pagination
+    const pageTxt = this.scene.add
+      .text(panelX, panelY + panelH / 2 - 32, `Página ${currentPage + 1} de ${totalPages}`, {
+        fontSize: "12px",
+        color: "#94a3b8",
+        fontStyle: "bold",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    const prevBtn = this.createCompactButton(
+      panelX - 120,
+      panelY + panelH / 2 - 32,
+      80,
+      28,
+      "◀ ANTERIOR",
+      0x334155,
+      () => {
+        if (currentPage > 0) {
+          currentPage--;
+          renderGrid();
+          pageTxt.setText(`Página ${currentPage + 1} de ${totalPages}`);
+        }
+      }
     );
-    this.createSelector(
-      col2X,
-      currY,
-      () => `Cor 1: ${this.getColorName(giColors[state.p_idx.acc_1])}`,
-      () => state.prevColor("acc_1", giColors),
-      () => state.nextColor("acc_1", giColors),
-      130
+
+    const nextBtn = this.createCompactButton(
+      panelX + 120,
+      panelY + panelH / 2 - 32,
+      80,
+      28,
+      "PRÓXIMO ▶",
+      0x334155,
+      () => {
+        if (currentPage < totalPages - 1) {
+          currentPage++;
+          renderGrid();
+          pageTxt.setText(`Página ${currentPage + 1} de ${totalPages}`);
+        }
+      }
     );
+
+    modalContainer.add([backdrop, panelBg, title, closeBtn, gridContainer, pageTxt, prevBtn, nextBtn]);
   }
 }

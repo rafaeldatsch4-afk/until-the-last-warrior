@@ -14,14 +14,25 @@ import { INITIAL_CHARACTERS } from "../data";
 export class CreatorPreview {
   public previewSprite?: Phaser.GameObjects.Sprite;
   public previewAura?: Phaser.GameObjects.Shape;
+  public stagePedestal?: Phaser.GameObjects.Shape;
+  public stageRing?: Phaser.GameObjects.Shape;
   public torsoBoundsBox?: Phaser.GameObjects.Rectangle;
   public torsoBoundsText?: Phaser.GameObjects.Text;
   public alignmentGuides: Phaser.GameObjects.GameObject[] = [];
   public showDebugGuides: boolean = false;
   private scene: Phaser.Scene;
+  public posX: number = 750;
+  public posY: number = 240;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, x: number = 750, y: number = 240) {
     this.scene = scene;
+    this.posX = x;
+    this.posY = y;
+  }
+
+  public setPosition(x: number, y: number) {
+    this.posX = x;
+    this.posY = y;
   }
 
   public updatePreview(
@@ -103,24 +114,34 @@ export class CreatorPreview {
     createAnim("custom_preview_idle", "custom_preview", 0, 3, 10, -1);
     createAnim("custom_preview_ssj_idle", "custom_preview_ssj", 0, 3, 10, -1);
 
+    const auraCol = isTransformed ? 0xf1c40f : builderData.auraColor;
     this.previewAura = this.scene.add
-      .ellipse(700, 290, 150, 250, builderData.auraColor)
-      .setAlpha(0.3)
+      .ellipse(this.posX, this.posY + 20, 140, 240, auraCol)
+      .setAlpha(isTransformed ? 0.55 : 0.25)
       .setBlendMode(Phaser.BlendModes.ADD);
-    
+
+    if (isTransformed) {
+      this.scene.tweens.add({
+        targets: this.previewAura,
+        scaleX: 1.15,
+        scaleY: 1.08,
+        alpha: 0.7,
+        yoyo: true,
+        repeat: -1,
+        duration: 400,
+        ease: "Sine.easeInOut",
+      });
+    }
+
     const texName = isTransformed ? "custom_preview_ssj" : "custom_preview";
     const animName = isTransformed ? "custom_preview_ssj_idle" : "custom_preview_idle";
 
     this.previewSprite = this.scene.add
-      .sprite(700, 260, texName)
-      .setScale(2.5);
+      .sprite(this.posX, this.posY, texName)
+      .setScale(2.7);
+
     if (this.scene.textures.exists(texName)) {
       this.previewSprite.play(animName);
-    }
-    
-    if (isTransformed) {
-      this.previewAura.setFillStyle(0xffd700, 0.6); // Gold aura
-      this.previewAura.setScale(1.2);
     }
 
     // Clear previous debug guides
@@ -128,9 +149,9 @@ export class CreatorPreview {
     this.alignmentGuides = [];
 
     if (this.showDebugGuides) {
-      const spriteX = 700;
-      const spriteY = 260;
-      const spriteScale = 2.5;
+      const spriteX = this.posX;
+      const spriteY = this.posY;
+      const spriteScale = 2.7;
       const texScale = 2; // SCALE inside generateCustomSprite
 
       const frameWidth = 96 * texScale;
@@ -139,44 +160,19 @@ export class CreatorPreview {
       const screenLeft = spriteX - (frameWidth * spriteScale) / 2;
       const screenTop = spriteY - (frameHeight * spriteScale) / 2;
 
-      // Draw Head/Neck Alignment Guide (Y = 16px base, 32px scaled)
       const neckY = screenTop + 17 * texScale * spriteScale;
       const neckLine = this.scene.add
         .line(0, 0, screenLeft + 40, neckY, screenLeft + frameWidth * spriteScale - 40, neckY, 0x00ffff, 0.8)
         .setOrigin(0, 0)
         .setDepth(205);
-      const neckLabel = this.scene.add
-        .text(screenLeft + 45, neckY - 14, "◄ Alinhamento Pescoço/Tronco (Y:17)", {
-          fontSize: "11px",
-          color: "#00ffff",
-          fontFamily: "monospace",
-          backgroundColor: "#000000aa",
-        })
-        .setDepth(205);
 
-      // Draw Waist/Legs Alignment Guide (Y = 27px base)
       const waistY = screenTop + 27 * texScale * spriteScale;
       const waistLine = this.scene.add
         .line(0, 0, screenLeft + 40, waistY, screenLeft + frameWidth * spriteScale - 40, waistY, 0xff00ff, 0.8)
         .setOrigin(0, 0)
         .setDepth(205);
-      const waistLabel = this.scene.add
-        .text(screenLeft + 45, waistY + 2, "◄ Alinhamento Cintura/Pernas (Y:27)", {
-          fontSize: "11px",
-          color: "#ff00ff",
-          fontFamily: "monospace",
-          backgroundColor: "#000000aa",
-        })
-        .setDepth(205);
 
-      // Center X Axis
-      const centerX = spriteX;
-      const centerLine = this.scene.add
-        .line(0, 0, centerX, screenTop + 20, centerX, screenTop + frameHeight * spriteScale - 20, 0x2ecc71, 0.5)
-        .setOrigin(0, 0)
-        .setDepth(205);
-
-      this.alignmentGuides.push(neckLine, neckLabel, waistLine, waistLabel, centerLine);
+      this.alignmentGuides.push(neckLine, waistLine);
 
       if (torsoBounds) {
         const boxX = screenLeft + torsoBounds.minX * texScale * spriteScale;
@@ -189,23 +185,7 @@ export class CreatorPreview {
           .setStrokeStyle(1.5, 0xf1c40f)
           .setDepth(206);
 
-        const boundsText = this.scene.add
-          .text(
-            boxX + boxW + 6,
-            boxY,
-            `Tronco: ${torsoBounds.w}x${torsoBounds.h}px\nX:[${torsoBounds.minX}..${torsoBounds.minX + torsoBounds.w}]\nY:[${torsoBounds.minY}..${torsoBounds.minY + torsoBounds.h}]`,
-            {
-              fontSize: "11px",
-              color: "#f1c40f",
-              fontStyle: "bold",
-              fontFamily: "monospace",
-              backgroundColor: "#0a0a14dd",
-              padding: { x: 4, y: 2 },
-            },
-          )
-          .setDepth(206);
-
-        this.alignmentGuides.push(boundsBox, boundsText);
+        this.alignmentGuides.push(boundsBox);
       }
     }
   }

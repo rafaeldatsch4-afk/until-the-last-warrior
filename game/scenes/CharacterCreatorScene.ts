@@ -6,7 +6,13 @@ import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import { CreatorState } from "../creator/CreatorState";
 import { CreatorPreview } from "../creator/CreatorPreview";
 import { CreatorUI } from "../creator/CreatorUI";
-import { auraColors, giColors, hairColors, partOptions, skinColors } from "../creator/CreatorPartOptions";
+import {
+  auraColors,
+  giColors,
+  hairColors,
+  partOptions,
+  skinColors,
+} from "../creator/CreatorPartOptions";
 import { generateCustomSprite } from "../sprites/CustomSprite";
 
 export default class CharacterCreatorScene extends Phaser.Scene {
@@ -17,16 +23,16 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   private currentBaseObjIndex = 0;
   private currentColorIndex = 0;
 
-  private customSp1Id = "";
-  private customSp2Id = "";
-  private customSp1Name = "";
-  private customSp2Name = "";
+  private customSp1Id = "goku";
+  private customSp1Name = "Kamehameha";
+  private customSp2Id = "goku";
+  private customSp2Name = "Spirit Bomb";
   private previewIsTransformed = false;
 
   private builderData = {
     base: INITIAL_CHARACTERS[0],
     auraColor: auraColors[0],
-    name: "Custom",
+    name: "Guerreiro Z",
   };
 
   private AVAILABLE_SPECIALS = [
@@ -36,7 +42,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     { id: "piccolo", name: "Special Beam" },
     { id: "trunks", name: "Burning Attack" },
     { id: "freeza", name: "Death Beam" },
-    { id: "cell", name: "Kamehameha" },
+    { id: "cell", name: "Kamehameha Solar" },
     { id: "buu", name: "Innocence Cannon" },
     { id: "gohan", name: "Masenko" },
     { id: "naruto", name: "Rasengan" },
@@ -66,51 +72,513 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     { id: "obito", name: "Kamui" },
   ];
 
+  private nameDisplayTxt?: Phaser.GameObjects.Text;
+  private transformBtnGlow?: Phaser.GameObjects.Graphics;
+
   constructor() {
     super("CharacterCreatorScene");
   }
 
   create() {
     this.cameras.main.fadeIn(300, 0, 0, 0);
-    
+
     const { width, height } = this.cameras.main;
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0x0a0515, 0x000000, 0x1f0f38, 0x050510, 1);
-    bg.fillRect(0, 0, width, height);
-
-    // Grid pattern
-    const grid = this.add.graphics();
-    grid.lineStyle(1, 0x3498db, 0.1);
-    for (let x = 0; x < width; x += 40) grid.moveTo(x, 0).lineTo(x, height);
-    for (let y = 0; y < height; y += 40) grid.moveTo(0, y).lineTo(width, y);
-    grid.strokePath();
-
-    this.add.image(width / 2, height / 2, "arena").setAlpha(0.15).setBlendMode(Phaser.BlendModes.SCREEN);
-    
-    // Add some cool ambient particles to make it feel premium
-    const particles = this.add.particles(0, 0, "particle", {
-      x: { min: 0, max: width },
-      y: { min: 0, max: height },
-      lifespan: 4000,
-      speedY: { min: -10, max: -30 },
-      speedX: { min: -10, max: 10 },
-      scale: { start: 0.5, end: 0 },
-      alpha: { start: 0.3, end: 0 },
-      quantity: 1,
-      blendMode: "ADD",
-      tint: 0x3498db
-    });
-
-    if (this.cameras.main.postFX) {
-      this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.4);
-    }
-
-    this.preview = new CreatorPreview(this);
-    this.ui = new CreatorUI(this, () => this.updatePreview());
     const bounds = ResponsiveUtils.getSafeBounds();
 
-    // Back button
-    this.createStyledButton(bounds.left + 70, bounds.top + 40, 120, 40, "VOLTAR", 0xe74c3c, () => {
+    // 1. Rich Cosmic Background
+    const bg = this.add.graphics();
+    bg.fillGradientStyle(0x060913, 0x0a1020, 0x03060c, 0x020408, 1);
+    bg.fillRect(0, 0, width, height);
+
+    // Subtle Hex/Grid Lines
+    const grid = this.add.graphics();
+    grid.lineStyle(1, 0x1e293b, 0.2);
+    for (let x = 0; x < width; x += 44) grid.moveTo(x, 0).lineTo(x, height);
+    for (let y = 0; y < height; y += 44) grid.moveTo(0, y).lineTo(width, y);
+    grid.strokePath();
+
+    // Ambient floating embers/energy particles
+    if (this.textures.exists("particle")) {
+      this.add.particles(0, 0, "particle", {
+        x: { min: 0, max: width },
+        y: { min: 0, max: height },
+        lifespan: 4000,
+        speedY: { min: -10, max: -26 },
+        speedX: { min: -6, max: 6 },
+        scale: { start: 0.4, end: 0 },
+        alpha: { start: 0.3, end: 0 },
+        tint: [0x38bdf8, 0xfacc15, 0x818cf8],
+        quantity: 1,
+        frequency: 300,
+        blendMode: "ADD",
+      });
+    }
+
+    if (this.cameras.main.postFX) {
+      this.cameras.main.postFX.addVignette(0.5, 0.5, 0.75, 0.35);
+    }
+
+    // 2. TOP HEADER
+    // Back Button (Top Left)
+    this.createHeaderBackButton(bounds.left + 55, bounds.top + 22);
+
+    // Main Header Title (Centered)
+    const headerContainer = this.add.container(width / 2, bounds.top + 22);
+    const headerTitle = this.add
+      .text(0, -4, "CRIAR PERSONAGEM", {
+        fontSize: "20px",
+        fontStyle: "900",
+        color: "#facc15",
+        stroke: "#000000",
+        strokeThickness: 3.5,
+        letterSpacing: 2.5,
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        shadow: { color: "#000000", blur: 4, fill: true, stroke: true },
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    const headerSub = this.add
+      .text(0, 14, "ESTÚDIO DE CUSTOMIZAÇÃO DE GUERREIROS", {
+        fontSize: "9px",
+        fontStyle: "bold",
+        color: "#94a3b8",
+        letterSpacing: 2,
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    headerContainer.add([headerTitle, headerSub]);
+
+    // 3. RESPONSIVE TWO-COLUMN LAYOUT
+    const contentTopY = bounds.top + 48;
+    const contentH = Math.min(450, bounds.bottom - contentTopY - 10);
+
+    const leftColW = 515;
+    const rightColW = 345;
+    const gap = 16;
+    const totalW = leftColW + rightColW + gap;
+    const startX = Math.max(bounds.left + 10, (width - totalW) / 2);
+
+    const leftColX = startX;
+    const rightColX = leftColX + leftColW + gap;
+
+    // Load saved character data if present
+    this.loadInitialCustomData();
+
+    // 4. PREVIEW INITIALIZATION (Centered inside Right Column)
+    const previewCenterX = rightColX + rightColW / 2;
+    const previewCenterY = contentTopY + 160;
+
+    this.preview = new CreatorPreview(this, previewCenterX, previewCenterY);
+    this.ui = new CreatorUI(this, () => this.updatePreview());
+
+    // 5. LEFT COLUMN: STUDIO CUSTOMIZER (Tabs: Estilo, Cores, Poderes)
+    this.ui.customSp1Id = this.customSp1Id;
+    this.ui.customSp1Name = this.customSp1Name;
+    this.ui.customSp2Id = this.customSp2Id;
+    this.ui.customSp2Name = this.customSp2Name;
+
+    this.ui.initStudioPanel(
+      leftColX,
+      contentTopY,
+      leftColW,
+      contentH,
+      this.state,
+      this.AVAILABLE_SPECIALS,
+      this.AVAILABLE_SUPERS
+    );
+
+    // 6. RIGHT COLUMN: SHOWCASE STAGE & ACTIONS
+    this.buildRightShowcasePanel(rightColX, contentTopY, rightColW, contentH, previewCenterX, previewCenterY);
+
+    // Initial render
+    this.updatePreview();
+  }
+
+  private loadInitialCustomData() {
+    const gameState = this.registry.get("gameState");
+    if (gameState && gameState.characters) {
+      const existing = gameState.characters.find((c: CharacterData) => c.id === 999);
+      if (existing) {
+        if (existing.name) this.builderData.name = existing.name;
+        if (existing.customData) {
+          const cd = existing.customData;
+          if (cd.part_head) {
+            const idx = partOptions.head.indexOf(cd.part_head);
+            if (idx !== -1) this.state.style_idx.head = idx;
+          }
+          if (cd.part_torso) {
+            const idx = partOptions.torso.indexOf(cd.part_torso);
+            if (idx !== -1) this.state.style_idx.torso = idx;
+          }
+          if (cd.part_legs) {
+            const idx = partOptions.legs.indexOf(cd.part_legs);
+            if (idx !== -1) this.state.style_idx.legs = idx;
+          }
+          if (cd.part_feet) {
+            const idx = partOptions.feet.indexOf(cd.part_feet);
+            if (idx !== -1) this.state.style_idx.feet = idx;
+          }
+          if (cd.part_accessory) {
+            const idx = partOptions.accessory.indexOf(cd.part_accessory);
+            if (idx !== -1) this.state.style_idx.accessory = idx;
+          }
+
+          if (cd.sp1_id) {
+            this.customSp1Id = cd.sp1_id;
+            const sp = this.AVAILABLE_SPECIALS.find((s) => s.id === cd.sp1_id);
+            if (sp) this.customSp1Name = sp.name;
+          }
+          if (cd.sp2_id) {
+            this.customSp2Id = cd.sp2_id;
+            const sp = this.AVAILABLE_SUPERS.find((s) => s.id === cd.sp2_id);
+            if (sp) this.customSp2Name = sp.name;
+          }
+        }
+      }
+    }
+  }
+
+  private buildRightShowcasePanel(
+    panelX: number,
+    panelY: number,
+    panelW: number,
+    panelH: number,
+    previewCenterX: number,
+    previewCenterY: number
+  ) {
+    const container = this.add.container(panelX, panelY);
+
+    // 1. Right Glass Panel
+    const bg = this.add.graphics();
+    bg.fillStyle(0x0a0f1d, 0.88);
+    bg.fillRoundedRect(0, 0, panelW, panelH, 12);
+    bg.lineStyle(1.5, 0x1e293b, 0.9);
+    bg.strokeRoundedRect(0, 0, panelW, panelH, 12);
+
+    // Corner accents
+    bg.lineStyle(2, 0xfacc15, 0.7);
+    const bLen = 14;
+    // Top-Left
+    bg.moveTo(0, bLen).lineTo(0, 0).lineTo(bLen, 0);
+    // Top-Right
+    bg.moveTo(panelW - bLen, 0).lineTo(panelW, 0).lineTo(panelW, bLen);
+    // Bottom-Left
+    bg.moveTo(0, panelH - bLen).lineTo(0, panelH).lineTo(bLen, panelH);
+    // Bottom-Right
+    bg.moveTo(panelW - bLen, panelH).lineTo(panelW, panelH).lineTo(panelW, panelH - bLen);
+    bg.strokePath();
+
+    container.add(bg);
+
+    // 2. Character Name Header Card (Interactive click to edit name)
+    const nameCardW = panelW - 28;
+    const nameCardH = 44;
+    const nameCardY = 16;
+    const nameCardCenterX = panelW / 2;
+
+    const nameCardBg = this.add.graphics();
+    const drawNameBg = (isHover: boolean) => {
+      nameCardBg.clear();
+      nameCardBg.fillStyle(isHover ? 0x1e293b : 0x0f172a, 0.95);
+      nameCardBg.fillRoundedRect(14, nameCardY, nameCardW, nameCardH, 8);
+      nameCardBg.lineStyle(1.5, isHover ? 0x38bdf8 : 0x334155, 0.9);
+      nameCardBg.strokeRoundedRect(14, nameCardY, nameCardW, nameCardH, 8);
+    };
+    drawNameBg(false);
+
+    this.nameDisplayTxt = this.add
+      .text(nameCardCenterX - 10, nameCardY + nameCardH / 2, `⚔️ ${this.builderData.name}`, {
+        fontSize: "15px",
+        fontStyle: "bold",
+        color: "#facc15",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    const editIcon = this.add
+      .text(nameCardCenterX + this.nameDisplayTxt.width / 2 + 8, nameCardY + nameCardH / 2, "✎", {
+        fontSize: "14px",
+        color: "#38bdf8",
+      })
+      .setOrigin(0.5);
+
+    const nameHit = this.add
+      .rectangle(nameCardCenterX, nameCardY + nameCardH / 2, nameCardW, nameCardH, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+
+    nameHit.on("pointerover", () => {
+      drawNameBg(true);
+      editIcon.setColor("#facc15");
+    });
+    nameHit.on("pointerout", () => {
+      drawNameBg(false);
+      editIcon.setColor("#38bdf8");
+    });
+    nameHit.on("pointerdown", () => {
+      window.dispatchEvent(
+        new CustomEvent("request-text-input", {
+          detail: {
+            title: "Nome do seu Guerreiro:",
+            currentValue: this.builderData.name,
+            onComplete: (newName: string) => {
+              if (newName && newName.trim().length > 0) {
+                this.builderData.name = newName.trim().substring(0, 16);
+                if (this.nameDisplayTxt) {
+                  this.nameDisplayTxt.setText(`⚔️ ${this.builderData.name}`);
+                  editIcon.setX(nameCardCenterX + this.nameDisplayTxt.width / 2 + 8);
+                }
+              }
+            },
+          },
+        })
+      );
+    });
+
+    container.add([nameCardBg, this.nameDisplayTxt, editIcon, nameHit]);
+
+    // 3. Stage Pedestal Graphics (Behind sprite)
+    const relPedestalY = previewCenterY - panelY + 50;
+    const pedestal = this.add.graphics();
+    pedestal.fillStyle(0x0284c7, 0.2);
+    pedestal.fillEllipse(panelW / 2, relPedestalY, 140, 36);
+    pedestal.lineStyle(1.5, 0x38bdf8, 0.6);
+    pedestal.strokeEllipse(panelW / 2, relPedestalY, 140, 36);
+
+    const pedestalRing = this.add.graphics();
+    pedestalRing.lineStyle(1, 0xfacc15, 0.4);
+    pedestalRing.strokeEllipse(panelW / 2, relPedestalY, 110, 24);
+
+    this.tweens.add({
+      targets: [pedestal, pedestalRing],
+      scaleX: 1.05,
+      scaleY: 1.05,
+      alpha: 0.7,
+      yoyo: true,
+      repeat: -1,
+      duration: 1800,
+      ease: "Sine.easeInOut",
+    });
+
+    container.add([pedestal, pedestalRing]);
+
+    // 4. Action Row: [ ⚡ TRANSFORMAR (SSJ) ] & [ 🎲 ALEATÓRIO ]
+    const btnRowY = panelH - 105;
+    const halfBtnW = (panelW - 36) / 2;
+
+    // Transform SSJ Button
+    const transBtnX = 14 + halfBtnW / 2;
+    const transBtn = this.createStageActionButton(
+      transBtnX,
+      btnRowY,
+      halfBtnW,
+      38,
+      "⚡ SSJ MODE",
+      0xd97706,
+      () => {
+        this.previewIsTransformed = !this.previewIsTransformed;
+        this.updatePreview();
+      }
+    );
+
+    // Randomize Button
+    const randBtnX = 14 + halfBtnW + 8 + halfBtnW / 2;
+    const randBtn = this.createStageActionButton(
+      randBtnX,
+      btnRowY,
+      halfBtnW,
+      38,
+      "🎲 ALEATÓRIO",
+      0x7c3aed,
+      () => {
+        this.randomizeCharacter();
+      }
+    );
+
+    container.add([transBtn, randBtn]);
+
+    // 5. PRIMARY CTA: [ 💾 SALVAR E EQUIPAR ]
+    const saveBtnY = panelH - 42;
+    const saveBtnW = panelW - 28;
+    const saveBtn = this.createHeroSaveButton(
+      panelW / 2,
+      saveBtnY,
+      saveBtnW,
+      48,
+      "SALVAR E EQUIPAR",
+      () => {
+        this.saveAndEquipCharacter();
+      }
+    );
+
+    container.add(saveBtn);
+  }
+
+  private createStageActionButton(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    label: string,
+    colorHex: number,
+    onClick: () => void
+  ): Phaser.GameObjects.Container {
+    const container = this.add.container(x, y);
+
+    const bg = this.add.graphics();
+    const drawBg = (isHover: boolean) => {
+      bg.clear();
+      bg.fillStyle(isHover ? colorHex : 0x0f172a, 0.95);
+      bg.fillRoundedRect(-w / 2, -h / 2, w, h, 6);
+      bg.lineStyle(1.5, isHover ? 0xffffff : colorHex, 0.9);
+      bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 6);
+    };
+    drawBg(false);
+
+    const txt = this.add
+      .text(0, 0, label, {
+        fontSize: "11px",
+        fontStyle: "bold",
+        color: "#ffffff",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    const hit = this.add
+      .rectangle(0, 0, w, h, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+
+    hit.on("pointerover", () => {
+      drawBg(true);
+      this.tweens.add({ targets: container, scale: 1.04, duration: 100 });
+    });
+    hit.on("pointerout", () => {
+      drawBg(false);
+      this.tweens.add({ targets: container, scale: 1, duration: 100 });
+    });
+    hit.on("pointerdown", () => {
+      this.tweens.add({
+        targets: container,
+        scale: 0.95,
+        yoyo: true,
+        duration: 60,
+        onComplete: onClick,
+      });
+    });
+
+    container.add([bg, txt, hit]);
+    return container;
+  }
+
+  private createHeroSaveButton(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    label: string,
+    onClick: () => void
+  ): Phaser.GameObjects.Container {
+    const container = this.add.container(x, y);
+
+    const bg = this.add.graphics();
+    const drawBg = (isHover: boolean) => {
+      bg.clear();
+      // Drop Shadow
+      bg.fillStyle(0x000000, 0.4);
+      bg.fillRoundedRect(-w / 2 + 2, -h / 2 + 2, w, h, 8);
+      // Main Surface
+      bg.fillStyle(isHover ? 0x16a34a : 0x15803d, 1);
+      bg.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
+      // Border
+      bg.lineStyle(2, isHover ? 0x86efac : 0x22c55e, 1);
+      bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+    };
+    drawBg(false);
+
+    const txt = this.add
+      .text(0, 0, `💾  ${label}`, {
+        fontSize: "14px",
+        fontStyle: "900",
+        color: "#ffffff",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        letterSpacing: 1,
+        stroke: "#064e3b",
+        strokeThickness: 3,
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    const hit = this.add
+      .rectangle(0, 0, w, h, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+
+    hit.on("pointerover", () => {
+      drawBg(true);
+      this.tweens.add({ targets: container, scale: 1.03, duration: 120 });
+    });
+    hit.on("pointerout", () => {
+      drawBg(false);
+      this.tweens.add({ targets: container, scale: 1, duration: 120 });
+    });
+    hit.on("pointerdown", () => {
+      this.tweens.add({
+        targets: container,
+        scale: 0.96,
+        yoyo: true,
+        duration: 80,
+        onComplete: onClick,
+      });
+    });
+
+    container.add([bg, txt, hit]);
+    return container;
+  }
+
+  private createHeaderBackButton(x: number, y: number) {
+    const container = this.add.container(x, y).setDepth(200);
+
+    const bg = this.add.graphics();
+    const btnW = 96;
+    const btnH = 32;
+
+    const drawBg = (isHover: boolean) => {
+      bg.clear();
+      bg.fillStyle(isHover ? 0x334155 : 0x1e293b, 0.95);
+      bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      bg.lineStyle(1.5, isHover ? 0x38bdf8 : 0x475569, 0.9);
+      bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+    };
+    drawBg(false);
+
+    const txt = this.add
+      .text(0, 0, "← VOLTAR", {
+        fontSize: "12px",
+        fontStyle: "bold",
+        color: "#ffffff",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    const hit = this.add
+      .rectangle(0, 0, btnW, btnH, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+
+    hit.on("pointerover", () => {
+      drawBg(true);
+      txt.setColor("#38bdf8");
+      this.tweens.add({ targets: container, scale: 1.05, duration: 100 });
+    });
+    hit.on("pointerout", () => {
+      drawBg(false);
+      txt.setColor("#ffffff");
+      this.tweens.add({ targets: container, scale: 1, duration: 100 });
+    });
+    hit.on("pointerdown", () => {
       const gs = this.registry.get("gameState");
       if (gs && gs.gameMode === "story") {
         transitionTo(this, "ModeSelectScene");
@@ -119,116 +587,60 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       }
     });
 
-    // Title
-    this.add.text(480, bounds.top + 40, "CRIAR PERSONAGEM", { fontSize: "32px", fontStyle: "italic bold", color: "#f39c12", fontFamily: "system-ui, sans-serif", stroke: "#000", strokeThickness: 4, shadow: { offsetX: 0, offsetY: 0, color: "#f39c12", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
-
-    // Build Selectors using the extracted UI
-    this.ui.buildAllSelectors(this.state);
-
-    this.setupNamesAndSpecials();
-    this.setupSaveButton();
-
-    // Box
-    const previewBox = this.add.rectangle(700, 280, 300, 360, 0x1a1a24, 0.8).setStrokeStyle(2, 0x3498db);
-    this.tweens.add({ targets: previewBox, alpha: 0.5, yoyo: true, repeat: -1, duration: 2000 });
-    this.add.text(700, 160, "PREVIEW", { fontSize: "24px", fontStyle: "italic bold", color: "#3498db", stroke: "#000", strokeThickness: 2, shadow: { offsetX: 0, offsetY: 0, color: "#3498db", blur: 10, fill: true, stroke: true } }).setOrigin(0.5);
-    
-    // Pedestal
-    const pedestal = this.add.ellipse(700, 420, 120, 40, 0x3498db, 0.3);
-    this.tweens.add({ targets: pedestal, scaleX: 1.1, scaleY: 1.1, alpha: 0.1, yoyo: true, repeat: -1, duration: 1500 });
-
-
-    // Randomize button
-    this.createStyledButton(bounds.right - 75, bounds.top + 40, 150, 40, "ALEATÓRIO", 0x8e44ad, () => {
-      // Randomize styles
-      this.state.style_idx.head = Phaser.Math.Between(0, partOptions.head.length - 1);
-      this.state.style_idx.torso = Phaser.Math.Between(0, partOptions.torso.length - 1);
-      this.state.style_idx.legs = Phaser.Math.Between(0, partOptions.legs.length - 1);
-      this.state.style_idx.feet = Phaser.Math.Between(0, partOptions.feet.length - 1);
-      this.state.style_idx.accessory = Phaser.Math.Between(0, partOptions.accessory.length - 1);
-      
-      // Randomize colors
-      this.state.p_idx.skin = Phaser.Math.Between(0, skinColors.length - 1);
-      this.state.p_idx.hair = Phaser.Math.Between(0, hairColors.length - 1);
-      this.state.p_idx.torso_1 = Phaser.Math.Between(0, giColors.length - 1);
-      this.state.p_idx.torso_2 = Phaser.Math.Between(0, giColors.length - 1);
-      this.state.p_idx.legs_1 = Phaser.Math.Between(0, giColors.length - 1);
-      this.state.p_idx.legs_2 = Phaser.Math.Between(0, giColors.length - 1);
-      this.state.p_idx.feet_1 = Phaser.Math.Between(0, giColors.length - 1);
-      this.state.p_idx.feet_2 = Phaser.Math.Between(0, giColors.length - 1);
-      this.state.p_idx.head_1 = Phaser.Math.Between(0, giColors.length - 1);
-      this.state.p_idx.head_2 = Phaser.Math.Between(0, giColors.length - 1);
-      this.state.p_idx.acc_1 = Phaser.Math.Between(0, giColors.length - 1);
-
-      // Randomize special and super
-      const sp1 = Phaser.Utils.Array.GetRandom(this.AVAILABLE_SPECIALS);
-      const sp2 = Phaser.Utils.Array.GetRandom(this.AVAILABLE_SUPERS);
-      this.customSp1Id = sp1.id;
-      this.customSp1Name = sp1.name;
-      this.customSp2Id = sp2.id;
-      this.customSp2Name = sp2.name;
-
-      this.scene.restart(); 
-    });
-
-    this.createStyledButton(700, bounds.bottom - 45, 140, 35, "TRANSFORMAR", 0xf39c12, () => {
-      this.previewIsTransformed = !this.previewIsTransformed;
-      this.updatePreview();
-    });
-
-    // Debug: Force Alignment Validation & Guide Lines
-    this.createStyledButton(850, bounds.bottom - 45, 140, 35, "DEBUG GUIAS", 0x16a085, () => {
-      this.preview.showDebugGuides = !this.preview.showDebugGuides;
-      this.updatePreview();
-    });
-
-    // Debug: Force Preset Quick-Tester (Cycles through all new torso/legs combos with heads)
-    let debugPresetIndex = 0;
-    const debugPresets = [
-      { name: "Kimono Z + Goku", torso: "goku", legs: "goku", head: "goku", feet: "goku" },
-      { name: "Colete Pirata + Luffy", torso: "luffy", legs: "luffy", head: "luffy", feet: "luffy" },
-      { name: "Sobretudo JoJo + Jotaro", torso: "jotaro", legs: "jotaro", head: "jotaro", feet: "jotaro" },
-      { name: "Sem Camisa + Sasuke", torso: "muscle", legs: "sasuke", head: "sasuke", feet: "sasuke" },
-      { name: "Shinobi + Naruto", torso: "naruto", legs: "naruto", head: "naruto", feet: "naruto" },
-      { name: "Armadura Saiyajin + Vegeta", torso: "vegeta", legs: "vegeta", head: "vegeta", feet: "vegeta" },
-      { name: "Traje Aranha + Spiderman", torso: "spiderman", legs: "spiderman", head: "spiderman", feet: "spiderman" },
-      { name: "Herói + Saitama", torso: "saitama", legs: "saitama", head: "saitama", feet: "saitama" },
-      { name: "Uniforme CH + Chapolim", torso: "chapolim", legs: "chapolim", head: "chapolim", feet: "chapolim" },
-      { name: "Gola Alta + Goku Head", torso: "sasuke", legs: "goku", head: "goku", feet: "goku" },
-    ];
-
-    const debugPresetBtn = this.createStyledButton(700, bounds.bottom - 85, 290, 30, "DEBUG: TESTAR SPRITE NOVO", 0x2980b9, () => {
-      const p = debugPresets[debugPresetIndex];
-      this.forceDebugSpriteParts(p.torso, p.legs, p.head, p.feet);
-      
-      const debugTxt = this.add.text(700, 200, `[DEBUG] Carregado: ${p.name}`, {
-        fontSize: "13px",
-        color: "#00ffff",
-        backgroundColor: "#000000cc",
-        padding: { x: 6, y: 3 },
-        fontStyle: "bold"
-      }).setOrigin(0.5).setDepth(300);
-      this.tweens.add({ targets: debugTxt, alpha: 0, y: 180, duration: 1500, onComplete: () => debugTxt.destroy() });
-
-      debugPresetIndex = (debugPresetIndex + 1) % debugPresets.length;
-    });
-
-    this.updatePreview();
+    container.add([bg, txt, hit]);
   }
 
-  public forceDebugSpriteParts(torsoId: string, legsId: string, headId: string, feetId: string) {
-    const tIdx = partOptions.torso.indexOf(torsoId);
-    const lIdx = partOptions.legs.indexOf(legsId);
-    const hIdx = partOptions.head.indexOf(headId);
-    const fIdx = partOptions.feet.indexOf(feetId);
+  private randomizeCharacter() {
+    // Randomize styles
+    this.state.style_idx.head = Phaser.Math.Between(0, partOptions.head.length - 1);
+    this.state.style_idx.torso = Phaser.Math.Between(0, partOptions.torso.length - 1);
+    this.state.style_idx.legs = Phaser.Math.Between(0, partOptions.legs.length - 1);
+    this.state.style_idx.feet = Phaser.Math.Between(0, partOptions.feet.length - 1);
+    this.state.style_idx.accessory = Phaser.Math.Between(0, partOptions.accessory.length - 1);
 
-    if (tIdx !== -1) this.state.style_idx.torso = tIdx;
-    if (lIdx !== -1) this.state.style_idx.legs = lIdx;
-    if (hIdx !== -1) this.state.style_idx.head = hIdx;
-    if (fIdx !== -1) this.state.style_idx.feet = fIdx;
+    // Randomize colors
+    this.state.p_idx.skin = Phaser.Math.Between(0, skinColors.length - 1);
+    this.state.p_idx.hair = Phaser.Math.Between(0, hairColors.length - 1);
+    this.state.p_idx.torso_1 = Phaser.Math.Between(0, giColors.length - 1);
+    this.state.p_idx.torso_2 = Phaser.Math.Between(0, giColors.length - 1);
+    this.state.p_idx.legs_1 = Phaser.Math.Between(0, giColors.length - 1);
+    this.state.p_idx.legs_2 = Phaser.Math.Between(0, giColors.length - 1);
+    this.state.p_idx.feet_1 = Phaser.Math.Between(0, giColors.length - 1);
+    this.state.p_idx.feet_2 = Phaser.Math.Between(0, giColors.length - 1);
+    this.state.p_idx.acc_1 = Phaser.Math.Between(0, giColors.length - 1);
 
-    this.preview.showDebugGuides = true;
+    // Randomize specials
+    const sp1 = Phaser.Utils.Array.GetRandom(this.AVAILABLE_SPECIALS);
+    const sp2 = Phaser.Utils.Array.GetRandom(this.AVAILABLE_SUPERS);
+    this.customSp1Id = sp1.id;
+    this.customSp1Name = sp1.name;
+    this.customSp2Id = sp2.id;
+    this.customSp2Name = sp2.name;
+
+    this.ui.customSp1Id = sp1.id;
+    this.ui.customSp1Name = sp1.name;
+    this.ui.customSp2Id = sp2.id;
+    this.ui.customSp2Name = sp2.name;
+
+    // Refresh UI & Preview
     this.updatePreview();
+    const bounds = ResponsiveUtils.getSafeBounds();
+    const contentTopY = bounds.top + 48;
+    const contentH = Math.min(450, bounds.bottom - contentTopY - 10);
+    const leftColW = 515;
+    const gap = 16;
+    const totalW = leftColW + 345 + gap;
+    const startX = Math.max(bounds.left + 10, (this.cameras.main.width - totalW) / 2);
+
+    this.ui.initStudioPanel(
+      startX,
+      contentTopY,
+      leftColW,
+      contentH,
+      this.state,
+      this.AVAILABLE_SPECIALS,
+      this.AVAILABLE_SUPERS
+    );
   }
 
   private updatePreview() {
@@ -242,175 +654,140 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     );
   }
 
-  private setupNamesAndSpecials() {
-    // Name
-    // Centralized under Preview
-    const nameTxt = this.add.text(700, 80, `Nome: ${this.builderData.name}`, { fontSize: "22px", color: "#f1c40f", fontStyle: "bold" }).setOrigin(0.5, 0.5);
-    const editBtn = this.createStyledButton(700, 120, 120, 30, "EDITAR NOME", 0x34495e, () => {
-      window.dispatchEvent(
-        new CustomEvent("request-text-input", {
-          detail: {
-            title: "Digite o nome:",
-            currentValue: this.builderData.name,
-            onComplete: (newName: string) => {
-              if (newName && newName.trim().length > 0) {
-                this.builderData.name = newName.substring(0, 15);
-                nameTxt.setText(`Nome: ${this.builderData.name}`);
-              }
-            },
-          },
-        })
-      );
-    });
+  private saveAndEquipCharacter() {
+    const customData = {
+      gi1: 0,
+      gi2: 0,
+      skin: skinColors[this.state.p_idx.skin],
+      hair: hairColors[this.state.p_idx.hair],
+      color_torso_1: giColors[this.state.p_idx.torso_1],
+      color_torso_2: giColors[this.state.p_idx.torso_2],
+      color_legs_1: giColors[this.state.p_idx.legs_1],
+      color_legs_2: giColors[this.state.p_idx.legs_2],
+      color_feet_1: giColors[this.state.p_idx.feet_1],
+      color_feet_2: giColors[this.state.p_idx.feet_2],
+      color_head_1: giColors[this.state.p_idx.head_1],
+      color_head_2: giColors[this.state.p_idx.head_2],
+      color_acc_1: giColors[this.state.p_idx.acc_1],
+      sp1_id: this.customSp1Id || this.builderData.base.key,
+      sp2_id: this.customSp2Id || this.builderData.base.key,
+      part_head: partOptions.head[this.state.style_idx.head],
+      part_torso: partOptions.torso[this.state.style_idx.torso],
+      part_legs: partOptions.legs[this.state.style_idx.legs],
+      part_feet: partOptions.feet[this.state.style_idx.feet],
+      part_accessory: partOptions.accessory[this.state.style_idx.accessory],
+    };
 
-    // Special 1
-    const sp1Txt = this.add.text(70, 390, `Esp 1: ${this.customSp1Name || this.builderData.base.specialName}`, { fontSize: "16px", color: "#fff" }).setOrigin(0, 0.5);
-    const sp1Btn = this.createStyledButton(460, 390, 110, 30, "SELECIONAR", 0x34495e, () => {
-      this.ui.showAttackSelectModal(false, this.AVAILABLE_SPECIALS, this.AVAILABLE_SUPERS, (id, name) => {
-        this.customSp1Id = id;
-        this.customSp1Name = name;
-        sp1Txt.setText(`Esp 1: ${name}`);
-        this.updatePreview();
-      });
-    });
+    const customChar: CharacterData = {
+      ...this.builderData.base,
+      id: 999,
+      key: "custom_999",
+      baseKey: this.builderData.base.key,
+      name: this.builderData.name,
+      specialColor: this.builderData.auraColor,
+      specialName: this.customSp1Name || this.builderData.base.specialName,
+      superName: this.customSp2Name || this.builderData.base.superName,
+      price: 0,
+      unlocked: true,
+      customData: customData,
+    };
 
-    // Special 2
-    const sp2Txt = this.add.text(70, 430, `Super: ${this.customSp2Name || this.builderData.base.superName}`, { fontSize: "16px", color: "#fff" }).setOrigin(0, 0.5);
-    const sp2Btn = this.createStyledButton(460, 430, 110, 30, "SELECIONAR", 0x34495e, () => {
-      this.ui.showAttackSelectModal(true, this.AVAILABLE_SPECIALS, this.AVAILABLE_SUPERS, (id, name) => {
-        this.customSp2Id = id;
-        this.customSp2Name = name;
-        sp2Txt.setText(`Super: ${name}`);
-        this.updatePreview();
-      });
-    });
-  }
+    generateCustomSprite(this, customChar);
 
-  private setupSaveButton() {
-    const bounds = ResponsiveUtils.getSafeBounds();
-    this.createStyledButton(300, bounds.bottom - 45, 350, 50, "SALVAR E EQUIPAR", 0x27ae60, () => {
-      const customData = {
-        gi1: 0,
-        gi2: 0,
-        skin: skinColors[this.state.p_idx.skin],
-        hair: hairColors[this.state.p_idx.hair],
-        color_torso_1: giColors[this.state.p_idx.torso_1],
-        color_torso_2: giColors[this.state.p_idx.torso_2],
-        color_legs_1: giColors[this.state.p_idx.legs_1],
-        color_legs_2: giColors[this.state.p_idx.legs_2],
-        color_feet_1: giColors[this.state.p_idx.feet_1],
-        color_feet_2: giColors[this.state.p_idx.feet_2],
-        color_head_1: giColors[this.state.p_idx.head_1],
-        color_head_2: giColors[this.state.p_idx.head_2],
-        color_acc_1: giColors[this.state.p_idx.acc_1],
-        sp1_id: this.customSp1Id || this.builderData.base.key,
-        sp2_id: this.customSp2Id || this.builderData.base.key,
-        part_head: partOptions.head[this.state.style_idx.head],
-        part_torso: partOptions.torso[this.state.style_idx.torso],
-        part_legs: partOptions.legs[this.state.style_idx.legs],
-        part_feet: partOptions.feet[this.state.style_idx.feet],
-        part_accessory: partOptions.accessory[this.state.style_idx.accessory],
+    const createAllForTex = (baseKey: string, texKey: string) => {
+      const createAnim = (
+        animKey: string,
+        start: number,
+        end: number,
+        frameRate: number,
+        repeat: number = -1
+      ) => {
+        if (this.anims.exists(animKey)) this.anims.remove(animKey);
+        const frames = [];
+        for (let i = start; i <= end; i++) {
+          frames.push({ key: texKey, frame: i.toString() });
+        }
+        if (frames.length > 0) {
+          this.anims.create({ key: animKey, frames, frameRate, repeat });
+        }
       };
+      createAnim(`${baseKey}_idle`, 0, 3, 10, -1);
+      createAnim(`${baseKey}_walk`, 4, 7, 12, -1);
+      createAnim(`${baseKey}_attack`, 8, 9, 16, 0);
+      createAnim(`${baseKey}_special`, 8, 9, 12, -1);
+      createAnim(`${baseKey}_defend`, 10, 10, 10, -1);
+      createAnim(`${baseKey}_transform`, 0, 3, 24, -1);
+      createAnim(`${baseKey}_charge`, 11, 11, 10, -1);
+    };
 
-      const customChar: CharacterData = {
-        ...this.builderData.base,
-        id: 999,
-        key: "custom_999",
-        baseKey: this.builderData.base.key,
-        name: this.builderData.name,
-        specialColor: this.builderData.auraColor,
-        specialName: this.customSp1Name || this.builderData.base.specialName,
-        superName: this.customSp2Name || this.builderData.base.superName,
-        price: 0,
-        unlocked: true,
-        customData: customData,
-      };
+    createAllForTex("custom_999", "custom_999");
+    createAllForTex("custom_999_ssj", "custom_999_ssj");
+    createAllForTex("custom_999_ui", "custom_999_ui");
 
-      generateCustomSprite(this, customChar);
+    const gameState = this.registry.get("gameState");
+    if (gameState) {
+      gameState.characters = (gameState.characters || []).filter((c: CharacterData) => c.id !== 999);
+      gameState.characters.push(customChar);
+      gameState.p1CharacterId = 999;
+      this.registry.set("gameState", gameState);
+      // @ts-ignore
+      if (window.UTLW) window.UTLW.save();
+    }
 
-      const createAllForTex = (baseKey: string, texKey: string) => {
-        const createAnim = (animKey: string, start: number, end: number, frameRate: number, repeat: number = -1) => {
-          if (this.anims.exists(animKey)) this.anims.remove(animKey);
-          const frames = [];
-          for (let i = start; i <= end; i++) {
-            frames.push({ key: texKey, frame: i.toString() });
-          }
-          if (frames.length > 0) {
-            this.anims.create({ key: animKey, frames, frameRate, repeat });
-          }
+    if (gameState?.gameMode === "story") {
+      if (!gameState.storyState) {
+        gameState.storyState = {
+          level: 0,
+          exp: 0,
+          statPoints: 0,
+          stats: { attack: 10, defense: 10, ki: 10, speed: 10, health: 100 },
+          stage: 1,
         };
-        createAnim(`${baseKey}_idle`, 0, 3, 10, -1);
-        createAnim(`${baseKey}_walk`, 4, 7, 12, -1);
-        createAnim(`${baseKey}_attack`, 8, 9, 16, 0);
-        createAnim(`${baseKey}_special`, 8, 9, 12, -1);
-        createAnim(`${baseKey}_defend`, 10, 10, 10, -1);
-        createAnim(`${baseKey}_transform`, 0, 3, 24, -1);
-        createAnim(`${baseKey}_charge`, 11, 11, 10, -1);
-      };
-
-      createAllForTex("custom_999", "custom_999");
-      createAllForTex("custom_999_ssj", "custom_999_ssj");
-      createAllForTex("custom_999_ui", "custom_999_ui");
-
-      const gameState = this.registry.get("gameState");
-      if (gameState) {
-        gameState.characters = gameState.characters.filter((c: CharacterData) => c.id !== 999);
-        gameState.characters.push(customChar);
-        gameState.p1CharacterId = 999;
-        this.registry.set("gameState", gameState);
-        // @ts-ignore
-        if (window.UTLW) window.UTLW.save();
       }
+      gameState.storyState.customCharacter = customChar;
+      this.registry.set("gameState", gameState);
+      // @ts-ignore
+      if (window.UTLW) window.UTLW.save();
+      transitionTo(this, "StoryHubScene");
+      return;
+    }
 
-      if (gameState?.gameMode === "story") {
-         if (!gameState.storyState) {
-            gameState.storyState = {
-              level: 0,
-              exp: 0,
-              statPoints: 0,
-              stats: { attack: 10, defense: 10, ki: 10, speed: 10, health: 100 },
-              stage: 1
-            };
-         }
-         gameState.storyState.customCharacter = customChar;
-         this.registry.set("gameState", gameState);
-         if (window.UTLW) window.UTLW.save();
-         transitionTo(this, "StoryHubScene");
-         return;
-      }
+    // Success Toast Notification
+    const toast = this.add.container(this.cameras.main.width / 2, this.cameras.main.height / 2).setDepth(2000);
+    const toastBg = this.add.graphics();
+    toastBg.fillStyle(0x064e3b, 0.95);
+    toastBg.fillRoundedRect(-180, -26, 360, 52, 10);
+    toastBg.lineStyle(2, 0x4ade80, 1);
+    toastBg.strokeRoundedRect(-180, -26, 360, 52, 10);
 
-      const confirmTxt = this.add.text(250, 350, "Equipado como Player 1!", { color: "#00ff00", fontSize: "18px", fontStyle: "bold" }).setOrigin(0.5);
-      this.tweens.add({ targets: confirmTxt, alpha: 0, y: 320, duration: 2000, onComplete: () => confirmTxt.destroy() });
+    const toastTxt = this.add
+      .text(0, 0, "✓ GUERREIRO EQUIPADO COMO PLAYER 1!", {
+        fontSize: "13px",
+        fontStyle: "bold",
+        color: "#ffffff",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    toast.add([toastBg, toastTxt]);
+    this.tweens.add({
+      targets: toast,
+      scale: { from: 0.8, to: 1 },
+      alpha: { from: 0, to: 1 },
+      duration: 200,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        this.time.delayedCall(1600, () => {
+          this.tweens.add({
+            targets: toast,
+            alpha: 0,
+            y: toast.y - 20,
+            duration: 300,
+            onComplete: () => toast.destroy(),
+          });
+        });
+      },
     });
   }
-  createStyledButton(x: number, y: number, width: number, height: number, text: string, color: number, callback: () => void) {
-    const container = this.add.container(x, y);
-    const bg = this.add.rectangle(0, 0, width, height, color).setStrokeStyle(2, 0xffffff);
-    const glow = this.add.rectangle(0, 0, width, height, color, 0.5).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
-    const txt = this.add.text(0, 0, text, { fontSize: Math.floor(height*0.4) + "px", fontStyle: "bold", fontFamily: "system-ui", color: "#fff", stroke: "#000", strokeThickness: 2 }).setOrigin(0.5);
-    
-    container.add([bg, glow, txt]);
-    
-    const hitArea = this.add.rectangle(0, 0, width, height, 0x000000, 0).setInteractive({ useHandCursor: true });
-    container.add(hitArea);
-    
-    hitArea.on("pointerover", () => {
-      this.tweens.add({ targets: glow, alpha: 1, duration: 150 });
-      this.tweens.add({ targets: container, scale: 1.05, duration: 150 });
-      txt.setColor("#f1c40f");
-    });
-    hitArea.on("pointerout", () => {
-      this.tweens.add({ targets: glow, alpha: 0, duration: 150 });
-      this.tweens.add({ targets: container, scale: 1, duration: 150 });
-      txt.setColor("#fff");
-    });
-    hitArea.on("pointerdown", () => {
-      this.tweens.add({ targets: container, scale: 0.95, yoyo: true, duration: 50, onComplete: callback });
-      if (this.sound && this.cache.audio.exists("sfx_select")) {
-        this.sound.play("sfx_select", { volume: 0.5 });
-      }
-    });
-    return container;
-  }
-
 }
