@@ -7,6 +7,75 @@ interface ToastData {
   desc: string;
 }
 
+/**
+ * Toca um efeito sonoro de celebração com fanfarra triunfante e brilho sonoro
+ */
+function playCelebrationSound() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+
+    let sfxVol = 0.6;
+    try {
+      const state = (window as any).UTLW?.state;
+      if (state?.settings?.sfxVolume !== undefined) {
+        sfxVol = Math.max(0, Math.min(1, state.settings.sfxVolume * 0.6));
+      }
+    } catch {}
+
+    const ctx = new AudioCtx();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
+
+    // Sequência de notas triunfantes: C5 -> E5 -> G5 -> C6 + harmonização cintilante (E6, G6, C7)
+    const notes = [
+      { freq: 523.25, time: 0.00, dur: 0.14, type: 'triangle' as OscillatorType, gain: 0.4 * sfxVol },
+      { freq: 659.25, time: 0.10, dur: 0.14, type: 'triangle' as OscillatorType, gain: 0.45 * sfxVol },
+      { freq: 783.99, time: 0.20, dur: 0.16, type: 'triangle' as OscillatorType, gain: 0.5 * sfxVol },
+      { freq: 1046.50, time: 0.32, dur: 0.85, type: 'triangle' as OscillatorType, gain: 0.6 * sfxVol },
+      // Harmonização e brilho sonoro de vitória
+      { freq: 1318.51, time: 0.34, dur: 0.82, type: 'sine' as OscillatorType, gain: 0.35 * sfxVol },
+      { freq: 1567.98, time: 0.36, dur: 0.80, type: 'sine' as OscillatorType, gain: 0.3 * sfxVol },
+      { freq: 2093.00, time: 0.38, dur: 0.75, type: 'sine' as OscillatorType, gain: 0.22 * sfxVol },
+      { freq: 2637.02, time: 0.40, dur: 0.65, type: 'sine' as OscillatorType, gain: 0.15 * sfxVol },
+    ];
+
+    notes.forEach((note) => {
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      osc.type = note.type;
+      osc.frequency.setValueAtTime(note.freq, now + note.time);
+
+      const startTime = now + note.time;
+      const endTime = startTime + note.dur;
+
+      gainNode.gain.setValueAtTime(0.0001, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(Math.max(0.0001, note.gain), startTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, endTime);
+
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(endTime + 0.05);
+    });
+
+    setTimeout(() => {
+      try {
+        if (ctx.state !== 'closed') {
+          ctx.close();
+        }
+      } catch {}
+    }, 1600);
+  } catch (err) {
+    console.warn("Celebration audio error:", err);
+  }
+}
+
 export const AchievementToast: React.FC = () => {
   const [toasts, setToasts] = useState<ToastData[]>([]);
 
@@ -20,6 +89,7 @@ export const AchievementToast: React.FC = () => {
       };
       
       setToasts(prev => [...prev, newToast]);
+      playCelebrationSound();
       
       // Remove after 4 seconds
       setTimeout(() => {
