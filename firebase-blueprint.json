@@ -2,25 +2,76 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "User profile and statistics",
+      "description": "User profile and combat statistics",
       "type": "object",
       "properties": {
         "username": { "type": "string" },
+        "avatar": { "type": "string" },
         "matches": { "type": "number" },
         "wins": { "type": "number" },
         "losses": { "type": "number" },
+        "elo": { "type": "number" },
+        "coins": { "type": "number" },
         "achievements": { "type": "array", "items": { "type": "string" } },
         "lastLogin": { "type": "string", "format": "date-time" }
       }
     },
-    "DailyStreak": {
-      "title": "DailyStreak",
-      "description": "Information about consecutive days logged in",
+    "UserSave": {
+      "title": "UserSave",
+      "description": "Comprehensive player progress including story campaign, victory stats, and unlocked characters",
       "type": "object",
       "properties": {
-        "currentStreak": { "type": "number" },
-        "lastLoginDate": { "type": "string" },
-        "lastClaimedDate": { "type": "string" }
+        "coins": { "type": "number" },
+        "stats": {
+          "type": "object",
+          "properties": {
+            "totalWins": { "type": "number" },
+            "winStreak": { "type": "number" },
+            "maxWinStreak": { "type": "number" },
+            "tournamentsWon": { "type": "number" },
+            "arcadeClears": { "type": "number" },
+            "charactersUnlocked": { "type": "number" }
+          }
+        },
+        "storyState": {
+          "type": "object",
+          "properties": {
+            "stage": { "type": "number" },
+            "level": { "type": "number" },
+            "exp": { "type": "number" },
+            "statPoints": { "type": "number" },
+            "stats": {
+              "type": "object",
+              "properties": {
+                "attack": { "type": "number" },
+                "defense": { "type": "number" },
+                "ki": { "type": "number" },
+                "speed": { "type": "number" },
+                "health": { "type": "number" }
+              }
+            },
+            "customCharacter": {
+              "type": "object"
+            }
+          }
+        },
+        "unlockedTitles": { "type": "array", "items": { "type": "string" } },
+        "equippedTitle": { "type": "string" },
+        "characters": { "type": "array" },
+        "settings": { "type": "object" },
+        "lastSyncedAt": { "type": "number" }
+      }
+    },
+    "LeaderboardPublic": {
+      "title": "LeaderboardPublic",
+      "description": "Public leaderboard entry for matchmaking and ranking",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "avatar": { "type": "string" },
+        "wins": { "type": "number" },
+        "elo": { "type": "number" },
+        "matches": { "type": "number" }
       }
     }
   },
@@ -29,9 +80,13 @@
       "schema": { "$ref": "#/entities/User" },
       "description": "User profile data."
     },
-    "/users/{userId}/dailyStreak/info": {
-      "schema": { "$ref": "#/entities/DailyStreak" },
-      "description": "Daily streak progress schema."
+    "/users/{userId}/save/progress": {
+      "schema": { "$ref": "#/entities/UserSave" },
+      "description": "Full player save including story campaign, statistics, and unlocked fighters."
+    },
+    "/leaderboard_public/{userId}": {
+      "schema": { "$ref": "#/entities/LeaderboardPublic" },
+      "description": "Public leaderboard document for ranking."
     }
   }
 }

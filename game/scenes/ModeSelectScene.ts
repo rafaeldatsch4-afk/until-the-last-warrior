@@ -90,28 +90,45 @@ export default class ModeSelectScene extends Phaser.Scene {
     });
 
     // 4. Header Title (Centered with generous breathing space)
-    const title = this.add
-      .text(width / 2, bounds.top + 28, "MODO DE JOGO", {
-        fontSize: "28px",
-        color: "#ffffff",
+    const headerContainer = this.add.container(width / 2, bounds.top + 28);
+
+    const titleShadow = this.add
+      .text(0, 2, "MODO DE JOGO", {
+        fontSize: "26px",
+        color: "#000000",
         fontStyle: "900",
-        letterSpacing: 2,
-        fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        letterSpacing: 3,
+        fontFamily: "'Montserrat', 'Rajdhani', sans-serif",
+        resolution: 3,
+      })
+      .setOrigin(0.5)
+      .setAlpha(0.6);
+
+    const title = this.add
+      .text(0, 0, "MODO DE JOGO", {
+        fontSize: "26px",
+        color: "#facc15",
+        fontStyle: "900",
+        letterSpacing: 3,
+        fontFamily: "'Montserrat', 'Rajdhani', sans-serif",
         stroke: "#000000",
-        strokeThickness: 5,
+        strokeThickness: 3,
         shadow: {
           offsetX: 0,
-          offsetY: 4,
-          color: "#f1c40f",
-          blur: 4,
+          offsetY: 2,
+          color: "#ca8a04",
+          blur: 6,
           fill: true,
+          stroke: true,
         },
-        resolution: 2,
+        resolution: 3,
       })
       .setOrigin(0.5);
 
+    headerContainer.add([titleShadow, title]);
+
     this.tweens.add({
-      targets: title,
+      targets: headerContainer,
       y: bounds.top + 26,
       duration: 1800,
       yoyo: true,
@@ -123,39 +140,51 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     const modes = [
       {
-        text: "📖 HISTÓRIA",
+        text: "HISTÓRIA",
+        icon: "📖",
         mode: "story",
-        color: 0x8e44ad,
+        color: 0x7c3aed,
+        accentColor: 0xa78bfa,
         desc: "Crie seu lutador e avance por batalhas épicas",
       },
       {
-        text: "🤖 1 VS 1 (CPU)",
+        text: "1 VS 1 (CPU)",
+        icon: "🤖",
         mode: "single",
-        color: 0x2980b9,
+        color: 0x0284c7,
+        accentColor: 0x38bdf8,
         desc: "Lute contra a inteligência artificial",
       },
       {
-        text: "👥 1 VS 1 (LOCAL)",
+        text: "1 VS 1 (LOCAL)",
+        icon: "👥",
         mode: "local_pvp",
-        color: 0xc0392b,
+        color: 0xd97706,
+        accentColor: 0xfbbf24,
         desc: "Jogue contra um amigo no mesmo teclado",
       },
       {
-        text: "🥋 TREINAMENTO",
+        text: "TREINAMENTO",
+        icon: "🥋",
         mode: "training",
-        color: 0x27ae60,
+        color: 0x16a34a,
+        accentColor: 0x4ade80,
         desc: "Treine contra um oponente imóvel e imortal",
       },
       {
-        text: "🕹️ ARCADE",
+        text: "ARCADE",
+        icon: "🕹️",
         mode: "arcade",
-        color: 0x9b59b6,
+        color: 0x9333ea,
+        accentColor: 0xc084fc,
         desc: "Enfrente uma série consecutiva de oponentes",
       },
       {
-        text: "🏅 TORNEIO",
+        text: "TORNEIO",
+        icon: "🏅",
         mode: "tournament",
-        color: 0xd4ac0d,
+        color: 0xca8a04,
+        accentColor: 0xfacc15,
         desc: "Chaveamento oficial de 8 lutadores",
       },
     ];
@@ -166,16 +195,17 @@ export default class ModeSelectScene extends Phaser.Scene {
     }
 
     // Calculate vertical spacing dynamically to fit all screen sizes smoothly
-    const startY = bounds.top + 72;
-    const availableHeight = bounds.bottom - startY - 15;
+    const startY = bounds.top + 68;
+    const availableHeight = bounds.bottom - startY - 12;
     const modeCount = modes.length;
-    const itemGap = Math.min(56, Math.floor(availableHeight / modeCount));
+    const itemGap = Math.min(58, Math.floor(availableHeight / modeCount));
 
     modes.forEach((m, index) => {
       const yPos = startY + index * itemGap + itemGap / 2;
       this.createBtn(
         width / 2,
         yPos,
+        m.icon,
         m.text,
         m.desc,
         () => {
@@ -200,6 +230,7 @@ export default class ModeSelectScene extends Phaser.Scene {
           }
         },
         m.color,
+        m.accentColor,
       );
     });
   }
@@ -207,45 +238,35 @@ export default class ModeSelectScene extends Phaser.Scene {
   createBtn(
     x: number,
     y: number,
+    icon: string,
     text: string,
     desc: string,
     onClick: () => void,
     color: number,
+    accentColor: number,
   ) {
     const container = this.add.container(x, y);
 
     const graphics = this.add.graphics();
-    const btnWidth = Math.min(500, this.cameras.main.width - 60);
-    const btnHeight = 44;
+    const btnWidth = Math.min(520, this.cameras.main.width - 48);
+    const btnHeight = 48;
     const radius = 8;
 
     const drawBtn = (isHover: boolean) => {
       graphics.clear();
 
-      // Shadow
-      graphics.fillStyle(0x000000, 0.6);
+      // Soft ambient drop shadow
+      graphics.fillStyle(0x000000, 0.5);
       graphics.fillRoundedRect(
-        -btnWidth / 2 + 3,
-        -btnHeight / 2 + 4,
+        -btnWidth / 2 + 2,
+        -btnHeight / 2 + 3,
         btnWidth,
         btnHeight,
         radius,
       );
 
-      // Background color
-      const r = (color >> 16) & 255;
-      const g = (color >> 8) & 255;
-      const b = color & 255;
-
-      let fillColor = color;
-      if (isHover) {
-        fillColor =
-          (Math.min(255, r + 35) << 16) |
-          (Math.min(255, g + 35) << 8) |
-          Math.min(255, b + 35);
-      }
-
-      graphics.fillStyle(fillColor, 0.95);
+      // Dark card surface with vibrant tinted background
+      graphics.fillStyle(isHover ? color : 0x0a1020, 0.94);
       graphics.fillRoundedRect(
         -btnWidth / 2,
         -btnHeight / 2,
@@ -254,21 +275,31 @@ export default class ModeSelectScene extends Phaser.Scene {
         radius,
       );
 
-      // Inner highlight
-      graphics.fillStyle(0xffffff, isHover ? 0.2 : 0.08);
+      // Left Accent Strip
+      graphics.fillStyle(isHover ? 0xffffff : accentColor, 1);
       graphics.fillRoundedRect(
-        -btnWidth / 2 + 2,
-        -btnHeight / 2 + 2,
-        btnWidth - 4,
-        btnHeight / 2,
-        radius - 2,
+        -btnWidth / 2,
+        -btnHeight / 2,
+        6,
+        btnHeight,
+        { tl: radius, bl: radius, tr: 0, br: 0 },
       );
 
-      // Border
+      // Glass Top Highlight
+      graphics.fillStyle(0xffffff, isHover ? 0.15 : 0.05);
+      graphics.fillRoundedRect(
+        -btnWidth / 2 + 6,
+        -btnHeight / 2,
+        btnWidth - 6,
+        btnHeight / 2,
+        { tl: 0, tr: radius, bl: 0, br: 0 },
+      );
+
+      // Border outline
       graphics.lineStyle(
-        2,
-        isHover ? 0xffffff : 0x000000,
-        isHover ? 0.9 : 0.4,
+        1.5,
+        isHover ? 0xffffff : accentColor,
+        isHover ? 0.95 : 0.45,
       );
       graphics.strokeRoundedRect(
         -btnWidth / 2,
@@ -281,28 +312,30 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     drawBtn(false);
 
+    // Title Text - Ultra Crisp Montserrat / Rajdhani typography
     const txt = this.add
-      .text(0, -8, text, {
-        fontSize: "17px",
+      .text(0, -9, `${icon}  ${text}`, {
+        fontSize: "15px",
         color: "#ffffff",
-        fontStyle: "bold",
-        stroke: "#000",
-        strokeThickness: 3,
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        resolution: 2,
+        fontStyle: "800",
+        letterSpacing: 1.5,
+        fontFamily: "'Montserrat', 'Rajdhani', sans-serif",
+        stroke: "#000000",
+        strokeThickness: 2,
+        resolution: 3,
       })
       .setOrigin(0.5);
 
+    // Description Text - Clean, modern Plus Jakarta Sans typography
     const descTxt = this.add
       .text(0, 11, desc, {
         fontSize: "11px",
-        color: "#f1f5f9",
-        fontStyle: "italic",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        stroke: "#000",
-        strokeThickness: 2,
-        resolution: 2,
+        color: "#cbd5e1",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        letterSpacing: 0.3,
+        stroke: "#000000",
+        strokeThickness: 1.5,
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -316,11 +349,15 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     hitArea.on("pointerover", () => {
       drawBtn(true);
-      this.tweens.add({ targets: container, scale: 1.03, duration: 100 });
+      txt.setColor("#ffffff");
+      descTxt.setColor("#f8fafc");
+      this.tweens.add({ targets: container, scale: 1.025, duration: 100 });
     });
 
     hitArea.on("pointerout", () => {
       drawBtn(false);
+      txt.setColor("#ffffff");
+      descTxt.setColor("#cbd5e1");
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
 
@@ -328,7 +365,7 @@ export default class ModeSelectScene extends Phaser.Scene {
       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
       this.tweens.add({
         targets: container,
-        scale: 0.96,
+        scale: 0.97,
         duration: 60,
         yoyo: true,
         onComplete: onClick,
@@ -340,22 +377,22 @@ export default class ModeSelectScene extends Phaser.Scene {
     const container = this.add.container(x, y).setDepth(200);
 
     const graphics = this.add.graphics();
-    const btnWidth = 110;
-    const btnHeight = 36;
+    const btnWidth = 104;
+    const btnHeight = 32;
     const radius = 6;
 
     const drawBtn = (isHover: boolean) => {
       graphics.clear();
-      graphics.fillStyle(0x000000, 0.6);
+      graphics.fillStyle(0x000000, 0.4);
       graphics.fillRoundedRect(
         -btnWidth / 2 + 2,
-        -btnHeight / 2 + 3,
+        -btnHeight / 2 + 2,
         btnWidth,
         btnHeight,
         radius,
       );
 
-      graphics.fillStyle(isHover ? 0x475569 : 0x1e293b, 0.95);
+      graphics.fillStyle(isHover ? 0x334155 : 0x0f172a, 0.92);
       graphics.fillRoundedRect(
         -btnWidth / 2,
         -btnHeight / 2,
@@ -364,7 +401,7 @@ export default class ModeSelectScene extends Phaser.Scene {
         radius,
       );
 
-      graphics.lineStyle(1.5, isHover ? 0x60a5fa : 0x94a3b8, 0.9);
+      graphics.lineStyle(1.5, isHover ? 0x38bdf8 : 0x334155, 0.9);
       graphics.strokeRoundedRect(
         -btnWidth / 2,
         -btnHeight / 2,
@@ -378,11 +415,12 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     const txt = this.add
       .text(0, 0, text, {
-        fontSize: "14px",
-        color: "#ffffff",
-        fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
+        fontSize: "12px",
+        color: "#f8fafc",
+        fontStyle: "700",
+        letterSpacing: 1,
+        fontFamily: "'Rajdhani', 'Montserrat', sans-serif",
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -395,11 +433,13 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     hitArea.on("pointerover", () => {
       drawBtn(true);
-      this.tweens.add({ targets: container, scale: 1.08, duration: 100 });
+      txt.setColor("#38bdf8");
+      this.tweens.add({ targets: container, scale: 1.05, duration: 100 });
     });
 
     hitArea.on("pointerout", () => {
       drawBtn(false);
+      txt.setColor("#f8fafc");
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
 
@@ -407,7 +447,7 @@ export default class ModeSelectScene extends Phaser.Scene {
       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
       this.tweens.add({
         targets: container,
-        scale: 0.92,
+        scale: 0.94,
         duration: 60,
         yoyo: true,
         onComplete: onClick,

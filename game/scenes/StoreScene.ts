@@ -1,4 +1,5 @@
 import { transitionTo } from "../utils/sceneTransition";
+import { syncCloudSaveImmediate } from "../systems/CloudSave";
 import Phaser from "phaser";
 import { GameState } from "../types";
 
@@ -328,6 +329,7 @@ export default class StoreScene extends Phaser.Scene {
 
       window.UTLW.save();
       window.dispatchEvent(new CustomEvent('sync-coins', { detail: { coins: state.coins }}));
+      syncCloudSaveImmediate();
       this.showSaveIndicator();
 
       this.coinsText.setText(`COINS: ${state.coins}`);

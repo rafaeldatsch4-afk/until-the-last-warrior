@@ -1,4 +1,5 @@
 import { transitionTo } from "../utils/sceneTransition";
+import { syncCloudSaveImmediate } from "../systems/CloudSave";
 import Phaser from "phaser";
 import { INITIAL_CHARACTERS } from "../data";
 import { CharacterData } from "../types";
@@ -732,6 +733,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       this.registry.set("gameState", gameState);
       // @ts-ignore
       if (window.UTLW) window.UTLW.save();
+      syncCloudSaveImmediate();
     }
 
     if (gameState?.gameMode === "story") {
@@ -748,6 +750,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       this.registry.set("gameState", gameState);
       // @ts-ignore
       if (window.UTLW) window.UTLW.save();
+      syncCloudSaveImmediate();
       transitionTo(this, "StoryHubScene");
       return;
     }

@@ -220,6 +220,7 @@ export default class StoryHubScene extends Phaser.Scene {
 
              this.registry.set("gameState", this.gameState);
              if (window.UTLW) window.UTLW.save();
+             syncCloudSaveImmediate();
              if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
              
              // Update all buttons visually
@@ -334,6 +335,7 @@ export default class StoryHubScene extends Phaser.Scene {
        this.gameState.storyState = undefined;
        this.registry.set("gameState", this.gameState);
        if (window.UTLW) window.UTLW.save();
+       syncCloudSaveImmediate();
        transitionTo(this, "ModeSelectScene");
     });
 

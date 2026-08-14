@@ -1,4 +1,5 @@
 import { transitionTo } from "../utils/sceneTransition";
+import { syncCloudSaveImmediate } from "../systems/CloudSave";
 import Phaser from "phaser";
 import { GameState, CharacterData, TournamentMatch } from "../types";
 import { INITIAL_CHARACTERS } from "../data";
@@ -108,6 +109,7 @@ export default class TournamentScene extends Phaser.Scene {
         this.gameState.coins += 500;
         this.registry.set("gameState", this.gameState);
         window.UTLW.save();
+        syncCloudSaveImmediate();
         this.add
           .text(480, 480, "+500 MOEDAS!", {
             fontSize: "24px",
