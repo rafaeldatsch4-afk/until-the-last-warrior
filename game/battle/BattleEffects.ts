@@ -220,5 +220,7 @@ export class BattleEffects {
     });
   }
 
-
+  public destroy() {
+    // No persistent groups yet, placeholder for object pooling & clean teardown
+  }
 }

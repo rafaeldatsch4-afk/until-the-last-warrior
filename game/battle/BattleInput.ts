@@ -625,4 +625,21 @@ export class BattleInput {
     pauseBtn.on("pointerup", () => pauseBtn.setAlpha(0.6));
     pauseBtn.on("pointerout", () => pauseBtn.setAlpha(0.6));
   }
+
+  public destroy() {
+    if (this.mobileControls && this.mobileControls.length > 0) {
+      this.mobileControls.forEach((ctrl) => {
+        try {
+          ctrl.destroy();
+        } catch (e) {}
+      });
+      this.mobileControls = [];
+    }
+    if (this.editHudTextObj) {
+      try {
+        this.editHudTextObj.destroy();
+      } catch (e) {}
+      this.editHudTextObj = null;
+    }
+  }
 }

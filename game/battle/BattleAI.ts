@@ -1,5 +1,6 @@
 export class BattleAI {
   scene: any;
+  aiMovementTimer?: Phaser.Time.TimerEvent;
 
   constructor(scene: any) {
     this.scene = scene;
@@ -24,7 +25,7 @@ export class BattleAI {
     });
 
     // AI Movement Loop
-    s.time.addEvent({
+    this.aiMovementTimer = s.time.addEvent({
       delay: 300,
       loop: true,
       callback: () => {
@@ -186,6 +187,17 @@ export class BattleAI {
       // Low Ki: Favor Charging or distancing
       if (r < 0.7) s.performCharge(false);
       else s.performAttack(false, dist < 150 ? "melee" : "ki");
+    }
+  }
+
+  public destroy() {
+    if (this.aiMovementTimer) {
+      this.aiMovementTimer.remove();
+      this.aiMovementTimer = undefined;
+    }
+    if (this.scene && this.scene.turnTimer) {
+      this.scene.turnTimer.remove();
+      this.scene.turnTimer = undefined;
     }
   }
 }

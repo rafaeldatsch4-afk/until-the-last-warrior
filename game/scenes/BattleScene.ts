@@ -21,7 +21,7 @@ import { animKeyToId, animIdToSuffix } from "../systems/AnimKeyMap";
 export default class BattleScene extends Phaser.Scene {
   enemyMaxHp!: number;
   playerMaxHp!: number;
-  storyStats?: any;
+  storyStats?: { attack: number; defense: number; ki: number; speed: number; health: number };
   public trnBtnGroup?: Phaser.GameObjects.Container;
 
   public battleUI!: BattleUI;
@@ -515,29 +515,9 @@ export default class BattleScene extends Phaser.Scene {
       },
     });
 
-    // Clean up when scene shuts down
-    this.events.on("shutdown", () => {
-      if (this.turnTimer) this.turnTimer.remove();
-      if (this.regenTimer) this.regenTimer.remove();
-      if (this.battleEnvironment) this.battleEnvironment.destroy();
-      this.sound.stopByKey("bgm_battle");
-      this.input.keyboard?.removeAllKeys();
-      this.input.keyboard?.removeAllListeners();
-      if (this.gameState.gameMode === "online_pvp") {
-        MultiplayerManager.getInstance().disconnect();
-      }
-
-      // Limpeza completa para evitar acúmulo de memória entre partidas
-      this.tweens.killAll();
-      this.time.removeAllEvents();
-
-      // Destrói qualquer emissor de partículas ainda ativo
-      this.children.list
-        .filter((child) => child.type === "ParticleEmitter" || (child as any).emitters)
-        .forEach((emitter) => {
-          try { (emitter as any).destroy(); } catch (e) {}
-        });
-    });
+    // Clean up when scene shuts down / destroys
+    this.events.on(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
+    this.events.on(Phaser.Scenes.Events.DESTROY, this.handleDestroy, this);
   }
 
   update(time: number, delta: number) {
@@ -5197,5 +5177,108 @@ export default class BattleScene extends Phaser.Scene {
           this.enemyKi / 100,
         );
     }
+  }
+
+  public handleShutdown() {
+    // 1. Timers & Tweens
+    if (this.turnTimer) {
+      this.turnTimer.remove();
+      this.turnTimer = undefined;
+    }
+    if (this.regenTimer) {
+      this.regenTimer.remove();
+      this.regenTimer = undefined;
+    }
+    this.time.removeAllEvents();
+    this.tweens.killAll();
+
+    // 2. Secondary Subsystems Teardown
+    if (this.battleAI) {
+      try {
+        this.battleAI.destroy();
+      } catch (e) {}
+    }
+    if (this.battleInput) {
+      try {
+        this.battleInput.destroy();
+      } catch (e) {}
+    }
+    if (this.battleUI) {
+      try {
+        this.battleUI.destroy();
+      } catch (e) {}
+    }
+    if (this.battleEnvironment) {
+      try {
+        this.battleEnvironment.destroy();
+      } catch (e) {}
+    }
+    if (this.effects) {
+      try {
+        this.effects.destroy();
+      } catch (e) {}
+    }
+
+    // 3. Audio Cleanup
+    if (this.sound) {
+      try {
+        this.sound.stopByKey("bgm_battle");
+      } catch (e) {}
+    }
+
+    // 4. Inputs & Keyboard
+    if (this.input) {
+      try {
+        this.input.keyboard?.removeAllKeys();
+        this.input.keyboard?.removeAllListeners();
+        this.input.removeAllListeners();
+      } catch (e) {}
+    }
+
+    // 5. Multiplayer Cleanup
+    const mm = MultiplayerManager.getInstance();
+    mm.onMatchPausedCallback = undefined;
+    mm.onMatchResumedCallback = undefined;
+    mm.onRemoteStateCallback = undefined;
+    mm.onRemoteActionCallback = undefined;
+    mm.onOpponentLeftCallback = undefined;
+    if (this.gameState?.gameMode === "online_pvp") {
+      try {
+        mm.disconnect();
+      } catch (e) {}
+    }
+
+    // 6. Particle Emitters & Dynamic Objects
+    if (this.children && this.children.list) {
+      this.children.list
+        .filter(
+          (child) =>
+            child.type === "ParticleEmitter" || (child as any).emitters,
+        )
+        .forEach((emitter) => {
+          try {
+            (emitter as any).destroy();
+          } catch (e) {}
+        });
+    }
+
+    // 7. Nullify Display Object references to allow GC immediate collection
+    this.player = null!;
+    this.enemy = null!;
+    this.p1Shadow = null!;
+    this.p2Shadow = null!;
+    this.p1Aura = null!;
+    this.p2Aura = null!;
+    this.p1Shield = null!;
+    this.p2Shield = null!;
+    this.p1ChargeIndicator = null!;
+    this.p2ChargeIndicator = null!;
+    this.trnBtnGroup = undefined;
+  }
+
+  public handleDestroy() {
+    this.handleShutdown();
+    this.events.off(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
+    this.events.off(Phaser.Scenes.Events.DESTROY, this.handleDestroy, this);
   }
 }

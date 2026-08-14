@@ -722,4 +722,33 @@ export class BattleUI {
       onComplete: () => comboText.destroy(),
     });
   }
+
+  public destroy() {
+    if (this.p1ComboHideTimer) {
+      this.p1ComboHideTimer.remove();
+      this.p1ComboHideTimer = undefined;
+    }
+    if (this.p2ComboHideTimer) {
+      this.p2ComboHideTimer.remove();
+      this.p2ComboHideTimer = undefined;
+    }
+    if (this.p1KiPulseTween) {
+      this.p1KiPulseTween.stop();
+      this.p1KiPulseTween = undefined;
+    }
+    if (this.p2KiPulseTween) {
+      this.p2KiPulseTween.stop();
+      this.p2KiPulseTween = undefined;
+    }
+    if (this.uiContainer) {
+      try {
+        this.uiContainer.destroy(true);
+      } catch (e) {}
+    }
+    if (this.pauseOverlay) {
+      try {
+        this.pauseOverlay.destroy(true);
+      } catch (e) {}
+    }
+  }
 }
