@@ -18,8 +18,8 @@ import { generateCustomSprite } from "../sprites/CustomSprite";
 
 export default class CharacterCreatorScene extends Phaser.Scene {
   private state = new CreatorState();
-  private preview!: CreatorPreview;
-  private ui!: CreatorUI;
+  private preview?: CreatorPreview;
+  private ui?: CreatorUI;
 
   private currentBaseObjIndex = 0;
   private currentColorIndex = 0;
@@ -36,7 +36,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     name: "Guerreiro Z",
   };
 
-  private AVAILABLE_SPECIALS = [
+  private readonly AVAILABLE_SPECIALS = [
     { id: "goku", name: "Kamehameha" },
     { id: "vegeta", name: "Galick Gun" },
     { id: "kuririn", name: "Destructo Disc" },
@@ -57,7 +57,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     { id: "chapolim", name: "Marreta Bionica" },
   ];
 
-  private AVAILABLE_SUPERS = [
+  private readonly AVAILABLE_SUPERS = [
     { id: "goku", name: "Spirit Bomb" },
     { id: "vegeta", name: "Final Flash" },
     { id: "kuririn", name: "Super Disc" },
@@ -74,19 +74,29 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   ];
 
   private nameDisplayTxt?: Phaser.GameObjects.Text;
-  private transformBtnGlow?: Phaser.GameObjects.Graphics;
+  private editIconTxt?: Phaser.GameObjects.Text;
+  private particleEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
+  private rightPanelContainer?: Phaser.GameObjects.Container;
+  private headerContainer?: Phaser.GameObjects.Container;
+  private backButtonContainer?: Phaser.GameObjects.Container;
+  private isShuttingDown: boolean = false;
 
   constructor() {
     super("CharacterCreatorScene");
   }
 
   create() {
+    this.isShuttingDown = false;
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
-    const { width, height } = this.cameras.main;
-    const bounds = ResponsiveUtils.getSafeBounds();
+    // Registro explícito do ciclo de vida para limpeza total de recursos
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
+    this.events.once(Phaser.Scenes.Events.DESTROY, this.handleDestroy, this);
 
-    // 1. Rich Cosmic Background
+    const { width, height } = this.cameras.main;
+    const bounds = ResponsiveUtils.getSafeBounds(this);
+
+    // 1. Cosmic Gradient Background
     const bg = this.add.graphics();
     bg.fillGradientStyle(0x060913, 0x0a1020, 0x03060c, 0x020408, 1);
     bg.fillRect(0, 0, width, height);
@@ -100,7 +110,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     // Ambient floating embers/energy particles
     if (this.textures.exists("particle")) {
-      this.add.particles(0, 0, "particle", {
+      this.particleEmitter = this.add.particles(0, 0, "particle", {
         x: { min: 0, max: width },
         y: { min: 0, max: height },
         lifespan: 4000,
@@ -120,11 +130,9 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     }
 
     // 2. TOP HEADER
-    // Back Button (Top Left)
-    this.createHeaderBackButton(bounds.left + 55, bounds.top + 22);
+    this.backButtonContainer = this.createHeaderBackButton(bounds.left + 55, bounds.top + 22);
 
-    // Main Header Title (Centered)
-    const headerContainer = this.add.container(width / 2, bounds.top + 22);
+    this.headerContainer = this.add.container(width / 2, bounds.top + 22);
     const headerTitle = this.add
       .text(0, -4, "CRIAR PERSONAGEM", {
         fontSize: "20px",
@@ -150,17 +158,19 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    headerContainer.add([headerTitle, headerSub]);
+    this.headerContainer.add([headerTitle, headerSub]);
 
     // 3. RESPONSIVE TWO-COLUMN LAYOUT
     const contentTopY = bounds.top + 48;
     const contentH = Math.min(450, bounds.bottom - contentTopY - 10);
 
-    const leftColW = 515;
-    const rightColW = 345;
+    // Ajuste dinâmico de colunas para telas normais e ultra-wide
+    const availableW = bounds.width;
+    const leftColW = Math.min(515, Math.floor(availableW * 0.58));
+    const rightColW = Math.min(345, Math.floor(availableW * 0.38));
     const gap = 16;
     const totalW = leftColW + rightColW + gap;
-    const startX = Math.max(bounds.left + 10, (width - totalW) / 2);
+    const startX = Math.max(bounds.left + 4, Math.floor(bounds.centerX - totalW / 2));
 
     const leftColX = startX;
     const rightColX = leftColX + leftColW + gap;
@@ -168,7 +178,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     // Load saved character data if present
     this.loadInitialCustomData();
 
-    // 4. PREVIEW INITIALIZATION (Centered inside Right Column)
+    // 4. PREVIEW INITIALIZATION (Centralizado na Coluna Direita)
     const previewCenterX = rightColX + rightColW / 2;
     const previewCenterY = contentTopY + 160;
 
@@ -192,10 +202,26 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     );
 
     // 6. RIGHT COLUMN: SHOWCASE STAGE & ACTIONS
-    this.buildRightShowcasePanel(rightColX, contentTopY, rightColW, contentH, previewCenterX, previewCenterY);
+    this.buildRightShowcasePanel(
+      rightColX,
+      contentTopY,
+      rightColW,
+      contentH,
+      previewCenterX,
+      previewCenterY
+    );
 
-    // Initial render
-    this.updatePreview();
+    // Renderização inicial imediata do preview
+    if (this.preview) {
+      this.preview.updatePreviewImmediate(
+        this.state,
+        this.currentBaseObjIndex,
+        this.currentColorIndex,
+        this.customSp1Id,
+        this.customSp2Id,
+        this.previewIsTransformed
+      );
+    }
   }
 
   private loadInitialCustomData() {
@@ -247,10 +273,16 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     panelY: number,
     panelW: number,
     panelH: number,
-    previewCenterX: number,
+    _previewCenterX: number,
     previewCenterY: number
   ) {
+    if (this.rightPanelContainer) {
+      this.rightPanelContainer.destroy(true);
+      this.rightPanelContainer = undefined;
+    }
+
     const container = this.add.container(panelX, panelY);
+    this.rightPanelContainer = container;
 
     // 1. Right Glass Panel
     const bg = this.add.graphics();
@@ -300,7 +332,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    const editIcon = this.add
+    this.editIconTxt = this.add
       .text(nameCardCenterX + this.nameDisplayTxt.width / 2 + 8, nameCardY + nameCardH / 2, "✎", {
         fontSize: "14px",
         color: "#38bdf8",
@@ -312,25 +344,29 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
 
     nameHit.on("pointerover", () => {
+      if (this.isShuttingDown) return;
       drawNameBg(true);
-      editIcon.setColor("#facc15");
+      if (this.editIconTxt) this.editIconTxt.setColor("#facc15");
     });
     nameHit.on("pointerout", () => {
+      if (this.isShuttingDown) return;
       drawNameBg(false);
-      editIcon.setColor("#38bdf8");
+      if (this.editIconTxt) this.editIconTxt.setColor("#38bdf8");
     });
     nameHit.on("pointerdown", () => {
+      if (this.isShuttingDown) return;
       window.dispatchEvent(
         new CustomEvent("request-text-input", {
           detail: {
             title: "Nome do seu Guerreiro:",
             currentValue: this.builderData.name,
             onComplete: (newName: string) => {
+              if (this.isShuttingDown) return;
               if (newName && newName.trim().length > 0) {
                 this.builderData.name = newName.trim().substring(0, 16);
-                if (this.nameDisplayTxt) {
+                if (this.nameDisplayTxt && this.editIconTxt) {
                   this.nameDisplayTxt.setText(`⚔️ ${this.builderData.name}`);
-                  editIcon.setX(nameCardCenterX + this.nameDisplayTxt.width / 2 + 8);
+                  this.editIconTxt.setX(nameCardCenterX + this.nameDisplayTxt.width / 2 + 8);
                 }
               }
             },
@@ -339,7 +375,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       );
     });
 
-    container.add([nameCardBg, this.nameDisplayTxt, editIcon, nameHit]);
+    container.add([nameCardBg, this.nameDisplayTxt, this.editIconTxt, nameHit]);
 
     // 3. Stage Pedestal Graphics (Behind sprite)
     const relPedestalY = previewCenterY - panelY + 50;
@@ -366,11 +402,10 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     container.add([pedestal, pedestalRing]);
 
-    // 4. Action Row: [ ⚡ TRANSFORMAR (SSJ) ] & [ 🎲 ALEATÓRIO ]
+    // 4. Action Row: [ ⚡ SSJ MODE ] & [ 🎲 ALEATÓRIO ]
     const btnRowY = panelH - 105;
     const halfBtnW = (panelW - 36) / 2;
 
-    // Transform SSJ Button
     const transBtnX = 14 + halfBtnW / 2;
     const transBtn = this.createStageActionButton(
       transBtnX,
@@ -385,7 +420,6 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       }
     );
 
-    // Randomize Button
     const randBtnX = 14 + halfBtnW + 8 + halfBtnW / 2;
     const randBtn = this.createStageActionButton(
       randBtnX,
@@ -454,14 +488,17 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
 
     hit.on("pointerover", () => {
+      if (this.isShuttingDown) return;
       drawBg(true);
       this.tweens.add({ targets: container, scale: 1.04, duration: 100 });
     });
     hit.on("pointerout", () => {
+      if (this.isShuttingDown) return;
       drawBg(false);
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
     hit.on("pointerdown", () => {
+      if (this.isShuttingDown) return;
       this.tweens.add({
         targets: container,
         scale: 0.95,
@@ -488,13 +525,10 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     const bg = this.add.graphics();
     const drawBg = (isHover: boolean) => {
       bg.clear();
-      // Drop Shadow
       bg.fillStyle(0x000000, 0.4);
       bg.fillRoundedRect(-w / 2 + 2, -h / 2 + 2, w, h, 8);
-      // Main Surface
       bg.fillStyle(isHover ? 0x16a34a : 0x15803d, 1);
       bg.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-      // Border
       bg.lineStyle(2, isHover ? 0x86efac : 0x22c55e, 1);
       bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
     };
@@ -518,14 +552,17 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
 
     hit.on("pointerover", () => {
+      if (this.isShuttingDown) return;
       drawBg(true);
       this.tweens.add({ targets: container, scale: 1.03, duration: 120 });
     });
     hit.on("pointerout", () => {
+      if (this.isShuttingDown) return;
       drawBg(false);
       this.tweens.add({ targets: container, scale: 1, duration: 120 });
     });
     hit.on("pointerdown", () => {
+      if (this.isShuttingDown) return;
       this.tweens.add({
         targets: container,
         scale: 0.96,
@@ -539,7 +576,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     return container;
   }
 
-  private createHeaderBackButton(x: number, y: number) {
+  private createHeaderBackButton(x: number, y: number): Phaser.GameObjects.Container {
     const container = this.add.container(x, y).setDepth(200);
 
     const bg = this.add.graphics();
@@ -570,16 +607,19 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
 
     hit.on("pointerover", () => {
+      if (this.isShuttingDown) return;
       drawBg(true);
       txt.setColor("#38bdf8");
       this.tweens.add({ targets: container, scale: 1.05, duration: 100 });
     });
     hit.on("pointerout", () => {
+      if (this.isShuttingDown) return;
       drawBg(false);
       txt.setColor("#ffffff");
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
     hit.on("pointerdown", () => {
+      if (this.isShuttingDown) return;
       const gs = this.registry.get("gameState");
       if (gs && gs.gameMode === "story") {
         transitionTo(this, "ModeSelectScene");
@@ -589,9 +629,12 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     });
 
     container.add([bg, txt, hit]);
+    return container;
   }
 
   private randomizeCharacter() {
+    if (this.isShuttingDown) return;
+
     // Randomize styles
     this.state.style_idx.head = Phaser.Math.Between(0, partOptions.head.length - 1);
     this.state.style_idx.torso = Phaser.Math.Between(0, partOptions.torso.length - 1);
@@ -618,33 +661,42 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.customSp2Id = sp2.id;
     this.customSp2Name = sp2.name;
 
-    this.ui.customSp1Id = sp1.id;
-    this.ui.customSp1Name = sp1.name;
-    this.ui.customSp2Id = sp2.id;
-    this.ui.customSp2Name = sp2.name;
+    if (this.ui) {
+      this.ui.customSp1Id = sp1.id;
+      this.ui.customSp1Name = sp1.name;
+      this.ui.customSp2Id = sp2.id;
+      this.ui.customSp2Name = sp2.name;
+    }
 
     // Refresh UI & Preview
     this.updatePreview();
-    const bounds = ResponsiveUtils.getSafeBounds();
+
+    const bounds = ResponsiveUtils.getSafeBounds(this);
     const contentTopY = bounds.top + 48;
     const contentH = Math.min(450, bounds.bottom - contentTopY - 10);
-    const leftColW = 515;
+    const availableW = bounds.width;
+    const leftColW = Math.min(515, Math.floor(availableW * 0.58));
+    const rightColW = Math.min(345, Math.floor(availableW * 0.38));
     const gap = 16;
-    const totalW = leftColW + 345 + gap;
-    const startX = Math.max(bounds.left + 10, (this.cameras.main.width - totalW) / 2);
+    const totalW = leftColW + rightColW + gap;
+    const startX = Math.max(bounds.left + 4, Math.floor(bounds.centerX - totalW / 2));
 
-    this.ui.initStudioPanel(
-      startX,
-      contentTopY,
-      leftColW,
-      contentH,
-      this.state,
-      this.AVAILABLE_SPECIALS,
-      this.AVAILABLE_SUPERS
-    );
+    if (this.ui) {
+      this.ui.initStudioPanel(
+        startX,
+        contentTopY,
+        leftColW,
+        contentH,
+        this.state,
+        this.AVAILABLE_SPECIALS,
+        this.AVAILABLE_SUPERS
+      );
+    }
   }
 
   private updatePreview() {
+    if (this.isShuttingDown || !this.preview) return;
+
     this.preview.updatePreview(
       this.state,
       this.currentBaseObjIndex,
@@ -656,6 +708,8 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   }
 
   private saveAndEquipCharacter() {
+    if (this.isShuttingDown) return;
+
     const customData = {
       gi1: 0,
       gi2: 0,
@@ -781,16 +835,66 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       duration: 200,
       ease: "Back.easeOut",
       onComplete: () => {
+        if (this.isShuttingDown) return;
         this.time.delayedCall(1600, () => {
+          if (this.isShuttingDown || !toast.scene) return;
           this.tweens.add({
             targets: toast,
             alpha: 0,
             y: toast.y - 20,
             duration: 300,
-            onComplete: () => toast.destroy(),
+            onComplete: () => toast.destroy(true),
           });
         });
       },
     });
+  }
+
+  private handleShutdown() {
+    this.isShuttingDown = true;
+
+    // 1. Interromper todos os tweens e timers da cena
+    this.tweens.killAll();
+    this.time.removeAllEvents();
+
+    // 2. Destruição segura de UI e Preview
+    if (this.ui) {
+      this.ui.destroy();
+      this.ui = undefined;
+    }
+
+    if (this.preview) {
+      this.preview.destroy();
+      this.preview = undefined;
+    }
+
+    // 3. Destruir containers locais
+    if (this.rightPanelContainer) {
+      this.rightPanelContainer.destroy(true);
+      this.rightPanelContainer = undefined;
+    }
+    if (this.headerContainer) {
+      this.headerContainer.destroy(true);
+      this.headerContainer = undefined;
+    }
+    if (this.backButtonContainer) {
+      this.backButtonContainer.destroy(true);
+      this.backButtonContainer = undefined;
+    }
+
+    // 4. Limpar emissores de partículas
+    if (this.particleEmitter) {
+      this.particleEmitter.destroy();
+      this.particleEmitter = undefined;
+    }
+
+    // 5. Remover ouvintes de eventos da cena e de input
+    this.input.removeAllListeners();
+    this.events.off(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
+    this.events.off(Phaser.Scenes.Events.DESTROY, this.handleDestroy, this);
+  }
+
+  private handleDestroy() {
+    this.handleShutdown();
   }
 }

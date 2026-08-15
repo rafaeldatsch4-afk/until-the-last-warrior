@@ -16,7 +16,9 @@ export class CreatorUI {
   private currentTab: CreatorTab = "style";
   private panelContainer?: Phaser.GameObjects.Container;
   private tabButtons: Phaser.GameObjects.Container[] = [];
+  private activeModalContainer?: Phaser.GameObjects.Container;
   private stateRef?: CreatorState;
+  private isDestroyed: boolean = false;
 
   // Attack selection state
   public customSp1Id: string = "";
@@ -77,12 +79,15 @@ export class CreatorUI {
     specials: { id: string; name: string }[],
     supers: { id: string; name: string }[]
   ) {
+    if (this.isDestroyed || !this.scene || !this.scene.sys) return;
+
     this.stateRef = state;
     this.availableSpecials = specials;
     this.availableSupers = supers;
 
     if (this.panelContainer) {
-      this.panelContainer.destroy();
+      this.panelContainer.destroy(true);
+      this.panelContainer = undefined;
     }
 
     this.panelContainer = this.scene.add.container(panelX, panelY);
@@ -132,6 +137,7 @@ export class CreatorUI {
         `${tab.icon} ${tab.label}`,
         tab.key === this.currentTab,
         () => {
+          if (this.currentTab === tab.key) return;
           this.currentTab = tab.key;
           this.refreshTabs(panelW, panelH);
         }
@@ -174,18 +180,21 @@ export class CreatorUI {
       .setInteractive({ useHandCursor: true });
 
     hit.on("pointerover", () => {
-      if (this.currentTab !== label) {
+      if (this.isDestroyed) return;
+      if (!isActive) {
         this.drawTabBg(bg, w, h, isActive, true);
         txt.setColor("#ffffff");
       }
     });
 
     hit.on("pointerout", () => {
+      if (this.isDestroyed) return;
       this.drawTabBg(bg, w, h, isActive, false);
       txt.setColor(isActive ? "#38bdf8" : "#94a3b8");
     });
 
     hit.on("pointerdown", () => {
+      if (this.isDestroyed) return;
       onClick();
     });
 
@@ -215,10 +224,10 @@ export class CreatorUI {
   }
 
   private refreshTabs(panelW: number, panelH: number) {
-    if (!this.stateRef) return;
+    if (!this.stateRef || !this.panelContainer) return;
     this.initStudioPanel(
-      this.panelContainer!.x,
-      this.panelContainer!.y,
+      this.panelContainer.x,
+      this.panelContainer.y,
       panelW,
       panelH,
       this.stateRef,
@@ -228,9 +237,9 @@ export class CreatorUI {
   }
 
   private renderCurrentTabContent(panelW: number, panelH: number) {
-    if (!this.stateRef) return;
+    if (!this.stateRef || !this.panelContainer) return;
     const contentContainer = this.scene.add.container(0, 68);
-    this.panelContainer!.add(contentContainer);
+    this.panelContainer.add(contentContainer);
 
     if (this.currentTab === "style") {
       this.renderStyleTab(contentContainer, panelW);
@@ -412,6 +421,7 @@ export class CreatorUI {
         .setInteractive({ useHandCursor: true });
 
       arrowL.on("pointerdown", () => {
+        if (this.isDestroyed) return;
         row.onPrev();
         valTxt.setText(row.getVal());
         this.onUpdate();
@@ -429,6 +439,7 @@ export class CreatorUI {
         .setInteractive({ useHandCursor: true });
 
       arrowR.on("pointerdown", () => {
+        if (this.isDestroyed) return;
         row.onNext();
         valTxt.setText(row.getVal());
         this.onUpdate();
@@ -563,6 +574,7 @@ export class CreatorUI {
         .setInteractive({ useHandCursor: true });
 
       arrowL.on("pointerdown", () => {
+        if (this.isDestroyed) return;
         item.onPrev();
         drawSwatch();
         colorTxt.setText(this.getColorName(item.getHex()));
@@ -579,6 +591,7 @@ export class CreatorUI {
         .setInteractive({ useHandCursor: true });
 
       arrowR.on("pointerdown", () => {
+        if (this.isDestroyed) return;
         item.onNext();
         drawSwatch();
         colorTxt.setText(this.getColorName(item.getHex()));
@@ -754,14 +767,17 @@ export class CreatorUI {
       .setInteractive({ useHandCursor: true });
 
     hit.on("pointerover", () => {
+      if (this.isDestroyed) return;
       drawBtn(true);
       this.scene.tweens.add({ targets: container, scale: 1.05, duration: 100 });
     });
     hit.on("pointerout", () => {
+      if (this.isDestroyed) return;
       drawBtn(false);
       this.scene.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
     hit.on("pointerdown", () => {
+      if (this.isDestroyed) return;
       onClick();
     });
 
@@ -775,8 +791,16 @@ export class CreatorUI {
     supers: { id: string; name: string }[],
     onSelect: (id: string, name: string) => void
   ) {
+    if (this.isDestroyed || !this.scene || !this.scene.sys) return;
+
+    if (this.activeModalContainer) {
+      this.activeModalContainer.destroy(true);
+      this.activeModalContainer = undefined;
+    }
+
     const { width, height } = this.scene.cameras.main;
     const modalContainer = this.scene.add.container(0, 0).setDepth(1000);
+    this.activeModalContainer = modalContainer;
 
     const backdrop = this.scene.add
       .rectangle(width / 2, height / 2, width, height, 0x000000, 0.8)
@@ -821,12 +845,17 @@ export class CreatorUI {
 
     closeBtn.on("pointerover", () => closeBtn.setColor("#ef4444"));
     closeBtn.on("pointerout", () => closeBtn.setColor("#94a3b8"));
-    closeBtn.on("pointerdown", () => modalContainer.destroy());
+    closeBtn.on("pointerdown", () => {
+      if (this.activeModalContainer === modalContainer) {
+        this.activeModalContainer = undefined;
+      }
+      modalContainer.destroy(true);
+    });
 
     const list = isSuper ? supers : specials;
     const itemsPerPage = 8;
     let currentPage = 0;
-    const totalPages = Math.ceil(list.length / itemsPerPage);
+    const totalPages = Math.max(1, Math.ceil(list.length / itemsPerPage));
 
     const gridContainer = this.scene.add.container(0, 0);
 
@@ -891,7 +920,10 @@ export class CreatorUI {
 
         hit.on("pointerdown", () => {
           onSelect(item.id, item.name);
-          modalContainer.destroy();
+          if (this.activeModalContainer === modalContainer) {
+            this.activeModalContainer = undefined;
+          }
+          modalContainer.destroy(true);
         });
 
         card.add([bBg, bTxt, hit]);
@@ -945,5 +977,25 @@ export class CreatorUI {
     );
 
     modalContainer.add([backdrop, panelBg, title, closeBtn, gridContainer, pageTxt, prevBtn, nextBtn]);
+  }
+
+  /**
+   * Limpeza de containers, modais, botões e listeners interativos.
+   */
+  public destroy() {
+    this.isDestroyed = true;
+
+    if (this.activeModalContainer) {
+      this.activeModalContainer.destroy(true);
+      this.activeModalContainer = undefined;
+    }
+
+    if (this.panelContainer) {
+      this.panelContainer.destroy(true);
+      this.panelContainer = undefined;
+    }
+
+    this.tabButtons = [];
+    this.stateRef = undefined;
   }
 }
