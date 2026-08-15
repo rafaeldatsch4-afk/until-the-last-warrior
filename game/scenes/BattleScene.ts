@@ -580,14 +580,14 @@ export default class BattleScene extends Phaser.Scene {
 
     // Network state stream sync
     if (this.gameState.gameMode === "online_pvp") {
-      // Interpolate remote player
-      if (this.hasInitialRemotePosition) {
-        const target = this.localPlayerIndex === 1 ? this.enemy : this.player;
-        if (target && target.active) {
-          // Smooth lerp based on delta time, capped at 0.8
-          const lerpFactor = Phaser.Math.Clamp(delta * 0.02, 0.1, 0.8);
-          target.x += (this.remoteTargetX - target.x) * lerpFactor;
-          target.y += (this.remoteTargetY - target.y) * lerpFactor;
+      // Interpolate remote player with Snapshot Linear Interpolation (Lerp)
+      const target = this.localPlayerIndex === 1 ? this.enemy : this.player;
+      if (target && target.active) {
+        const interp = MultiplayerManager.getInstance().updateInterpolation(delta);
+        target.x = interp.x;
+        target.y = interp.y;
+        if (!target.getData("isAttacking")) {
+          target.setRotation(interp.rotation);
         }
       }
 
