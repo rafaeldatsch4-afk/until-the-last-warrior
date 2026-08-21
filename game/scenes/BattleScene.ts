@@ -17,6 +17,7 @@ import { DailyChallenges } from "../systems/DailyChallenges";
 import { auth } from "../../firebase/init";
 import { MultiplayerManager } from "../systems/MultiplayerManager";
 import { animKeyToId, animIdToSuffix } from "../systems/AnimKeyMap";
+import { AuraManager } from "../systems/AuraManager";
 
 export default class BattleScene extends Phaser.Scene {
   enemyMaxHp!: number;
@@ -1686,66 +1687,12 @@ export default class BattleScene extends Phaser.Scene {
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
 
-    // Default base form colors
-    let auraColor = data.specialColor || (isPlayer ? 0x3498db : 0xe74c3c);
-    let ringColor = auraColor;
-
-    if (level > 0) {
-      // Transformed forms
-      const isUI = data.key === "goku" && level === 2;
-      const isUE = data.key === "vegeta" && level === 2;
-      const isSageMode = data.key === "naruto" && level === 1;
-      const isKuramaMode = data.key === "naruto" && level === 2;
-
-      auraColor = 0xffd700; // SSJ Gold
-      ringColor = 0xffff00;
-
-      if (isUI) {
-        auraColor = 0xffffff;
-        ringColor = 0x00ffff;
-      } else if (isUE) {
-        auraColor = 0x9b59b6;
-        ringColor = 0xff00ff;
-      } else if (data.key === "gohan" && level === 2) {
-        auraColor = 0x8a2be2;
-        ringColor = 0xff00ff;
-      } else if (data.key === "gohan" && level === 1) {
-        auraColor = 0xffd700;
-        ringColor = 0xffff00;
-      } else if (data.key === "piccolo") {
-        auraColor = 0xff8800;
-        ringColor = 0xffaa00;
-      } else if (data.key === "cell") {
-        auraColor = 0x00ff00;
-        ringColor = 0x00aa00;
-      } else if (data.key === "optimus") {
-        auraColor = 0x3498db;
-        ringColor = 0x2980b9;
-      } else if (data.key === "minipekka") {
-        auraColor = 0xff0000;
-        ringColor = 0xaa0000;
-      } else if (data.key === "cyberninja") {
-        auraColor = 0x00eaff;
-        ringColor = 0x0088ff;
-      } else if (isSageMode) {
-        auraColor = 0xffaa00;
-        ringColor = 0xff4400;
-      } else if (isKuramaMode) {
-        auraColor = 0xffff00;
-        ringColor = 0xffaa00;
-      } else if (data.key === "thukuna") {
-        auraColor = 0x8b0000;
-        ringColor = 0x000000;
-      } else if (data.key === "gojo") {
-        auraColor = 0x00ffff;
-        ringColor = 0xffffff;
-      } else if (data.key === "saitama") {
-        auraColor = 0xffffff;
-        ringColor = 0xff0000;
-      }
-    }
-
-    return { auraColor, ringColor };
+    return AuraManager.getBattleAura(
+      data.key,
+      isPlayer,
+      level,
+      data.specialColor,
+    );
   }
 
   performContinuousCharge(isPlayer: boolean, delta: number) {
@@ -2869,13 +2816,14 @@ export default class BattleScene extends Phaser.Scene {
     this.setActionState(isPlayer, true);
     this.modifyKi(isPlayer, 25);
     const sprite = isPlayer ? this.player : this.enemy;
+    const colors = this.getCharacterAuraColor(isPlayer);
 
-    // FIX: Moved charge aura down to +60 (Chest level)
+    // Charge aura with dynamic color
     const aura = this.add.circle(
       sprite.x,
       sprite.y + 60,
       10,
-      isPlayer ? 0x3498db : 0xe74c3c,
+      colors.auraColor,
       0.6,
     );
     this.children.moveBelow(aura, sprite);
@@ -2995,6 +2943,17 @@ export default class BattleScene extends Phaser.Scene {
       auraColor = 0xffffff; // White/Neutral for Saitama
       ringColor = 0xff0000; // Red for the intensity
       transformText = "SERIOUS MODE!";
+    }
+
+    const customAura = AuraManager.getBattleAura(
+      data.key,
+      isPlayer,
+      nextLevel,
+      data.specialColor,
+    );
+    if (customAura.isCustom) {
+      auraColor = customAura.auraColor;
+      ringColor = customAura.ringColor;
     }
 
     const animKeyTransform = this.getAnimKey(

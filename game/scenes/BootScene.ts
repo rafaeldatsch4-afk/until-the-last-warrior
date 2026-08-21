@@ -7,6 +7,7 @@ import { INITIAL_CHARACTERS } from "../data";
 import { AchievementSystem } from "../systems/Achievements";
 import { GameState } from "../types";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
+import { AuraManager } from "../systems/AuraManager";
 
 export default class BootScene extends Phaser.Scene {
   declare registry: Phaser.Data.DataManager;
@@ -44,6 +45,8 @@ console.log("Initializing Game State...");
         equippedTitle: "",
         settings: {
           lowPerformanceMode: detectLowEndDevice(),
+          auraColor: AuraManager.getPreference().id,
+          auraMode: AuraManager.getPreference().mode,
           hudConfig: {
             dpadPos: { x: 150, y: 380 },
             dpadScale: 1,

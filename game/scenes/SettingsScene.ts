@@ -1,6 +1,8 @@
 import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
+import { AuraManager, AURA_PRESETS } from "../systems/AuraManager";
+import { AuraCustomizerModal } from "../components/AuraCustomizerModal";
 
 export default class SettingsScene extends Phaser.Scene {
   declare registry: Phaser.Data.DataManager;
@@ -11,6 +13,9 @@ export default class SettingsScene extends Phaser.Scene {
     | Phaser.Sound.NoAudioSoundManager
     | Phaser.Sound.HTML5AudioSoundManager
     | Phaser.Sound.WebAudioSoundManager;
+
+  private auraBadgeText!: Phaser.GameObjects.Text;
+  private auraBadgeDot!: Phaser.GameObjects.Arc;
 
   constructor() {
     super("SettingsScene");
@@ -209,10 +214,70 @@ export default class SettingsScene extends Phaser.Scene {
       .on("pointerout", () => controlsBtn.setFillStyle(0x9b59b6))
             .on("pointerdown", () => this.showControlsOverlay());
 
+    // --- AURA SETTINGS ---
+    this.add
+      .text(480, 205, "AURA DE COMBATE (COR DO KI)", {
+        fontSize: "18px",
+        color: "#ffd54a",
+        fontStyle: "bold",
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    const auraBtn = this.add
+      .rectangle(480, 240, 320, 38, 0x3b82f6)
+      .setStrokeStyle(2, 0x93c5fd);
+    const auraBtnTxt = this.add
+      .text(480, 240, "⚡ PERSONALIZAR COR DA AURA", {
+        fontSize: "15px",
+        fontStyle: "bold",
+        color: "#ffffff",
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    // Active Aura Indicator Chip
+    const auraBadgeCont = this.add.container(480, 275);
+    const auraBadgeBg = this.add.graphics();
+    auraBadgeBg.fillStyle(0x0f172a, 0.8);
+    auraBadgeBg.fillRoundedRect(-140, -12, 280, 24, 6);
+    auraBadgeBg.lineStyle(1, 0x334155, 0.8);
+    auraBadgeBg.strokeRoundedRect(-140, -12, 280, 24, 6);
+    this.auraBadgeDot = this.add.circle(-115, 0, 5, 0xffd700);
+    this.auraBadgeText = this.add
+      .text(-100, 0, "AURA: SUPER SAIYAJIN", {
+        fontSize: "12px",
+        fontStyle: "bold",
+        color: "#cbd5e1",
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+      })
+      .setOrigin(0, 0.5);
+    auraBadgeCont.add([auraBadgeBg, this.auraBadgeDot, this.auraBadgeText]);
+    this.updateAuraBadge();
+
+    auraBtn
+      .setInteractive({ useHandCursor: true })
+      .on("pointerover", () => {
+        auraBtn.setFillStyle(0x2563eb);
+        this.tweens.add({ targets: auraBtn, scaleX: 1.03, scaleY: 1.03, duration: 100 });
+      })
+      .on("pointerout", () => {
+        auraBtn.setFillStyle(0x3b82f6);
+        this.tweens.add({ targets: auraBtn, scaleX: 1, scaleY: 1, duration: 100 });
+      })
+      .on("pointerdown", () => {
+        if (this.cache.audio.exists("sfx_select") || this.sound.get("sfx_select")) {
+          this.sound.play("sfx_select", { volume: this.registry.get("sfxVolume") ?? 1.0 });
+        }
+        AuraCustomizerModal.show(this, () => this.updateAuraBadge());
+      });
+
     // --- DISPLAY / PERFORMANCE ---
     this.add
-      .text(480, 220, "DISPLAY & PERFORMANCE", {
-        fontSize: "20px",
+      .text(480, 310, "DISPLAY & PERFORMANCE", {
+        fontSize: "18px",
         color: "#aaa",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         resolution: 2,
@@ -220,30 +285,49 @@ export default class SettingsScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     let potatoMode = state.settings?.lowPerformanceMode || false;
-    const perfBtn = this.add.rectangle(480, 260, 250, 40, potatoMode ? 0xe74c3c : 0x2ecc71).setStrokeStyle(2, 0xffffff);
-    const perfTxt = this.add.text(480, 260, potatoMode ? "POTATO MODE: ON" : "POTATO MODE: OFF", { fontSize: "16px", fontStyle: "bold", color: "#000", fontFamily: "system-ui" }).setOrigin(0.5);
+    const perfBtn = this.add
+      .rectangle(480, 342, 250, 34, potatoMode ? 0xe74c3c : 0x2ecc71)
+      .setStrokeStyle(2, 0xffffff);
+    const perfTxt = this.add
+      .text(480, 342, potatoMode ? "POTATO MODE: ON" : "POTATO MODE: OFF", {
+        fontSize: "15px",
+        fontStyle: "bold",
+        color: "#000",
+        fontFamily: "system-ui",
+      })
+      .setOrigin(0.5);
     perfBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
-       potatoMode = !potatoMode;
-       if (!state.settings) state.settings = {};
-       state.settings.lowPerformanceMode = potatoMode;
-       window.UTLW.save();
-       perfBtn.setFillStyle(potatoMode ? 0xe74c3c : 0x2ecc71);
-       perfTxt.setText(potatoMode ? "POTATO MODE: ON" : "POTATO MODE: OFF");
+      potatoMode = !potatoMode;
+      if (!state.settings) state.settings = {};
+      state.settings.lowPerformanceMode = potatoMode;
+      window.UTLW.save();
+      perfBtn.setFillStyle(potatoMode ? 0xe74c3c : 0x2ecc71);
+      perfTxt.setText(potatoMode ? "POTATO MODE: ON" : "POTATO MODE: OFF");
     });
 
     const isMobile = this.sys.game.device.input.touch || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (isMobile) {
-        const hudBtn = this.add.rectangle(480, 310, 250, 40, 0xf39c12).setStrokeStyle(2, 0xffffff);
-        const hudTxt = this.add.text(480, 310, "CUSTOMIZE MOBILE HUD", { fontSize: "16px", fontStyle: "bold", color: "#000", fontFamily: "system-ui" }).setOrigin(0.5);
-        hudBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
-           this.showHudEditor();
-        });
+      const hudBtn = this.add
+        .rectangle(480, 382, 250, 34, 0xf39c12)
+        .setStrokeStyle(2, 0xffffff);
+      const hudTxt = this.add
+        .text(480, 382, "CUSTOMIZE MOBILE HUD", {
+          fontSize: "14px",
+          fontStyle: "bold",
+          color: "#000",
+          fontFamily: "system-ui",
+        })
+        .setOrigin(0.5);
+      hudBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
+        this.showHudEditor();
+      });
     }
 
     // --- DATA MANAGEMENT (SAVE/LOAD) ---
+    const dataY = isMobile ? 425 : 395;
     this.add
-      .text(480, 350, "DATA MANAGEMENT", {
-        fontSize: "20px",
+      .text(480, dataY, "DATA MANAGEMENT", {
+        fontSize: "18px",
         color: "#aaa",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         resolution: 2,
@@ -252,11 +336,11 @@ export default class SettingsScene extends Phaser.Scene {
 
     // Export Button
     const exportBtn = this.add
-      .rectangle(380, 390, 180, 40, 0x3498db)
+      .rectangle(380, dataY + 32, 180, 34, 0x3498db)
       .setStrokeStyle(2, 0xffffff);
     const exportTxt = this.add
-      .text(380, 390, "DOWNLOAD SAVE", {
-        fontSize: "16px",
+      .text(380, dataY + 32, "DOWNLOAD SAVE", {
+        fontSize: "15px",
         fontStyle: "bold",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         resolution: 2,
@@ -271,11 +355,11 @@ export default class SettingsScene extends Phaser.Scene {
 
     // Import Button
     const importBtn = this.add
-      .rectangle(580, 390, 180, 40, 0xe67e22)
+      .rectangle(580, dataY + 32, 180, 34, 0xe67e22)
       .setStrokeStyle(2, 0xffffff);
     const importTxt = this.add
-      .text(580, 390, "UPLOAD SAVE", {
-        fontSize: "16px",
+      .text(580, dataY + 32, "UPLOAD SAVE", {
+        fontSize: "15px",
         fontStyle: "bold",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         resolution: 2,
@@ -657,5 +741,22 @@ export default class SettingsScene extends Phaser.Scene {
 
     // 3. Trigger click
     input.click();
+  }
+
+  private updateAuraBadge() {
+    if (!this.auraBadgeText || !this.auraBadgeDot) return;
+    const pref = AuraManager.getPreference();
+    const preset = AURA_PRESETS.find((p) => p.id === pref.id) || AURA_PRESETS[0];
+
+    const modeStr = pref.mode === "all" ? " (TODOS)" : " (P1)";
+    this.auraBadgeText.setText(`AURA: ${preset.name.toUpperCase()}${modeStr}`);
+
+    if (preset.color === -1) {
+      this.auraBadgeDot.setFillStyle(0x94a3b8);
+      this.auraBadgeText.setColor("#94a3b8");
+    } else {
+      this.auraBadgeDot.setFillStyle(preset.color);
+      this.auraBadgeText.setColor(preset.hex);
+    }
   }
 }

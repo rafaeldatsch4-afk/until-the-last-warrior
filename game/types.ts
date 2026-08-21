@@ -105,13 +105,15 @@ export interface GameState {
   equippedTitle?: string;
   settings?: {
     lowPerformanceMode?: boolean;
+    auraColor?: string | number;
+    auraMode?: "p1" | "all";
     hudConfig?: {
       dpadPos?: { x: number, y: number };
       dpadScale?: number;
       buttonsPos?: { x: number, y: number };
       buttonsScale?: number;
       opacity?: number;
-    }
+    };
   };
 }
 

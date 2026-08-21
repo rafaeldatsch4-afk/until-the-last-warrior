@@ -4,6 +4,7 @@ import { GameState } from "../types";
 import { DailyChallenges, CHALLENGES } from "../systems/DailyChallenges";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import { ArenaTextureBuilder } from "../battle/ArenaTextureBuilder";
+import { AuraCustomizerModal } from "../components/AuraCustomizerModal";
 
 const ARENAS_LIST = [
   { id: "arena", name: "Planeta Terra", icon: "🌍", color: 0x3498db },
@@ -254,9 +255,9 @@ export default class MenuScene extends Phaser.Scene {
 
     // 7. Menu Buttons (Right Column - Dedicated, Clean Layout)
     const menuColX = Math.min(width - 270, bounds.right - 235);
-    const menuBlockHeight = 5 * 43 + 36;
-    const startY = Math.round((height - menuBlockHeight) / 2) + 12;
-    const spacing = 43;
+    const menuBlockHeight = 6 * 38 + 34;
+    const startY = Math.round((height - menuBlockHeight) / 2) + 8;
+    const spacing = 38;
 
     this.createMenuButton(
       menuColX,
@@ -281,7 +282,7 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "StoreScene");
       },
       0x3498db,
-      60,
+      50,
     );
 
     this.createMenuButton(
@@ -294,12 +295,25 @@ export default class MenuScene extends Phaser.Scene {
         this.showChallengesPopup();
       },
       0xf1c40f,
-      120,
+      100,
     );
 
     this.createMenuButton(
       menuColX,
       startY + spacing * 3,
+      "⚡ COR DA AURA",
+      () => {
+        this.resumeAudioContext();
+        if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+        AuraCustomizerModal.show(this);
+      },
+      0x00eaff,
+      150,
+    );
+
+    this.createMenuButton(
+      menuColX,
+      startY + spacing * 4,
       "CONFIGURAÇÕES",
       () => {
         this.resumeAudioContext();
@@ -307,12 +321,12 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "SettingsScene");
       },
       0x95a5a6,
-      180,
+      200,
     );
 
     this.createMenuButton(
       menuColX,
-      startY + spacing * 4,
+      startY + spacing * 5,
       "CRIAR PERSONAGEM",
       () => {
         this.resumeAudioContext();
@@ -320,12 +334,12 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "CharacterCreatorScene");
       },
       0x2ecc71,
-      240,
+      250,
     );
 
     this.createMenuButton(
       menuColX,
-      startY + spacing * 5,
+      startY + spacing * 6,
       "TOP GLOBAL",
       () => {
         this.resumeAudioContext();
