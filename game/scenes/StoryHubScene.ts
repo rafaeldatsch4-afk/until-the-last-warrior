@@ -303,6 +303,14 @@ export default class StoryHubScene extends Phaser.Scene {
        });
     });
 
+    // Tip regarding Parry and Defense
+    this.add.text(690, 436, "💡 Dica: Defenda no impacto exato para PARRY (+Ki e Contra-Ataque).\nEvoluir DEFESA amplia a janela de tempo do Parry!", {
+       fontSize: "11px",
+       color: "#bdc3c7",
+       align: "center",
+       lineSpacing: 3,
+    }).setOrigin(0.5);
+
     // Battle Button
     const hasPoints = storyState.statPoints > 0;
     

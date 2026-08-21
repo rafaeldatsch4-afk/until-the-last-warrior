@@ -232,6 +232,31 @@ export class BattleReward {
       });
     }
 
+    // Story Mode Parry Performance Display
+    if (s.gameState.gameMode === "story" && (s.storyParryCount || 0) > 0) {
+      const parryExp = (s.storyParryCount || 0) * 15;
+      const parryText = s.add
+        .text(480, coinsEarned > 0 ? 415 : 340, `⚡ PARRIES: ${s.storyParryCount} (+${parryExp} EXP BÔNUS)`, {
+          fontFamily: "Impact, sans-serif",
+          fontSize: "26px",
+          color: "#00ffff",
+          stroke: "#000",
+          strokeThickness: 5,
+        })
+        .setOrigin(0.5)
+        .setDepth(3001)
+        .setAlpha(0)
+        .setScrollFactor(0);
+
+      s.tweens.add({
+        targets: parryText,
+        alpha: 1,
+        duration: 400,
+        delay: 1300,
+        ease: "Power2",
+      });
+    }
+
     const btn = s.add
       .text(480, 480, "CONTINUE", {
         fontFamily: "Impact, sans-serif",
@@ -301,10 +326,11 @@ export class BattleReward {
         if (win) {
           const storyState = s.gameState.storyState;
           if (storyState) {
+            const parryExpBonus = (s.storyParryCount || 0) * 15;
             storyState.stage += 1;
-            storyState.exp += 50 + (storyState.level * 10);
+            storyState.exp += 50 + (storyState.level * 10) + parryExpBonus;
             const expNeeded = (storyState.level + 1) * 100;
-            if (storyState.exp >= expNeeded) {
+            while (storyState.exp >= expNeeded) {
                storyState.level++;
                storyState.exp -= expNeeded;
                storyState.statPoints += 2;

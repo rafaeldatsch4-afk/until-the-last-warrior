@@ -138,6 +138,13 @@ export default class BattleScene extends Phaser.Scene {
   public p1DashingUntil: number = 0;
   public p2DashingUntil: number = 0;
 
+  // Parry and Counter-Attack System
+  public storyParryCount: number = 0;
+  public p1CounterBonusUntil: number = 0;
+  public p1CounterBonus: number = 1.0;
+  public p2CounterBonusUntil: number = 0;
+  public p2CounterBonus: number = 1.0;
+
   // Action Flags to prevent spamming
   public p1ActionActive: boolean = false;
   public p1SuperActive: boolean = false;
@@ -238,6 +245,13 @@ export default class BattleScene extends Phaser.Scene {
     this.p2HitCombo = 0;
     this.p1HitComboDamage = 0;
     this.p2HitComboDamage = 0;
+
+    // Reset Parry & Counter System
+    this.storyParryCount = 0;
+    this.p1CounterBonusUntil = 0;
+    this.p1CounterBonus = 1.0;
+    this.p2CounterBonusUntil = 0;
+    this.p2CounterBonus = 1.0;
 
     const chars = this.gameState.characters;
     this.playerData =
@@ -4111,6 +4125,36 @@ export default class BattleScene extends Phaser.Scene {
        mult *= (1 + (this.gameState.storyState.stage - 1) * 0.1);
     }
     
+    // Parry Counter-Attack Bonus
+    if (isPlayer && this.time.now < this.p1CounterBonusUntil) {
+      mult *= this.p1CounterBonus;
+      this.p1CounterBonusUntil = 0; // Consume counter buff on hit
+
+      if (this.player && this.player.active) {
+        const floatCounter = this.add.text(this.player.x, this.player.y - 70, "⚡ CONTRA-ATAQUE!", {
+          fontSize: "30px",
+          color: "#ff6600",
+          fontStyle: "bold",
+          stroke: "#000000",
+          strokeThickness: 6,
+          shadow: { color: "#ffcc00", blur: 6, fill: true },
+        }).setOrigin(0.5).setDepth(150);
+
+        this.tweens.add({
+          targets: floatCounter,
+          y: this.player.y - 120,
+          scale: { from: 1.2, to: 1.0 },
+          alpha: { start: 1, end: 0 },
+          duration: 900,
+          ease: "Power2",
+          onComplete: () => floatCounter.destroy(),
+        });
+      }
+    } else if (!isPlayer && this.time.now < this.p2CounterBonusUntil) {
+      mult *= this.p2CounterBonus;
+      this.p2CounterBonusUntil = 0;
+    }
+
     return mult;
   }
 
@@ -4533,23 +4577,115 @@ export default class BattleScene extends Phaser.Scene {
 
     const def = isP ? this.playerDefending : this.enemyDefending;
     const target = isP ? this.player : this.enemy;
+    const attacker = isP ? this.enemy : this.player;
 
     let isCritical = false;
     if (def) {
+      const isStoryMode = this.gameState.gameMode === "story";
+      const defStat = (isStoryMode && isP) ? (this.gameState.storyState?.stats.defense || 0) : 0;
+      // Base parry window: 220ms. In Story Mode, defense stat expands parry window (+10ms per point, up to 360ms)
+      const parryWindow = (isStoryMode && isP) ? Math.min(360, 220 + defStat * 10) : 200;
       const defendStartTime = isP ? this.p1DefendStartTime : this.p2DefendStartTime;
-      const isPerfectBlock = (this.time.now - defendStartTime) < 200; // 200ms window
+      const isParry = (this.time.now - defendStartTime) < parryWindow;
 
-      if (isPerfectBlock) {
+      if (isParry) {
         dmg = 0; // Negate all damage
         this.createFloatingDamage(target.x, target.y + 20, 0, false, true);
-        const floatText = this.add.text(target.x, target.y - 40, "PERFECT BLOCK!", { fontSize: "32px", color: "#00ffff", fontStyle: "bold", stroke: "#000", strokeThickness: 6 }).setOrigin(0.5);
-        this.tweens.add({ targets: floatText, y: target.y - 80, alpha: 0, duration: 1000, onComplete: () => floatText.destroy() });
-        this.createImpactEffect(target.x, target.y + 40, 0x00ffff, "super");
-        this.battleCamera?.flash(200, 255, 255, 255);
+
+        const parryTextStr = isStoryMode ? "⚡ PARRY PERFEITO!" : "⚡ PARRY!";
+        const floatText = this.add.text(target.x, target.y - 40, parryTextStr, {
+          fontSize: "34px",
+          color: "#ffd700",
+          fontStyle: "bold",
+          stroke: "#003366",
+          strokeThickness: 7,
+          shadow: { color: "#00ffff", blur: 8, fill: true },
+        }).setOrigin(0.5).setDepth(150);
+
+        this.tweens.add({
+          targets: floatText,
+          y: target.y - 95,
+          scale: { from: 1.3, to: 1.0 },
+          alpha: { start: 1, end: 0 },
+          duration: 1100,
+          ease: "Back.easeOut",
+          onComplete: () => floatText.destroy(),
+        });
+
+        // Golden shockwave ring
+        const ring = this.add.circle(target.x, target.y + 40, 15, 0xffd700, 0)
+          .setStrokeStyle(6, 0x00ffff, 1)
+          .setDepth(25);
+        this.tweens.add({
+          targets: ring,
+          scale: 14,
+          alpha: { start: 1, end: 0 },
+          duration: 450,
+          ease: "Cubic.easeOut",
+          onComplete: () => ring.destroy(),
+        });
+
+        this.createImpactEffect(target.x, target.y + 40, 0xffd700, "super");
+        this.battleCamera?.flash(180, 255, 255, 255);
         if (this.soundManager) this.soundManager.playClash();
         triggerVibration("heavy");
-        // Hitstun the attacker
-        if (isP) this.p2ActionActive = false; else this.p1ActionActive = false;
+
+        if (isP) {
+          this.storyParryCount++;
+          // Ki boost for player parry (scaled with Ki stat if in Story Mode)
+          const kiStat = isStoryMode ? (this.gameState.storyState?.stats.ki || 0) : 0;
+          const kiBonus = 20 + Math.floor(defStat * 1.5) + (kiStat * 2);
+          this.modifyKi(true, kiBonus);
+
+          // Counter-attack damage buff (+45% base, plus defense scaling)
+          this.p1CounterBonusUntil = this.time.now + 2500;
+          this.p1CounterBonus = 1.45 + (defStat * 0.05);
+
+          // Stagger & Recoil Attacker (Hitstun / Guard Break)
+          this.p2ActionActive = false;
+          this.aiMoveDir = 0;
+          if (attacker && attacker.active) {
+            attacker.setTint(0xffd700);
+            const recoilDir = attacker.x < target.x ? -1 : 1;
+            this.tweens.add({
+              targets: attacker,
+              x: attacker.x + recoilDir * 70,
+              duration: 180,
+              ease: "Quad.easeOut",
+              onComplete: () => {
+                this.time.delayedCall(500, () => {
+                  if (attacker && attacker.active) attacker.clearTint();
+                });
+              },
+            });
+          }
+
+          if (this.battleUI) {
+            this.battleUI.showLog("⚡ PARRY! Inimigo desestabilizado (+Ki & Bônus de Contra-Ataque!)");
+          }
+        } else {
+          // AI / P2 Parried
+          this.p1ActionActive = false;
+          this.p2CounterBonusUntil = this.time.now + 2000;
+          this.p2CounterBonus = 1.35;
+          this.modifyKi(false, 20);
+          if (attacker && attacker.active) {
+            attacker.setTint(0xffd700);
+            const recoilDir = attacker.x < target.x ? -1 : 1;
+            this.tweens.add({
+              targets: attacker,
+              x: attacker.x + recoilDir * 60,
+              duration: 180,
+              ease: "Quad.easeOut",
+              onComplete: () => {
+                this.time.delayedCall(400, () => {
+                  if (attacker && attacker.active) attacker.clearTint();
+                });
+              },
+            });
+          }
+        }
+
         return; // Stop processing damage
       } else {
         // Normal block
