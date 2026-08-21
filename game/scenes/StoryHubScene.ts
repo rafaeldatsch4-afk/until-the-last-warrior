@@ -303,8 +303,8 @@ export default class StoryHubScene extends Phaser.Scene {
        });
     });
 
-    // Tip regarding Parry and Defense
-    this.add.text(690, 436, "💡 Dica: Defenda no impacto exato para PARRY (+Ki e Contra-Ataque).\nEvoluir DEFESA amplia a janela de tempo do Parry!", {
+    // Tip regarding Parry, Combos, and Attributes
+    this.add.text(690, 436, "💡 Dicas: PARRY Perfeito anula dano (ampliado por DEFESA).\nSequências de COMBOS aumentam dano & Ki (turbinados por VELOCIDADE)!", {
        fontSize: "11px",
        color: "#bdc3c7",
        align: "center",

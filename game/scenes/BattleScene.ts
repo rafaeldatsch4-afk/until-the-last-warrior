@@ -140,6 +140,7 @@ export default class BattleScene extends Phaser.Scene {
 
   // Parry and Counter-Attack System
   public storyParryCount: number = 0;
+  public maxStoryCombo: number = 0;
   public p1CounterBonusUntil: number = 0;
   public p1CounterBonus: number = 1.0;
   public p2CounterBonusUntil: number = 0;
@@ -248,6 +249,7 @@ export default class BattleScene extends Phaser.Scene {
 
     // Reset Parry & Counter System
     this.storyParryCount = 0;
+    this.maxStoryCombo = 0;
     this.p1CounterBonusUntil = 0;
     this.p1CounterBonus = 1.0;
     this.p2CounterBonusUntil = 0;
@@ -4337,28 +4339,51 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
-  createFloatingComboMultiplier(x: number, y: number, comboCount: number) {
+  createFloatingComboMultiplier(x: number, y: number, comboCount: number, customMult?: number, tierLabel?: string) {
     if (!this.scene.isActive()) return;
 
-    // Multiplier effect text (e.g. "x1.2")
-    const multiplier = (1 + (comboCount - 1) * 0.1).toFixed(1);
+    // Multiplier effect text (e.g. "x1.5")
+    const multiplier = customMult !== undefined ? customMult.toFixed(1) : (1 + (comboCount - 1) * 0.1).toFixed(1);
 
     // Alternate side based on random jitter to avoid overlap with damage numbers
     const jitterX =
-      Phaser.Math.Between(40, 80) * (Math.random() > 0.5 ? 1 : -1);
+      Phaser.Math.Between(35, 75) * (Math.random() > 0.5 ? 1 : -1);
+
+    let textColor = "#fffc00";
+    let strokeColor = "#000000";
+    let shadowColor = "#ff0000";
+    let label = tierLabel ? ` ${tierLabel}` : "";
+
+    if (comboCount >= 12) {
+      textColor = "#00ffff";
+      shadowColor = "#ff00ff";
+      if (!tierLabel) label = " 👑 GOD COMBO!";
+    } else if (comboCount >= 8) {
+      textColor = "#e056fd";
+      shadowColor = "#ff0055";
+      if (!tierLabel) label = " 💥 ULTRA COMBO!";
+    } else if (comboCount >= 5) {
+      textColor = "#ff6600";
+      shadowColor = "#ffbb00";
+      if (!tierLabel) label = " 🔥 COMBO RUSH!";
+    } else if (comboCount >= 3) {
+      textColor = "#ffd700";
+      shadowColor = "#ff6600";
+      if (!tierLabel) label = " ⚡ COMBO!";
+    }
 
     const text = this.add
-      .text(x + jitterX, y - 60, `${comboCount} HITS! (x${multiplier})`, {
+      .text(x + jitterX, y - 60, `${comboCount} HITS! (x${multiplier})${label}`, {
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
         fontStyle: "italic",
-        fontSize: "32px",
-        color: "#fffc00",
-        stroke: "#000000",
-        strokeThickness: 5,
+        fontSize: comboCount >= 8 ? "34px" : "30px",
+        color: textColor,
+        stroke: strokeColor,
+        strokeThickness: 6,
         shadow: {
-          color: "#ff0000",
-          blur: 8,
+          color: shadowColor,
+          blur: 10,
           offsetX: 0,
           offsetY: 0,
           fill: true,
@@ -4366,7 +4391,7 @@ export default class BattleScene extends Phaser.Scene {
         resolution: 2,
       })
       .setOrigin(0.5)
-      .setDepth(100)
+      .setDepth(150)
       .setScale(0.5)
       .setAlpha(0);
 
@@ -4540,8 +4565,13 @@ export default class BattleScene extends Phaser.Scene {
 
     // Update hit combo counter (BEFORE damage application)
     const currentTime = this.time.now;
+    const isStoryMode = this.gameState.gameMode === "story";
+    const speedStat = (isStoryMode && !isP) ? (this.gameState.storyState?.stats.speed || 0) : 0;
+    const p1ComboWindow = isStoryMode ? Math.min(3500, 2000 + speedStat * 120) : 2000;
+    const p2ComboWindow = 2000;
+
     if (isP) { // Player took damage, so Enemy (P2) gets the combo
-      if (currentTime - this.p2LastHitTime < 2000) {
+      if (currentTime - this.p2LastHitTime < p2ComboWindow) {
         this.p2HitCombo++;
       } else {
         this.p2HitCombo = 1;
@@ -4550,7 +4580,7 @@ export default class BattleScene extends Phaser.Scene {
       this.p2LastHitTime = currentTime;
       this.p1HitCombo = 0; // Reset player's combo because they got hit
     } else { // Enemy took damage, Player (P1) gets the combo
-      if (currentTime - this.p1LastHitTime < 2000) {
+      if (currentTime - this.p1LastHitTime < p1ComboWindow) {
         this.p1HitCombo++;
       } else {
         this.p1HitCombo = 1;
@@ -4558,13 +4588,43 @@ export default class BattleScene extends Phaser.Scene {
       }
       this.p1LastHitTime = currentTime;
       this.p2HitCombo = 0; // Reset enemy's combo
+      if (isStoryMode) {
+        this.maxStoryCombo = Math.max(this.maxStoryCombo, this.p1HitCombo);
+      }
     }
 
     // Apply combo multiplier ONLY if the target isn't defending
     const hitComboCount = isP ? this.p2HitCombo : this.p1HitCombo;
+    let comboMultiplier = 1.0;
+    let comboTierLabel = "";
+
     if (hitComboCount > 1) {
-      const mult = 1 + (hitComboCount - 1) * 0.1; // Increases damage by 10% per consecutive hit
-      dmg = Math.floor(dmg * mult);
+      if (isStoryMode && !isP) {
+        // Story Mode Player: Escalating Combo Multiplier based on Speed & Hit count
+        const perHitScale = 0.15 + (speedStat * 0.02); // 15% base + 2% per point of Speed
+        let extraSurge = 0;
+        if (hitComboCount >= 12) {
+          extraSurge = 0.80; // +80% flat surge
+          comboTierLabel = "👑 GOD COMBO!";
+          this.modifyKi(true, 15);
+        } else if (hitComboCount >= 8) {
+          extraSurge = 0.45; // +45% flat surge
+          comboTierLabel = "💥 ULTRA COMBO!";
+          this.modifyKi(true, 8);
+        } else if (hitComboCount >= 5) {
+          extraSurge = 0.20; // +20% flat surge
+          comboTierLabel = "🔥 COMBO RUSH!";
+          this.modifyKi(true, 4);
+        } else if (hitComboCount >= 3) {
+          extraSurge = 0.08;
+          comboTierLabel = "⚡ COMBO!";
+        }
+
+        comboMultiplier = 1 + (hitComboCount - 1) * perHitScale + extraSurge;
+      } else {
+        comboMultiplier = 1 + (hitComboCount - 1) * 0.1;
+      }
+      dmg = Math.floor(dmg * comboMultiplier);
     }
     if (isP) {
       this.p2HitComboDamage += dmg;
@@ -4767,7 +4827,38 @@ export default class BattleScene extends Phaser.Scene {
               target.x,
               target.y - 40,
               this.p1HitCombo,
+              comboMultiplier,
+              comboTierLabel
             );
+          }
+
+          // Story Mode combo milestone audiovisual feedback
+          if (isStoryMode && this.p1HitCombo > 1) {
+            if (this.p1HitCombo === 3) {
+              this.battleUI.showLog("⚡ COMBO! Dano aumentado (+15% por golpe)");
+            } else if (this.p1HitCombo === 5) {
+              this.battleUI.showLog("🔥 COMBO RUSH! Bônus de Dano & Ki ativados!");
+              if (this.battleCamera) this.battleCamera.flash(120, 255, 140, 0, true);
+              this.createImpactEffect(target.x, target.y + 50, 0xff6600, "super", dmg);
+            } else if (this.p1HitCombo === 8) {
+              this.battleUI.showLog("💥 ULTRA COMBO! Dano Devastador!");
+              if (this.battleCamera) {
+                this.battleCamera.flash(160, 220, 80, 255, true);
+                if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(200, 0.035);
+              }
+              this.createImpactEffect(target.x, target.y + 50, 0x00ffff, "super", dmg);
+              if (this.soundManager) this.soundManager.playClash();
+              triggerVibration("heavy");
+            } else if (this.p1HitCombo === 12) {
+              this.battleUI.showLog("👑 WARRIOR GOD COMBO! PODER MÁXIMO DESENCADEADO!");
+              if (this.battleCamera) {
+                this.battleCamera.flash(260, 255, 215, 0, true);
+                if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(350, 0.05);
+              }
+              this.createImpactEffect(target.x, target.y + 50, 0xffd700, "super", dmg);
+              if (this.soundManager) this.soundManager.playClash();
+              triggerVibration("critical");
+            }
           }
         }
 

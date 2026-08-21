@@ -232,29 +232,60 @@ export class BattleReward {
       });
     }
 
-    // Story Mode Parry Performance Display
-    if (s.gameState.gameMode === "story" && (s.storyParryCount || 0) > 0) {
-      const parryExp = (s.storyParryCount || 0) * 15;
-      const parryText = s.add
-        .text(480, coinsEarned > 0 ? 415 : 340, `⚡ PARRIES: ${s.storyParryCount} (+${parryExp} EXP BÔNUS)`, {
-          fontFamily: "Impact, sans-serif",
-          fontSize: "26px",
-          color: "#00ffff",
-          stroke: "#000",
-          strokeThickness: 5,
-        })
-        .setOrigin(0.5)
-        .setDepth(3001)
-        .setAlpha(0)
-        .setScrollFactor(0);
+    // Story Mode Parry & Combo Performance Display
+    if (s.gameState.gameMode === "story") {
+      let nextY = coinsEarned > 0 ? 370 : 330;
 
-      s.tweens.add({
-        targets: parryText,
-        alpha: 1,
-        duration: 400,
-        delay: 1300,
-        ease: "Power2",
-      });
+      if ((s.storyParryCount || 0) > 0) {
+        const parryExp = (s.storyParryCount || 0) * 15;
+        const parryText = s.add
+          .text(480, nextY, `⚡ PARRIES: ${s.storyParryCount} (+${parryExp} EXP BÔNUS)`, {
+            fontFamily: "Impact, sans-serif",
+            fontSize: "24px",
+            color: "#00ffff",
+            stroke: "#000",
+            strokeThickness: 5,
+          })
+          .setOrigin(0.5)
+          .setDepth(3001)
+          .setAlpha(0)
+          .setScrollFactor(0);
+
+        s.tweens.add({
+          targets: parryText,
+          alpha: 1,
+          duration: 400,
+          delay: 1300,
+          ease: "Power2",
+        });
+
+        nextY += 35;
+      }
+
+      if ((s.maxStoryCombo || 0) > 1) {
+        const comboExp = (s.maxStoryCombo || 0) * 20;
+        const comboCoins = (s.maxStoryCombo || 0) * 10;
+        const comboText = s.add
+          .text(480, nextY, `🔥 MAIOR COMBO: ${s.maxStoryCombo} HITS (+${comboExp} EXP / +${comboCoins} MOEDAS)`, {
+            fontFamily: "Impact, sans-serif",
+            fontSize: "24px",
+            color: "#ff9900",
+            stroke: "#000",
+            strokeThickness: 5,
+          })
+          .setOrigin(0.5)
+          .setDepth(3001)
+          .setAlpha(0)
+          .setScrollFactor(0);
+
+        s.tweens.add({
+          targets: comboText,
+          alpha: 1,
+          duration: 400,
+          delay: 1400,
+          ease: "Power2",
+        });
+      }
     }
 
     const btn = s.add
@@ -327,8 +358,15 @@ export class BattleReward {
           const storyState = s.gameState.storyState;
           if (storyState) {
             const parryExpBonus = (s.storyParryCount || 0) * 15;
+            const comboExpBonus = (s.maxStoryCombo || 0) > 1 ? (s.maxStoryCombo * 20) : 0;
+            const comboCoinsBonus = (s.maxStoryCombo || 0) > 1 ? (s.maxStoryCombo * 10) : 0;
+
             storyState.stage += 1;
-            storyState.exp += 50 + (storyState.level * 10) + parryExpBonus;
+            storyState.exp += 50 + (storyState.level * 10) + parryExpBonus + comboExpBonus;
+            if (comboCoinsBonus > 0) {
+              s.gameState.coins += comboCoinsBonus;
+            }
+
             const expNeeded = (storyState.level + 1) * 100;
             while (storyState.exp >= expNeeded) {
                storyState.level++;
