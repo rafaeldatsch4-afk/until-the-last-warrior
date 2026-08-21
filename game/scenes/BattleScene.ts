@@ -1043,6 +1043,17 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     if (this.p1Shadow && this.player) {
+      // Ensure player alpha and depth are restored after i-frames, actions or animations
+      if (this.player.active) {
+        if (this.time.now < this.p1InvulnerableUntil) {
+          this.player.setAlpha(Math.floor(time / 100) % 2 === 0 ? 0.35 : 1.0);
+        } else if (!this.p1ActionActive) {
+          if (this.player.alpha !== 1) this.player.setAlpha(1);
+          if (!this.player.visible) this.player.setVisible(true);
+        }
+        if (this.player.depth !== 1) this.player.setDepth(1);
+      }
+
       this.p1Shadow.setX(this.player.x);
       // Optional: fade slightly if they go high above the start pos
       const yDist = Math.max(0, this.p1StartPos.y - this.player.y);
@@ -1088,6 +1099,17 @@ export default class BattleScene extends Phaser.Scene {
       }
     }
     if (this.p2Shadow && this.enemy) {
+      // Ensure enemy alpha and depth are restored after i-frames, actions or animations
+      if (this.enemy.active) {
+        if (this.time.now < this.p2InvulnerableUntil) {
+          this.enemy.setAlpha(Math.floor(time / 100) % 2 === 0 ? 0.35 : 1.0);
+        } else if (!this.p2ActionActive) {
+          if (this.enemy.alpha !== 1) this.enemy.setAlpha(1);
+          if (!this.enemy.visible) this.enemy.setVisible(true);
+        }
+        if (this.enemy.depth !== 1) this.enemy.setDepth(1);
+      }
+
       this.p2Shadow.setX(this.enemy.x);
       const yDist = Math.max(0, this.p2StartPos.y - this.enemy.y);
       this.p2Shadow.setAlpha(Math.max(0.1, 0.5 - yDist / 200));
@@ -4052,12 +4074,23 @@ export default class BattleScene extends Phaser.Scene {
       : this.enemyTransformLevel;
     const animKeyIdle = this.getAnimKey(data.key, transLevel, "idle");
     const attacker = isPlayer ? this.player : this.enemy;
+    const defender = isPlayer ? this.enemy : this.player;
 
     if (isPlayer) this.p1SuperActive = false;
     else this.p2SuperActive = false;
 
     if (this.scene.isActive()) {
-      attacker.play(animKeyIdle);
+      if (attacker && attacker.active) {
+        attacker.play(animKeyIdle);
+        attacker.setAlpha(1);
+        attacker.setVisible(true);
+      }
+      if (defender && defender.active) {
+        defender.setVisible(true);
+        if (this.time.now >= (isPlayer ? this.p2InvulnerableUntil : this.p1InvulnerableUntil)) {
+          defender.setAlpha(1);
+        }
+      }
       this.setActionState(isPlayer, false);
     }
   }
@@ -4655,16 +4688,6 @@ export default class BattleScene extends Phaser.Scene {
         // Wake-up i-frames: Knockdown logic
         if (isP) this.p1InvulnerableUntil = this.time.now + 1500;
         else this.p2InvulnerableUntil = this.time.now + 1500;
-        
-        // Flash to indicate i-frames
-        this.tweens.add({
-          targets: target,
-          alpha: 0.2,
-          yoyo: true,
-          duration: 150,
-          repeat: 5,
-          onComplete: () => { if(target.active) target.alpha = 1; }
-        });
 
         const attacker = isP ? this.enemy : this.player;
         [target, attacker].forEach((char) => {
@@ -4760,6 +4783,9 @@ export default class BattleScene extends Phaser.Scene {
               target.clearTint();
               target.x = originalX;
               target.rotation = 0;
+              if (this.time.now >= (isP ? this.p1InvulnerableUntil : this.p2InvulnerableUntil)) {
+                target.setAlpha(1);
+              }
             }
           },
         });
@@ -4774,6 +4800,9 @@ export default class BattleScene extends Phaser.Scene {
             if (target.active) {
               target.clearTint();
               target.rotation = 0;
+              if (this.time.now >= (isP ? this.p1InvulnerableUntil : this.p2InvulnerableUntil)) {
+                target.setAlpha(1);
+              }
             }
           },
         });

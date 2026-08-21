@@ -1,8 +1,10 @@
 import Phaser from "phaser";
 import { transitionTo } from "../utils/sceneTransition";
 import { syncCloudSaveImmediate } from "../systems/CloudSave";
-import { GameState } from "../types";
+import { GameState, CharacterData } from "../types";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
+import { generateCustomSprite } from "../sprites/CustomSprite";
+import { INITIAL_CHARACTERS } from "../data";
 
 export default class StoryHubScene extends Phaser.Scene {
   private gameState!: GameState;
@@ -11,7 +13,53 @@ export default class StoryHubScene extends Phaser.Scene {
     super("StoryHubScene");
   }
 
-    create() {
+  private ensureCustomAnimsExist(key: string) {
+    const createAnim = (
+      animKey: string,
+      texture: string,
+      start: number,
+      end: number,
+      frameRate: number,
+      repeat: number = -1,
+    ) => {
+      if (!this.textures.exists(texture)) return;
+      if (this.anims.exists(animKey)) return;
+
+      const tex = this.textures.get(texture);
+      const frames: Phaser.Types.Animations.AnimationFrame[] = [];
+      for (let i = start; i <= end; i++) {
+        if (!tex.has(i.toString())) {
+          frames.push({ key: texture, frame: "0" });
+        } else {
+          frames.push({ key: texture, frame: i.toString() });
+        }
+      }
+      this.anims.create({
+        key: animKey,
+        frames: frames,
+        frameRate: frameRate,
+        repeat: repeat,
+      });
+    };
+
+    const createAllForTex = (baseKey: string, texKey: string) => {
+      createAnim(`${baseKey}_idle`, texKey, 0, 3, 10);
+      createAnim(`${baseKey}_walk`, texKey, 4, 7, 12);
+      createAnim(`${baseKey}_attack`, texKey, 8, 9, 16, 0);
+      createAnim(`${baseKey}_punch`, texKey, 8, 8, 12, 0);
+      createAnim(`${baseKey}_kick`, texKey, 9, 9, 12, 0);
+      createAnim(`${baseKey}_special`, texKey, 8, 9, 12, -1);
+      createAnim(`${baseKey}_defend`, texKey, 10, 10, 10, -1);
+      createAnim(`${baseKey}_transform`, texKey, 0, 3, 24, -1);
+      createAnim(`${baseKey}_charge`, texKey, 11, 11, 10, -1);
+    };
+
+    createAllForTex(key, key);
+    createAllForTex(`${key}_ssj`, `${key}_ssj`);
+    createAllForTex(`${key}_ui`, `${key}_ui`);
+  }
+
+  create() {
     this.cameras.main.fadeIn(300, 0, 0, 0);
     this.gameState = this.registry.get("gameState");
 
@@ -33,7 +81,7 @@ export default class StoryHubScene extends Phaser.Scene {
       .setBlendMode(Phaser.BlendModes.SCREEN);
 
     const bounds = ResponsiveUtils.getSafeBounds();
-    const title = this.add.text(480, bounds.top + 45, "MODO HISTÓRIA", {
+    this.add.text(480, bounds.top + 45, "MODO HISTÓRIA", {
       fontSize: "36px",
       color: "#f1c40f",
       fontStyle: "900",
@@ -54,7 +102,7 @@ export default class StoryHubScene extends Phaser.Scene {
       this.showConfigMenu();
     });
 
-    const storyState = this.gameState.storyState;
+    const storyState = this.gameState?.storyState;
     if (!storyState) return;
 
     // LEFT PANEL (Character & Level)
@@ -66,6 +114,16 @@ export default class StoryHubScene extends Phaser.Scene {
 
     const char = storyState.customCharacter;
     if (char) {
+       // Ensure textures and animations exist for custom character
+       if (!this.textures.exists("custom_999")) {
+         try {
+           generateCustomSprite(this, char);
+         } catch (e) {
+           console.error("Error generating custom sprite in StoryHub:", e);
+         }
+       }
+       this.ensureCustomAnimsExist("custom_999");
+
        this.add.text(240, 130, char.name.toUpperCase(), { 
            fontSize: "32px", 
            color: "#3498db", 
@@ -75,10 +133,12 @@ export default class StoryHubScene extends Phaser.Scene {
            fontFamily: "system-ui, -apple-system, sans-serif"
        }).setOrigin(0.5);
 
-       let previewKey = "custom_999"; 
+       const previewKey = "custom_999"; 
        if (this.anims.exists(previewKey + "_idle")) {
-          const sprite = this.add.sprite(240, 250, previewKey).setScale(2);
+          const sprite = this.add.sprite(240, 250, previewKey).setScale(2.2);
           sprite.play(previewKey + "_idle");
+       } else if (this.textures.exists(previewKey)) {
+          this.add.sprite(240, 250, previewKey, "0").setScale(2.2);
        } else {
           this.add.text(240, 250, "IMAGEM\nINDISPONÍVEL", { color: "#fff" }).setOrigin(0.5);
        }
@@ -96,7 +156,7 @@ export default class StoryHubScene extends Phaser.Scene {
     // Level Badge (Centered above the EXP bar)
     const badgeY = uiY - 28;
     const lvlBadge = this.add.graphics();
-    lvlBadge.fillStyle(0x3498db, 1); // Blue to match the theme instead of red
+    lvlBadge.fillStyle(0x3498db, 1);
     lvlBadge.fillCircle(barX, badgeY, 18);
     lvlBadge.lineStyle(2, 0xffffff, 1);
     lvlBadge.strokeCircle(barX, badgeY, 18);
@@ -152,7 +212,7 @@ export default class StoryHubScene extends Phaser.Scene {
         });
     }
 
-    let startY = 210;
+    const startY = 210;
     const stats = ["attack", "defense", "ki", "speed", "health"];
     const labels: Record<string, string> = {
       attack: "ATAQUE",
@@ -244,21 +304,19 @@ export default class StoryHubScene extends Phaser.Scene {
     });
 
     // Battle Button
-    // If we have stat points, maybe we want to hint the user
     const hasPoints = storyState.statPoints > 0;
     
     // Slanted Battle Button
     const battleBtnX = 480;
-    const battleBtnY = 490;
+    const battleBtnY = Math.min(490, bounds.bottom - 35);
     
     const battleBtnContainer = this.add.container(battleBtnX, battleBtnY);
     
-    // We will use a shape for slanted button
     const btnGraphics = this.add.graphics();
-    const btnWidth = 400;
-    const btnHeight = 60;
+    const btnWidth = 440;
+    const btnHeight = 56;
     
-    const drawBtn = (color: number) => {
+    const drawBtn = (color: number, strokeColor: number = 0xffffff) => {
         btnGraphics.clear();
         btnGraphics.fillStyle(color, 1);
         btnGraphics.beginPath();
@@ -269,54 +327,61 @@ export default class StoryHubScene extends Phaser.Scene {
         btnGraphics.closePath();
         btnGraphics.fillPath();
         
-        btnGraphics.lineStyle(3, 0xffffff, 1);
+        btnGraphics.lineStyle(3, strokeColor, 1);
         btnGraphics.strokePath();
-    }
+    };
     
-    drawBtn(0xe74c3c);
+    drawBtn(0xe74c3c, 0xf39c12);
     
-    const battleTxt = this.add.text(0, 0, `ENTRAR NA BATALHA (LUTA ${storyState.stage})`, { 
-        fontSize: "22px", 
-        color: "#fff", 
+    const battleTxt = this.add.text(0, 0, `⚔ ENTRAR NA BATALHA (LUTA ${storyState.stage})`, { 
+        fontSize: "20px", 
+        color: "#ffffff", 
         fontStyle: "900", 
+        stroke: "#000000",
+        strokeThickness: 4,
         fontFamily: "system-ui, -apple-system, sans-serif" 
     }).setOrigin(0.5);
     
     battleBtnContainer.add([btnGraphics, battleTxt]);
     
-    // Hit Area (polygon)
-    const hitArea = new Phaser.Geom.Polygon([
-        -btnWidth/2 + 20, -btnHeight/2,
-        btnWidth/2, -btnHeight/2,
-        btnWidth/2 - 20, btnHeight/2,
-        -btnWidth/2, btnHeight/2
-    ]);
-    
-    const hitZone = this.add.zone(0, 0, btnWidth, btnHeight)
-        .setInteractive({ hitArea: hitArea, hitAreaCallback: Phaser.Geom.Polygon.Contains, useHandCursor: true });
+    // Reliable interactive hit zone using rectangle
+    const hitZone = this.add.rectangle(0, 0, btnWidth, btnHeight, 0x000000, 0)
+        .setInteractive({ useHandCursor: true });
     
     battleBtnContainer.add(hitZone);
     
     hitZone.on("pointerover", () => {
-        drawBtn(0xc0392b);
-        if (hasPoints) {
-            // maybe a warning
-        }
+        drawBtn(0xc0392b, 0xffffff);
+        this.tweens.add({ targets: battleBtnContainer, scale: 1.03, duration: 100 });
     });
     
     hitZone.on("pointerout", () => {
-        drawBtn(0xe74c3c);
+        drawBtn(0xe74c3c, 0xf39c12);
+        this.tweens.add({ targets: battleBtnContainer, scale: 1.0, duration: 100 });
     });
     
+    let isStarting = false;
     hitZone.on("pointerdown", () => {
+       if (isStarting) return;
+       isStarting = true;
        if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-       this.tweens.add({ targets: battleBtnContainer, scale: 0.95, duration: 50, yoyo: true, onComplete: () => {
+       this.tweens.add({
+         targets: battleBtnContainer,
+         scale: 0.95,
+         duration: 60,
+         yoyo: true,
+         onComplete: () => {
            this.startNextBattle();
-       }});
+         }
+       });
     });
     
     if (hasPoints) {
-        this.add.text(battleBtnX, battleBtnY + 35, "Você tem pontos de atributo não gastos!", { fontSize: "12px", color: "#f1c40f" }).setOrigin(0.5);
+        this.add.text(battleBtnX, battleBtnY + 34, "Você tem pontos de atributo não gastos!", {
+          fontSize: "12px",
+          color: "#f1c40f",
+          fontStyle: "bold"
+        }).setOrigin(0.5);
     }
   }
 
@@ -326,12 +391,10 @@ export default class StoryHubScene extends Phaser.Scene {
     const title = this.add.text(480, 160, "OPÇÕES DA HISTÓRIA", { fontSize: "28px", color: "#fff", fontStyle: "bold" }).setOrigin(0.5);
 
     const editBtn = this.createModalBtn(480, 220, 300, 50, "EDITAR VISUAL DO PERSONAGEM", 0x2ecc71, () => {
-       // Transition to CharacterCreatorScene to edit character visual
        transitionTo(this, "CharacterCreatorScene");
     });
 
     const deleteBtn = this.createModalBtn(480, 290, 300, 50, "EXCLUIR PROGRESSO (RESET)", 0xe74c3c, () => {
-       // Excluir historia
        this.gameState.storyState = undefined;
        this.registry.set("gameState", this.gameState);
        if (window.UTLW) window.UTLW.save();
@@ -361,29 +424,52 @@ export default class StoryHubScene extends Phaser.Scene {
        this.tweens.add({ targets: container, scale: 0.9, duration: 50, yoyo: true, onComplete: callback });
     });
     
-    // Create a destroy wrapper to clean up the container
-    const destroyObj = {
+    return {
        destroy: () => {
            container.destroy();
        }
     };
-    return destroyObj;
   }
 
   startNextBattle() {
-     // Prepare the battle setup
-     const storyState = this.gameState.storyState!;
-     this.gameState.p1CharacterId = 999;
-     // Enemy character based on stage
-     const availableBaseChars = this.gameState.characters.filter(c => c.id !== 999);
-     const enemyIdx = (storyState.stage - 1) % availableBaseChars.length;
-     this.gameState.p2CharacterId = availableBaseChars[enemyIdx].id;
+     if (!this.gameState?.storyState) return;
+     const storyState = this.gameState.storyState;
      
-     // Set difficulty based on stage
-     this.gameState.difficulty = Math.min(2, Math.floor(storyState.stage / 5)); // gets harder every 5 stages
+     // 1. Ensure gameMode is set to story
+     this.gameState.gameMode = "story";
+     
+     // 2. Ensure customCharacter is registered in characters array
+     if (storyState.customCharacter) {
+        if (!this.gameState.characters) {
+           this.gameState.characters = [...INITIAL_CHARACTERS];
+        }
+        this.gameState.characters = this.gameState.characters.filter(c => c.id !== 999);
+        this.gameState.characters.push(storyState.customCharacter);
+        
+        if (!this.textures.exists("custom_999")) {
+           try {
+             generateCustomSprite(this, storyState.customCharacter);
+           } catch (e) {
+             console.error("Error generating custom sprite for battle:", e);
+           }
+        }
+        this.ensureCustomAnimsExist("custom_999");
+     }
+     
+     this.gameState.p1CharacterId = 999;
+     
+     // 3. Select enemy character based on stage
+     const availableBaseChars = (this.gameState.characters || INITIAL_CHARACTERS).filter(c => c.id !== 999);
+     const baseList = availableBaseChars.length > 0 ? availableBaseChars : INITIAL_CHARACTERS;
+     const enemyIdx = Math.max(0, (storyState.stage - 1) % baseList.length);
+     this.gameState.p2CharacterId = baseList[enemyIdx]?.id ?? INITIAL_CHARACTERS[0].id;
+     
+     // 4. Set difficulty based on stage
+     this.gameState.difficulty = Math.min(2, Math.floor(storyState.stage / 5));
      
      this.registry.set("gameState", this.gameState);
      if (window.UTLW) window.UTLW.save();
+     syncCloudSaveImmediate();
      
      transitionTo(this, "BattleScene");
   }
@@ -416,3 +502,4 @@ export default class StoryHubScene extends Phaser.Scene {
     return container;
   }
 }
+
