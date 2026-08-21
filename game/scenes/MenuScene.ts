@@ -102,7 +102,7 @@ export default class MenuScene extends Phaser.Scene {
     this.currentArenaIndex = ARENAS_LIST.findIndex((a) => a.id === savedArena);
     if (this.currentArenaIndex === -1) this.currentArenaIndex = 0;
 
-    // 1. Deep Space / Ambient Dark Base
+    // 1. Deep Space / Ambient Base
     const bg = this.add.graphics();
     bg.fillGradientStyle(0x060814, 0x0a0f24, 0x050713, 0x020308, 1);
     bg.fillRect(0, 0, width, height);
@@ -112,7 +112,7 @@ export default class MenuScene extends Phaser.Scene {
     this.bgImage = this.add
       .image(width / 2, height / 2, currentArena.id)
       .setDisplaySize(width * 1.05, height * 1.05)
-      .setAlpha(0.68);
+      .setAlpha(0.85);
 
     // Subtle atmospheric drift animation
     this.tweens.add({
@@ -127,32 +127,38 @@ export default class MenuScene extends Phaser.Scene {
       ease: "Sine.easeInOut",
     });
 
-    // Sleek cinematic gradient overlay (Darker on sides/bottom for UI contrast, clear in center)
+    // Sleek cinematic soft gradient overlay (gentle vignette for UI contrast)
     const darkOverlay = this.add.graphics();
-    darkOverlay.fillGradientStyle(0x060814, 0x060814, 0x020308, 0x020308, 0.45);
+    darkOverlay.fillGradientStyle(0x060814, 0x060814, 0x020308, 0x020308, 0.25);
     darkOverlay.fillRect(0, 0, width, height);
-
-    // Left column backplate subtle shade for title/menu readability
-    const leftShadow = this.add.graphics();
-    leftShadow.fillStyle(0x060814, 0.4);
-    leftShadow.fillRect(0, 0, width * 0.45, height);
 
     // Vignette
     if (this.cameras.main.postFX) {
-      this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.35);
+      this.cameras.main.postFX.addVignette(0.5, 0.5, 0.85, 0.3);
     }
 
     // 3. Thematic Arena Atmosphere Particles
     this.particlesGroup = this.add.group();
     this.spawnThematicParticles(width, height, currentArena.color);
 
-    // 4. Hero & Title Section (Left Column - Clean, Centered & Unobstructed)
+    // 4. Hero & Title Section (Left Column - Clean, Centered & Stylized)
     const leftColX = Math.round(width * 0.28);
-    const titleContainer = this.add.container(leftColX, height / 2 - 45);
+    const titleContainer = this.add.container(leftColX, height / 2 - 50);
 
-    const logoImg = this.add.image(0, -25, "utlw_logo");
-    logoImg.setScale(0.24);
+    // Stylized Hero Emblem / Card with Rounded Frame & Golden Glow
+    const emblemCard = this.add.graphics();
+    const cardW = 260;
+    const cardH = 150;
+    emblemCard.fillStyle(0x060814, 0.7);
+    emblemCard.fillRoundedRect(-cardW / 2, -cardH / 2 - 15, cardW, cardH, 16);
+    emblemCard.lineStyle(2, 0xd4af37, 0.85);
+    emblemCard.strokeRoundedRect(-cardW / 2, -cardH / 2 - 15, cardW, cardH, 16);
+
+    // Hero Logo Image with Smooth Scale inside Card
+    const logoImg = this.add.image(0, -15, "utlw_logo");
+    logoImg.setDisplaySize(240, 135);
     logoImg.setAlpha(0);
+
     this.tweens.add({
       targets: logoImg,
       alpha: 1,
@@ -161,15 +167,15 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     const subtitle = this.add
-      .text(0, 95, "A BATALHA FINAL COMEÇA AQUI", {
+      .text(0, 78, "⚔️ A BATALHA FINAL COMEÇA AQUI ⚔️", {
         fontSize: "12px",
         color: "#ffd54a",
         fontStyle: "bold",
-        letterSpacing: 2,
+        letterSpacing: 1.5,
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         stroke: "#000000",
         strokeThickness: 3,
-        shadow: { color: "#000000", blur: 4, fill: true },
+        shadow: { color: "#000000", blur: 6, fill: true },
         resolution: 2,
       })
       .setOrigin(0.5)
@@ -183,7 +189,7 @@ export default class MenuScene extends Phaser.Scene {
       ease: "Power2",
     });
 
-    titleContainer.add([logoImg, subtitle]);
+    titleContainer.add([emblemCard, logoImg, subtitle]);
 
     this.tweens.add({
       targets: titleContainer,
@@ -194,7 +200,7 @@ export default class MenuScene extends Phaser.Scene {
       ease: "Sine.easeInOut",
     });
 
-    // 5. Minimalist World / Arena Switcher Badge (Bottom Left, Below Logo)
+    // 5. World / Arena Switcher Badge (Bottom Left, Below Logo)
     this.createWorldBadge(leftColX, Math.min(height - 40, bounds.bottom - 24));
 
     // 6. Coins Display (Top Center)
