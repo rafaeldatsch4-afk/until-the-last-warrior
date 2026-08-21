@@ -31,7 +31,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     { id: "arena", name: "🌍 Planeta Terra", color: 0x3498db },
     { id: "arena_namek", name: "🪐 Namekusei", color: 0x2ecc71 },
     { id: "arena_city", name: "🏙️ Cidade Destruída", color: 0xe67e22 },
-    { id: "arena_tournament", name: "🏟️ Torneio Supremo", color: 0xf1c40f },
+    { id: "arena_tournament", name: "🏯 Torneio de Artes Marciais", color: 0xf1c40f },
     { id: "arena_ice", name: "❄️ Geleira Eterna", color: 0x00d2d3 },
     { id: "arena_lava", name: "🌋 Vulcão Infernal", color: 0xe74c3c },
     { id: "arena_desert", name: "🏜️ Deserto Esquecido", color: 0xd35400 },
@@ -312,7 +312,14 @@ export default class CharacterSelectScene extends Phaser.Scene {
       bounds.bottom - 74,
     );
 
-    // Initial state
+    // Initial state: preserve existing arena if already selected
+    const currentArenaId = this.state?.selectedArena;
+    if (currentArenaId) {
+      const foundIdx = this.arenas.findIndex((a) => a.id === currentArenaId);
+      if (foundIdx >= 0) {
+        this.selectedArenaIndex = foundIdx;
+      }
+    }
     this.state.selectedArena = this.arenas[this.selectedArenaIndex].id;
     this.registry.set("gameState", this.state);
 

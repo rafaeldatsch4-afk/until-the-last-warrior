@@ -475,6 +475,19 @@ export default class StoryHubScene extends Phaser.Scene {
      // 4. Set difficulty based on stage
      this.gameState.difficulty = Math.min(2, Math.floor(storyState.stage / 5));
      
+     // 5. Set thematic battle arena for the stage
+     const storyArenas = [
+       "arena",            // Stage 1: Planeta Terra
+       "arena_namek",      // Stage 2: Namekusei
+       "arena_city",       // Stage 3: Cidade Destruída
+       "arena_tournament", // Stage 4: Torneio de Artes Marciais
+       "arena_ice",        // Stage 5: Geleira Eterna
+       "arena_lava",       // Stage 6: Vulcão Infernal
+       "arena_desert",     // Stage 7: Deserto Esquecido
+       "arena_dark",       // Stage 8: Reino das Trevas (Clímax)
+     ];
+     this.gameState.selectedArena = storyArenas[(storyState.stage - 1) % storyArenas.length];
+     
      this.registry.set("gameState", this.gameState);
      if (window.UTLW) window.UTLW.save();
      syncCloudSaveImmediate();

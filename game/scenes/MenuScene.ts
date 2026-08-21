@@ -3,12 +3,13 @@ import Phaser from "phaser";
 import { GameState } from "../types";
 import { DailyChallenges, CHALLENGES } from "../systems/DailyChallenges";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
+import { ArenaTextureBuilder } from "../battle/ArenaTextureBuilder";
 
 const ARENAS_LIST = [
   { id: "arena", name: "Planeta Terra", icon: "🌍", color: 0x3498db },
   { id: "arena_namek", name: "Namekusei", icon: "🪐", color: 0x2ecc71 },
   { id: "arena_city", name: "Cidade Destruída", icon: "🏙️", color: 0xe67e22 },
-  { id: "arena_tournament", name: "Torneio Supremo", icon: "🏟️", color: 0xf1c40f },
+  { id: "arena_tournament", name: "Torneio de Artes Marciais", icon: "🏯", color: 0xf1c40f },
   { id: "arena_ice", name: "Geleira Eterna", icon: "❄️", color: 0x00d2d3 },
   { id: "arena_lava", name: "Vulcão Infernal", icon: "🌋", color: 0xe74c3c },
   { id: "arena_desert", name: "Deserto Esquecido", icon: "🏜️", color: 0xd35400 },
@@ -95,6 +96,10 @@ export default class MenuScene extends Phaser.Scene {
           volume: bgmEnabled ? bgmVol : 0,
         });
       }
+    }
+
+    if (!this.textures.exists("arena")) {
+      ArenaTextureBuilder.buildAllArenaTextures(this);
     }
 
     // Determine current selected arena

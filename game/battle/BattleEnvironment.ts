@@ -59,19 +59,21 @@ export class BattleEnvironment {
 
     switch (arenaId) {
       case "arena_ice":
-        color = 0xaaddff; // Snow
-        speedY = { min: 50, max: 150 };
-        speedX = { min: -100, max: 100 };
-        quantity = 2;
-        scale = { start: 0.3, end: 0.1 };
+        // Diamond dust blizzard & sparkling ice crystals
+        color = 0xdcfce7;
+        speedY = { min: 60, max: 180 };
+        speedX = { min: -180, max: -60 };
+        quantity = 4;
+        scale = { start: 0.35, end: 0.05 };
         texture = "env_dust";
         break;
       case "arena_lava":
-        color = 0xff5500; // Embers
-        speedY = { min: -150, max: -50 }; // Upwards
-        speedX = { min: -50, max: 50 };
-        quantity = 3;
-        scale = { start: 0.4, end: 0 };
+        color = 0xff7b00; // Blazing magma embers & heat sparks
+        speedY = { min: -180, max: -60 }; // Rising upwards from magma
+        speedX = { min: -60, max: 60 };
+        quantity = 5;
+        scale = { start: 0.5, end: 0.05 };
+        alpha = { start: 1.0, end: 0 };
         texture = "env_dust";
         break;
       case "arena_desert":
@@ -80,6 +82,15 @@ export class BattleEnvironment {
         speedX = { min: 300, max: 500 }; // Fast horizontal
         quantity = 5;
         scale = { start: 0.2, end: 0 };
+        texture = "env_dust";
+        break;
+      case "arena_tournament":
+        // Festive tournament gold dust & sun sparks
+        color = 0xffd700;
+        speedY = { min: -60, max: -20 };
+        speedX = { min: -40, max: 40 };
+        quantity = 2;
+        scale = { start: 0.35, end: 0.05 };
         texture = "env_dust";
         break;
       case "arena_namek":
@@ -93,11 +104,13 @@ export class BattleEnvironment {
         texture = "env_dust";
         break;
       case "arena_dark":
-        color = 0x8e44ad;
-        speedY = { min: -50, max: 50 };
-        speedX = { min: -50, max: 50 };
-        quantity = 1;
-        scale = { start: 0.3, end: 0 };
+        // Floating zero-g cosmic astral sparks & void motes
+        color = 0x4cc9f0;
+        speedY = { min: -70, max: -15 };
+        speedX = { min: -40, max: 40 };
+        quantity = 3;
+        scale = { start: 0.45, end: 0.05 };
+        alpha = { start: 0.9, end: 0 };
         texture = "env_dust";
         break;
       case "arena_city":
@@ -114,12 +127,12 @@ export class BattleEnvironment {
 
     if (quantity > 0) {
       this.weatherParticles = this.scene.add.particles(0, 0, texture, {
-        x: { min: 0, max: 5000 },
+        x: { min: -200, max: 2200 },
         y:
           arenaId === "arena_lava"
-            ? { min: 500, max: 600 }
-            : { min: -100, max: -50 },
-        lifespan: arenaId === "arena_city" ? 1000 : { min: 3000, max: 6000 },
+            ? { min: 460, max: 560 }
+            : { min: -100, max: -30 },
+        lifespan: arenaId === "arena_city" ? 1200 : { min: 3000, max: 6000 },
         speedY: speedY,
         speedX: speedX,
         scale: scale,

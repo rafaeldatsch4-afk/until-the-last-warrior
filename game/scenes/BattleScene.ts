@@ -289,10 +289,12 @@ export default class BattleScene extends Phaser.Scene {
     } else if (!selectedArena || selectedArena === "random") {
       selectedArena = Phaser.Utils.Array.GetRandom(arenas);
     }
-    const mapWidth = 5000;
+    const mapWidth = 2000;
+    // Render the high-definition battle stage in true 16:9 aspect ratio with smooth parallax depth
     const bgImage = this.add
-      .image(mapWidth / 2, 270, selectedArena)
-      .setDisplaySize(mapWidth * 1.3, 540 * 2.2) // Large enough so edges are not seen during camera zooms
+      .image(480, 270, selectedArena)
+      .setDisplaySize(2200, 1238)
+      .setScrollFactor(0.22, 0.22)
       .setDepth(-10);
 
     // Intelligently balance background tone so fighting characters stand out with rich contrast
@@ -300,9 +302,9 @@ export default class BattleScene extends Phaser.Scene {
       const bgMatrix = bgImage.postFX.addColorMatrix();
       // Gentle contrast and saturation tuning
       bgMatrix.contrast(1.05);
-      bgMatrix.brightness(0.92);
+      bgMatrix.brightness(0.95);
       // Subtle background depth-of-field blur
-      bgImage.postFX.addBlur(0.25, 0.25, 0.25, 1);
+      bgImage.postFX.addBlur(0.2, 0.2, 0.2, 1);
     }
 
     this.battleEnvironment = new BattleEnvironment(this, bgImage, selectedArena);
