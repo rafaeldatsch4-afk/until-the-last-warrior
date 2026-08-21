@@ -292,19 +292,17 @@ export default class BattleScene extends Phaser.Scene {
     const mapWidth = 5000;
     const bgImage = this.add
       .image(mapWidth / 2, 270, selectedArena)
-      .setDisplaySize(mapWidth * 1.5, 540 * 2.5) // Make it large enough so edges are not seen when zoomed out
-      .setTint(0x888888)
+      .setDisplaySize(mapWidth * 1.3, 540 * 2.2) // Large enough so edges are not seen during camera zooms
       .setDepth(-10);
 
-    // Intelligently desaturate and adjust only the background so characters remain colorful
+    // Intelligently balance background tone so fighting characters stand out with rich contrast
     if (bgImage.postFX && !this.gameState.settings?.lowPerformanceMode) {
       const bgMatrix = bgImage.postFX.addColorMatrix();
-      // Lower saturation of the background by 40% to stop eye burn
-      bgMatrix.saturate(-0.4);
-      // Slightly dim it
-      bgMatrix.brightness(0.8);
-      // Subtle blur for depth of field
-      bgImage.postFX.addBlur(0.3, 0.3, 0.3, 1);
+      // Gentle contrast and saturation tuning
+      bgMatrix.contrast(1.05);
+      bgMatrix.brightness(0.92);
+      // Subtle background depth-of-field blur
+      bgImage.postFX.addBlur(0.25, 0.25, 0.25, 1);
     }
 
     this.battleEnvironment = new BattleEnvironment(this, bgImage, selectedArena);
@@ -1414,8 +1412,13 @@ export default class BattleScene extends Phaser.Scene {
 
     this.setActionState(isPlayer, true);
 
-    if (isPlayer) this.p1DashCooldown = true;
-    else this.p2DashCooldown = true;
+    if (isPlayer) {
+      this.p1DashCooldown = true;
+      this.p1DashingUntil = this.time.now + 300;
+    } else {
+      this.p2DashCooldown = true;
+      this.p2DashingUntil = this.time.now + 300;
+    }
 
     // Simple dash dust effect
     this.createImpactEffect(sprite.x, sprite.y + 60, 0xecf0f1, "block");
@@ -4466,43 +4469,132 @@ export default class BattleScene extends Phaser.Scene {
 
   triggerSuccessfulDodge(isPlayer: boolean) {
     const target = isPlayer ? this.player : this.enemy;
+    if (!target || !target.active) return;
     
     // Floating text
     this.createFloatingDamage(target.x, target.y + 20, 0, false, true);
-    const floatText = this.add.text(target.x, target.y - 40, "ESQUIVA!", { 
-      fontSize: "36px", color: "#ffffff", fontStyle: "900", stroke: "#2ecc71", strokeThickness: 6 
-    }).setOrigin(0.5);
-    this.tweens.add({ targets: floatText, y: target.y - 80, alpha: 0, duration: 1000, onComplete: () => floatText.destroy() });
+    const floatText = this.add.text(target.x, target.y - 45, "💨 ESQUIVA PERFEITA!", { 
+      fontFamily: "Impact, system-ui, sans-serif",
+      fontSize: "30px",
+      color: "#00ff88",
+      fontStyle: "italic",
+      stroke: "#003319",
+      strokeThickness: 5,
+      shadow: {
+        color: "#00ff88",
+        blur: 10,
+        offsetX: 0,
+        offsetY: 0,
+        fill: true,
+      },
+    }).setOrigin(0.5).setDepth(200);
+
+    this.tweens.add({
+      targets: floatText,
+      y: target.y - 95,
+      scaleX: 1.1,
+      scaleY: 1.1,
+      alpha: 0,
+      duration: 850,
+      ease: "Cubic.easeOut",
+      onComplete: () => floatText.destroy(),
+    });
     
-    // Smoke effect
-    for(let i=0; i<5; i++) {
-        const smoke = this.add.circle(target.x + Phaser.Math.Between(-30, 30), target.y + Phaser.Math.Between(-20, 60), Phaser.Math.Between(15, 30), 0xdddddd, 0.8);
-        this.tweens.add({
-            targets: smoke,
-            y: smoke.y - Phaser.Math.Between(40, 80),
-            scale: 2,
-            alpha: 0,
-            duration: Phaser.Math.Between(400, 700),
-            onComplete: () => smoke.destroy()
-        });
+    // Smoke / dust puff
+    for (let i = 0; i < 5; i++) {
+      const smoke = this.add.circle(
+        target.x + Phaser.Math.Between(-30, 30),
+        target.y + Phaser.Math.Between(-10, 50),
+        Phaser.Math.Between(12, 25),
+        0xe8f8f5,
+        0.75
+      ).setDepth(target.depth - 2);
+      this.tweens.add({
+        targets: smoke,
+        y: smoke.y - Phaser.Math.Between(30, 70),
+        scale: 2.2,
+        alpha: 0,
+        duration: Phaser.Math.Between(350, 600),
+        onComplete: () => smoke.destroy(),
+      });
     }
 
-    // Afterimage flash
-    const ghost = this.add.sprite(target.x, target.y, target.texture.key, target.frame.name)
-      .setFlipX(target.flipX)
-      .setTintFill(0x2ecc71)
-      .setAlpha(0.8)
-      .setDepth(target.depth - 1);
-    this.tweens.add({
-      targets: ghost,
-      alpha: 0,
-      scale: 1.5,
-      duration: 400,
-      onComplete: () => ghost.destroy(),
+    // Motion Blur / Multi-layer Ghosting Trail (Rastro Fantasma Deslocado)
+    const trailColors = [0x00ff88, 0x2ecc71, 0x1abc9c, 0x55efc4, 0xffffff];
+    const dodgeDirection = target.flipX ? 1 : -1;
+
+    trailColors.forEach((ghostColor, index) => {
+      try {
+        const offsetDistance = (index + 1) * 26 * dodgeDirection;
+        const ghost = this.add
+          .sprite(target.x + offsetDistance, target.y, target.texture.key, target.frame.name)
+          .setFlipX(target.flipX)
+          .setOrigin(target.originX, target.originY)
+          .setScale(target.scaleX * 1.25, target.scaleY * 0.94) // Horizontal speed blur elongation
+          .setTintFill(ghostColor)
+          .setAlpha(0.85 - index * 0.14)
+          .setDepth(target.depth - 1 - index);
+
+        this.tweens.add({
+          targets: ghost,
+          x: ghost.x + (index + 1) * 18 * dodgeDirection,
+          scaleX: target.scaleX * 1.5,
+          scaleY: target.scaleY * 0.85,
+          alpha: 0,
+          duration: 220 + index * 70,
+          ease: "Cubic.easeOut",
+          onComplete: () => ghost.destroy(),
+        });
+      } catch (e) {
+        // Safe fallback if texture frame is unavailable
+      }
     });
 
-    if (this.soundManager) this.soundManager.playStep();
+    // Main Sprite Rapid Blur / Phasing Flicker
+    target.setAlpha(0.35);
+    target.setTintFill(0x00ff88); // Instant bright emerald speed flash
+    this.time.delayedCall(45, () => {
+      if (target && target.active) {
+        target.setAlpha(0.75);
+        target.setTint(0x2ecc71); // Soft green speed sheen
+        this.time.delayedCall(70, () => {
+          if (target && target.active) {
+            target.setAlpha(1.0);
+            target.clearTint(); // Normal sprite restored
+          }
+        });
+      }
+    });
+
+    // Horizontal speed lines / vacuum streaks (Blur de Velocidade)
+    for (let s = 0; s < 4; s++) {
+      const streakY = target.y + Phaser.Math.Between(-40, 50);
+      const streakGraphics = this.add.graphics().setDepth(target.depth + 1);
+      streakGraphics.lineStyle(3, 0x00ff88, 0.85);
+      streakGraphics.beginPath();
+      const startX = target.x - (dodgeDirection * 50);
+      const endX = target.x + (dodgeDirection * 90);
+      streakGraphics.moveTo(startX, streakY);
+      streakGraphics.lineTo(endX, streakY);
+      streakGraphics.strokePath();
+
+      this.tweens.add({
+        targets: streakGraphics,
+        alpha: 0,
+        duration: 240 + s * 40,
+        onComplete: () => streakGraphics.destroy(),
+      });
+    }
+
+    // Sound effect & Haptics
+    if (this.soundManager) this.soundManager.playDodge();
     triggerVibration("light");
+
+    // Story Mode agility feedback
+    if (this.gameState.gameMode === "story" && isPlayer) {
+      this.modifyKi(true, 10);
+      this.battleUI.showLog("💨 ESQUIVA PERFEITA! Rastro de velocidade ativado (+10 Ki)");
+    }
   }
 
   private hitStopTimeout: NodeJS.Timeout | null = null;
@@ -4687,8 +4779,52 @@ export default class BattleScene extends Phaser.Scene {
 
         this.createImpactEffect(target.x, target.y + 40, 0xffd700, "super");
         this.battleCamera?.flash(180, 255, 255, 255);
-        if (this.soundManager) this.soundManager.playClash();
+        if (this.soundManager) this.soundManager.playParry();
         triggerVibration("heavy");
+
+        // Quick color flash on the parrying character's sprite (White -> Electric Cyan -> Radiant Gold -> Normal)
+        if (target && target.active) {
+          target.setTintFill(0xffffff); // Instant bright white flash
+          this.time.delayedCall(45, () => {
+            if (target && target.active) {
+              target.setTintFill(0x00ffff); // Electric Cyan flash
+              this.time.delayedCall(65, () => {
+                if (target && target.active) {
+                  target.setTint(0xffd700); // Golden resonant glow
+                  this.time.delayedCall(130, () => {
+                    if (target && target.active) {
+                      target.clearTint(); // Restore normal sprite colors
+                    }
+                  });
+                }
+              });
+            }
+          });
+
+          // Energy radial ghost flash radiating outward from the character
+          try {
+            const parryGhost = this.add
+              .sprite(target.x, target.y, target.texture.key, target.frame.name)
+              .setFlipX(target.flipX)
+              .setOrigin(target.originX, target.originY)
+              .setScale(target.scaleX * 1.08, target.scaleY * 1.08)
+              .setTintFill(0x00ffff)
+              .setAlpha(0.85)
+              .setDepth(target.depth - 1);
+
+            this.tweens.add({
+              targets: parryGhost,
+              scaleX: target.scaleX * 1.35,
+              scaleY: target.scaleY * 1.35,
+              alpha: 0,
+              duration: 250,
+              ease: "Cubic.easeOut",
+              onComplete: () => parryGhost.destroy(),
+            });
+          } catch (e) {
+            // Ignore ghost creation if frame not available
+          }
+        }
 
         if (isP) {
           this.storyParryCount++;

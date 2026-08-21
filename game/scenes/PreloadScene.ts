@@ -7,6 +7,7 @@ import {
   SPRITE_GENERATORS,
 } from "../sprites/SpriteRegistry";
 import { generateCustomSprite } from "../sprites/CustomSprite";
+import { ArenaTextureBuilder } from "../battle/ArenaTextureBuilder";
 
 export default class PreloadScene extends Phaser.Scene {
   declare cameras: Phaser.Cameras.Scene2D.CameraManager;
@@ -84,65 +85,22 @@ export default class PreloadScene extends Phaser.Scene {
       // Deixamos a limpeza da UI para ser feita no final do processo em finishPreload()
     });
 
-    const createArenaBg = (key: string, colorTop: number, colorBottom: number) => {
-      const w = 128;
-      const h = 128;
-      const g = this.make.graphics({ x: 0, y: 0 });
-      g.fillGradientStyle(colorTop, colorTop, colorBottom, colorBottom, 1);
-      g.fillRect(0, 0, w, h);
-      
-      // Draw ground base
-      g.fillStyle(0x000000, 0.4);
-      g.fillRect(0, h * 0.7, w, h * 0.3);
-      
-      if (key === "arena_city") {
-        g.fillStyle(0x111111, 1);
-        g.fillRect(10, h*0.4, 20, h*0.3);
-        g.fillRect(40, h*0.2, 30, h*0.5);
-        g.fillRect(80, h*0.5, 25, h*0.2);
-        g.fillStyle(0xffaa00, 0.8);
-        g.fillCircle(w/2, h*0.3, 20);
-      } else if (key === "arena_ice") {
-        g.fillStyle(0xffffff, 0.5);
-        g.fillTriangle(20, h*0.7, 40, h*0.5, 60, h*0.7);
-        g.fillTriangle(70, h*0.7, 90, h*0.4, 110, h*0.7);
-      } else if (key === "arena_lava") {
-        g.fillStyle(0xff4400, 0.8);
-        g.fillCircle(30, h*0.8, 10);
-        g.fillCircle(80, h*0.75, 15);
-      } else if (key === "arena") {
-        g.fillStyle(0xffffff, 1);
-        for(let i=0; i<20; i++) g.fillRect(Math.random()*w, Math.random()*h*0.7, 1, 1);
-      } else if (key === "arena_namek") {
-        g.fillStyle(0x33aa33, 1); 
-        g.fillCircle(w*0.2, h*0.7, 30);
-      } else if (key === "arena_desert") {
-        g.fillStyle(0xd2b48c, 1);
-        g.fillCircle(w*0.3, h*0.8, 40);
-        g.fillCircle(w*0.8, h*0.7, 50);
-      }
-      
-      g.generateTexture(key, w, h);
-      g.destroy();
     this.load.image("utlw_logo", "icon.png");
+
     const graphics = this.make.graphics({ x: 0, y: 0 });
     graphics.fillStyle(0xffffff, 1);
     graphics.fillCircle(8, 8, 8);
     graphics.generateTexture("hit_spark", 16, 16);
+    graphics.destroy();
+
     const graphicsStreak = this.make.graphics({ x: 0, y: 0 });
     graphicsStreak.fillStyle(0xffffff, 1);
     graphicsStreak.fillRect(0, 7, 24, 2);
     graphicsStreak.generateTexture("hit_spark_streak", 24, 16);
-    };
+    graphicsStreak.destroy();
 
-    createArenaBg("arena", 0x000022, 0x111133); // space
-    createArenaBg("arena_namek", 0x2288ff, 0x55ccff); // sky
-    createArenaBg("arena_city", 0xff6600, 0x442255); // sunset
-    createArenaBg("arena_tournament", 0x4488ff, 0xaaddff); // clouds
-    createArenaBg("arena_ice", 0xaaccff, 0xffffff); // icy
-    createArenaBg("arena_lava", 0x330000, 0x882200); // underground/lava
-    createArenaBg("arena_desert", 0xddaa55, 0xffcc88); // sandy sky
-    createArenaBg("arena_dark", 0x000000, 0x110022); // deepblue
+    // Generate all 8 high-definition detailed battle arena backgrounds
+    ArenaTextureBuilder.buildAllArenaTextures(this);
   }
 
   create() {
@@ -424,6 +382,9 @@ export default class PreloadScene extends Phaser.Scene {
     generateSynthSound("sfx_punch_heavy", 0.25, "square", 100, 20, 0.8);
     generateSynthSound("sfx_block", 0.1, "sine", 400, 300, 0.4);
     generateSynthSound("sfx_clash", 0.2, "sawtooth", 800, 200, 0.7);
+    generateSynthSound("sfx_parry", 0.28, "sawtooth", 1600, 350, 0.85);
+    generateSynthSound("sfx_parry_ping", 0.35, "sine", 2200, 600, 0.75);
+    generateSynthSound("sfx_dodge", 0.24, "sine", 1400, 180, 0.7);
     generateSynthSound("sfx_beam", 1.0, "sawtooth", 400, 100, 0.3);
     generateSynthSound("sfx_beam_charge", 1.2, "sine", 100, 600, 0.3);
     generateSynthSound("sfx_beam_fire", 0.6, "square", 800, 100, 0.5);

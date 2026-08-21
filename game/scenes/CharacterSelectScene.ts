@@ -25,16 +25,17 @@ export default class CharacterSelectScene extends Phaser.Scene {
   private tooltipContainer!: Phaser.GameObjects.Container;
   private arenaSelectorContainer!: Phaser.GameObjects.Container;
   private arenaText!: Phaser.GameObjects.Text;
+  private bgImage!: Phaser.GameObjects.Image;
   private arenas = [
-    { id: "random", name: "Aleatório" },
-    { id: "arena", name: "Planeta Terra" },
-    { id: "arena_namek", name: "Namekusei" },
-    { id: "arena_city", name: "Cidade Destruída" },
-    { id: "arena_tournament", name: "Torneio" },
-    { id: "arena_ice", name: "Geleira" },
-    { id: "arena_lava", name: "Vulcão" },
-    { id: "arena_desert", name: "Deserto" },
-    { id: "arena_dark", name: "Reino das Trevas" }
+    { id: "random", name: "🎲 Aleatório", color: 0xf1c40f },
+    { id: "arena", name: "🌍 Planeta Terra", color: 0x3498db },
+    { id: "arena_namek", name: "🪐 Namekusei", color: 0x2ecc71 },
+    { id: "arena_city", name: "🏙️ Cidade Destruída", color: 0xe67e22 },
+    { id: "arena_tournament", name: "🏟️ Torneio Supremo", color: 0xf1c40f },
+    { id: "arena_ice", name: "❄️ Geleira Eterna", color: 0x00d2d3 },
+    { id: "arena_lava", name: "🌋 Vulcão Infernal", color: 0xe74c3c },
+    { id: "arena_desert", name: "🏜️ Deserto Esquecido", color: 0xd35400 },
+    { id: "arena_dark", name: "🌌 Reino das Trevas", color: 0x8e44ad }
   ];
   private selectedArenaIndex = 0;
   private tooltipName!: Phaser.GameObjects.Text;
@@ -99,14 +100,32 @@ export default class CharacterSelectScene extends Phaser.Scene {
     bg.fillGradientStyle(0x060814, 0x0a0f24, 0x04060f, 0x020308, 1);
     bg.fillRect(0, 0, width, height);
 
-    const selectedArena = this.state?.selectedArena || "arena";
-    this.add
-      .image(width / 2, height / 2, selectedArena)
-      .setDisplaySize(width * 1.1, height * 1.1)
-      .setAlpha(0.25)
-      .setBlendMode(Phaser.BlendModes.SCREEN);
+    const initialArena = this.state?.selectedArena || "arena";
+    const initialTex = initialArena === "random" ? "arena" : initialArena;
+    this.bgImage = this.add
+      .image(width / 2, height / 2, initialTex)
+      .setDisplaySize(width * 1.06, height * 1.06)
+      .setAlpha(0.65);
 
-    // Animated particles
+    // Subtle drift animation
+    this.tweens.add({
+      targets: this.bgImage,
+      x: width / 2 + 8,
+      y: height / 2 + 5,
+      scaleX: 1.08,
+      scaleY: 1.08,
+      duration: 9000,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+
+    // Dark overlay on bottom & edges to keep character grid and UI sharp and clear
+    const darkOverlay = this.add.graphics();
+    darkOverlay.fillGradientStyle(0x060814, 0x0a0f24, 0x020308, 0x020308, 0.5);
+    darkOverlay.fillRect(0, 0, width, height);
+
+    // Animated thematic particles
     for (let i = 0; i < 25; i++) {
       const p = this.add.circle(
         Phaser.Math.Between(0, width),
@@ -387,9 +406,26 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   updateArena() {
-    this.arenaText.setText(this.arenas[this.selectedArenaIndex].name);
-    this.state.selectedArena = this.arenas[this.selectedArenaIndex].id;
+    const chosen = this.arenas[this.selectedArenaIndex];
+    this.arenaText.setText(chosen.name);
+    this.state.selectedArena = chosen.id;
     this.registry.set("gameState", this.state);
+
+    if (this.bgImage && chosen.id !== "random" && this.textures.exists(chosen.id)) {
+      this.tweens.add({
+        targets: this.bgImage,
+        alpha: 0,
+        duration: 180,
+        onComplete: () => {
+          this.bgImage.setTexture(chosen.id);
+          this.tweens.add({
+            targets: this.bgImage,
+            alpha: 0.65,
+            duration: 250,
+          });
+        },
+      });
+    }
   }
 
   createFightButton() {

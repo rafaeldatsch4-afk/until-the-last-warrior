@@ -41,6 +41,18 @@ export class BattleSoundManager {
     this.playWithVariation("sfx_block", 0.8, 100);
   }
 
+  public playParry() {
+    this.playWithVariation("sfx_parry", 1.4, 60, 50);
+    this.playWithVariation("sfx_parry_ping", 1.1, 40, 100);
+    this.playWithVariation("sfx_clash", 0.9, 100, 150);
+    this.scene.cameras.main.shake(120, 0.008);
+  }
+
+  public playDodge() {
+    this.playWithVariation("sfx_dodge", 1.2, 80, 100);
+    this.playWithVariation("sfx_attack", 0.7, 120, 300);
+  }
+
   public playClash() {
     this.playWithVariation("sfx_clash", 1.2, 200, -50);
     this.playWithVariation("sfx_block", 1.0, 50, -200);

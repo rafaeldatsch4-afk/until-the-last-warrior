@@ -107,35 +107,39 @@ export default class MenuScene extends Phaser.Scene {
     bg.fillGradientStyle(0x060814, 0x0a0f24, 0x050713, 0x020308, 1);
     bg.fillRect(0, 0, width, height);
 
-    // 2. Full Arena World Background
+    // 2. Full Arena World Background (High-Fidelity)
     const currentArena = ARENAS_LIST[this.currentArenaIndex];
     this.bgImage = this.add
       .image(width / 2, height / 2, currentArena.id)
-      .setDisplaySize(width * 1.1, height * 1.1)
-      .setAlpha(0.45)
-      .setBlendMode(Phaser.BlendModes.SCREEN);
+      .setDisplaySize(width * 1.05, height * 1.05)
+      .setAlpha(0.68);
 
     // Subtle atmospheric drift animation
     this.tweens.add({
       targets: this.bgImage,
-      x: width / 2 + 15,
-      y: height / 2 + 10,
-      scaleX: 1.12,
-      scaleY: 1.12,
-      duration: 8000,
+      x: width / 2 + 10,
+      y: height / 2 + 6,
+      scaleX: 1.07,
+      scaleY: 1.07,
+      duration: 10000,
       yoyo: true,
       repeat: -1,
       ease: "Sine.easeInOut",
     });
 
-    // Dark gradient overlay to preserve UI readability
+    // Sleek cinematic gradient overlay (Darker on sides/bottom for UI contrast, clear in center)
     const darkOverlay = this.add.graphics();
-    darkOverlay.fillGradientStyle(0x060814, 0x0a0f24, 0x000000, 0x000000, 0.75);
+    darkOverlay.fillGradientStyle(0x060814, 0x060814, 0x020308, 0x020308, 0.45);
     darkOverlay.fillRect(0, 0, width, height);
+
+    // Left column backplate subtle shade for title/menu readability
+    const leftShadow = this.add.graphics();
+    leftShadow.fillStyle(0x060814, 0.4);
+    leftShadow.fillRect(0, 0, width * 0.45, height);
 
     // Vignette
     if (this.cameras.main.postFX) {
-      this.cameras.main.postFX.addVignette(0.5, 0.5, 0.7, 0.45);
+      this.cameras.main.postFX.addVignette(0.5, 0.5, 0.8, 0.35);
     }
 
     // 3. Thematic Arena Atmosphere Particles
@@ -398,7 +402,7 @@ export default class MenuScene extends Phaser.Scene {
         this.spawnThematicParticles(width, height, newArena.color);
         this.tweens.add({
           targets: this.bgImage,
-          alpha: 0.45,
+          alpha: 0.68,
           duration: 350,
         });
       },
