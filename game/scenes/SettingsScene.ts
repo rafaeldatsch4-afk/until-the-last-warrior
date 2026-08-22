@@ -1,8 +1,6 @@
 import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
-import { AuraManager, AURA_PRESETS } from "../systems/AuraManager";
-import { AuraCustomizerModal } from "../components/AuraCustomizerModal";
 
 export default class SettingsScene extends Phaser.Scene {
   declare registry: Phaser.Data.DataManager;
@@ -13,9 +11,6 @@ export default class SettingsScene extends Phaser.Scene {
     | Phaser.Sound.NoAudioSoundManager
     | Phaser.Sound.HTML5AudioSoundManager
     | Phaser.Sound.WebAudioSoundManager;
-
-  private auraBadgeText!: Phaser.GameObjects.Text;
-  private auraBadgeDot!: Phaser.GameObjects.Arc;
 
   constructor() {
     super("SettingsScene");
@@ -68,7 +63,7 @@ export default class SettingsScene extends Phaser.Scene {
 
     // Title
     this.add
-      .text(480, 50, "SETTINGS", {
+      .text(480, 45, "SETTINGS", {
         fontSize: "32px",
         fontStyle: "bold",
         fontFamily:
@@ -79,7 +74,7 @@ export default class SettingsScene extends Phaser.Scene {
 
     // --- AUDIO SETTING ---
     this.add
-      .text(480, 80, "AUDIO SETTINGS", {
+      .text(480, 90, "AUDIO SETTINGS", {
         fontSize: "20px",
         color: "#aaa",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
@@ -147,8 +142,8 @@ export default class SettingsScene extends Phaser.Scene {
     let cachedBgmVolume = this.registry.get("bgmVolume") ?? 0.5;
     if (cachedBgmVolume === 0) cachedBgmVolume = 0.5;
 
-    const updateBgmSlider = createSlider(480, 145, "Music Vol", "bgmVolume", 0.5, true);
-    createSlider(480, 175, "SFX Vol", "sfxVolume", 1.0, false);
+    const updateBgmSlider = createSlider(480, 165, "Music Vol", "bgmVolume", 0.5, true);
+    createSlider(480, 200, "SFX Vol", "sfxVolume", 1.0, false);
 
     // BGM Toggle
     let bgmEnabled = this.registry.get("bgmEnabled") !== false;
@@ -157,7 +152,7 @@ export default class SettingsScene extends Phaser.Scene {
     }
 
     const bgmToggleText = this.add
-      .text(480, 110, bgmEnabled ? "MUSIC: ON" : "MUSIC: OFF", {
+      .text(480, 125, bgmEnabled ? "MUSIC: ON" : "MUSIC: OFF", {
         fontSize: "22px",
         color: bgmEnabled ? "#2ecc71" : "#e74c3c",
         fontStyle: "bold",
@@ -212,71 +207,11 @@ export default class SettingsScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on("pointerover", () => controlsBtn.setFillStyle(0x8e44ad))
       .on("pointerout", () => controlsBtn.setFillStyle(0x9b59b6))
-            .on("pointerdown", () => this.showControlsOverlay());
-
-    // --- AURA SETTINGS ---
-    this.add
-      .text(480, 205, "AURA DE COMBATE (COR DO KI)", {
-        fontSize: "18px",
-        color: "#ffd54a",
-        fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    const auraBtn = this.add
-      .rectangle(480, 240, 320, 38, 0x3b82f6)
-      .setStrokeStyle(2, 0x93c5fd);
-    const auraBtnTxt = this.add
-      .text(480, 240, "⚡ PERSONALIZAR COR DA AURA", {
-        fontSize: "15px",
-        fontStyle: "bold",
-        color: "#ffffff",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    // Active Aura Indicator Chip
-    const auraBadgeCont = this.add.container(480, 275);
-    const auraBadgeBg = this.add.graphics();
-    auraBadgeBg.fillStyle(0x0f172a, 0.8);
-    auraBadgeBg.fillRoundedRect(-140, -12, 280, 24, 6);
-    auraBadgeBg.lineStyle(1, 0x334155, 0.8);
-    auraBadgeBg.strokeRoundedRect(-140, -12, 280, 24, 6);
-    this.auraBadgeDot = this.add.circle(-115, 0, 5, 0xffd700);
-    this.auraBadgeText = this.add
-      .text(-100, 0, "AURA: SUPER SAIYAJIN", {
-        fontSize: "12px",
-        fontStyle: "bold",
-        color: "#cbd5e1",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-      })
-      .setOrigin(0, 0.5);
-    auraBadgeCont.add([auraBadgeBg, this.auraBadgeDot, this.auraBadgeText]);
-    this.updateAuraBadge();
-
-    auraBtn
-      .setInteractive({ useHandCursor: true })
-      .on("pointerover", () => {
-        auraBtn.setFillStyle(0x2563eb);
-        this.tweens.add({ targets: auraBtn, scaleX: 1.03, scaleY: 1.03, duration: 100 });
-      })
-      .on("pointerout", () => {
-        auraBtn.setFillStyle(0x3b82f6);
-        this.tweens.add({ targets: auraBtn, scaleX: 1, scaleY: 1, duration: 100 });
-      })
-      .on("pointerdown", () => {
-        if (this.cache.audio.exists("sfx_select") || this.sound.get("sfx_select")) {
-          this.sound.play("sfx_select", { volume: this.registry.get("sfxVolume") ?? 1.0 });
-        }
-        AuraCustomizerModal.show(this, () => this.updateAuraBadge());
-      });
+      .on("pointerdown", () => this.showControlsOverlay());
 
     // --- DISPLAY / PERFORMANCE ---
     this.add
-      .text(480, 310, "DISPLAY & PERFORMANCE", {
+      .text(480, 248, "DISPLAY & PERFORMANCE", {
         fontSize: "18px",
         color: "#aaa",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
@@ -286,10 +221,10 @@ export default class SettingsScene extends Phaser.Scene {
 
     let potatoMode = state.settings?.lowPerformanceMode || false;
     const perfBtn = this.add
-      .rectangle(480, 342, 250, 34, potatoMode ? 0xe74c3c : 0x2ecc71)
+      .rectangle(480, 282, 260, 36, potatoMode ? 0xe74c3c : 0x2ecc71)
       .setStrokeStyle(2, 0xffffff);
     const perfTxt = this.add
-      .text(480, 342, potatoMode ? "POTATO MODE: ON" : "POTATO MODE: OFF", {
+      .text(480, 282, potatoMode ? "POTATO MODE: ON" : "POTATO MODE: OFF", {
         fontSize: "15px",
         fontStyle: "bold",
         color: "#000",
@@ -308,10 +243,10 @@ export default class SettingsScene extends Phaser.Scene {
     const isMobile = this.sys.game.device.input.touch || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (isMobile) {
       const hudBtn = this.add
-        .rectangle(480, 382, 250, 34, 0xf39c12)
+        .rectangle(480, 330, 260, 36, 0xf39c12)
         .setStrokeStyle(2, 0xffffff);
       const hudTxt = this.add
-        .text(480, 382, "CUSTOMIZE MOBILE HUD", {
+        .text(480, 330, "CUSTOMIZE MOBILE HUD", {
           fontSize: "14px",
           fontStyle: "bold",
           color: "#000",
@@ -324,7 +259,7 @@ export default class SettingsScene extends Phaser.Scene {
     }
 
     // --- DATA MANAGEMENT (SAVE/LOAD) ---
-    const dataY = isMobile ? 425 : 395;
+    const dataY = isMobile ? 385 : 345;
     this.add
       .text(480, dataY, "DATA MANAGEMENT", {
         fontSize: "18px",
@@ -336,10 +271,10 @@ export default class SettingsScene extends Phaser.Scene {
 
     // Export Button
     const exportBtn = this.add
-      .rectangle(380, dataY + 32, 180, 34, 0x3498db)
+      .rectangle(380, dataY + 36, 180, 36, 0x3498db)
       .setStrokeStyle(2, 0xffffff);
     const exportTxt = this.add
-      .text(380, dataY + 32, "DOWNLOAD SAVE", {
+      .text(380, dataY + 36, "DOWNLOAD SAVE", {
         fontSize: "15px",
         fontStyle: "bold",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
@@ -355,10 +290,10 @@ export default class SettingsScene extends Phaser.Scene {
 
     // Import Button
     const importBtn = this.add
-      .rectangle(580, dataY + 32, 180, 34, 0xe67e22)
+      .rectangle(580, dataY + 36, 180, 36, 0xe67e22)
       .setStrokeStyle(2, 0xffffff);
     const importTxt = this.add
-      .text(580, dataY + 32, "UPLOAD SAVE", {
+      .text(580, dataY + 36, "UPLOAD SAVE", {
         fontSize: "15px",
         fontStyle: "bold",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
@@ -375,10 +310,10 @@ export default class SettingsScene extends Phaser.Scene {
     // --- APP INSTALLATION ---
     if ((window as any).deferredPWAInstallPrompt) {
       const installBtn = this.add
-        .rectangle(480, 480, 250, 50, 0xf1c40f)
+        .rectangle(480, dataY + 85, 250, 44, 0xf1c40f)
         .setStrokeStyle(3, 0xffffff);
       const installTxt = this.add
-        .text(480, 480, "INSTALL OFFLINE GAME", {
+        .text(480, dataY + 85, "INSTALL OFFLINE GAME", {
           fontSize: "18px",
           color: "#000",
           fontStyle: "bold",
@@ -741,22 +676,5 @@ export default class SettingsScene extends Phaser.Scene {
 
     // 3. Trigger click
     input.click();
-  }
-
-  private updateAuraBadge() {
-    if (!this.auraBadgeText || !this.auraBadgeDot) return;
-    const pref = AuraManager.getPreference();
-    const preset = AURA_PRESETS.find((p) => p.id === pref.id) || AURA_PRESETS[0];
-
-    const modeStr = pref.mode === "all" ? " (TODOS)" : " (P1)";
-    this.auraBadgeText.setText(`AURA: ${preset.name.toUpperCase()}${modeStr}`);
-
-    if (preset.color === -1) {
-      this.auraBadgeDot.setFillStyle(0x94a3b8);
-      this.auraBadgeText.setColor("#94a3b8");
-    } else {
-      this.auraBadgeDot.setFillStyle(preset.color);
-      this.auraBadgeText.setColor(preset.hex);
-    }
   }
 }

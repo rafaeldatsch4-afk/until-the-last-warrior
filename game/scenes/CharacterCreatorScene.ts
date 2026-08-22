@@ -657,11 +657,13 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     if (this.isShuttingDown) return;
 
     // Randomize styles
-    this.state.style_idx.head = Phaser.Math.Between(0, partOptions.head.length - 1);
+    this.state.style_idx.accessory = Phaser.Math.Between(0, partOptions.accessory.length - 1);
+    const availableHeads = this.state.getAvailableHeads();
+    this.state.style_idx.head = Phaser.Math.Between(0, availableHeads.length - 1);
     this.state.style_idx.torso = Phaser.Math.Between(0, partOptions.torso.length - 1);
     this.state.style_idx.legs = Phaser.Math.Between(0, partOptions.legs.length - 1);
     this.state.style_idx.feet = Phaser.Math.Between(0, partOptions.feet.length - 1);
-    this.state.style_idx.accessory = Phaser.Math.Between(0, partOptions.accessory.length - 1);
+    this.state.validateConstraints();
 
     // Randomize colors
     this.state.p_idx.skin = Phaser.Math.Between(0, skinColors.length - 1);
@@ -756,11 +758,11 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       aura_ring_color: preset.ringColor,
       sp1_id: this.customSp1Id || this.builderData.base.key,
       sp2_id: this.customSp2Id || this.builderData.base.key,
-      part_head: partOptions.head[this.state.style_idx.head],
+      part_head: this.state.getEquippedHead(),
       part_torso: partOptions.torso[this.state.style_idx.torso],
       part_legs: partOptions.legs[this.state.style_idx.legs],
       part_feet: partOptions.feet[this.state.style_idx.feet],
-      part_accessory: partOptions.accessory[this.state.style_idx.accessory],
+      part_accessory: this.state.getEquippedAccessory(),
     };
 
     const customChar: CharacterData = {

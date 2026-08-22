@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { CreatorState } from "./CreatorState";
 import {
   partOptions,
+  getAvailableHeadOptions,
   auraColors,
   skinColors,
   hairColors,
@@ -332,15 +333,34 @@ export class CreatorUI {
       return map[id] || id;
     };
 
+    const getAvailableHeads = () => {
+      const acc = partOptions.accessory[state.style_idx.accessory] || "none";
+      return getAvailableHeadOptions(acc);
+    };
+
+    let headValTxtRef: Phaser.GameObjects.Text | null = null;
+
     const rows = [
       {
+        id: "head",
         label: "CABEÇA / ROSTO",
         icon: "👤",
-        getVal: () => getHeadName(partOptions.head[state.style_idx.head]),
-        onPrev: () => state.prevPart("head", partOptions.head),
-        onNext: () => state.nextPart("head", partOptions.head),
+        getVal: () => {
+          const heads = getAvailableHeads();
+          const headId = heads[state.style_idx.head] || "goku";
+          return getHeadName(headId);
+        },
+        onPrev: () => {
+          const heads = getAvailableHeads();
+          state.prevPart("head", heads);
+        },
+        onNext: () => {
+          const heads = getAvailableHeads();
+          state.nextPart("head", heads);
+        },
       },
       {
+        id: "torso",
         label: "TRONCO / TRAJE",
         icon: "🥋",
         getVal: () => getTorsoName(partOptions.torso[state.style_idx.torso]),
@@ -348,6 +368,7 @@ export class CreatorUI {
         onNext: () => state.nextPart("torso", partOptions.torso),
       },
       {
+        id: "legs",
         label: "PERNAS / CALÇA",
         icon: "👖",
         getVal: () => getLegsName(partOptions.legs[state.style_idx.legs]),
@@ -355,6 +376,7 @@ export class CreatorUI {
         onNext: () => state.nextPart("legs", partOptions.legs),
       },
       {
+        id: "feet",
         label: "PÉS / CALÇADO",
         icon: "🥾",
         getVal: () => getFeetName(partOptions.feet[state.style_idx.feet]),
@@ -362,11 +384,28 @@ export class CreatorUI {
         onNext: () => state.nextPart("feet", partOptions.feet),
       },
       {
+        id: "accessory",
         label: "ACESSÓRIO EXTRA",
         icon: "⚔️",
         getVal: () => getAccName(partOptions.accessory[state.style_idx.accessory]),
-        onPrev: () => state.prevPart("accessory", partOptions.accessory),
-        onNext: () => state.nextPart("accessory", partOptions.accessory),
+        onPrev: () => {
+          state.prevPart("accessory", partOptions.accessory);
+          state.validateConstraints();
+          if (headValTxtRef) {
+            const heads = getAvailableHeads();
+            const headId = heads[state.style_idx.head] || "goku";
+            headValTxtRef.setText(getHeadName(headId));
+          }
+        },
+        onNext: () => {
+          state.nextPart("accessory", partOptions.accessory);
+          state.validateConstraints();
+          if (headValTxtRef) {
+            const heads = getAvailableHeads();
+            const headId = heads[state.style_idx.head] || "goku";
+            headValTxtRef.setText(getHeadName(headId));
+          }
+        },
       },
     ];
 
@@ -414,6 +453,10 @@ export class CreatorUI {
           resolution: 2,
         })
         .setOrigin(0.5);
+
+      if (row.id === "head") {
+        headValTxtRef = valTxt;
+      }
 
       // Left Arrow
       const arrowL = this.scene.add

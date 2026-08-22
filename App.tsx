@@ -1,16 +1,173 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import GameCanvas from './components/GameCanvas';
 import { AuthButton } from './components/AuthModal';
 import { AchievementToast } from './components/AchievementToast';
 
+interface TextInputPromptData {
+  title: string;
+  currentValue: string;
+  onComplete: (val: string) => void;
+}
+
+const TextInputModal: React.FC<{
+  prompt: TextInputPromptData;
+  onClose: () => void;
+}> = ({ prompt, onClose }) => {
+  const [text, setText] = useState(prompt.currentValue || '');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Disable Phaser keyboard input while modal is open
+    const game = (window as any).gameInstance;
+    if (game?.input?.keyboard) {
+      game.input.keyboard.enabled = false;
+    }
+    if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+
+    return () => {
+      // Re-enable Phaser keyboard input when modal closes
+      if (game?.input?.keyboard) {
+        game.input.keyboard.enabled = true;
+      }
+    };
+  }, []);
+
+  const handleConfirm = () => {
+    const finalVal = text.trim() || prompt.currentValue || "Guerreiro";
+    prompt.onComplete(finalVal);
+    onClose();
+  };
+
+  const handleCharClick = (char: string) => {
+    if (text.length < 16) {
+      setText((prev) => prev + char);
+    }
+  };
+
+  const handleBackspace = () => {
+    setText((prev) => prev.slice(0, -1));
+  };
+
+  const handleClear = () => {
+    setText('');
+  };
+
+  const quickLetters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"," "];
+
+  return (
+    <div 
+      className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div 
+        className="bg-[#0f172a] border-2 border-[#38bdf8] p-5 rounded-xl shadow-2xl max-w-md w-full flex flex-col gap-3 text-white"
+        onKeyDown={(e) => e.stopPropagation()}
+        onKeyUp={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+          <h3 className="text-lg font-bold text-sky-400 font-mono flex items-center gap-2">
+            <span>⚔️</span> {prompt.title}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-white text-xl font-bold px-2"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Input box */}
+        <div className="relative flex items-center">
+          <input
+            ref={inputRef}
+            type="text"
+            maxLength={16}
+            value={text}
+            onChange={(e) => setText(e.target.value.substring(0, 16))}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Enter') {
+                handleConfirm();
+              } else if (e.key === 'Escape') {
+                onClose();
+              }
+            }}
+            placeholder="Digite o nome..."
+            className="w-full bg-[#1e293b] text-yellow-300 text-center text-xl font-bold p-3 rounded-lg border-2 border-slate-600 focus:border-yellow-400 outline-none uppercase tracking-wider shadow-inner"
+            autoFocus
+          />
+          {text.length > 0 && (
+            <button
+              onClick={handleClear}
+              className="absolute right-3 text-slate-400 hover:text-red-400 font-bold text-sm px-2 py-1 bg-slate-800 rounded"
+              title="Limpar"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <div className="text-xs text-slate-400 text-center">
+          {text.length}/16 caracteres • Use o teclado ou os botões abaixo
+        </div>
+
+        {/* Virtual on-screen keypad for touch/mobile */}
+        <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800 flex flex-wrap justify-center gap-1 max-h-32 overflow-y-auto">
+          {quickLetters.map((char) => (
+            <button
+              key={char}
+              type="button"
+              onClick={() => handleCharClick(char)}
+              className="px-2.5 py-1.5 bg-slate-800 hover:bg-sky-600 active:bg-sky-500 rounded text-sm font-mono font-bold text-slate-200 min-w-[28px] transition-colors"
+            >
+              {char === " " ? "␣" : char}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={handleBackspace}
+            className="px-3 py-1.5 bg-red-950/80 hover:bg-red-800 active:bg-red-700 rounded text-sm font-bold text-red-200 transition-colors"
+          >
+            ⌫
+          </button>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 mt-1">
+          <button 
+            type="button"
+            onClick={onClose}
+            className="flex-1 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 py-3 rounded-lg font-bold uppercase transition-all"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="button"
+            onClick={handleConfirm}
+            className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 active:scale-95 text-slate-950 py-3 rounded-lg font-bold uppercase tracking-wide transition-all shadow-lg font-mono"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isMenuScene, setIsMenuScene] = useState(true); // Default to true, assuming we start near menu
-  const [textInputPrompt, setTextInputPrompt] = useState<{ title: string; currentValue: string; onComplete: (val: string) => void } | null>(null);
+  const [isMenuScene, setIsMenuScene] = useState(true);
+  const [textInputPrompt, setTextInputPrompt] = useState<TextInputPromptData | null>(null);
   const [isShaking, setIsShaking] = useState<string | false>(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionTimeoutRef = useRef<any>(null);
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -44,20 +201,29 @@ const App: React.FC = () => {
     };
     window.addEventListener('shake-screen', handleShakeScreen);
 
-    const handleTransitionStart = () => setIsTransitioning(true);
-    const handleTransitionEnd = () => setIsTransitioning(false);
+    const handleTransitionStart = () => {
+      setIsTransitioning(true);
+      if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
+      // Hard timeout guarantee: transition can NEVER stay black
+      transitionTimeoutRef.current = setTimeout(() => {
+        setIsTransitioning(false);
+      }, 400);
+    };
+
+    const handleTransitionEnd = () => {
+      if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
+      setIsTransitioning(false);
+    };
+
     window.addEventListener('scene-transition-start', handleTransitionStart);
     window.addEventListener('scene-transition-end', handleTransitionEnd);
 
     // Listen for PWA installation prompt
     const handleBeforeInstallPrompt = (e: any) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
       (window as any).deferredPWAInstallPrompt = e;
     };
-
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     const handleRequestInstall = async () => {
@@ -66,18 +232,14 @@ const App: React.FC = () => {
         prompt.prompt();
         const { outcome } = await prompt.userChoice;
         if (outcome === 'accepted') {
-          console.log('User accepted the install prompt');
           (window as any).deferredPWAInstallPrompt = null;
           setDeferredPrompt(null);
-        } else {
-          console.log('User dismissed the install prompt');
         }
       }
     };
     window.addEventListener('request-pwa-install', handleRequestInstall);
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle navigation if we are in MenuScene and no text input is open
       if (isMenuScene && !textInputPrompt) {
         if (['ArrowUp', 'ArrowDown', 'Enter'].includes(e.key)) {
           window.dispatchEvent(new CustomEvent('menu-nav', { detail: e.key }));
@@ -87,6 +249,7 @@ const App: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
       window.removeEventListener('scene-transition-start', handleTransitionStart);
       window.removeEventListener('scene-transition-end', handleTransitionEnd);
       document.removeEventListener('fullscreenchange', onFullscreenChange);
@@ -114,6 +277,7 @@ const App: React.FC = () => {
       <main className="flex-1 w-full p-0 relative overflow-hidden">
         <AuthButton />
         <AchievementToast />
+        
         {/* Buttons Container */}
         <div className="absolute z-40 flex flex-col sm:flex-row gap-2" style={{ top: 'max(1rem, env(safe-area-inset-top))', right: 'max(1rem, env(safe-area-inset-right))' }}>
           {isMenuScene && (
@@ -159,61 +323,26 @@ const App: React.FC = () => {
           </button>
         </div>
 
-        {/* Text Input Prompt */}
+        {/* Interactive Text Input Prompt */}
         {textInputPrompt && (
-          <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
-            <div className="bg-[#2c3e50] border-2 border-[#34495e] p-6 rounded-lg shadow-2xl max-w-sm w-full flex flex-col gap-4">
-              <h3 className="text-xl font-bold text-white font-mono text-center mb-2">{textInputPrompt.title}</h3>
-              <input
-                type="text"
-                maxLength={20}
-                className="w-full bg-[#1a252f] text-yellow-400 text-center text-xl font-bold p-3 outline-none border border-[#34495e] focus:border-[#3498db] transition-colors uppercase"
-                defaultValue={textInputPrompt.currentValue}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    textInputPrompt.onComplete(e.currentTarget.value);
-                    setTextInputPrompt(null);
-                  } else if (e.key === 'Escape') {
-                    setTextInputPrompt(null);
-                  }
-                }}
-                autoFocus
-                onBlur={(e) => e.currentTarget.focus()}
-              />
-              <div className="flex gap-2 mt-2">
-                <button 
-                  onClick={() => setTextInputPrompt(null)}
-                  className="flex-1 bg-[#e74c3c] hover:bg-[#c0392b] text-white p-3 font-bold uppercase transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  onClick={(e) => {
-                    const input = e.currentTarget.parentElement?.parentElement?.querySelector('input');
-                    if (input) {
-                      textInputPrompt.onComplete(input.value);
-                      setTextInputPrompt(null);
-                    }
-                  }}
-                  className="flex-1 bg-[#2ecc71] hover:bg-[#27ae60] text-black p-3 font-bold uppercase transition-colors"
-                >
-                  Confirmar
-                </button>
-              </div>
-            </div>
-          </div>
+          <TextInputModal
+            prompt={textInputPrompt}
+            onClose={() => setTextInputPrompt(null)}
+          />
         )}
 
         <div className="relative overflow-hidden bg-[#071026] w-full h-full">
           <GameCanvas />
         </div>
       </main>
-      {/* Scene Transition Overlay */}
+
+      {/* Scene Transition Overlay (pointer-events-none ensures it never blocks clicks) */}
       <div 
-        className={`fixed inset-0 bg-black z-[200] pointer-events-none transition-opacity duration-300 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 bg-black z-[200] pointer-events-none transition-opacity duration-200 ease-in-out ${isTransitioning ? 'opacity-100' : 'opacity-0'}`}
       ></div>
     </div>
   );
 };
 
 export default App;
+

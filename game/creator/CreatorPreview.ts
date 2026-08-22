@@ -167,11 +167,11 @@ export class CreatorPreview {
       color_acc_1: giColors[state.p_idx.acc_1] ?? giColors[0],
       sp1_id: customSp1Id || builderData.base.key,
       sp2_id: customSp2Id || builderData.base.key,
-      part_head: partOptions.head[state.style_idx.head] || "goku",
+      part_head: state.getEquippedHead(),
       part_torso: partOptions.torso[state.style_idx.torso] || "goku",
       part_legs: partOptions.legs[state.style_idx.legs] || "goku",
       part_feet: partOptions.feet[state.style_idx.feet] || "goku",
-      part_accessory: partOptions.accessory[state.style_idx.accessory] || "none",
+      part_accessory: state.getEquippedAccessory(),
     };
 
     const preset = AURA_PRESETS.find((p) => p.id === state.aura_preset_id);

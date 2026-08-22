@@ -54,8 +54,16 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     // resolução lógica em 960x540 (todos os cálculos de posição continuam iguais).
     zoom: 2,
   },
+  render: {
+    pixelArt: true,
+    antialias: false,
+    powerPreference: "high-performance",
+    batchSize: 4096,
+  },
   fps: {
     target: 60,
+    min: 30,
+    forceSetTimeOut: false,
   },
   input: {
     activePointers: 5,

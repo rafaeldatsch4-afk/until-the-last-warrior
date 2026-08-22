@@ -1,3 +1,5 @@
+import { partOptions, getAvailableHeadOptions } from "./CreatorPartOptions";
+
 export class CreatorState {
   public aura_preset_id: string = "gold";
   public aura_mode: "p1" | "all" = "p1";
@@ -24,13 +26,38 @@ export class CreatorState {
     accessory: 0,
   };
 
+  public getEquippedAccessory(): string {
+    return partOptions.accessory[this.style_idx.accessory] || "none";
+  }
+
+  public getAvailableHeads(): string[] {
+    return getAvailableHeadOptions(this.getEquippedAccessory());
+  }
+
+  public getEquippedHead(): string {
+    const heads = this.getAvailableHeads();
+    if (this.style_idx.head >= heads.length) {
+      this.style_idx.head = 0;
+    }
+    return heads[this.style_idx.head] || "goku";
+  }
+
+  public validateConstraints() {
+    const heads = this.getAvailableHeads();
+    if (this.style_idx.head >= heads.length) {
+      this.style_idx.head = 0;
+    }
+  }
+
   public nextPart(part: keyof typeof this.style_idx, options: string[]) {
     this.style_idx[part] = (this.style_idx[part] + 1) % options.length;
+    this.validateConstraints();
   }
 
   public prevPart(part: keyof typeof this.style_idx, options: string[]) {
     this.style_idx[part] =
       (this.style_idx[part] - 1 + options.length) % options.length;
+    this.validateConstraints();
   }
 
   public nextColor(part: keyof typeof this.p_idx, options: number[]) {

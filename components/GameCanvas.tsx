@@ -92,6 +92,7 @@ const GameCanvas: React.FC = () => {
       };
 
       gameRef.current = new Phaser.Game(config);
+      (window as any).gameInstance = gameRef.current;
 
       let resizeTimeout: ReturnType<typeof setTimeout>;
       const handleResize = () => {
