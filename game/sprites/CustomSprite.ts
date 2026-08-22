@@ -1261,6 +1261,7 @@ export function generateCustomSprite(
       // 4. HEAD & FACE
       // ==========================================
       const hasStrawHat = pAcc === "straw_hat";
+      const hasHeadband = pAcc === "headband";
 
       if (pHead === "spiderman") {
         // Full Mask with Large Expressive Angled White Spider Eyes & Web Grid
@@ -1274,15 +1275,28 @@ export function generateCustomSprite(
         headDot(19, 7, 0x111111);
         headDot(12, 10, 0x111111);
         headDot(20, 10, 0x111111);
+        headDot(14, 11, 0x111111);
+        headDot(18, 11, 0x111111);
 
-        // Large angled Spider-Man eyes with black border & white lens
-        headBox(12, 7, 3, 3, 0x000000);
-        headBox(13, 8, 2, 2, 0xffffff);
-        headDot(14, 8, 0xffffff);
+        if (isAttack || isCharge) {
+          // Narrowed aggressive spider lenses
+          headBox(12, 8, 3, 2, 0x000000);
+          headBox(13, 8, 2, 1, 0xffffff);
+          headDot(13, 9, 0xffffff);
 
-        headBox(17, 7, 3, 3, 0x000000);
-        headBox(17, 8, 2, 2, 0xffffff);
-        headDot(17, 8, 0xffffff);
+          headBox(17, 8, 3, 2, 0x000000);
+          headBox(17, 8, 2, 1, 0xffffff);
+          headDot(18, 9, 0xffffff);
+        } else {
+          // Large angled Spider-Man eyes with black border & white lens
+          headBox(12, 7, 3, 3, 0x000000);
+          headBox(13, 8, 2, 2, 0xffffff);
+          headDot(14, 8, 0xffffff);
+
+          headBox(17, 7, 3, 3, 0x000000);
+          headBox(17, 8, 2, 2, 0xffffff);
+          headDot(17, 8, 0xffffff);
+        }
       } else if (pHead === "saitama") {
         // Smooth Polished Bald Dome
         headBox(11, 5, 10, 8, SKIN_SHADOW);
@@ -1291,23 +1305,27 @@ export function generateCustomSprite(
         // Specular sheen on top of head
         if (!hasStrawHat) {
           headBox(14, 5, 3, 1, SKIN_LIGHT);
+          headDot(13, 6, SKIN_LIGHT);
         }
 
         if (isCharge || isAttack) {
-          // Serious Mode
-          headBox(13, 8, 2, 1, 0x000000); // Fierce eyebrows
-          headBox(17, 8, 2, 1, 0x000000);
+          // Serious Mode: Chiseled anime warrior face
+          headBox(12, 8, 3, 1, 0x000000); // Fierce angled eyebrows
+          headBox(17, 8, 3, 1, 0x000000);
           headBox(13, 9, 2, 2, 0xffffff);
           headBox(17, 9, 2, 2, 0xffffff);
           headDot(14, 9, 0x000000);
           headDot(17, 9, 0x000000);
-          headBox(15, 11, 2, 1, 0x000000);
+          headBox(14, 11, 4, 1, 0x000000); // Determined mouth
+          headDot(16, 12, SKIN_DEEP); // Chin cleft
         } else {
-          // Casual Derp Face
+          // Casual Derp Face: Classic One-Punch Man derp expression
           headDot(14, 9, 0x000000);
           headDot(18, 9, 0x000000);
           headDot(14, 10, 0xffffff);
           headDot(18, 10, 0xffffff);
+          headDot(12, 10, 0xfca5a5); // Cute anime blush dots
+          headDot(20, 10, 0xfca5a5);
           headBox(15, 11, 2, 1, SKIN_SHADOW);
         }
       } else if (pHead === "chapolim") {
@@ -1318,6 +1336,7 @@ export function generateCustomSprite(
 
         // Face opening in cowl
         headBox(13, 7, 6, 5, SKIN_TONE);
+        headBox(14, 7, 4, 1, SKIN_LIGHT);
 
         if (hasStrawHat) {
           // Cute angled Antennae emerging from sides of the Straw Hat
@@ -1326,6 +1345,8 @@ export function generateCustomSprite(
           // Pom-poms on tips
           headBox(6, 0, 3, 2, HEAD_2);
           headBox(23, 0, 3, 2, HEAD_2);
+          headDot(7, 0, 0xffffff);
+          headDot(24, 0, 0xffffff);
         } else {
           headBox(11, 4, 10, 1, HEAD_1_SHADOW);
           headBox(12, 4, 8, 1, HEAD_1);
@@ -1335,12 +1356,21 @@ export function generateCustomSprite(
           // Pom-poms on tips
           headBox(11, 0, 3, 2, HEAD_2);
           headBox(18, 0, 3, 2, HEAD_2);
+          headDot(12, 0, 0xffffff);
+          headDot(19, 0, 0xffffff);
         }
 
-        // Friendly eyes & smile
+        // Friendly hero eyes & smile
+        headBox(13, 8, 2, 1, 0xffffff);
+        headBox(17, 8, 2, 1, 0xffffff);
         headDot(14, 8, eyeColor);
         headDot(17, 8, eyeColor);
-        headBox(15, 11, 2, 1, SKIN_SHADOW);
+
+        if (isAttack || isCharge) {
+          headBox(14, 11, 4, 1, 0x991b1b); // Brave battle shout
+        } else {
+          headBox(15, 11, 2, 1, SKIN_SHADOW); // Friendly smile
+        }
       } else if (pHead === "vegeta") {
         // Vegeta Widow's Peak & Flame Hair
         headBox(12, 6, 8, 7, SKIN_TONE);
@@ -1388,8 +1418,10 @@ export function generateCustomSprite(
 
         if (isAttack || isCharge) {
           headBox(14, 11, 4, 2, 0x000000);
+          headBox(15, 11, 2, 1, 0xffffff); // Gritted teeth
         } else {
-          headBox(14, 11, 4, 1, 0x111111);
+          headBox(14, 11, 4, 1, 0x111111); // Saiyan prince smirk
+          headDot(18, 11, 0x111111);
         }
       } else if (pHead === "naruto") {
         // Naruto Spiky Blond Hair & Whiskers
@@ -1408,6 +1440,7 @@ export function generateCustomSprite(
           headBox(11, -2, 3, 3, hairColor);
           headBox(15, -3, 3, 4, hairColor);
           headBox(18, -2, 3, 3, hairColor);
+          headDot(13, -1, isTransformed ? 0xffffff : hairColor);
         }
 
         // Whiskers (3 on each cheek)
@@ -1418,12 +1451,20 @@ export function generateCustomSprite(
         dot(19, 10, 0x444444);
         dot(19, 11, 0x444444);
 
-        // Eyes & Grin
+        // Eyes & Grin (Kurama / Sage eyes if transformed)
+        const narutoEye = isTransformed ? 0xf59e0b : (eyeColor === 0x111111 ? 0x0284c7 : eyeColor);
         headBox(13, 8, 2, 1, 0xffffff);
         headBox(17, 8, 2, 1, 0xffffff);
-        headDot(14, 8, eyeColor);
-        headDot(17, 8, eyeColor);
-        headBox(14, 11, 4, 1, 0x000000);
+        headDot(14, 8, narutoEye);
+        headDot(17, 8, narutoEye);
+
+        if (isAttack || isCharge) {
+          headBox(14, 11, 4, 2, 0x450a0a); // Roaring mouth
+          headBox(15, 11, 2, 1, 0xffffff); // Teeth
+        } else {
+          headBox(14, 11, 4, 1, 0x000000); // Big confident grin
+          headDot(18, 10, 0x000000);
+        }
       } else if (pHead === "sasuke") {
         // Sasuke Layered Center-parted Bangs & Ducktail Spikes & Sharingan Eyes
         headBox(12, 6, 8, 7, SKIN_TONE);
@@ -1447,15 +1488,16 @@ export function generateCustomSprite(
           headBox(14, 5, 4, 3, hairColor);
         }
 
-        // Sharingan Eyes (Crimson with Tomoe pupil)
+        // Sharingan / Rinnegan Eyes (Crimson with Tomoe pupil or Purple Rinnegan)
+        const sasukeEye = isTransformed ? 0xa855f7 : 0xef4444;
         headBox(13, 8, 2, 1, 0xffffff);
         headBox(17, 8, 2, 1, 0xffffff);
-        headDot(14, 8, 0xef4444);
-        headDot(17, 8, 0xef4444);
-        dot(14, 8, 0x000000); // Tomoe dot
-        dot(17, 8, 0x000000);
+        headDot(14, 8, sasukeEye);
+        headDot(17, 8, sasukeEye);
+        headDot(14, 8, 0x000000); // Tomoe center
+        headDot(17, 8, 0x000000);
 
-        headBox(14, 11, 4, 1, 0x000000); // Cool stoic line
+        headBox(14, 11, 4, 1, 0x000000); // Stoic line
       } else if (pHead === "jotaro") {
         // Gakuran Visor Cap Fused with Hair + Gold Hand Badge + Strong Jaw
         headBox(12, 6, 8, 7, SKIN_TONE);
@@ -1488,11 +1530,13 @@ export function generateCustomSprite(
           headBox(10, 10, 12, 3, hairColor);
         }
 
-        // Intense JoJo eyes
+        // Intense JoJo eyes with dramatic brow hatching
+        headDot(13, 7, 0x000000);
+        headDot(18, 7, 0x000000);
         headBox(13, 8, 2, 1, 0xffffff);
         headBox(17, 8, 2, 1, 0xffffff);
-        headDot(14, 8, eyeColor);
-        headDot(17, 8, eyeColor);
+        headDot(14, 8, eyeColor === 0x111111 ? 0x0d9488 : eyeColor); // Piercing teal/green
+        headDot(17, 8, eyeColor === 0x111111 ? 0x0d9488 : eyeColor);
 
         headBox(14, 11, 4, 1, 0x000000);
       } else if (pHead === "luffy") {
@@ -1511,21 +1555,31 @@ export function generateCustomSprite(
           headBox(10, 1, 12, 5, hairColor);
           headBox(8, 3, 3, 4, hairColor);
           headBox(21, 3, 3, 4, hairColor);
+          headBox(12, 5, 3, 2, hairColor);
+          headBox(17, 5, 3, 2, hairColor);
         }
 
-        // Eyes
-        headBox(13, 8, 2, 1, 0xffffff);
-        headBox(17, 8, 2, 1, 0xffffff);
+        // Round expressive eyes
+        headBox(13, 8, 2, 2, 0xffffff);
+        headBox(17, 8, 2, 2, 0xffffff);
         headDot(14, 8, 0x000000);
         headDot(17, 8, 0x000000);
 
-        // Under-eye stitched scar
-        dot(18, 10, 0xef4444);
-        dot(17, 10, 0xef4444);
+        // Under-eye stitched scar with 2 tick marks
+        headDot(13, 10, 0xef4444);
+        headDot(14, 10, 0xef4444);
+        headDot(13, 11, 0xef4444);
 
-        // Wide White Grin
-        headBox(14, 11, 4, 1, 0xffffff);
-        headBox(14, 10, 4, 1, 0x000000);
+        if (isAttack || isCharge) {
+          // Wide open battle roar
+          headBox(14, 10, 4, 3, 0x450a0a);
+          headBox(14, 10, 4, 1, 0xffffff); // Top teeth
+          headBox(14, 12, 4, 1, 0xffffff); // Bottom teeth
+        } else {
+          // Wide Signature White Grin
+          headBox(14, 10, 4, 2, 0x000000);
+          headBox(14, 11, 4, 1, 0xffffff);
+        }
       } else {
         // Goku Iconic Multi-layered Spiky Hair & Expressive Eyes
         headBox(12, 6, 8, 7, SKIN_TONE);
@@ -1594,6 +1648,7 @@ export function generateCustomSprite(
           headBox(15, 11, 2, 1, 0x440000);
         } else if (isCharge) {
           headBox(14, 11, 4, 2, 0x000000);
+          headBox(15, 11, 2, 1, 0xffffff);
         } else {
           headDot(16, 11, 0x222222); // Smirk
         }
@@ -1686,16 +1741,38 @@ export function generateCustomSprite(
         headBox(5, 5, 3, 3, bandShade);
         headBox(4, 7, 2, 4, bandColor);
       } else if (pAcc === "scouter") {
-        // Saiyan Scouter Headset (Translucent lens + Ear unit)
-        // Ear bracket
-        headBox(10, 7, 2, 4, 0xffffff);
-        headBox(10, 8, 1, 2, 0xd4a000);
+        // Saiyan Scouter Headset (Translucent lens + Ear unit + Digital HUD)
+        // Ear bracket & earpiece
+        headBox(9, 7, 2, 4, 0xffffff);
+        headBox(9, 8, 1, 2, 0xd4a000);
+        headDot(10, 8, 0x111111);
 
-        // Translucent Glowing Green Lens over left eye
-        alphaBox(12, 7, 4, 3, 0x22c55e, 0.65);
+        // Frame arm over temple
+        headBox(10, 7, 3, 1, 0xffffff);
+
+        // Translucent Glowing Emerald Lens over left eye
+        alphaBox(12, 7, 5, 4, 0x22c55e, 0.65);
+        alphaBox(13, 8, 3, 2, 0x4ade80, 0.45);
         // Optical reticle HUD lines
         dot(13, 8, 0xffffff);
         dot(15, 7, 0x22c55e);
+        dot(16, 9, 0xffffff);
+      } else if (pAcc === "scarf") {
+        // Hero / Shinobi Front Scarf Wrap & Overlap Folds
+        const scarfColor = ACC_1 || 0xd92525;
+        const scarfShade = ACC_1_SHADOW;
+        const scarfLight = getLight(scarfColor, 18);
+
+        // Wrap around lower neck & jawline
+        box(11, 12, 10, 3, scarfShade);
+        box(12, 13, 8, 3, scarfColor);
+        box(13, 13, 6, 1, scarfLight);
+        // Center fold knot
+        box(15, 14, 3, 3, scarfShade);
+        box(15, 14, 2, 2, scarfColor);
+        // Draping front tail
+        box(14, 16, 3, 4, scarfColor);
+        box(14, 17, 3, 3, scarfShade);
       } else if (pAcc === "sword") {
         // Masterwork Katana (Steel Blade, Golden Tsuba, Braided Tsuka, Slash VFX)
         let handColor = SKIN_TONE;
