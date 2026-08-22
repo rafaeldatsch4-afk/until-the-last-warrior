@@ -15,6 +15,7 @@ import {
   skinColors,
 } from "../creator/CreatorPartOptions";
 import { generateCustomSprite } from "../sprites/CustomSprite";
+import { AURA_PRESETS, AuraManager } from "../systems/AuraManager";
 
 export default class CharacterCreatorScene extends Phaser.Scene {
   private state = new CreatorState();
@@ -184,8 +185,13 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     this.preview = new CreatorPreview(this, previewCenterX, previewCenterY);
     this.ui = new CreatorUI(this, () => this.updatePreview());
+    this.ui.onTestCharge = () => {
+      if (this.preview) {
+        this.preview.triggerChargeEffect();
+      }
+    };
 
-    // 5. LEFT COLUMN: STUDIO CUSTOMIZER (Tabs: Estilo, Cores, Poderes)
+    // 5. LEFT COLUMN: STUDIO CUSTOMIZER (Tabs: Estilo, Cores, Aura, Poderes)
     this.ui.customSp1Id = this.customSp1Id;
     this.ui.customSp1Name = this.customSp1Name;
     this.ui.customSp2Id = this.customSp2Id;
@@ -225,13 +231,28 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   }
 
   private loadInitialCustomData() {
+    const pref = AuraManager.getPreference();
+    this.state.aura_preset_id = pref.id;
+    this.state.aura_mode = pref.mode;
+
+    const initialPreset = AURA_PRESETS.find((p) => p.id === pref.id) || AURA_PRESETS[1];
+    if (initialPreset && initialPreset.color !== -1) {
+      this.builderData.auraColor = initialPreset.color;
+    }
+
     const gameState = this.registry.get("gameState");
     if (gameState && gameState.characters) {
       const existing = gameState.characters.find((c: CharacterData) => c.id === 999);
       if (existing) {
         if (existing.name) this.builderData.name = existing.name;
+        if (existing.specialColor) this.builderData.auraColor = existing.specialColor;
         if (existing.customData) {
-          const cd = existing.customData;
+          const cd = existing.customData as any;
+          if (cd.aura_id) {
+            this.state.aura_preset_id = cd.aura_id;
+            const p = AURA_PRESETS.find((pr) => pr.id === cd.aura_id);
+            if (p && p.color !== -1) this.builderData.auraColor = p.color;
+          }
           if (cd.part_head) {
             const idx = partOptions.head.indexOf(cd.part_head);
             if (idx !== -1) this.state.style_idx.head = idx;
@@ -710,6 +731,12 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   private saveAndEquipCharacter() {
     if (this.isShuttingDown) return;
 
+    const preset =
+      AURA_PRESETS.find((p) => p.id === this.state.aura_preset_id) || AURA_PRESETS[1];
+    const auraColor = preset.color !== -1 ? preset.color : 0xffd700;
+    this.builderData.auraColor = auraColor;
+    AuraManager.setPreference(this.state.aura_preset_id, this.state.aura_mode);
+
     const customData = {
       gi1: 0,
       gi2: 0,
@@ -724,6 +751,9 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       color_head_1: giColors[this.state.p_idx.head_1],
       color_head_2: giColors[this.state.p_idx.head_2],
       color_acc_1: giColors[this.state.p_idx.acc_1],
+      aura_id: this.state.aura_preset_id,
+      aura_color: auraColor,
+      aura_ring_color: preset.ringColor,
       sp1_id: this.customSp1Id || this.builderData.base.key,
       sp2_id: this.customSp2Id || this.builderData.base.key,
       part_head: partOptions.head[this.state.style_idx.head],
@@ -739,7 +769,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       key: "custom_999",
       baseKey: this.builderData.base.key,
       name: this.builderData.name,
-      specialColor: this.builderData.auraColor,
+      specialColor: auraColor,
       specialName: this.customSp1Name || this.builderData.base.specialName,
       superName: this.customSp2Name || this.builderData.base.superName,
       price: 0,

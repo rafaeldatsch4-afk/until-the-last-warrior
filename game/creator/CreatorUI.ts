@@ -7,12 +7,14 @@ import {
   hairColors,
   giColors,
 } from "./CreatorPartOptions";
+import { AURA_PRESETS, AuraManager, AuraPreset } from "../systems/AuraManager";
 
-export type CreatorTab = "style" | "colors" | "skills";
+export type CreatorTab = "style" | "colors" | "aura" | "skills";
 
 export class CreatorUI {
   private scene: Phaser.Scene;
   private onUpdate: () => void;
+  public onTestCharge?: () => void;
   private currentTab: CreatorTab = "style";
   private panelContainer?: Phaser.GameObjects.Container;
   private tabButtons: Phaser.GameObjects.Container[] = [];
@@ -117,15 +119,15 @@ export class CreatorUI {
     // 2. Tab Switcher Header
     const tabH = 36;
     const tabY = 16;
-    const tabWidth = (panelW - 32) / 3;
+    const tabs: { key: CreatorTab; label: string; icon: string }[] = [
+      { key: "style", label: "ESTILO", icon: "👕" },
+      { key: "colors", label: "CORES", icon: "🎨" },
+      { key: "aura", label: "AURA", icon: "⚡" },
+      { key: "skills", label: "GOLPES", icon: "🔥" },
+    ];
+    const tabWidth = (panelW - 32) / tabs.length;
 
     this.tabButtons = [];
-
-    const tabs: { key: CreatorTab; label: string; icon: string }[] = [
-      { key: "style", label: "ESTILO & PEÇAS", icon: "👕" },
-      { key: "colors", label: "PALETA & CORES", icon: "🎨" },
-      { key: "skills", label: "GOLPES & MAGIAS", icon: "⚡" },
-    ];
 
     tabs.forEach((tab, index) => {
       const tabX = 16 + index * tabWidth + tabWidth / 2;
@@ -245,6 +247,8 @@ export class CreatorUI {
       this.renderStyleTab(contentContainer, panelW);
     } else if (this.currentTab === "colors") {
       this.renderColorsTab(contentContainer, panelW);
+    } else if (this.currentTab === "aura") {
+      this.renderAuraTab(contentContainer, panelW);
     } else if (this.currentTab === "skills") {
       this.renderSkillsTab(contentContainer, panelW);
     }
@@ -504,6 +508,25 @@ export class CreatorUI {
         onPrev: () => state.prevColor("acc_1", giColors),
         onNext: () => state.nextColor("acc_1", giColors),
       },
+      {
+        label: "Aura do Ki ⚡",
+        getHex: () => {
+          const p = AURA_PRESETS.find((pr) => pr.id === state.aura_preset_id) || AURA_PRESETS[1];
+          return p.color !== -1 ? p.color : 0xffd700;
+        },
+        onPrev: () => {
+          const curIdx = AURA_PRESETS.findIndex((pr) => pr.id === state.aura_preset_id);
+          const nextIdx = (curIdx - 1 + AURA_PRESETS.length) % AURA_PRESETS.length;
+          state.aura_preset_id = AURA_PRESETS[nextIdx].id;
+          AuraManager.setPreference(state.aura_preset_id, state.aura_mode);
+        },
+        onNext: () => {
+          const curIdx = AURA_PRESETS.findIndex((pr) => pr.id === state.aura_preset_id);
+          const nextIdx = (curIdx + 1) % AURA_PRESETS.length;
+          state.aura_preset_id = AURA_PRESETS[nextIdx].id;
+          AuraManager.setPreference(state.aura_preset_id, state.aura_mode);
+        },
+      },
     ];
 
     const colW = (panelW - 44) / 2;
@@ -600,6 +623,246 @@ export class CreatorUI {
 
       container.add([card, titleTxt, swatch, pillBg, colorTxt, arrowL, arrowR]);
     });
+  }
+
+  // --- TAB: COR DA AURA ---
+  private renderAuraTab(container: Phaser.GameObjects.Container, panelW: number) {
+    const state = this.stateRef!;
+    const cardW = panelW - 32;
+
+    const currentPreset =
+      AURA_PRESETS.find((p) => p.id === state.aura_preset_id) || AURA_PRESETS[1];
+    const auraHex = currentPreset.color !== -1 ? currentPreset.color : 0xffd700;
+    const ringHex = currentPreset.ringColor !== -1 ? currentPreset.ringColor : auraHex;
+
+    // 1. Active Aura Showcase Banner Card
+    const bannerY = 8;
+    const bannerH = 58;
+    const bannerCard = this.scene.add.graphics();
+    bannerCard.fillStyle(0x0f172a, 0.92);
+    bannerCard.fillRoundedRect(16, bannerY, cardW, bannerH, 8);
+    bannerCard.lineStyle(1.5, auraHex, 0.9);
+    bannerCard.strokeRoundedRect(16, bannerY, cardW, bannerH, 8);
+
+    // Swatch Circle on left of banner
+    const bannerSwatch = this.scene.add.graphics();
+    bannerSwatch.fillStyle(auraHex, 1);
+    bannerSwatch.fillCircle(42, bannerY + bannerH / 2, 14);
+    bannerSwatch.lineStyle(2, ringHex, 1);
+    bannerSwatch.strokeCircle(42, bannerY + bannerH / 2, 14);
+
+    const bannerTitle = this.scene.add
+      .text(68, bannerY + 18, `⚡ AURA: ${currentPreset.name.toUpperCase()}`, {
+        fontSize: "13px",
+        fontStyle: "900",
+        color: `#${auraHex.toString(16).padStart(6, "0")}`,
+        fontFamily: "system-ui, sans-serif",
+        letterSpacing: 0.5,
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
+
+    const bannerDesc = this.scene.add
+      .text(68, bannerY + 39, currentPreset.description || "Aura de energia de combate lendária.", {
+        fontSize: "11px",
+        color: "#94a3b8",
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
+
+    // 2. Presets Grid Header
+    const gridTitleY = bannerY + bannerH + 12;
+    const gridTitle = this.scene.add
+      .text(18, gridTitleY, "ESCOLHA UMA AURA LENDÁRIA", {
+        fontSize: "11px",
+        fontStyle: "bold",
+        color: "#64748b",
+        fontFamily: "system-ui, sans-serif",
+        letterSpacing: 1,
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
+
+    // 3. Grid of Aura Presets (3 columns x 4 rows)
+    const cols = 3;
+    const gridGapX = 8;
+    const gridGapY = 8;
+    const btnW = Math.floor((cardW - (cols - 1) * gridGapX) / cols);
+    const btnH = 44;
+    const gridStartY = gridTitleY + 12;
+
+    const presetCards: Phaser.GameObjects.Container[] = [];
+
+    AURA_PRESETS.forEach((preset, index) => {
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+      const bx = 16 + col * (btnW + gridGapX) + btnW / 2;
+      const by = gridStartY + row * (btnH + gridGapY) + btnH / 2;
+
+      const pCont = this.scene.add.container(bx, by);
+      const isSelected = preset.id === state.aura_preset_id;
+      const pColor = preset.color !== -1 ? preset.color : 0xffffff;
+      const pRing = preset.ringColor !== -1 ? preset.ringColor : pColor;
+
+      const pBg = this.scene.add.graphics();
+      const drawCard = (hover: boolean) => {
+        pBg.clear();
+        pBg.fillStyle(isSelected ? 0x1e293b : 0x0f172a, 0.95);
+        pBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+        pBg.lineStyle(
+          isSelected ? 2 : hover ? 1.5 : 1,
+          isSelected ? pColor : hover ? 0x60a5fa : 0x334155,
+          isSelected ? 1 : hover ? 0.9 : 0.6
+        );
+        pBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+      };
+      drawCard(false);
+
+      // Swatch circle
+      const dot = this.scene.add.graphics();
+      dot.fillStyle(pColor, 1);
+      dot.fillCircle(-btnW / 2 + 16, 0, 8);
+      dot.lineStyle(1.5, pRing, 0.9);
+      dot.strokeCircle(-btnW / 2 + 16, 0, 8);
+
+      // Name Text
+      const nameTxt = this.scene.add
+        .text(-btnW / 2 + 30, 0, preset.name, {
+          fontSize: "11px",
+          fontStyle: isSelected ? "900" : "bold",
+          color: isSelected ? "#f8fafc" : "#cbd5e1",
+          fontFamily: "system-ui, sans-serif",
+          resolution: 2,
+        })
+        .setOrigin(0, 0.5);
+
+      // Checkmark icon if selected
+      let checkTxt: Phaser.GameObjects.Text | null = null;
+      if (isSelected) {
+        checkTxt = this.scene.add
+          .text(btnW / 2 - 12, 0, "✓", {
+            fontSize: "12px",
+            fontStyle: "bold",
+            color: "#38bdf8",
+          })
+          .setOrigin(0.5);
+      }
+
+      const hit = this.scene.add
+        .rectangle(0, 0, btnW, btnH, 0x000000, 0)
+        .setInteractive({ useHandCursor: true });
+
+      hit.on("pointerover", () => {
+        if (this.isDestroyed) return;
+        drawCard(true);
+        this.scene.tweens.add({ targets: pCont, scale: 1.03, duration: 80 });
+      });
+
+      hit.on("pointerout", () => {
+        if (this.isDestroyed) return;
+        drawCard(false);
+        this.scene.tweens.add({ targets: pCont, scale: 1, duration: 80 });
+      });
+
+      hit.on("pointerdown", () => {
+        if (this.isDestroyed) return;
+        state.aura_preset_id = preset.id;
+        AuraManager.setPreference(preset.id, state.aura_mode);
+        if (this.scene.cache.audio.exists("sfx_select")) {
+          this.scene.sound.play("sfx_select", { volume: 0.5 });
+        }
+        this.refreshTabs(panelW, 450);
+        this.onUpdate();
+      });
+
+      const elements: Phaser.GameObjects.GameObject[] = [pBg, dot, nameTxt, hit];
+      if (checkTxt) elements.push(checkTxt);
+      pCont.add(elements);
+      presetCards.push(pCont);
+    });
+
+    // 4. Bottom Controls: Centered Test Ki Action Button
+    const bottomControlsY = gridStartY + 4 * (btnH + gridGapY) + 12;
+    const testBtnW = cardW;
+    const testBtnH = 36;
+    const testBtnX = 16 + testBtnW / 2;
+    const testBtnY = bottomControlsY + testBtnH / 2;
+
+    const chargeBtnCont = this.scene.add.container(testBtnX, testBtnY);
+
+    const chargeBtnBg = this.scene.add.graphics();
+    const drawChargeBtn = (hover: boolean) => {
+      chargeBtnBg.clear();
+      chargeBtnBg.fillStyle(hover ? 0x92400e : 0x78350f, hover ? 0.95 : 0.85);
+      chargeBtnBg.fillRoundedRect(-testBtnW / 2, -testBtnH / 2, testBtnW, testBtnH, 8);
+      chargeBtnBg.lineStyle(
+        hover ? 2 : 1.5,
+        hover ? 0xfef08a : 0xf59e0b,
+        hover ? 1 : 0.85
+      );
+      chargeBtnBg.strokeRoundedRect(-testBtnW / 2, -testBtnH / 2, testBtnW, testBtnH, 8);
+    };
+    drawChargeBtn(false);
+
+    const chargeIcon = this.scene.add
+      .text(-testBtnW / 2 + 20, 0, "⚡", {
+        fontSize: "15px",
+        color: "#fbbf24",
+      })
+      .setOrigin(0.5);
+
+    const chargeBtnTxt = this.scene.add
+      .text(0, 0, "⚡ TESTAR EMANAÇÃO DO KI", {
+        fontSize: "13px",
+        fontStyle: "900",
+        color: "#fef3c7",
+        fontFamily: "system-ui, sans-serif",
+        letterSpacing: 1,
+        resolution: 2,
+      })
+      .setOrigin(0.5);
+
+    const chargeHit = this.scene.add
+      .rectangle(0, 0, testBtnW, testBtnH, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+
+    chargeHit.on("pointerover", () => {
+      if (this.isDestroyed) return;
+      drawChargeBtn(true);
+      this.scene.tweens.add({ targets: chargeBtnCont, scale: 1.02, duration: 80 });
+    });
+
+    chargeHit.on("pointerout", () => {
+      if (this.isDestroyed) return;
+      drawChargeBtn(false);
+      this.scene.tweens.add({ targets: chargeBtnCont, scale: 1, duration: 80 });
+    });
+
+    chargeHit.on("pointerdown", () => {
+      if (this.isDestroyed) return;
+      this.scene.tweens.add({
+        targets: chargeBtnCont,
+        scale: 0.97,
+        yoyo: true,
+        duration: 70,
+      });
+      if (this.onTestCharge) {
+        this.onTestCharge();
+      }
+    });
+
+    chargeBtnCont.add([chargeBtnBg, chargeIcon, chargeBtnTxt, chargeHit]);
+
+    container.add([
+      bannerCard,
+      bannerSwatch,
+      bannerTitle,
+      bannerDesc,
+      gridTitle,
+      ...presetCards,
+      chargeBtnCont,
+    ]);
   }
 
   // --- TAB 3: GOLPES & MAGIAS ---

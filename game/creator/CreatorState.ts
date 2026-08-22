@@ -1,4 +1,7 @@
 export class CreatorState {
+  public aura_preset_id: string = "gold";
+  public aura_mode: "p1" | "all" = "p1";
+
   public p_idx = {
     skin: 0,
     hair: 0,

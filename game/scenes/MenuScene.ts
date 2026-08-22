@@ -4,7 +4,6 @@ import { GameState } from "../types";
 import { DailyChallenges, CHALLENGES } from "../systems/DailyChallenges";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import { ArenaTextureBuilder } from "../battle/ArenaTextureBuilder";
-import { AuraCustomizerModal } from "../components/AuraCustomizerModal";
 
 const ARENAS_LIST = [
   { id: "arena", name: "Planeta Terra", icon: "🌍", color: 0x3498db },
@@ -310,19 +309,6 @@ export default class MenuScene extends Phaser.Scene {
     this.createMenuButton(
       menuColX,
       startY + spacing * 3,
-      "⚡ COR DA AURA",
-      () => {
-        this.resumeAudioContext();
-        if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-        AuraCustomizerModal.show(this);
-      },
-      0x00eaff,
-      150,
-    );
-
-    this.createMenuButton(
-      menuColX,
-      startY + spacing * 4,
       "CONFIGURAÇÕES",
       () => {
         this.resumeAudioContext();
@@ -330,12 +316,12 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "SettingsScene");
       },
       0x95a5a6,
-      200,
+      150,
     );
 
     this.createMenuButton(
       menuColX,
-      startY + spacing * 5,
+      startY + spacing * 4,
       "CRIAR PERSONAGEM",
       () => {
         this.resumeAudioContext();
@@ -343,12 +329,12 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "CharacterCreatorScene");
       },
       0x2ecc71,
-      250,
+      200,
     );
 
     this.createMenuButton(
       menuColX,
-      startY + spacing * 6,
+      startY + spacing * 5,
       "TOP GLOBAL",
       () => {
         this.resumeAudioContext();
@@ -356,7 +342,7 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "LeaderboardScene");
       },
       0x9b59b6,
-      300,
+      250,
     );
   }
 

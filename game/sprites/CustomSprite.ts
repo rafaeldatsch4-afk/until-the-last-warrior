@@ -211,15 +211,6 @@ export function generateCustomSprite(
         h: number,
         color: number,
       ) => {
-        let drawY = y;
-        let drawH = h;
-        if (pAcc === "straw_hat" && !isDrawingHat && drawY < 5) {
-          const diff = 5 - drawY;
-          drawY = 5;
-          drawH -= diff;
-          if (drawH <= 0) return;
-        }
-
         const { ox, oy } =
           isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
@@ -232,21 +223,19 @@ export function generateCustomSprite(
 
         const finalYPose =
           isAttack || isDefend || isCharge || isWalk
-            ? drawY + poseOffsetY / 2
-            : drawY;
+            ? y + poseOffsetY / 2
+            : y;
 
         canvas.fillStyle(color, 1);
         canvas.fillRect(
           (offsetX + finalX) * SCALE,
           (finalYPose + breatheOffset + DRAW_OFFSET_Y) * SCALE,
           w * SCALE,
-          drawH * SCALE,
+          h * SCALE,
         );
       };
 
       const headDot = (x: number, y: number, color: number) => {
-        if (pAcc === "straw_hat" && !isDrawingHat && y < 5) return;
-
         const { ox, oy } =
           isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
@@ -1271,6 +1260,8 @@ export function generateCustomSprite(
       // ==========================================
       // 4. HEAD & FACE
       // ==========================================
+      const hasStrawHat = pAcc === "straw_hat";
+
       if (pHead === "spiderman") {
         // Full Mask with Large Expressive Angled White Spider Eyes & Web Grid
         headBox(11, 5, 10, 8, HEAD_1_SHADOW);
@@ -1298,7 +1289,9 @@ export function generateCustomSprite(
         headBox(12, 5, 8, 8, SKIN_TONE);
         headBox(14, 13, 4, 1, SKIN_TONE);
         // Specular sheen on top of head
-        headBox(14, 5, 3, 1, SKIN_LIGHT);
+        if (!hasStrawHat) {
+          headBox(14, 5, 3, 1, SKIN_LIGHT);
+        }
 
         if (isCharge || isAttack) {
           // Serious Mode
@@ -1319,46 +1312,65 @@ export function generateCustomSprite(
         }
       } else if (pHead === "chapolim") {
         // Red Cowl + Seamless Yellow Antennae with Pom-poms
-        headBox(11, 4, 10, 8, HEAD_1_SHADOW);
-        headBox(12, 4, 8, 8, HEAD_1);
+        headBox(11, 5, 10, 8, HEAD_1_SHADOW);
+        headBox(12, 5, 8, 8, HEAD_1);
         headBox(14, 13, 4, 1, SKIN_TONE);
 
         // Face opening in cowl
         headBox(13, 7, 6, 5, SKIN_TONE);
 
-        // Antennae (Smoothly anchored into cowl top y=1..4)
-        headBox(12, 2, 1, 3, HEAD_1);
-        headBox(19, 2, 1, 3, HEAD_1);
-        // Pom-poms on tips
-        headBox(11, 0, 3, 2, HEAD_2);
-        headBox(18, 0, 3, 2, HEAD_2);
+        if (hasStrawHat) {
+          // Cute angled Antennae emerging from sides of the Straw Hat
+          headBox(7, 2, 1, 4, HEAD_1);
+          headBox(24, 2, 1, 4, HEAD_1);
+          // Pom-poms on tips
+          headBox(6, 0, 3, 2, HEAD_2);
+          headBox(23, 0, 3, 2, HEAD_2);
+        } else {
+          headBox(11, 4, 10, 1, HEAD_1_SHADOW);
+          headBox(12, 4, 8, 1, HEAD_1);
+          // Antennae (anchored on cowl top y=2..4)
+          headBox(12, 2, 1, 3, HEAD_1);
+          headBox(19, 2, 1, 3, HEAD_1);
+          // Pom-poms on tips
+          headBox(11, 0, 3, 2, HEAD_2);
+          headBox(18, 0, 3, 2, HEAD_2);
+        }
 
         // Friendly eyes & smile
         headDot(14, 8, eyeColor);
         headDot(17, 8, eyeColor);
         headBox(15, 11, 2, 1, SKIN_SHADOW);
       } else if (pHead === "vegeta") {
-        // Vegeta Widow's Peak & Aggressive Upward Flame Hair
+        // Vegeta Widow's Peak & Flame Hair
         headBox(12, 6, 8, 7, SKIN_TONE);
         headBox(14, 13, 4, 1, SKIN_TONE);
         headBox(13, 12, 6, 1, SKIN_SHADOW);
 
-        // Widow's Peak forehead hairline
-        headBox(12, 5, 8, 1, hairColor);
-        headDot(15, 6, hairColor);
-        headDot(16, 6, hairColor);
+        if (hasStrawHat) {
+          // Sideburns and widow's peak under brim
+          headBox(9, 5, 3, 5, hairColor);
+          headBox(20, 5, 3, 5, hairColor);
+          headDot(15, 6, hairColor);
+          headDot(16, 6, hairColor);
+        } else {
+          // Widow's Peak forehead hairline
+          headBox(12, 5, 8, 1, hairColor);
+          headDot(15, 6, hairColor);
+          headDot(16, 6, hairColor);
 
-        // Aggressive Flame Hair mass
-        headBox(10, 0, 12, 5, hairColor);
-        headBox(10, -3, 12, 3, hairColor);
-        headBox(11, -6, 10, 3, hairColor);
-        headBox(12, -9, 8, 3, hairColor);
-        headBox(13, -12, 6, 3, hairColor);
-        headBox(14, -14, 4, 2, hairColor); // Center spike
+          // Aggressive Flame Hair mass
+          headBox(10, 0, 12, 5, hairColor);
+          headBox(10, -3, 12, 3, hairColor);
+          headBox(11, -6, 10, 3, hairColor);
+          headBox(12, -9, 8, 3, hairColor);
+          headBox(13, -12, 6, 3, hairColor);
+          headBox(14, -14, 4, 2, hairColor); // Center spike
 
-        // Hair depth / highlights
-        headBox(13, -8, 1, 6, isTransformed ? 0xffffff : 0x444444);
-        headBox(17, -8, 1, 6, isTransformed ? 0xffffff : 0x444444);
+          // Hair depth / highlights
+          headBox(13, -8, 1, 6, isTransformed ? 0xffffff : 0x444444);
+          headBox(17, -8, 1, 6, isTransformed ? 0xffffff : 0x444444);
+        }
 
         // Fierce angled eyebrows
         headDot(12, 8, eyebrowColor);
@@ -1384,11 +1396,19 @@ export function generateCustomSprite(
         headBox(12, 6, 8, 7, SKIN_TONE);
         headBox(14, 13, 4, 1, SKIN_TONE);
 
-        // Spiky Hair
-        headBox(10, 1, 12, 4, hairColor);
-        headBox(11, -2, 3, 3, hairColor);
-        headBox(15, -3, 3, 4, hairColor);
-        headBox(18, -2, 3, 3, hairColor);
+        if (hasStrawHat) {
+          // Side spikes and bangs framing under hat
+          headBox(8, 5, 4, 4, hairColor);
+          headBox(20, 5, 4, 4, hairColor);
+          headBox(13, 6, 2, 1, hairColor);
+          headBox(17, 6, 2, 1, hairColor);
+        } else {
+          // Spiky Hair
+          headBox(10, 1, 12, 4, hairColor);
+          headBox(11, -2, 3, 3, hairColor);
+          headBox(15, -3, 3, 4, hairColor);
+          headBox(18, -2, 3, 3, hairColor);
+        }
 
         // Whiskers (3 on each cheek)
         dot(12, 9, 0x444444);
@@ -1409,16 +1429,23 @@ export function generateCustomSprite(
         headBox(12, 6, 8, 7, SKIN_TONE);
         headBox(14, 13, 4, 1, SKIN_TONE);
 
-        // Spiky Hair mass
-        headBox(9, 0, 14, 7, hairColor);
-        headBox(16, -2, 4, 3, hairColor); // Ducktail back spikes
-        headBox(11, -1, 3, 2, hairColor);
+        if (hasStrawHat) {
+          // Front bangs framing cheeks
+          headBox(8, 5, 3, 6, hairColor);
+          headBox(21, 5, 3, 6, hairColor);
+          headBox(14, 6, 4, 1, hairColor);
+        } else {
+          // Spiky Hair mass
+          headBox(9, 0, 14, 7, hairColor);
+          headBox(16, -2, 4, 3, hairColor); // Ducktail back spikes
+          headBox(11, -1, 3, 2, hairColor);
 
-        // Front bangs framing cheeks
-        headBox(8, 4, 3, 7, hairColor);
-        headBox(21, 4, 3, 7, hairColor);
-        // Center parted V-bang
-        headBox(14, 5, 4, 3, hairColor);
+          // Front bangs framing cheeks
+          headBox(8, 4, 3, 7, hairColor);
+          headBox(21, 4, 3, 7, hairColor);
+          // Center parted V-bang
+          headBox(14, 5, 4, 3, hairColor);
+        }
 
         // Sharingan Eyes (Crimson with Tomoe pupil)
         headBox(13, 8, 2, 1, 0xffffff);
@@ -1435,24 +1462,31 @@ export function generateCustomSprite(
         headBox(14, 13, 4, 1, SKIN_TONE);
         headBox(13, 11, 6, 2, SKIN_SHADOW);
 
-        // Hat Crown
-        headBox(10, 1, 12, 4, HEAD_1);
-        headBox(10, 1, 1, 4, HEAD_1_SHADOW);
-        headBox(21, 1, 1, 4, HEAD_2);
+        if (hasStrawHat) {
+          // Side and back hair
+          headBox(9, 6, 3, 6, hairColor);
+          headBox(20, 6, 3, 6, hairColor);
+          headBox(10, 10, 12, 3, hairColor);
+        } else {
+          // Hat Crown
+          headBox(10, 1, 12, 4, HEAD_1);
+          headBox(10, 1, 1, 4, HEAD_1_SHADOW);
+          headBox(21, 1, 1, 4, HEAD_2);
 
-        // Visor / Brim
-        headBox(9, 4, 14, 2, HEAD_1);
-        headBox(10, 5, 12, 1, 0x111111); // Shadow under brim on eyes
+          // Visor / Brim
+          headBox(9, 4, 14, 2, HEAD_1);
+          headBox(10, 5, 12, 1, 0x111111); // Shadow under brim on eyes
 
-        // Gold Hand & Pin on Hat
-        headBox(12, 2, 4, 2, 0xffd700);
-        headBox(13, 3, 2, 1, 0xb45309);
-        headBox(17, 2, 2, 2, HEAD_1_SHADOW);
+          // Gold Hand & Pin on Hat
+          headBox(12, 2, 4, 2, 0xffd700);
+          headBox(13, 3, 2, 1, 0xb45309);
+          headBox(17, 2, 2, 2, HEAD_1_SHADOW);
 
-        // Back Hair fusion
-        headBox(9, 6, 2, 6, hairColor);
-        headBox(21, 6, 2, 6, hairColor);
-        headBox(10, 10, 12, 3, hairColor);
+          // Back Hair fusion
+          headBox(9, 6, 2, 6, hairColor);
+          headBox(21, 6, 2, 6, hairColor);
+          headBox(10, 10, 12, 3, hairColor);
+        }
 
         // Intense JoJo eyes
         headBox(13, 8, 2, 1, 0xffffff);
@@ -1466,10 +1500,18 @@ export function generateCustomSprite(
         headBox(12, 6, 8, 7, SKIN_TONE);
         headBox(14, 13, 4, 1, SKIN_TONE);
 
-        // Messy Black Hair
-        headBox(10, 1, 12, 5, hairColor);
-        headBox(8, 3, 3, 4, hairColor);
-        headBox(21, 3, 3, 4, hairColor);
+        if (hasStrawHat) {
+          // Side hair tufts and bangs peeking under the brim
+          headBox(8, 5, 4, 4, hairColor);
+          headBox(20, 5, 4, 4, hairColor);
+          headBox(12, 6, 2, 2, hairColor);
+          headBox(18, 6, 2, 2, hairColor);
+        } else {
+          // Messy Black Hair
+          headBox(10, 1, 12, 5, hairColor);
+          headBox(8, 3, 3, 4, hairColor);
+          headBox(21, 3, 3, 4, hairColor);
+        }
 
         // Eyes
         headBox(13, 8, 2, 1, 0xffffff);
@@ -1490,40 +1532,50 @@ export function generateCustomSprite(
         headBox(14, 13, 4, 1, SKIN_TONE);
         headBox(13, 12, 6, 1, SKIN_SHADOW);
 
-        // Hair Base & Spikes
-        if (isTransformed && !isUI) {
-          // Super Saiyan
-          headBox(10, 0, 12, 6, hairColor);
-          headBox(8, -2, 3, 6, hairColor);
-          headBox(6, 0, 2, 4, hairColor);
-          headBox(21, -2, 3, 6, hairColor);
-          headBox(24, 0, 2, 4, hairColor);
-          headBox(11, -6, 3, 6, hairColor);
-          headBox(14, -8, 4, 8, hairColor);
-          headBox(18, -5, 3, 5, hairColor);
-          // Golden Inner Sheen
-          headBox(13, -4, 2, 4, 0xffffff);
-          headBox(15, -6, 2, 4, 0xffffff);
-        } else if (isUI) {
-          // Ultra Instinct
-          headBox(10, 1, 12, 7, hairColor);
-          headBox(14, -2, 4, 4, hairColor);
-          headBox(8, 2, 3, 5, hairColor);
-          headBox(21, 2, 3, 5, hairColor);
-          headBox(12, 1, 2, 3, 0xffffff);
-          headBox(18, 1, 2, 3, 0xffffff);
-        } else {
-          // Base Goku Hair
-          headBox(10, 1, 12, 6, hairColor);
-          headBox(6, 1, 4, 4, hairColor);
-          headBox(8, -1, 4, 3, hairColor);
-          headBox(22, 1, 4, 4, hairColor);
-          headBox(20, -1, 4, 3, hairColor);
-          headBox(12, -2, 4, 4, hairColor);
-          headBox(16, -3, 4, 5, hairColor);
-          // Front bangs
+        if (hasStrawHat) {
+          // Side hair tufts and front bangs peeking out from under the straw hat
+          headBox(7, 5, 4, 5, hairColor);
+          headBox(21, 5, 4, 5, hairColor);
+          headBox(6, 7, 2, 3, hairColor);
+          headBox(24, 7, 2, 3, hairColor);
           headBox(13, 6, 2, 2, hairColor);
           headBox(17, 6, 2, 2, hairColor);
+        } else {
+          // Hair Base & Spikes
+          if (isTransformed && !isUI) {
+            // Super Saiyan
+            headBox(10, 0, 12, 6, hairColor);
+            headBox(8, -2, 3, 6, hairColor);
+            headBox(6, 0, 2, 4, hairColor);
+            headBox(21, -2, 3, 6, hairColor);
+            headBox(24, 0, 2, 4, hairColor);
+            headBox(11, -6, 3, 6, hairColor);
+            headBox(14, -8, 4, 8, hairColor);
+            headBox(18, -5, 3, 5, hairColor);
+            // Golden Inner Sheen
+            headBox(13, -4, 2, 4, 0xffffff);
+            headBox(15, -6, 2, 4, 0xffffff);
+          } else if (isUI) {
+            // Ultra Instinct
+            headBox(10, 1, 12, 7, hairColor);
+            headBox(14, -2, 4, 4, hairColor);
+            headBox(8, 2, 3, 5, hairColor);
+            headBox(21, 2, 3, 5, hairColor);
+            headBox(12, 1, 2, 3, 0xffffff);
+            headBox(18, 1, 2, 3, 0xffffff);
+          } else {
+            // Base Goku Hair
+            headBox(10, 1, 12, 6, hairColor);
+            headBox(6, 1, 4, 4, hairColor);
+            headBox(8, -1, 4, 3, hairColor);
+            headBox(22, 1, 4, 4, hairColor);
+            headBox(20, -1, 4, 3, hairColor);
+            headBox(12, -2, 4, 4, hairColor);
+            headBox(16, -3, 4, 5, hairColor);
+            // Front bangs
+            headBox(13, 6, 2, 2, hairColor);
+            headBox(17, 6, 2, 2, hairColor);
+          }
         }
 
         // Eyes
@@ -1551,34 +1603,52 @@ export function generateCustomSprite(
       // 5. FRONT ACCESSORIES
       // ==========================================
       if (pAcc === "straw_hat") {
-        // Masterwork Straw Hat (User's favorite! Ultra-detailed)
+        // Masterwork Straw Hat (Ultra-detailed anime straw hat with woven texture)
         isDrawingHat = true;
-        // Under-brim shadow on face
-        headBox(11, 5, 10, 2, SKIN_SHADOW);
 
-        // Wide Straw Brim
-        headBox(5, 3, 22, 2, 0xa07100); // Brim shadow base
-        headBox(6, 3, 20, 1, 0xffd700); // Main bright brim
-        headBox(7, 2, 18, 1, 0xffd700);
+        // Straw Hat Crown Dome (y=1..4)
+        headBox(9, 1, 14, 4, 0xffd700);
+        headBox(9, 1, 2, 4, 0xb48200); // Left shadow
+        headBox(21, 1, 2, 4, 0xb48200); // Right shadow
+        headBox(11, 1, 10, 1, 0xfff066); // Specular highlight sheen
+        
+        // Woven cross-hatch micro-texture on dome
+        headDot(11, 2, 0xd4a000);
+        headDot(13, 2, 0xd4a000);
+        headDot(15, 2, 0xd4a000);
+        headDot(17, 2, 0xd4a000);
+        headDot(19, 2, 0xd4a000);
+        headDot(12, 3, 0xd4a000);
+        headDot(14, 3, 0xd4a000);
+        headDot(16, 3, 0xd4a000);
+        headDot(18, 3, 0xd4a000);
+        headDot(20, 3, 0xd4a000);
 
-        // Straw Hat Crown Dome
-        headBox(10, -1, 12, 4, 0xffd700);
-        headBox(10, -1, 2, 4, 0xa07100); // Dome left shadow
-        headBox(20, -1, 2, 4, 0xa07100); // Dome right shadow
+        // Crimson Ribbon Band (y=4)
+        headBox(9, 4, 14, 1, 0xef4444);
+        headBox(9, 4, 2, 1, 0x991b1b);
+        headBox(21, 4, 2, 1, 0x991b1b);
+        headDot(10, 4, 0x7f1d1d);
+        headDot(21, 4, 0x7f1d1d);
 
-        // Woven texture lines
-        headBox(11, 0, 10, 1, 0xd4a000);
-        headBox(12, 1, 8, 1, 0xd4a000);
+        // Wide Straw Brim (y=5..6) with organic curve
+        headBox(4, 5, 24, 2, 0xa07100); // Under-brim shadow base
+        headBox(5, 5, 22, 1, 0xffd700); // Main bright brim
+        headBox(6, 4, 20, 1, 0xffea00); // Upper brim curve & sheen
+        headBox(4, 6, 24, 1, 0x854d0e); // Rim bottom edge
+        headDot(4, 5, 0xffd700); // Left brim upward flare
+        headDot(27, 5, 0xffd700); // Right brim upward flare
 
-        // Crimson Ribbon Band
-        headBox(10, 2, 12, 1, 0xef4444);
-        headBox(10, 2, 2, 1, 0x991b1b);
-        headBox(20, 2, 2, 1, 0x991b1b);
+        // Atmospheric cast shadow under brim onto face/mask
+        alphaBox(10, 6, 12, 1, 0x000000, 0.35);
 
-        // Chin Strap Cord
-        headBox(10, 12, 1, 3, 0x78350f);
-        headBox(21, 12, 1, 3, 0x78350f);
-        headBox(11, 14, 10, 1, 0x78350f);
+        // Chin Strap Cord & Leather Buckle
+        headBox(9, 7, 1, 5, 0x78350f);
+        headBox(22, 7, 1, 5, 0x78350f);
+        headBox(10, 12, 2, 1, 0x78350f);
+        headBox(20, 12, 2, 1, 0x78350f);
+        headBox(12, 13, 8, 1, 0x78350f);
+        headDot(16, 13, 0xd97706); // Wooden slider bead
 
         isDrawingHat = false;
       } else if (pAcc === "headband") {

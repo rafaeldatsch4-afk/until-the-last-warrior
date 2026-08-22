@@ -10,12 +10,17 @@ import {
   giColors,
 } from "./CreatorPartOptions";
 import { INITIAL_CHARACTERS } from "../data";
+import { AURA_PRESETS } from "../systems/AuraManager";
 
 export class CreatorPreview {
   public previewSprite?: Phaser.GameObjects.Sprite;
   public previewAura?: Phaser.GameObjects.Shape;
-  public stagePedestal?: Phaser.GameObjects.Shape;
-  public stageRing?: Phaser.GameObjects.Shape;
+  public previewAuraCore?: Phaser.GameObjects.Shape;
+  public previewAuraRing?: Phaser.GameObjects.Arc;
+  public previewSparks: Phaser.GameObjects.Arc[] = [];
+  public previewLightningArcs: Phaser.GameObjects.Line[] = [];
+  public stagePedestal?: Phaser.GameObjects.Graphics;
+  public stageRing?: Phaser.GameObjects.Graphics;
   public torsoBoundsBox?: Phaser.GameObjects.Rectangle;
   public torsoBoundsText?: Phaser.GameObjects.Text;
   public alignmentGuides: Phaser.GameObjects.GameObject[] = [];
@@ -27,6 +32,8 @@ export class CreatorPreview {
   // Debounce e controle de ciclo de vida
   private debounceTimer: Phaser.Time.TimerEvent | null = null;
   private auraTween: Phaser.Tweens.Tween | null = null;
+  private auraRingTween: Phaser.Tweens.Tween | null = null;
+  private lightningTimer: Phaser.Time.TimerEvent | null = null;
   private isDestroyed: boolean = false;
 
   private static readonly PREVIEW_TEXTURE_KEYS = [
@@ -38,6 +45,7 @@ export class CreatorPreview {
   private static readonly PREVIEW_ANIM_KEYS = [
     "custom_preview_idle",
     "custom_preview_ssj_idle",
+    "custom_preview_charge",
   ];
 
   constructor(scene: Phaser.Scene, x: number = 750, y: number = 240) {
@@ -166,6 +174,23 @@ export class CreatorPreview {
       part_accessory: partOptions.accessory[state.style_idx.accessory] || "none",
     };
 
+    const preset = AURA_PRESETS.find((p) => p.id === state.aura_preset_id);
+    let effectiveAuraColor = 0xffd700;
+    let effectiveRingColor = 0xffff00;
+
+    if (preset && preset.color !== -1) {
+      effectiveAuraColor = preset.color;
+      effectiveRingColor = preset.ringColor !== -1 ? preset.ringColor : preset.color;
+    } else if (builderData.auraColor) {
+      effectiveAuraColor = builderData.auraColor;
+      effectiveRingColor = builderData.auraColor;
+    }
+
+    if (isTransformed) {
+      effectiveAuraColor = 0xf1c40f;
+      effectiveRingColor = 0xffff55;
+    }
+
     // Parar animações ativas no sprite anterior antes de descartar texturas
     if (this.previewSprite) {
       this.previewSprite.stop();
@@ -181,11 +206,28 @@ export class CreatorPreview {
       this.auraTween.remove();
       this.auraTween = null;
     }
+    if (this.auraRingTween) {
+      this.auraRingTween.stop();
+      this.auraRingTween.remove();
+      this.auraRingTween = null;
+    }
 
     if (this.previewAura) {
       this.previewAura.destroy();
       this.previewAura = undefined;
     }
+    if (this.previewAuraCore) {
+      this.previewAuraCore.destroy();
+      this.previewAuraCore = undefined;
+    }
+    if (this.previewAuraRing) {
+      this.previewAuraRing.destroy();
+      this.previewAuraRing = undefined;
+    }
+    this.previewSparks.forEach((s) => {
+      if (s && s.destroy) s.destroy();
+    });
+    this.previewSparks = [];
 
     // Gerar nova textura procedural com cleanup nativo em CustomSprite
     const { torsoBounds } = generateCustomSprite(this.scene, {
@@ -225,23 +267,91 @@ export class CreatorPreview {
     createAnim("custom_preview_idle", "custom_preview", 0, 3, 10, -1);
     createAnim("custom_preview_ssj_idle", "custom_preview_ssj", 0, 3, 10, -1);
 
-    const auraCol = isTransformed ? 0xf1c40f : builderData.auraColor;
+    // 0. High-Tech Stage Pedestal & Ground Projection
+    if (this.stagePedestal) this.stagePedestal.destroy();
+    if (this.stageRing) this.stageRing.destroy();
+
+    this.stagePedestal = this.scene.add.graphics();
+    this.stagePedestal.fillStyle(0x0f172a, 0.85);
+    this.stagePedestal.fillEllipse(this.posX, this.posY + 56, 170, 48);
+    this.stagePedestal.fillStyle(0x1e293b, 0.9);
+    this.stagePedestal.fillEllipse(this.posX, this.posY + 52, 140, 36);
+    this.stagePedestal.lineStyle(2, 0x38bdf8, 0.6);
+    this.stagePedestal.strokeEllipse(this.posX, this.posY + 52, 140, 36);
+    this.stagePedestal.lineStyle(1, effectiveRingColor, 0.8);
+    this.stagePedestal.strokeEllipse(this.posX, this.posY + 52, 110, 26);
+
+    // 1. Outer Flame Aura (Glow)
     this.previewAura = this.scene.add
-      .ellipse(this.posX, this.posY + 20, 140, 240, auraCol)
+      .ellipse(this.posX, this.posY + 10, 140, 236, effectiveAuraColor)
+      .setAlpha(isTransformed ? 0.65 : 0.38)
+      .setBlendMode(Phaser.BlendModes.ADD);
+
+    // 2. Inner Bright Core
+    this.previewAuraCore = this.scene.add
+      .ellipse(this.posX, this.posY + 16, 90, 168, effectiveRingColor)
       .setAlpha(isTransformed ? 0.55 : 0.25)
       .setBlendMode(Phaser.BlendModes.ADD);
 
-    if (isTransformed) {
-      this.auraTween = this.scene.tweens.add({
-        targets: this.previewAura,
-        scaleX: 1.15,
-        scaleY: 1.08,
-        alpha: 0.7,
-        yoyo: true,
+    // 3. Ground Ki Shockwave Ring
+    this.previewAuraRing = this.scene.add
+      .circle(this.posX, this.posY + 52, 64, 0x000000, 0)
+      .setStrokeStyle(3, effectiveRingColor, 0.8)
+      .setBlendMode(Phaser.BlendModes.ADD);
+
+    // 4. Pulsing Tweens
+    this.auraTween = this.scene.tweens.add({
+      targets: this.previewAura,
+      scaleX: 1.15,
+      scaleY: 1.08,
+      alpha: isTransformed ? 0.8 : 0.5,
+      yoyo: true,
+      repeat: -1,
+      duration: isTransformed ? 320 : 580,
+      ease: "Sine.easeInOut",
+    });
+
+    this.auraRingTween = this.scene.tweens.add({
+      targets: [this.previewAuraRing, this.previewAuraCore],
+      scaleX: 1.18,
+      scaleY: 1.1,
+      alpha: 0.9,
+      yoyo: true,
+      repeat: -1,
+      duration: isTransformed ? 350 : 620,
+      ease: "Sine.easeInOut",
+    });
+
+    // 5. Floating Ki Sparks
+    for (let i = 0; i < 12; i++) {
+      const spark = this.scene.add
+        .circle(
+          this.posX + Phaser.Math.Between(-40, 40),
+          this.posY + 52,
+          Phaser.Math.Between(2, 4.5),
+          effectiveRingColor,
+          0.9
+        )
+        .setBlendMode(Phaser.BlendModes.ADD);
+      this.previewSparks.push(spark);
+
+      this.scene.tweens.add({
+        targets: spark,
+        y: this.posY - Phaser.Math.Between(45, 95),
+        x: spark.x + Phaser.Math.Between(-18, 18),
+        alpha: 0,
+        scale: 0.25,
+        duration: Phaser.Math.Between(650, 1350),
         repeat: -1,
-        duration: 400,
-        ease: "Sine.easeInOut",
+        delay: i * 90,
+        ease: "Cubic.easeOut",
       });
+    }
+
+    // 6. Dynamic Lightning Arcs for high tiers or transformed states
+    this.clearLightning();
+    if (isTransformed || (preset && (preset.id === "ui" || preset.id === "astral" || preset.id === "ssj2" || preset.id === "ego" || preset.id === "god" || preset.id === "blue"))) {
+      this.startLightning(effectiveRingColor);
     }
 
     const texName = isTransformed ? "custom_preview_ssj" : "custom_preview";
@@ -336,6 +446,120 @@ export class CreatorPreview {
     }
   }
 
+  private clearLightning() {
+    if (this.lightningTimer) {
+      this.lightningTimer.remove(false);
+      this.lightningTimer = null;
+    }
+    this.previewLightningArcs.forEach((arc) => {
+      if (arc && arc.destroy) arc.destroy();
+    });
+    this.previewLightningArcs = [];
+  }
+
+  private startLightning(color: number) {
+    this.clearLightning();
+    if (!this.scene || !this.scene.time) return;
+
+    this.lightningTimer = this.scene.time.addEvent({
+      delay: 140,
+      loop: true,
+      callback: () => {
+        if (this.isDestroyed || !this.scene || !this.scene.sys) return;
+
+        // Clean older arcs
+        this.previewLightningArcs.forEach((arc) => {
+          if (arc && arc.destroy) arc.destroy();
+        });
+        this.previewLightningArcs = [];
+
+        // Generate 1-3 zigzag lightning arcs around the warrior
+        const count = Phaser.Math.Between(1, 3);
+        for (let c = 0; c < count; c++) {
+          const startX = this.posX + Phaser.Math.Between(-36, 36);
+          const startY = this.posY + Phaser.Math.Between(-40, 50);
+          const midX = startX + Phaser.Math.Between(-14, 14);
+          const midY = startY + Phaser.Math.Between(-16, -6);
+          const endX = midX + Phaser.Math.Between(-12, 12);
+          const endY = midY + Phaser.Math.Between(-18, -8);
+
+          const arc = this.scene.add
+            .line(0, 0, startX, startY, midX, midY, 0xffffff, 0.95)
+            .setLineWidth(1.8)
+            .setBlendMode(Phaser.BlendModes.ADD);
+
+          const arc2 = this.scene.add
+            .line(0, 0, midX, midY, endX, endY, color, 0.85)
+            .setLineWidth(1.4)
+            .setBlendMode(Phaser.BlendModes.ADD);
+
+          this.previewLightningArcs.push(arc, arc2);
+
+          this.scene.time.delayedCall(90, () => {
+            if (arc && arc.destroy) arc.destroy();
+            if (arc2 && arc2.destroy) arc2.destroy();
+          });
+        }
+      },
+    });
+  }
+
+  /**
+   * Dispara um efeito visual e sonoro de emanação / carga de Ki no guerreiro.
+   */
+  public triggerChargeEffect() {
+    if (this.isDestroyed || !this.scene || !this.scene.sys) return;
+
+    if (this.scene.cache.audio.exists("sfx_charge")) {
+      this.scene.sound.play("sfx_charge", { volume: 0.7 });
+    } else if (this.scene.cache.audio.exists("sfx_transform")) {
+      this.scene.sound.play("sfx_transform", { volume: 0.55 });
+    }
+
+    if (this.previewAura && this.previewAuraCore) {
+      this.scene.tweens.add({
+        targets: [this.previewAura, this.previewAuraCore],
+        scaleX: 1.6,
+        scaleY: 1.45,
+        alpha: 1,
+        yoyo: true,
+        duration: 280,
+        repeat: 3,
+        ease: "Back.easeOut",
+      });
+    }
+
+    if (this.previewAuraRing) {
+      this.scene.tweens.add({
+        targets: this.previewAuraRing,
+        scaleX: 1.8,
+        scaleY: 1.6,
+        alpha: 1,
+        yoyo: true,
+        duration: 220,
+        repeat: 4,
+      });
+    }
+
+    if (this.previewSprite) {
+      this.scene.tweens.add({
+        targets: this.previewSprite,
+        y: this.posY - 5,
+        yoyo: true,
+        duration: 70,
+        repeat: 8,
+      });
+    }
+
+    // Temporary lightning storm on charge
+    this.startLightning(0xffffff);
+    this.scene.time.delayedCall(900, () => {
+      if (!this.isDestroyed) {
+        this.clearLightning();
+      }
+    });
+  }
+
   /**
    * Limpeza e destruição de recursos de textura, animações e objetos de cena.
    */
@@ -347,10 +571,17 @@ export class CreatorPreview {
       this.debounceTimer = null;
     }
 
+    this.clearLightning();
+
     if (this.auraTween) {
       this.auraTween.stop();
       this.auraTween.remove();
       this.auraTween = null;
+    }
+    if (this.auraRingTween) {
+      this.auraRingTween.stop();
+      this.auraRingTween.remove();
+      this.auraRingTween = null;
     }
 
     if (this.previewSprite) {
@@ -363,6 +594,18 @@ export class CreatorPreview {
       this.previewAura.destroy();
       this.previewAura = undefined;
     }
+    if (this.previewAuraCore) {
+      this.previewAuraCore.destroy();
+      this.previewAuraCore = undefined;
+    }
+    if (this.previewAuraRing) {
+      this.previewAuraRing.destroy();
+      this.previewAuraRing = undefined;
+    }
+    this.previewSparks.forEach((s) => {
+      if (s && s.destroy) s.destroy();
+    });
+    this.previewSparks = [];
 
     if (this.stagePedestal) {
       this.stagePedestal.destroy();
