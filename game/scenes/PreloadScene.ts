@@ -85,7 +85,11 @@ export default class PreloadScene extends Phaser.Scene {
       // Deixamos a limpeza da UI para ser feita no final do processo em finishPreload()
     });
 
-    this.load.image("utlw_logo", "icon.png");
+    this.load.on("loaderror", (fileObj: Phaser.Loader.File) => {
+      console.warn("Preload non-fatal asset notice, fallback enabled:", fileObj?.key);
+    });
+
+    this.load.image("utlw_logo", "/icon.png");
 
     const graphics = this.make.graphics({ x: 0, y: 0 });
     graphics.fillStyle(0xffffff, 1);
@@ -107,6 +111,17 @@ export default class PreloadScene extends Phaser.Scene {
     this.cameras.main.fadeIn(300, 0, 0, 0);
     this.createAudioAssets();
     this.createFXAssets();
+
+    // Ensure utlw_logo texture exists even if image load failed or was delayed
+    if (!this.textures.exists("utlw_logo")) {
+      const g = this.make.graphics({ x: 0, y: 0 });
+      g.fillStyle(0x060814, 1);
+      g.fillRoundedRect(0, 0, 240, 135, 12);
+      g.lineStyle(2, 0xd4af37, 1);
+      g.strokeRoundedRect(0, 0, 240, 135, 12);
+      g.generateTexture("utlw_logo", 240, 135);
+      g.destroy();
+    }
 
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;

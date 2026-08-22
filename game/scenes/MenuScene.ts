@@ -161,6 +161,15 @@ export default class MenuScene extends Phaser.Scene {
     emblemCard.strokeRoundedRect(-cardW / 2, -cardH / 2 - 15, cardW, cardH, 16);
 
     // Hero Logo Image with Smooth Scale inside Card
+    if (!this.textures.exists("utlw_logo")) {
+      const g = this.make.graphics({ x: 0, y: 0 });
+      g.fillStyle(0x060814, 1);
+      g.fillRoundedRect(0, 0, 240, 135, 12);
+      g.lineStyle(2, 0xd4af37, 1);
+      g.strokeRoundedRect(0, 0, 240, 135, 12);
+      g.generateTexture("utlw_logo", 240, 135);
+      g.destroy();
+    }
     const logoImg = this.add.image(0, -15, "utlw_logo");
     logoImg.setDisplaySize(240, 135);
     logoImg.setAlpha(0);
