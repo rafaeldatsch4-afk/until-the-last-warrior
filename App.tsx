@@ -188,9 +188,18 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const onFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isFull = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isFull);
     };
     document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    document.addEventListener('mozfullscreenchange', onFullscreenChange);
+    document.addEventListener('MSFullscreenChange', onFullscreenChange);
 
     const handleSceneChange = (e: any) => {
       if (e.detail === 'MenuScene') {
@@ -270,6 +279,9 @@ const App: React.FC = () => {
       window.removeEventListener('scene-transition-start', handleTransitionStart);
       window.removeEventListener('scene-transition-end', handleTransitionEnd);
       document.removeEventListener('fullscreenchange', onFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', onFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', onFullscreenChange);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('request-pwa-install', handleRequestInstall);
       window.removeEventListener('scene-changed', handleSceneChange);
@@ -280,11 +292,34 @@ const App: React.FC = () => {
   }, [isMenuScene, textInputPrompt]);
 
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(e => console.log(e));
+    const doc = document as any;
+    const docEl = document.documentElement as any;
+    const isFull = !!(
+      doc.fullscreenElement ||
+      doc.webkitFullscreenElement ||
+      doc.mozFullScreenElement ||
+      doc.msFullscreenElement
+    );
+
+    if (!isFull) {
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch((e: any) => console.log(e));
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+      } else if (docEl.mozRequestFullScreen) {
+        docEl.mozRequestFullScreen();
+      } else if (docEl.msRequestFullscreen) {
+        docEl.msRequestFullscreen();
+      }
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(e => console.log(e));
+      if (doc.exitFullscreen) {
+        doc.exitFullscreen().catch((e: any) => console.log(e));
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
+      } else if (doc.mozCancelFullScreen) {
+        doc.mozCancelFullScreen();
+      } else if (doc.msExitFullscreen) {
+        doc.msExitFullscreen();
       }
     }
   };
@@ -295,26 +330,37 @@ const App: React.FC = () => {
         <AuthButton />
         <AchievementToast />
         
-        {/* Buttons Container */}
-        <div className="absolute z-40 flex flex-col sm:flex-row gap-2" style={{ top: 'max(1rem, env(safe-area-inset-top))', right: 'max(1rem, env(safe-area-inset-right))' }}>
-          {isMenuScene && (
+        {/* Fullscreen Button - Only on First Screen (MenuScene) */}
+        {isMenuScene && (
+          <div 
+            className="absolute z-40"
+            style={{ 
+              top: 'max(1rem, env(safe-area-inset-top))', 
+              right: 'max(1rem, env(safe-area-inset-right))' 
+            }}
+            onPointerDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+            onMouseDown={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+            onClick={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+            onTouchStart={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
+          >
             <button
               onClick={toggleFullscreen}
-              className="bg-black/50 hover:bg-black/80 text-white p-2 text-sm rounded backdrop-blur transition-all outline-none hidden landscape:block md:block border border-yellow-500/50"
+              className="group relative flex items-center justify-center w-10 h-10 bg-gray-900 rounded-sm border border-yellow-500/50 hover:border-yellow-500 hover:bg-black active:scale-95 transition-all duration-300 shadow-lg"
               title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
+              aria-label={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
             >
               {isFullscreen ? (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-yellow-400 group-hover:text-yellow-300">
                   <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
                 </svg>
               ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-yellow-400 group-hover:text-yellow-300">
                   <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
                 </svg>
               )}
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Rotate Device Overlay */}
         <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 text-center landscape:hidden md:hidden">
