@@ -273,30 +273,30 @@ export class CreatorPreview {
 
     this.stagePedestal = this.scene.add.graphics();
     this.stagePedestal.fillStyle(0x0f172a, 0.85);
-    this.stagePedestal.fillEllipse(this.posX, this.posY + 56, 170, 48);
+    this.stagePedestal.fillEllipse(this.posX, this.posY + 44, 135, 36);
     this.stagePedestal.fillStyle(0x1e293b, 0.9);
-    this.stagePedestal.fillEllipse(this.posX, this.posY + 52, 140, 36);
+    this.stagePedestal.fillEllipse(this.posX, this.posY + 42, 115, 28);
     this.stagePedestal.lineStyle(2, 0x38bdf8, 0.6);
-    this.stagePedestal.strokeEllipse(this.posX, this.posY + 52, 140, 36);
+    this.stagePedestal.strokeEllipse(this.posX, this.posY + 42, 115, 28);
     this.stagePedestal.lineStyle(1, effectiveRingColor, 0.8);
-    this.stagePedestal.strokeEllipse(this.posX, this.posY + 52, 110, 26);
+    this.stagePedestal.strokeEllipse(this.posX, this.posY + 42, 90, 20);
 
     // 1. Outer Flame Aura (Glow)
     this.previewAura = this.scene.add
-      .ellipse(this.posX, this.posY + 10, 140, 236, effectiveAuraColor)
+      .ellipse(this.posX, this.posY + 6, 115, 165, effectiveAuraColor)
       .setAlpha(isTransformed ? 0.65 : 0.38)
       .setBlendMode(Phaser.BlendModes.ADD);
 
     // 2. Inner Bright Core
     this.previewAuraCore = this.scene.add
-      .ellipse(this.posX, this.posY + 16, 90, 168, effectiveRingColor)
+      .ellipse(this.posX, this.posY + 8, 75, 125, effectiveRingColor)
       .setAlpha(isTransformed ? 0.55 : 0.25)
       .setBlendMode(Phaser.BlendModes.ADD);
 
     // 3. Ground Ki Shockwave Ring
     this.previewAuraRing = this.scene.add
-      .circle(this.posX, this.posY + 52, 64, 0x000000, 0)
-      .setStrokeStyle(3, effectiveRingColor, 0.8)
+      .circle(this.posX, this.posY + 42, 48, 0x000000, 0)
+      .setStrokeStyle(2.5, effectiveRingColor, 0.8)
       .setBlendMode(Phaser.BlendModes.ADD);
 
     // 4. Pulsing Tweens
@@ -323,12 +323,12 @@ export class CreatorPreview {
     });
 
     // 5. Floating Ki Sparks
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 10; i++) {
       const spark = this.scene.add
         .circle(
-          this.posX + Phaser.Math.Between(-40, 40),
-          this.posY + 52,
-          Phaser.Math.Between(2, 4.5),
+          this.posX + Phaser.Math.Between(-32, 32),
+          this.posY + 42,
+          Phaser.Math.Between(2, 3.5),
           effectiveRingColor,
           0.9
         )
@@ -337,8 +337,8 @@ export class CreatorPreview {
 
       this.scene.tweens.add({
         targets: spark,
-        y: this.posY - Phaser.Math.Between(45, 95),
-        x: spark.x + Phaser.Math.Between(-18, 18),
+        y: this.posY - Phaser.Math.Between(35, 75),
+        x: spark.x + Phaser.Math.Between(-14, 14),
         alpha: 0,
         scale: 0.25,
         duration: Phaser.Math.Between(650, 1350),
@@ -361,7 +361,7 @@ export class CreatorPreview {
 
     this.previewSprite = this.scene.add
       .sprite(this.posX, this.posY, texName)
-      .setScale(2.7);
+      .setScale(2.2);
 
     if (this.scene.textures.exists(texName)) {
       this.previewSprite.play(animName);
@@ -390,7 +390,7 @@ export class CreatorPreview {
   }) {
     const spriteX = this.posX;
     const spriteY = this.posY;
-    const spriteScale = 2.7;
+    const spriteScale = 2.2;
     const texScale = 2;
 
     const frameWidth = 96 * texScale;

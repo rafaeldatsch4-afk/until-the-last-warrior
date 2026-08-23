@@ -2815,6 +2815,9 @@ export default class BattleScene extends Phaser.Scene {
 
     this.setActionState(isPlayer, true);
     this.modifyKi(isPlayer, 25);
+    if (isPlayer && this.gameState && this.gameState.gameMode !== "training") {
+      DailyChallenges.onKiCharged(25);
+    }
     const sprite = isPlayer ? this.player : this.enemy;
     const colors = this.getCharacterAuraColor(isPlayer);
 
@@ -2875,8 +2878,14 @@ export default class BattleScene extends Phaser.Scene {
     this.clearChargeIndicator(isPlayer);
 
     const nextLevel = currentLevel + 1;
-    if (isPlayer) this.playerTransformLevel = nextLevel;
-    else this.enemyTransformLevel = nextLevel;
+    if (isPlayer) {
+      this.playerTransformLevel = nextLevel;
+      if (this.gameState && this.gameState.gameMode !== "training") {
+        DailyChallenges.onTransform();
+      }
+    } else {
+      this.enemyTransformLevel = nextLevel;
+    }
 
     const isUI = data.key === "goku" && nextLevel === 2;
     const isUE = data.key === "vegeta" && nextLevel === 2;
@@ -3423,7 +3432,7 @@ export default class BattleScene extends Phaser.Scene {
     this.modifyKi(isPlayer, -cost);
 
     if (isPlayer && this.gameState && this.gameState.gameMode !== "training") {
-      DailyChallenges.addProgress("use_special_5_times", 1);
+      DailyChallenges.onSpecialUsed(isSuper);
     }
 
     const moveName = isSuper ? data.superName : data.specialName;
@@ -4551,6 +4560,10 @@ export default class BattleScene extends Phaser.Scene {
     if (this.soundManager) this.soundManager.playDodge();
     triggerVibration("light");
 
+    if (isPlayer && this.gameState && this.gameState.gameMode !== "training") {
+      DailyChallenges.onDodge();
+    }
+
     // Story Mode agility feedback
     if (this.gameState.gameMode === "story" && isPlayer) {
       this.modifyKi(true, 10);
@@ -4641,6 +4654,9 @@ export default class BattleScene extends Phaser.Scene {
       }
       this.p1LastHitTime = currentTime;
       this.p2HitCombo = 0; // Reset enemy's combo
+      if (this.gameState && this.gameState.gameMode !== "training") {
+        DailyChallenges.onComboHit(this.p1HitCombo);
+      }
       if (isStoryMode) {
         this.maxStoryCombo = Math.max(this.maxStoryCombo, this.p1HitCombo);
       }
@@ -4789,6 +4805,9 @@ export default class BattleScene extends Phaser.Scene {
 
         if (isP) {
           this.storyParryCount++;
+          if (this.gameState && this.gameState.gameMode !== "training") {
+            DailyChallenges.onParry();
+          }
           // Ki boost for player parry (scaled with Ki stat if in Story Mode)
           const kiStat = isStoryMode ? (this.gameState.storyState?.stats.ki || 0) : 0;
           const kiBonus = 20 + Math.floor(defStat * 1.5) + (kiStat * 2);
@@ -4997,8 +5016,14 @@ export default class BattleScene extends Phaser.Scene {
     // Spawn floating damage number
     this.createFloatingDamage(target.x, target.y + 60, dmg, isCritical, def);
 
-    if (isP) this.playerHp = Math.max(0, this.playerHp - dmg);
-    else this.enemyHp = Math.max(0, this.enemyHp - dmg);
+    if (isP) {
+      this.playerHp = Math.max(0, this.playerHp - dmg);
+    } else {
+      this.enemyHp = Math.max(0, this.enemyHp - dmg);
+      if (this.gameState && this.gameState.gameMode !== "training") {
+        DailyChallenges.onDamageDealt(dmg);
+      }
+    }
 
     if (this.gameState.gameMode === "training") {
       if (!isP) this.enemyHp = this.enemyData.maxHp;

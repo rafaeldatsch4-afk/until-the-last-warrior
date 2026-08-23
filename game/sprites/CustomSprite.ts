@@ -1501,91 +1501,111 @@ export function generateCustomSprite(
 
         headBox(14, 11, 4, 1, 0x000000); // Stoic line
       } else if (pHead === "jotaro") {
-        // Jotaro Kujo (Authentic JoJo manga look: Gakuran cap with gold palm emblem, chiseled jaw, piercing eyes)
+        // Jotaro Kujo (Authentic JoJo Part 3 manga look: Iconic Gakuran cap with gold palm emblem, torn hair blend in back, chiseled jaw, piercing eyes & thick brows)
+        
         // 1. Base Face and Chiseled Jawline
-        headBox(12, 6, 8, 7, SKIN_TONE);
-        headBox(13, 12, 6, 1, SKIN_TONE);
-        headBox(14, 13, 4, 1, SKIN_TONE);
-        // Jawline shading
-        headDot(12, 11, SKIN_SHADOW);
-        headDot(19, 11, SKIN_SHADOW);
-        headDot(13, 12, SKIN_SHADOW);
-        headDot(18, 12, SKIN_SHADOW);
-        headDot(16, 13, SKIN_SHADOW);
+        headBox(11, 5, 10, 8, SKIN_TONE);
+        headBox(12, 12, 8, 1, SKIN_TONE);
+        headBox(14, 13, 4, 1, SKIN_TONE); // Neck
+        
+        // Defined JoJo Jawline & Cheek shading
+        headDot(11, 10, SKIN_SHADOW);
+        headDot(11, 11, SKIN_SHADOW);
+        headDot(20, 10, SKIN_SHADOW);
+        headDot(20, 11, SKIN_SHADOW);
+        headBox(12, 12, 8, 1, SKIN_SHADOW);
+        headDot(15, 13, SKIN_DEEP);
 
         if (hasStrawHat) {
-          // Sideburns and hair locks framing cheeks under the straw hat
-          headBox(9, 5, 3, 5, hairColor);
-          headBox(20, 5, 3, 5, hairColor);
-          headDot(10, 10, hairColor);
-          headDot(21, 10, hairColor);
+          // Under Straw Hat: Sharp Jotaro sideburns & bangs framing face
+          headBox(9, 5, 3, 6, hairColor);
+          headBox(20, 5, 3, 6, hairColor);
+          headDot(10, 11, hairColor);
+          headDot(21, 11, hairColor);
+          headBox(13, 6, 2, 2, hairColor); // Front hair tuft
+          headBox(17, 6, 2, 2, hairColor);
         } else {
-          // Gakuran Visor Cap (Fused seamlessly with spiky hair in back)
+          // Authentic Gakuran Visor Cap (Fused seamlessly with spiky hair in back)
           const CAP_BASE = HEAD_1 || 0x18181b;
           const CAP_SHADE = HEAD_1_SHADOW || 0x09090b;
+          const CAP_LIGHT = getLight(CAP_BASE, 20);
 
-          // Cap Crown (y=1..4)
-          headBox(10, 1, 12, 4, CAP_BASE);
-          headBox(10, 1, 1, 4, CAP_SHADE);
-          headBox(21, 1, 1, 4, 0x27272a);
-          headBox(11, 1, 10, 1, 0x3f3f46); // Specular highlight sheen
+          // Cap Crown Structure (y=0..4)
+          headBox(10, 0, 12, 4, CAP_BASE);
+          headBox(10, 0, 2, 4, CAP_SHADE); // Left shadow
+          headBox(20, 0, 2, 4, CAP_SHADE); // Right shadow
+          headBox(11, 0, 10, 1, CAP_LIGHT); // Top rim highlight
 
-          // Iconic Gold Palm / Hand Emblem on front-left of cap
-          headBox(12, 2, 4, 3, 0xfacc15); // Golden badge plate
-          headDot(13, 2, 0xca8a04);
-          headDot(14, 3, 0x78350f); // Hand contour
-          headDot(15, 3, 0xca8a04);
-          headDot(17, 2, 0xfacc15); // Secondary circular pin
-          headDot(17, 3, 0xca8a04);
+          // Iconic Gold Palm / Hand Emblem on front-left (x=12..14, y=1..3)
+          headBox(12, 1, 3, 3, 0xfacc15); // Golden hand plate
+          headDot(12, 1, 0xfff066); // Golden sheen
+          headDot(13, 2, 0xca8a04); // Palm detail
+          headDot(14, 2, 0x78350f); // Fingers contour
+          headDot(13, 3, 0xca8a04);
 
-          // Angular Visor / Bill (slanted over forehead)
-          headBox(9, 4, 14, 2, CAP_SHADE);
-          headBox(10, 4, 12, 1, 0x27272a); // Visor edge highlight
-          headDot(8, 5, CAP_SHADE); // Visor corner flare
-          headDot(23, 5, CAP_SHADE);
+          // Secondary Gold Round Pin on front-right (x=17..18, y=1..2)
+          headBox(17, 1, 2, 2, 0xfacc15);
+          headDot(17, 1, 0xfff066);
+          headDot(18, 2, 0xca8a04);
 
-          // Back hair fusion (torn spikes emerging from rear of cap)
-          headBox(7, 2, 3, 5, hairColor);
-          headBox(22, 2, 3, 5, hairColor);
-          headDot(6, 3, hairColor);
-          headDot(6, 5, hairColor);
-          headDot(25, 3, hairColor);
-          headDot(25, 5, hairColor);
+          // Angular Visor / Bill (slanted over forehead y=4..5)
+          headBox(8, 4, 16, 2, CAP_SHADE);
+          headBox(9, 4, 14, 1, CAP_LIGHT); // Visor upper edge highlight
+          headDot(7, 5, CAP_SHADE); // Visor corner flare left
+          headDot(24, 5, CAP_SHADE); // Visor corner flare right
+          headDot(23, 4, 0xffffff); // Specular gleam on visor tip
 
-          // Sideburns
-          headBox(10, 6, 2, 4, hairColor);
-          headBox(20, 6, 2, 4, hairColor);
+          // Iconic Torn Hair Blend (Spikes emerging from back of cap y=1..7)
+          headBox(6, 1, 4, 6, hairColor);
+          headBox(22, 1, 4, 6, hairColor);
+          headDot(5, 2, hairColor);
+          headDot(5, 4, hairColor);
+          headDot(5, 6, hairColor);
+          headDot(26, 2, hairColor);
+          headDot(26, 4, hairColor);
+          headDot(26, 6, hairColor);
+
+          // Prominent Sideburns tapering down jawline
+          headBox(10, 6, 2, 5, hairColor);
+          headBox(20, 6, 2, 5, hairColor);
+          headDot(10, 11, hairColor);
+          headDot(21, 11, hairColor);
         }
 
-        // Forehead shadow under visor/brim
-        alphaBox(11, 6, 10, 1, 0x000000, 0.4);
+        // Visor Shadow on Forehead (Classic mysterious JoJo shadow)
+        alphaBox(11, 5, 10, 2, 0x000000, 0.45);
 
-        // JoJo Manga Brow & Hatch Marks
-        headBox(12, 7, 3, 1, 0x000000); // Piercing furrowed brows
-        headBox(17, 7, 3, 1, 0x000000);
-        headDot(15, 7, 0x111111); // Frown hatch line
+        // JoJo Manga Eyebrows & Furrowed Lines
+        headBox(11, 7, 4, 1, 0x000000); // Piercing sharp left brow
+        headBox(17, 7, 4, 1, 0x000000); // Piercing sharp right brow
+        headDot(15, 7, 0x111111); // Center furrow hatch mark
         headDot(16, 7, 0x111111);
 
-        // Sharp JoJo Eyes (Piercing teal/green iris with black eyeliner)
+        // Sharp Piercing JoJo Eyes (Clear anime eyes with dark outline & teal iris)
         const jojoEye = eyeColor === 0x111111 ? 0x0d9488 : eyeColor;
-        headBox(13, 8, 2, 1, 0xffffff);
-        headBox(17, 8, 2, 1, 0xffffff);
-        headDot(14, 8, jojoEye);
-        headDot(17, 8, jojoEye);
-        headDot(13, 9, 0x111111); // Lower lid line
-        headDot(18, 9, 0x111111);
+        headBox(12, 8, 3, 2, 0x000000); // Left eye frame
+        headBox(17, 8, 3, 2, 0x000000); // Right eye frame
+        headBox(12, 8, 3, 1, 0xffffff); // White sclera L
+        headBox(17, 8, 3, 1, 0xffffff); // White sclera R
+        headDot(13, 8, jojoEye); // Iris L
+        headDot(18, 8, jojoEye); // Iris R
+        headDot(13, 8, 0x000000); // Pupil L
+        headDot(18, 8, 0x000000); // Pupil R
 
-        // Defined Manga Nose
+        // Defined Anime Nose Bridge & Shadow
         headDot(15, 9, SKIN_SHADOW);
-        headDot(16, 10, SKIN_DEEP);
+        headDot(15, 10, SKIN_DEEP);
+        headDot(16, 10, SKIN_SHADOW);
 
         // Mouth & Expression
         if (isAttack || isCharge) {
-          headBox(14, 11, 4, 2, 0x450a0a); // Intense roar / ORA ORA
-          headBox(15, 11, 2, 1, 0xffffff); // Gritted teeth
+          headBox(13, 11, 6, 2, 0x450a0a); // Intense roar / ORA ORA
+          headBox(14, 11, 4, 1, 0xffffff); // Gritted teeth
+          headBox(13, 11, 1, 2, 0x000000);
+          headBox(18, 11, 1, 2, 0x000000);
         } else {
-          headBox(14, 11, 4, 1, 0x111111); // Firm stoic mouth
-          headDot(15, 12, SKIN_SHADOW); // Lower lip shadow
+          headBox(13, 11, 6, 1, 0x111111); // Determined stoic mouth
+          headDot(15, 12, SKIN_SHADOW); // Lower lip shading
         }
       } else if (pHead === "luffy") {
         // Luffy Messy Hair, Under-Eye Scar & Confident Grin

@@ -520,38 +520,58 @@ export function generateJotaroSprite(scene: Phaser.Scene) {
 
         // --- CHAPÉU & CABELO REFEITOS ---
         // Copa superior do chapéu
-        headBox(jX + 10, -2, 9, 5, COAT_MD);
-        headBox(jX + 11, -2, 7, 1, COAT_HL); // Brilho no topo
+        headBox(jX + 10, -2, 10, 5, COAT_MD);
+        headBox(jX + 11, -2, 8, 1, COAT_HL); // Brilho no topo
 
-        // Hair removed user request. Only hat remains.
+        // Spiky Hair tearing into rear of the cap (Jotaro signature silhouette)
+        headBox(jX + 6, 0, 4, 6, HAIR_DK);
+        headBox(jX + 21, 0, 4, 6, HAIR_DK);
+        headDot(jX + 5, 1, HAIR_DK);
+        headDot(jX + 5, 3, HAIR_DK);
+        headDot(jX + 5, 5, HAIR_DK);
+        headDot(jX + 25, 1, HAIR_DK);
+        headDot(jX + 25, 3, HAIR_DK);
+        headDot(jX + 25, 5, HAIR_DK);
 
         // Aba do Chapéu (Plana e destacada)
-        headBox(jX + 9, 3, 14, 2, COAT_DK); // Sombra da aba grossa
-        headBox(jX + 10, 3, 13, 1, COAT_LT); // Edge highlight
-        headDot(jX + 22, 3, COAT_HL); // Ponta extrema da aba brilhando
+        headBox(jX + 8, 3, 16, 2, COAT_DK); // Sombra da aba grossa
+        headBox(jX + 9, 3, 14, 1, COAT_LT); // Edge highlight
+        headDot(jX + 23, 3, COAT_HL); // Ponta extrema da aba brilhando
 
-        // Emblemas de Ouro (Mão e Âncora isoladas)
-        headBox(jX + 12, 1, 2, 2, GOLD_MD); // Mão menor
-        headBox(jX + 16, 1, 2, 2, GOLD_MD); // Âncora menor
+        // Emblemas de Ouro (Mão dourada e Broche redondo)
+        headBox(jX + 12, 0, 3, 3, GOLD_MD); // Mão dourada
+        headDot(jX + 12, 0, GOLD_LT);
+        headDot(jX + 13, 1, GOLD_DK);
+        headBox(jX + 17, 0, 2, 2, GOLD_MD); // Broche redondo
+        headDot(jX + 17, 0, GOLD_LT);
 
         // --- ROSTO SUPER CLEAN ANIME ---
-        headBox(jX + 11, 5, 8, 7, SKIN_MD); // Rosto base
+        headBox(jX + 11, 5, 9, 7, SKIN_MD); // Rosto base
 
-        // Sombra da Aba mais leve e limpa, menos intrusiva
-        headBox(jX + 11, 5, 8, 1, SKIN_DK);
+        // Sombra da Aba misteriosa
+        headBox(jX + 11, 5, 9, 1, SKIN_DK);
 
-        // Olhos limpos (Estilo Jotaro original bem nítido)
-        headBox(jX + 12, 7, 2, 1, 0xffffff); // Sclera L
-        headBox(jX + 16, 7, 2, 1, 0xffffff); // Sclera R
-        headDot(jX + 13, 7, 0x000000); // Íris L olhando frente
-        headDot(jX + 16, 7, 0x000000); // Íris R olhando frente
+        // Olhos nítidos (Estilo Jotaro original piercing eyes)
+        headBox(jX + 12, 7, 3, 1, 0xffffff); // Sclera L
+        headBox(jX + 17, 7, 3, 1, 0xffffff); // Sclera R
+        headDot(jX + 13, 7, 0x0d9488); // Íris L (Teal/Green clássico JoJo)
+        headDot(jX + 18, 7, 0x0d9488); // Íris R
+        headDot(jX + 13, 7, 0x000000); // Pupila L
+        headDot(jX + 18, 7, 0x000000); // Pupila R
 
-        // Sobrancelhas retas e grossas mas sem se unirem bizarramente
-        headBox(jX + 12, 6, 2, 1, HAIR_DK);
-        headBox(jX + 16, 6, 2, 1, HAIR_DK);
+        // Sobrancelhas retas e marcadas estilo mangá
+        headBox(jX + 11, 6, 3, 1, HAIR_DK);
+        headBox(jX + 17, 6, 3, 1, HAIR_DK);
+        headDot(jX + 15, 6, HAIR_DK);
 
-        // Boca linha reta sutil
-        headBox(jX + 13, 10, 4, 1, 0x000000); // Boca super discreta preta ou marrom escuro
+        // Nariz & Boca determinada
+        headDot(jX + 15, 8, SKIN_DK);
+        headDot(jX + 15, 9, SKIN_DK);
+        headBox(jX + 13, 10, 5, 1, 0x000000); // Boca firme e estóica
+
+        // Costeletas
+        headBox(jX + 10, 6, 2, 4, HAIR_DK);
+        headBox(jX + 20, 6, 2, 4, HAIR_DK);
 
         // --- BRAÇOS CROSS/POCKET ---
         box(jX + 8, 14, 3, 3, COAT_MD); // Ombro Trás

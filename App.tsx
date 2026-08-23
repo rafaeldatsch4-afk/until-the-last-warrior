@@ -18,20 +18,33 @@ const TextInputModal: React.FC<{
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Disable Phaser keyboard input while modal is open
+    // Disable Phaser keyboard capture and listeners while typing
     const game = (window as any).gameInstance;
     if (game?.input?.keyboard) {
       game.input.keyboard.enabled = false;
-    }
-    if (inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+      if (typeof game.input.keyboard.stopListeners === 'function') {
+        game.input.keyboard.stopListeners();
+      }
+      if (game.input.keyboard.preventDefault !== undefined) {
+        game.input.keyboard.preventDefault = false;
+      }
     }
 
+    const timer = setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.select();
+      }
+    }, 50);
+
     return () => {
+      clearTimeout(timer);
       // Re-enable Phaser keyboard input when modal closes
       if (game?.input?.keyboard) {
         game.input.keyboard.enabled = true;
+        if (typeof game.input.keyboard.startListeners === 'function') {
+          game.input.keyboard.startListeners();
+        }
       }
     };
   }, []);
@@ -56,22 +69,26 @@ const TextInputModal: React.FC<{
     setText('');
   };
 
-  const quickLetters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"," "];
+  const quickLetters = [
+    "A","B","C","D","E","F","G","H","I","J","K","L","M",
+    "N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+    "0","1","2","3","4","5","6","7","8","9"," "
+  ];
 
   return (
     <div 
-      className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 animate-fade-in"
+      className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
-        className="bg-[#0f172a] border-2 border-[#38bdf8] p-5 rounded-xl shadow-2xl max-w-md w-full flex flex-col gap-3 text-white"
+        className="bg-[#0f172a] border-2 border-[#38bdf8] p-4 sm:p-5 rounded-xl shadow-2xl max-w-md w-full flex flex-col gap-3 text-white"
         onKeyDown={(e) => e.stopPropagation()}
         onKeyUp={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-700 pb-2">
-          <h3 className="text-lg font-bold text-sky-400 font-mono flex items-center gap-2">
+          <h3 className="text-base sm:text-lg font-bold text-sky-400 font-mono flex items-center gap-2">
             <span>⚔️</span> {prompt.title}
           </h3>
           <button
@@ -99,7 +116,7 @@ const TextInputModal: React.FC<{
               }
             }}
             placeholder="Digite o nome..."
-            className="w-full bg-[#1e293b] text-yellow-300 text-center text-xl font-bold p-3 rounded-lg border-2 border-slate-600 focus:border-yellow-400 outline-none uppercase tracking-wider shadow-inner"
+            className="w-full bg-[#1e293b] text-yellow-300 text-center text-lg sm:text-xl font-bold p-3 rounded-lg border-2 border-slate-600 focus:border-yellow-400 outline-none uppercase tracking-wider shadow-inner"
             autoFocus
           />
           {text.length > 0 && (
@@ -114,27 +131,27 @@ const TextInputModal: React.FC<{
         </div>
 
         <div className="text-xs text-slate-400 text-center">
-          {text.length}/16 caracteres • Use o teclado ou os botões abaixo
+          {text.length}/16 caracteres • Digite pelo teclado ou toque nas teclas abaixo
         </div>
 
         {/* Virtual on-screen keypad for touch/mobile */}
-        <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800 flex flex-wrap justify-center gap-1 max-h-32 overflow-y-auto">
+        <div className="bg-slate-900/90 p-2 rounded-lg border border-slate-800 flex flex-wrap justify-center gap-1 max-h-36 overflow-y-auto">
           {quickLetters.map((char) => (
             <button
               key={char}
               type="button"
               onClick={() => handleCharClick(char)}
-              className="px-2.5 py-1.5 bg-slate-800 hover:bg-sky-600 active:bg-sky-500 rounded text-sm font-mono font-bold text-slate-200 min-w-[28px] transition-colors"
+              className="px-2 py-1.5 bg-slate-800 hover:bg-sky-600 active:bg-sky-500 rounded text-xs sm:text-sm font-mono font-bold text-slate-200 min-w-[28px] transition-colors"
             >
-              {char === " " ? "␣" : char}
+              {char === " " ? "ESPAÇO" : char}
             </button>
           ))}
           <button
             type="button"
             onClick={handleBackspace}
-            className="px-3 py-1.5 bg-red-950/80 hover:bg-red-800 active:bg-red-700 rounded text-sm font-bold text-red-200 transition-colors"
+            className="px-3 py-1.5 bg-red-950/80 hover:bg-red-800 active:bg-red-700 rounded text-xs sm:text-sm font-bold text-red-200 transition-colors"
           >
-            ⌫
+            ⌫ APAGAR
           </button>
         </div>
 
@@ -143,14 +160,14 @@ const TextInputModal: React.FC<{
           <button 
             type="button"
             onClick={onClose}
-            className="flex-1 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 py-3 rounded-lg font-bold uppercase transition-all"
+            className="flex-1 bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 py-2.5 sm:py-3 rounded-lg font-bold uppercase transition-all text-sm"
           >
             Cancelar
           </button>
           <button 
             type="button"
             onClick={handleConfirm}
-            className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 active:scale-95 text-slate-950 py-3 rounded-lg font-bold uppercase tracking-wide transition-all shadow-lg font-mono"
+            className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 active:scale-95 text-slate-950 py-2.5 sm:py-3 rounded-lg font-bold uppercase tracking-wide transition-all shadow-lg font-mono text-sm"
           >
             Confirmar
           </button>

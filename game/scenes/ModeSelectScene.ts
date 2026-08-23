@@ -231,6 +231,7 @@ export default class ModeSelectScene extends Phaser.Scene {
         },
         m.color,
         m.accentColor,
+        100 + index * 60,
       );
     });
   }
@@ -244,8 +245,22 @@ export default class ModeSelectScene extends Phaser.Scene {
     onClick: () => void,
     color: number,
     accentColor: number,
+    delayAnim: number = 0,
   ) {
-    const container = this.add.container(x, y);
+    const container = this.add.container(x, y + 25);
+    container.setAlpha(0);
+    container.setScale(0.95, 0.95);
+
+    this.tweens.add({
+      targets: container,
+      y: y,
+      scaleX: 1,
+      scaleY: 1,
+      alpha: 1,
+      duration: 420,
+      ease: "Cubic.easeOut",
+      delay: delayAnim,
+    });
 
     const graphics = this.add.graphics();
     const btnWidth = Math.min(520, this.cameras.main.width - 48);

@@ -149,6 +149,8 @@ export default class MenuScene extends Phaser.Scene {
     // 4. Hero & Title Section (Left Column - Clean, Centered & Stylized)
     const leftColX = Math.round(width * 0.28);
     const titleContainer = this.add.container(leftColX, height / 2 - 50);
+    titleContainer.setAlpha(0);
+    titleContainer.setScale(0.94);
 
     // Stylized Hero Emblem / Card with Rounded Frame & Golden Glow
     const emblemCard = this.add.graphics();
@@ -171,14 +173,6 @@ export default class MenuScene extends Phaser.Scene {
     }
     const logoImg = this.add.image(0, -15, "utlw_logo");
     logoImg.setDisplaySize(240, 135);
-    logoImg.setAlpha(0);
-
-    this.tweens.add({
-      targets: logoImg,
-      alpha: 1,
-      duration: 800,
-      ease: "Power2",
-    });
 
     const subtitle = this.add
       .text(0, 78, "⚔️ A BATALHA FINAL COMEÇA AQUI ⚔️", {
@@ -192,33 +186,37 @@ export default class MenuScene extends Phaser.Scene {
         shadow: { color: "#000000", blur: 6, fill: true },
         resolution: 2,
       })
-      .setOrigin(0.5)
-      .setAlpha(0);
-
-    this.tweens.add({
-      targets: subtitle,
-      alpha: 1,
-      duration: 800,
-      delay: 200,
-      ease: "Power2",
-    });
+      .setOrigin(0.5);
 
     titleContainer.add([emblemCard, logoImg, subtitle]);
 
+    // Smooth entrance for Hero title
     this.tweens.add({
       targets: titleContainer,
-      y: titleContainer.y - 6,
-      duration: 3000,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
+      alpha: 1,
+      scaleX: 1,
+      scaleY: 1,
+      duration: 650,
+      ease: "Cubic.easeOut",
+      onComplete: () => {
+        // Continuous subtle floating animation
+        this.tweens.add({
+          targets: titleContainer,
+          y: titleContainer.y - 6,
+          duration: 3000,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.easeInOut",
+        });
+      },
     });
 
     // 5. World / Arena Switcher Badge (Bottom Left, Below Logo)
     this.createWorldBadge(leftColX, Math.min(height - 40, bounds.bottom - 24));
 
     // 6. Coins Display (Top Center)
-    const coinDisplay = this.add.container(width / 2, bounds.top + 22);
+    const coinDisplay = this.add.container(width / 2, bounds.top + 10);
+    coinDisplay.setAlpha(0);
     const bgGraphics = this.add.graphics();
     bgGraphics.fillStyle(0x0a0f1d, 0.85);
     bgGraphics.fillRoundedRect(-55, -16, 110, 32, 16);
@@ -261,6 +259,16 @@ export default class MenuScene extends Phaser.Scene {
       this.coinText,
     ]);
 
+    // Drop in coins smoothly
+    this.tweens.add({
+      targets: coinDisplay,
+      y: bounds.top + 22,
+      alpha: 1,
+      duration: 500,
+      delay: 150,
+      ease: "Cubic.easeOut",
+    });
+
     // 7. Menu Buttons (Right Column - Dedicated, Clean Layout)
     const menuColX = Math.min(width - 270, bounds.right - 235);
     const menuBlockHeight = 6 * 38 + 34;
@@ -277,7 +285,7 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "ModeSelectScene");
       },
       0xe74c3c,
-      0,
+      100,
     );
 
     this.createMenuButton(
@@ -290,7 +298,7 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "StoreScene");
       },
       0x3498db,
-      50,
+      170,
     );
 
     this.createMenuButton(
@@ -303,7 +311,7 @@ export default class MenuScene extends Phaser.Scene {
         this.showChallengesPopup();
       },
       0xf1c40f,
-      100,
+      240,
     );
 
     this.createMenuButton(
@@ -316,7 +324,7 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "SettingsScene");
       },
       0x95a5a6,
-      150,
+      310,
     );
 
     this.createMenuButton(
@@ -329,7 +337,7 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "CharacterCreatorScene");
       },
       0x2ecc71,
-      200,
+      380,
     );
 
     this.createMenuButton(
@@ -342,12 +350,13 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "LeaderboardScene");
       },
       0x9b59b6,
-      250,
+      450,
     );
   }
 
   private createWorldBadge(x: number, y: number) {
-    this.arenaBadgeContainer = this.add.container(x, y);
+    this.arenaBadgeContainer = this.add.container(x, y + 15);
+    this.arenaBadgeContainer.setAlpha(0);
 
     const bg = this.add.graphics();
     const w = 260;
@@ -397,6 +406,16 @@ export default class MenuScene extends Phaser.Scene {
     rightArrow.on("pointerout", () => rightArrow.setColor("#f1c40f"));
 
     this.arenaBadgeContainer.add([bg, this.arenaBadgeText, leftArrow, rightArrow]);
+
+    // Smooth slide-up fade-in for World Badge
+    this.tweens.add({
+      targets: this.arenaBadgeContainer,
+      y: y,
+      alpha: 1,
+      duration: 500,
+      delay: 220,
+      ease: "Cubic.easeOut",
+    });
   }
 
   private cycleWorld(dir: number) {
@@ -468,32 +487,38 @@ export default class MenuScene extends Phaser.Scene {
     const bounds = ResponsiveUtils.getSafeBounds();
 
     const popupOverlay = this.add
-      .rectangle(width / 2, height / 2, width, height, 0x000000, 0.75)
+      .rectangle(width / 2, height / 2, width, height, 0x000000, 0.8)
       .setInteractive()
       .setDepth(100);
 
     const popupCard = this.add.container(width / 2, height / 2).setDepth(101);
 
-    const modalW = Math.min(480, width - 30);
-    const modalH = Math.min(410, bounds.height - 20);
+    const todaysChallenges = DailyChallenges.getTodaysChallenges();
+    const modalW = Math.min(520, width - 24);
+    const modalH = Math.min(460, bounds.height - 20);
     const halfW = modalW / 2;
     const halfH = modalH / 2;
 
     // Background Graphic with rounded corners and golden border
     const popupBg = this.add.graphics();
-    popupBg.fillStyle(0x0f172a, 0.98);
-    popupBg.fillRoundedRect(-halfW, -halfH, modalW, modalH, 12);
-    popupBg.lineStyle(2, 0xf1c40f, 0.9);
-    popupBg.strokeRoundedRect(-halfW, -halfH, modalW, modalH, 12);
+    popupBg.fillStyle(0x0a0f1d, 0.98);
+    popupBg.fillRoundedRect(-halfW, -halfH, modalW, modalH, 14);
+    popupBg.lineStyle(2, 0xf59e0b, 0.85);
+    popupBg.strokeRoundedRect(-halfW, -halfH, modalW, modalH, 14);
+
+    // Subtle header accent line
+    const headerLine = this.add.graphics();
+    headerLine.lineStyle(1, 0x334155, 0.6);
+    headerLine.lineBetween(-halfW + 16, -halfH + 46, halfW - 16, -halfH + 46);
 
     // Header Title
     const popupTitle = this.add
-      .text(0, -halfH + 26, "DESAFIOS DO DIA", {
-        fontSize: "20px",
+      .text(0, -halfH + 24, "⚡ MISSÕES DIÁRIAS & RECOMPENSAS", {
+        fontSize: "18px",
         fontStyle: "900",
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#f1c40f",
+        color: "#f59e0b",
         stroke: "#000000",
         strokeThickness: 3,
         resolution: 2,
@@ -501,17 +526,17 @@ export default class MenuScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     // Modern Close Button
-    const closeBtnX = halfW - 24;
-    const closeBtnY = -halfH + 24;
+    const closeBtnX = halfW - 22;
+    const closeBtnY = -halfH + 22;
     const closeBtnBg = this.add.graphics();
     closeBtnBg.fillStyle(0x1e293b, 0.9);
-    closeBtnBg.fillCircle(closeBtnX, closeBtnY, 15);
+    closeBtnBg.fillCircle(closeBtnX, closeBtnY, 14);
     closeBtnBg.lineStyle(1.5, 0x475569, 0.8);
-    closeBtnBg.strokeCircle(closeBtnX, closeBtnY, 15);
+    closeBtnBg.strokeCircle(closeBtnX, closeBtnY, 14);
 
     const closeBtnTxt = this.add
       .text(closeBtnX, closeBtnY, "✕", {
-        fontSize: "14px",
+        fontSize: "13px",
         color: "#94a3b8",
         fontStyle: "bold",
         fontFamily: "system-ui, sans-serif",
@@ -540,21 +565,21 @@ export default class MenuScene extends Phaser.Scene {
     closeHit.on("pointerover", () => {
       closeBtnBg.clear();
       closeBtnBg.fillStyle(0xef4444, 1);
-      closeBtnBg.fillCircle(closeBtnX, closeBtnY, 15);
+      closeBtnBg.fillCircle(closeBtnX, closeBtnY, 14);
       closeBtnTxt.setColor("#ffffff");
     });
     closeHit.on("pointerout", () => {
       closeBtnBg.clear();
       closeBtnBg.fillStyle(0x1e293b, 0.9);
-      closeBtnBg.fillCircle(closeBtnX, closeBtnY, 15);
+      closeBtnBg.fillCircle(closeBtnX, closeBtnY, 14);
       closeBtnBg.lineStyle(1.5, 0x475569, 0.8);
-      closeBtnBg.strokeCircle(closeBtnX, closeBtnY, 15);
+      closeBtnBg.strokeCircle(closeBtnX, closeBtnY, 14);
       closeBtnTxt.setColor("#94a3b8");
     });
     closeHit.on("pointerdown", closePopup);
     popupOverlay.on("pointerdown", closePopup);
 
-    popupCard.add([popupBg, popupTitle, closeBtnBg, closeBtnTxt, closeHit]);
+    popupCard.add([popupBg, headerLine, popupTitle, closeBtnBg, closeBtnTxt, closeHit]);
 
     // 1. Daily Streak Section
     const streakInfo = await DailyChallenges.getStreakInfo();
@@ -564,21 +589,21 @@ export default class MenuScene extends Phaser.Scene {
       streakInfo.currentStreak,
     );
 
-    const cardInnerW = modalW - 32;
+    const cardInnerW = modalW - 28;
     const streakY = -halfH + 74;
 
     const streakBg = this.add.graphics();
-    streakBg.fillStyle(0x18181b, 0.9);
-    streakBg.fillRoundedRect(-cardInnerW / 2, streakY - 26, cardInnerW, 52, 8);
-    streakBg.lineStyle(1.5, 0xf97316, 0.8);
-    streakBg.strokeRoundedRect(-cardInnerW / 2, streakY - 26, cardInnerW, 52, 8);
+    streakBg.fillStyle(0x111827, 0.95);
+    streakBg.fillRoundedRect(-cardInnerW / 2, streakY - 22, cardInnerW, 44, 8);
+    streakBg.lineStyle(1.5, 0xf97316, 0.7);
+    streakBg.strokeRoundedRect(-cardInnerW / 2, streakY - 22, cardInnerW, 44, 8);
 
     const streakTitleText = this.add.text(
-      -cardInnerW / 2 + 14,
-      streakY - 14,
-      `Sequência Diária: ${streakInfo.currentStreak} Dias 🔥`,
+      -cardInnerW / 2 + 12,
+      streakY - 10,
+      `🔥 Sequência Diária: ${streakInfo.currentStreak} ${streakInfo.currentStreak === 1 ? "Dia" : "Dias"}`,
       {
-        fontSize: "14px",
+        fontSize: "13px",
         fontStyle: "bold",
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
@@ -588,9 +613,9 @@ export default class MenuScene extends Phaser.Scene {
     );
 
     const streakDetailText = this.add.text(
-      -cardInnerW / 2 + 14,
-      streakY + 6,
-      `Recompensa de Hoje: ${currentStreakCoins} 🪙 (Bônus de login ativo)`,
+      -cardInnerW / 2 + 12,
+      streakY + 7,
+      `Bônus diário: +${currentStreakCoins} 🪙 de login`,
       {
         fontSize: "11px",
         color: "#94a3b8",
@@ -601,12 +626,12 @@ export default class MenuScene extends Phaser.Scene {
 
     popupCard.add([streakBg, streakTitleText, streakDetailText]);
 
-    const streakBtnX = cardInnerW / 2 - 55;
+    const streakBtnX = cardInnerW / 2 - 48;
 
     if (hasClaimedStreakToday) {
       const claimedStreakText = this.add
-        .text(streakBtnX, streakY, "CONCLUÍDO ✓", {
-          fontSize: "12px",
+        .text(streakBtnX, streakY, "COLETADO ✓", {
+          fontSize: "11px",
           color: "#22c55e",
           fontStyle: "bold",
           fontFamily: "system-ui, sans-serif",
@@ -619,13 +644,13 @@ export default class MenuScene extends Phaser.Scene {
       const drawClaimStreak = (isH: boolean) => {
         claimStreakBg.clear();
         claimStreakBg.fillStyle(isH ? 0x16a34a : 0x22c55e, 1);
-        claimStreakBg.fillRoundedRect(streakBtnX - 44, streakY - 14, 88, 28, 6);
+        claimStreakBg.fillRoundedRect(streakBtnX - 40, streakY - 13, 80, 26, 6);
       };
       drawClaimStreak(false);
 
       const claimStreakTxt = this.add
         .text(streakBtnX, streakY, "COLETAR", {
-          fontSize: "12px",
+          fontSize: "11px",
           color: "#ffffff",
           fontStyle: "bold",
           fontFamily: "system-ui, sans-serif",
@@ -634,7 +659,7 @@ export default class MenuScene extends Phaser.Scene {
         .setOrigin(0.5);
 
       const claimStreakHit = this.add
-        .rectangle(streakBtnX, streakY, 88, 28, 0x000000, 0)
+        .rectangle(streakBtnX, streakY, 80, 26, 0x000000, 0)
         .setInteractive({ useHandCursor: true });
 
       claimStreakHit.on("pointerover", () => drawClaimStreak(true));
@@ -647,7 +672,7 @@ export default class MenuScene extends Phaser.Scene {
           claimStreakHit.destroy();
           const claimedStreakText = this.add
             .text(streakBtnX, streakY, "COLETADO ✓", {
-              fontSize: "12px",
+              fontSize: "11px",
               color: "#22c55e",
               fontStyle: "bold",
               fontFamily: "system-ui, sans-serif",
@@ -666,68 +691,115 @@ export default class MenuScene extends Phaser.Scene {
     const progress = await DailyChallenges.getProgress();
 
     let claimableCount = 0;
-    CHALLENGES.forEach((challenge) => {
+    todaysChallenges.forEach((challenge) => {
       const p = progress[challenge.id] || { current: 0, claimed: false };
       if (p.current >= challenge.target && !p.claimed) claimableCount++;
     });
 
-    let startY = streakY + 58;
-    const itemGap = 54;
+    let startY = streakY + 52;
+    const itemGap = 62;
 
-    CHALLENGES.forEach((challenge) => {
+    const categoryColors: Record<string, { bg: number; border: number; label: string; text: string }> = {
+      combat: { bg: 0x450a0a, border: 0xef4444, label: "COMBATE", text: "#f87171" },
+      skill: { bg: 0x1e1b4b, border: 0x6366f1, label: "HABILIDADE", text: "#818cf8" },
+      defense: { bg: 0x064e3b, border: 0x10b981, label: "DEFESA", text: "#34d399" },
+      mastery: { bg: 0x451a03, border: 0xf59e0b, label: "MESTRIA", text: "#fbbf24" },
+    };
+
+    todaysChallenges.forEach((challenge) => {
       const p = progress[challenge.id] || { current: 0, claimed: false };
       const cardY = startY;
+      const isCompleted = p.current >= challenge.target;
+      const catConfig = categoryColors[challenge.category] || categoryColors.combat;
 
       const chCard = this.add.graphics();
-      chCard.fillStyle(0x131a2a, 0.9);
-      chCard.fillRoundedRect(-cardInnerW / 2, cardY - 22, cardInnerW, 46, 6);
-      chCard.lineStyle(1, 0x243247, 0.8);
-      chCard.strokeRoundedRect(-cardInnerW / 2, cardY - 22, cardInnerW, 46, 6);
+      chCard.fillStyle(0x0f172a, 0.9);
+      chCard.fillRoundedRect(-cardInnerW / 2, cardY - 26, cardInnerW, 54, 8);
+      chCard.lineStyle(1, isCompleted ? 0x10b981 : 0x1e293b, isCompleted ? 0.8 : 0.6);
+      chCard.strokeRoundedRect(-cardInnerW / 2, cardY - 26, cardInnerW, 54, 8);
 
-      const chTitle = this.add.text(-cardInnerW / 2 + 14, cardY - 12, challenge.title, {
-        fontSize: "13px",
+      // Icon + Category badge
+      const chIconText = this.add.text(-cardInnerW / 2 + 10, cardY - 14, challenge.icon, {
+        fontSize: "16px",
+        resolution: 2,
+      });
+
+      const catBadgeText = this.add.text(-cardInnerW / 2 + 34, cardY - 15, `[${catConfig.label}]`, {
+        fontSize: "10px",
         fontStyle: "bold",
-        color: "#ffffff",
+        color: catConfig.text,
+        fontFamily: "system-ui, sans-serif",
+        resolution: 2,
+      });
+
+      const chTitle = this.add.text(-cardInnerW / 2 + 104, cardY - 15, challenge.title, {
+        fontSize: "12px",
+        fontStyle: "bold",
+        color: "#f8fafc",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         resolution: 2,
       });
 
-      const chReward = this.add.text(
-        -cardInnerW / 2 + 14,
-        cardY + 5,
-        `Recompensa: ${challenge.reward} 🪙`,
-        {
-          fontSize: "11px",
-          color: "#facc15",
-          fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-          resolution: 2,
-        },
-      );
+      const chDesc = this.add.text(-cardInnerW / 2 + 12, cardY + 4, challenge.desc, {
+        fontSize: "10px",
+        color: "#94a3b8",
+        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        resolution: 2,
+      });
 
-      const isCompleted = p.current >= challenge.target;
+      // Progress bar background & fill
+      const barW = 100;
+      const barH = 5;
+      const barX = cardInnerW / 2 - 195;
+      const barY = cardY + 7;
+      const fillRatio = Math.min(1, Math.max(0, p.current / challenge.target));
+
+      const barBg = this.add.graphics();
+      barBg.fillStyle(0x1e293b, 1);
+      barBg.fillRoundedRect(barX, barY, barW, barH, 2);
+      if (fillRatio > 0) {
+        barBg.fillStyle(isCompleted ? 0x22c55e : 0x3b82f6, 1);
+        barBg.fillRoundedRect(barX, barY, Math.max(4, barW * fillRatio), barH, 2);
+      }
+
       const chProgressText = this.add
         .text(
-          cardInnerW / 2 - 110,
-          cardY,
-          `${Math.min(p.current, challenge.target)} / ${challenge.target}`,
+          barX + barW + 8,
+          barY + 2,
+          `${Math.min(p.current, challenge.target)}/${challenge.target}`,
           {
-            fontSize: "13px",
+            fontSize: "10px",
             fontStyle: "bold",
             color: isCompleted ? "#4ade80" : "#94a3b8",
             fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
             resolution: 2,
           },
         )
+        .setOrigin(0, 0.5);
+
+      const chReward = this.add
+        .text(
+          cardInnerW / 2 - 105,
+          cardY - 12,
+          `+${challenge.reward} 🪙`,
+          {
+            fontSize: "11px",
+            fontStyle: "bold",
+            color: "#fbbf24",
+            fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+            resolution: 2,
+          },
+        )
         .setOrigin(1, 0.5);
 
-      popupCard.add([chCard, chTitle, chReward, chProgressText]);
+      popupCard.add([chCard, chIconText, catBadgeText, chTitle, chDesc, barBg, chProgressText, chReward]);
 
-      const actionBtnX = cardInnerW / 2 - 50;
+      const actionBtnX = cardInnerW / 2 - 48;
 
       if (p.claimed) {
         const claimedText = this.add
           .text(actionBtnX, cardY, "COLETADO ✓", {
-            fontSize: "12px",
+            fontSize: "11px",
             color: "#22c55e",
             fontStyle: "bold",
             fontFamily: "system-ui, sans-serif",
@@ -740,7 +812,7 @@ export default class MenuScene extends Phaser.Scene {
         const drawClaimBtn = (isH: boolean) => {
           claimBtnBg.clear();
           claimBtnBg.fillStyle(isH ? 0xeab308 : 0xfacc15, 1);
-          claimBtnBg.fillRoundedRect(actionBtnX - 38, cardY - 13, 76, 26, 6);
+          claimBtnBg.fillRoundedRect(actionBtnX - 36, cardY - 13, 72, 26, 6);
         };
         drawClaimBtn(false);
 
@@ -755,7 +827,7 @@ export default class MenuScene extends Phaser.Scene {
           .setOrigin(0.5);
 
         const claimHit = this.add
-          .rectangle(actionBtnX, cardY, 76, 26, 0x000000, 0)
+          .rectangle(actionBtnX, cardY, 72, 26, 0x000000, 0)
           .setInteractive({ useHandCursor: true });
 
         claimHit.on("pointerover", () => drawClaimBtn(true));
@@ -767,7 +839,7 @@ export default class MenuScene extends Phaser.Scene {
             claimHit.destroy();
             const claimedText = this.add
               .text(actionBtnX, cardY, "COLETADO ✓", {
-                fontSize: "12px",
+                fontSize: "11px",
                 color: "#22c55e",
                 fontStyle: "bold",
                 fontFamily: "system-ui, sans-serif",
@@ -787,6 +859,17 @@ export default class MenuScene extends Phaser.Scene {
           }
         });
         popupCard.add([claimBtnBg, claimBtnTxt, claimHit]);
+      } else {
+        const inProgressTxt = this.add
+          .text(actionBtnX, cardY, "EM ANDAMENTO", {
+            fontSize: "9px",
+            color: "#64748b",
+            fontStyle: "bold",
+            fontFamily: "system-ui, sans-serif",
+            resolution: 2,
+          })
+          .setOrigin(0.5);
+        popupCard.add(inProgressTxt);
       }
 
       startY += itemGap;
@@ -799,13 +882,13 @@ export default class MenuScene extends Phaser.Scene {
       const drawCollectAll = (isH: boolean) => {
         collectAllBg.clear();
         collectAllBg.fillStyle(isH ? 0x16a34a : 0x22c55e, 1);
-        collectAllBg.fillRoundedRect(-80, collectAllY - 14, 160, 28, 6);
+        collectAllBg.fillRoundedRect(-80, collectAllY - 13, 160, 26, 6);
       };
       drawCollectAll(false);
 
       const collectAllTxt = this.add
-        .text(0, collectAllY, "COLETAR TUDO", {
-          fontSize: "12px",
+        .text(0, collectAllY, "⚡ COLETAR TUDO", {
+          fontSize: "11px",
           color: "#ffffff",
           fontStyle: "bold",
           fontFamily: "system-ui, sans-serif",
@@ -814,7 +897,7 @@ export default class MenuScene extends Phaser.Scene {
         .setOrigin(0.5);
 
       const collectAllHit = this.add
-        .rectangle(0, collectAllY, 160, 28, 0x000000, 0)
+        .rectangle(0, collectAllY, 160, 26, 0x000000, 0)
         .setInteractive({ useHandCursor: true });
 
       collectAllHit.on("pointerover", () => drawCollectAll(true));
@@ -897,16 +980,8 @@ export default class MenuScene extends Phaser.Scene {
     color: number,
     delayAnim: number = 0,
   ) {
-    const container = this.add.container(x + 80, y).setAlpha(0); // Starts slightly offset right with 0 alpha
-
-    this.tweens.add({
-      targets: container,
-      x: x,
-      alpha: 1,
-      duration: 400,
-      ease: "Cubic.easeOut",
-      delay: delayAnim,
-    });
+    const container = this.add.container(x + 95, y).setAlpha(0);
+    container.setScale(0.92, 0.94);
 
     const height = 36;
     const width = 225;
@@ -955,6 +1030,28 @@ export default class MenuScene extends Phaser.Scene {
       .setAlpha(0.6);
 
     container.add([polyShadow, hoverGlow, polyMain, txt, accent]);
+
+    // Smooth premium entrance animation (slide + scale settle + subtle gleam sweep)
+    this.tweens.add({
+      targets: container,
+      x: x,
+      scaleX: 1,
+      scaleY: 1,
+      alpha: 1,
+      duration: 460,
+      ease: "Cubic.easeOut",
+      delay: delayAnim,
+      onComplete: () => {
+        // Subtle sheen flash across button accent on arrival
+        this.tweens.add({
+          targets: hoverGlow,
+          alpha: 0.45,
+          duration: 160,
+          yoyo: true,
+          ease: "Sine.easeInOut",
+        });
+      },
+    });
 
     // Interactive hit area
     const hitArea = this.add

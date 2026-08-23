@@ -75,11 +75,9 @@ export class BattleReward {
 
     if (win) {
       if (s.gameState && s.gameState.gameMode !== "training") {
-        DailyChallenges.addProgress("win_3_battles", 1);
         const effectiveMaxHp = s.playerMaxHp || s.playerData.maxHp;
-        if (s.playerHp && effectiveMaxHp && s.playerHp === effectiveMaxHp) {
-          DailyChallenges.addProgress("win_no_damage", 1);
-        }
+        const isFlawless = !!(s.playerHp && effectiveMaxHp && s.playerHp === effectiveMaxHp);
+        DailyChallenges.onBattleWon(s.gameState.gameMode, isFlawless);
       }
       this.playVictorySound();
     }

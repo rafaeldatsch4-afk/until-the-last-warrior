@@ -162,14 +162,14 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.headerContainer.add([headerTitle, headerSub]);
 
     // 3. RESPONSIVE TWO-COLUMN LAYOUT
-    const contentTopY = bounds.top + 48;
-    const contentH = Math.min(450, bounds.bottom - contentTopY - 10);
+    const contentTopY = bounds.top + 46;
+    const contentH = Math.min(460, bounds.bottom - contentTopY - 10);
 
-    // Ajuste dinâmico de colunas para telas normais e ultra-wide
+    // Dynamic columns for standard & ultra-wide screens
     const availableW = bounds.width;
-    const leftColW = Math.min(515, Math.floor(availableW * 0.58));
-    const rightColW = Math.min(345, Math.floor(availableW * 0.38));
-    const gap = 16;
+    const leftColW = Math.min(520, Math.floor(availableW * 0.58));
+    const rightColW = Math.min(350, Math.floor(availableW * 0.38));
+    const gap = 14;
     const totalW = leftColW + rightColW + gap;
     const startX = Math.max(bounds.left + 4, Math.floor(bounds.centerX - totalW / 2));
 
@@ -179,9 +179,9 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     // Load saved character data if present
     this.loadInitialCustomData();
 
-    // 4. PREVIEW INITIALIZATION (Centralizado na Coluna Direita)
+    // 4. PREVIEW INITIALIZATION (Centered vertically in the preview viewport between header & actions)
     const previewCenterX = rightColX + rightColW / 2;
-    const previewCenterY = contentTopY + 160;
+    const previewCenterY = contentTopY + Math.floor((contentH - 48) / 2);
 
     this.preview = new CreatorPreview(this, previewCenterX, previewCenterY);
     this.ui = new CreatorUI(this, () => this.updatePreview());
@@ -328,24 +328,24 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     container.add(bg);
 
     // 2. Character Name Header Card (Interactive click to edit name)
-    const nameCardW = panelW - 28;
-    const nameCardH = 44;
-    const nameCardY = 16;
+    const nameCardW = panelW - 24;
+    const nameCardH = 38;
+    const nameCardY = 12;
     const nameCardCenterX = panelW / 2;
 
     const nameCardBg = this.add.graphics();
     const drawNameBg = (isHover: boolean) => {
       nameCardBg.clear();
       nameCardBg.fillStyle(isHover ? 0x1e293b : 0x0f172a, 0.95);
-      nameCardBg.fillRoundedRect(14, nameCardY, nameCardW, nameCardH, 8);
+      nameCardBg.fillRoundedRect(12, nameCardY, nameCardW, nameCardH, 8);
       nameCardBg.lineStyle(1.5, isHover ? 0x38bdf8 : 0x334155, 0.9);
-      nameCardBg.strokeRoundedRect(14, nameCardY, nameCardW, nameCardH, 8);
+      nameCardBg.strokeRoundedRect(12, nameCardY, nameCardW, nameCardH, 8);
     };
     drawNameBg(false);
 
     this.nameDisplayTxt = this.add
-      .text(nameCardCenterX - 10, nameCardY + nameCardH / 2, `⚔️ ${this.builderData.name}`, {
-        fontSize: "15px",
+      .text(nameCardCenterX - 8, nameCardY + nameCardH / 2, `⚔️ ${this.builderData.name}`, {
+        fontSize: "14px",
         fontStyle: "bold",
         color: "#facc15",
         fontFamily: "system-ui, -apple-system, sans-serif",
@@ -355,7 +355,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     this.editIconTxt = this.add
       .text(nameCardCenterX + this.nameDisplayTxt.width / 2 + 8, nameCardY + nameCardH / 2, "✎", {
-        fontSize: "14px",
+        fontSize: "13px",
         color: "#38bdf8",
       })
       .setOrigin(0.5);
@@ -399,16 +399,16 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     container.add([nameCardBg, this.nameDisplayTxt, this.editIconTxt, nameHit]);
 
     // 3. Stage Pedestal Graphics (Behind sprite)
-    const relPedestalY = previewCenterY - panelY + 50;
+    const relPedestalY = previewCenterY - panelY + 44;
     const pedestal = this.add.graphics();
-    pedestal.fillStyle(0x0284c7, 0.2);
-    pedestal.fillEllipse(panelW / 2, relPedestalY, 140, 36);
-    pedestal.lineStyle(1.5, 0x38bdf8, 0.6);
-    pedestal.strokeEllipse(panelW / 2, relPedestalY, 140, 36);
+    pedestal.fillStyle(0x0284c7, 0.18);
+    pedestal.fillEllipse(panelW / 2, relPedestalY, 130, 32);
+    pedestal.lineStyle(1.5, 0x38bdf8, 0.5);
+    pedestal.strokeEllipse(panelW / 2, relPedestalY, 130, 32);
 
     const pedestalRing = this.add.graphics();
-    pedestalRing.lineStyle(1, 0xfacc15, 0.4);
-    pedestalRing.strokeEllipse(panelW / 2, relPedestalY, 110, 24);
+    pedestalRing.lineStyle(1, 0xfacc15, 0.35);
+    pedestalRing.strokeEllipse(panelW / 2, relPedestalY, 100, 22);
 
     this.tweens.add({
       targets: [pedestal, pedestalRing],
@@ -424,15 +424,15 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     container.add([pedestal, pedestalRing]);
 
     // 4. Action Row: [ ⚡ SSJ MODE ] & [ 🎲 ALEATÓRIO ]
-    const btnRowY = panelH - 105;
-    const halfBtnW = (panelW - 36) / 2;
+    const btnRowY = panelH - 80;
+    const halfBtnW = (panelW - 32) / 2;
 
-    const transBtnX = 14 + halfBtnW / 2;
+    const transBtnX = 12 + halfBtnW / 2;
     const transBtn = this.createStageActionButton(
       transBtnX,
       btnRowY,
       halfBtnW,
-      38,
+      32,
       "⚡ SSJ MODE",
       0xd97706,
       () => {
@@ -441,12 +441,12 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       }
     );
 
-    const randBtnX = 14 + halfBtnW + 8 + halfBtnW / 2;
+    const randBtnX = 12 + halfBtnW + 8 + halfBtnW / 2;
     const randBtn = this.createStageActionButton(
       randBtnX,
       btnRowY,
       halfBtnW,
-      38,
+      32,
       "🎲 ALEATÓRIO",
       0x7c3aed,
       () => {
@@ -457,13 +457,13 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     container.add([transBtn, randBtn]);
 
     // 5. PRIMARY CTA: [ 💾 SALVAR E EQUIPAR ]
-    const saveBtnY = panelH - 42;
-    const saveBtnW = panelW - 28;
+    const saveBtnY = panelH - 32;
+    const saveBtnW = panelW - 24;
     const saveBtn = this.createHeroSaveButton(
       panelW / 2,
       saveBtnY,
       saveBtnW,
-      48,
+      44,
       "SALVAR E EQUIPAR",
       () => {
         this.saveAndEquipCharacter();

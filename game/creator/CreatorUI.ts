@@ -118,24 +118,24 @@ export class CreatorUI {
     this.panelContainer.add(bg);
 
     // 2. Tab Switcher Header
-    const tabH = 36;
-    const tabY = 16;
+    const tabH = 34;
+    const tabY = 12;
     const tabs: { key: CreatorTab; label: string; icon: string }[] = [
       { key: "style", label: "ESTILO", icon: "👕" },
       { key: "colors", label: "CORES", icon: "🎨" },
       { key: "aura", label: "AURA", icon: "⚡" },
       { key: "skills", label: "GOLPES", icon: "🔥" },
     ];
-    const tabWidth = (panelW - 32) / tabs.length;
+    const tabWidth = (panelW - 28) / tabs.length;
 
     this.tabButtons = [];
 
     tabs.forEach((tab, index) => {
-      const tabX = 16 + index * tabWidth + tabWidth / 2;
+      const tabX = 14 + index * tabWidth + tabWidth / 2;
       const tabBtn = this.createTabButton(
         tabX,
         tabY + tabH / 2,
-        tabWidth - 6,
+        tabWidth - 4,
         tabH,
         `${tab.icon} ${tab.label}`,
         tab.key === this.currentTab,
@@ -241,7 +241,7 @@ export class CreatorUI {
 
   private renderCurrentTabContent(panelW: number, panelH: number) {
     if (!this.stateRef || !this.panelContainer) return;
-    const contentContainer = this.scene.add.container(0, 68);
+    const contentContainer = this.scene.add.container(0, 52);
     this.panelContainer.add(contentContainer);
 
     if (this.currentTab === "style") {
@@ -249,7 +249,7 @@ export class CreatorUI {
     } else if (this.currentTab === "colors") {
       this.renderColorsTab(contentContainer, panelW);
     } else if (this.currentTab === "aura") {
-      this.renderAuraTab(contentContainer, panelW);
+      this.renderAuraTab(contentContainer, panelW, panelH);
     } else if (this.currentTab === "skills") {
       this.renderSkillsTab(contentContainer, panelW);
     }
@@ -409,8 +409,8 @@ export class CreatorUI {
       },
     ];
 
-    const rowH = 62;
-    const startY = 12;
+    const rowH = 48;
+    const startY = 6;
 
     rows.forEach((row, idx) => {
       const rowY = startY + idx * rowH;
@@ -418,14 +418,14 @@ export class CreatorUI {
       // Row Container
       const rowBox = this.scene.add.graphics();
       rowBox.fillStyle(0x0f172a, 0.7);
-      rowBox.fillRoundedRect(16, rowY, panelW - 32, 54, 8);
+      rowBox.fillRoundedRect(14, rowY, panelW - 28, 42, 6);
       rowBox.lineStyle(1, 0x1e293b, 0.8);
-      rowBox.strokeRoundedRect(16, rowY, panelW - 32, 54, 8);
+      rowBox.strokeRoundedRect(14, rowY, panelW - 28, 42, 6);
 
       // Label
       const txtLabel = this.scene.add
-        .text(32, rowY + 27, `${row.icon} ${row.label}`, {
-          fontSize: "12px",
+        .text(26, rowY + 21, `${row.icon} ${row.label}`, {
+          fontSize: "11px",
           fontStyle: "bold",
           color: "#94a3b8",
           fontFamily: "system-ui, sans-serif",
@@ -434,19 +434,19 @@ export class CreatorUI {
         .setOrigin(0, 0.5);
 
       // Selector Pill on the right
-      const pillW = Math.min(270, panelW - 200);
-      const pillX = panelW - 24 - pillW / 2;
-      const pillY = rowY + 27;
+      const pillW = Math.min(250, panelW - 170);
+      const pillX = panelW - 20 - pillW / 2;
+      const pillY = rowY + 21;
 
       const pillBg = this.scene.add.graphics();
       pillBg.fillStyle(0x1e293b, 0.95);
-      pillBg.fillRoundedRect(pillX - pillW / 2, pillY - 18, pillW, 36, 6);
+      pillBg.fillRoundedRect(pillX - pillW / 2, pillY - 15, pillW, 30, 6);
       pillBg.lineStyle(1.5, 0x334155, 0.9);
-      pillBg.strokeRoundedRect(pillX - pillW / 2, pillY - 18, pillW, 36, 6);
+      pillBg.strokeRoundedRect(pillX - pillW / 2, pillY - 15, pillW, 30, 6);
 
       const valTxt = this.scene.add
         .text(pillX, pillY, row.getVal(), {
-          fontSize: "12px",
+          fontSize: "11px",
           fontStyle: "bold",
           color: "#f8fafc",
           fontFamily: "system-ui, sans-serif",
@@ -458,14 +458,17 @@ export class CreatorUI {
         headValTxtRef = valTxt;
       }
 
-      // Left Arrow
+      // Left Arrow with larger hit area
       const arrowL = this.scene.add
-        .text(pillX - pillW / 2 + 16, pillY, "◀", {
-          fontSize: "13px",
+        .text(pillX - pillW / 2 + 15, pillY, "◀", {
+          fontSize: "12px",
           color: "#38bdf8",
         })
         .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true });
+        .setInteractive(
+          new Phaser.Geom.Rectangle(-16, -15, 32, 30),
+          Phaser.Geom.Rectangle.Contains
+        );
 
       arrowL.on("pointerdown", () => {
         if (this.isDestroyed) return;
@@ -476,14 +479,17 @@ export class CreatorUI {
       arrowL.on("pointerover", () => arrowL.setColor("#facc15").setScale(1.2));
       arrowL.on("pointerout", () => arrowL.setColor("#38bdf8").setScale(1));
 
-      // Right Arrow
+      // Right Arrow with larger hit area
       const arrowR = this.scene.add
-        .text(pillX + pillW / 2 - 16, pillY, "▶", {
-          fontSize: "13px",
+        .text(pillX + pillW / 2 - 15, pillY, "▶", {
+          fontSize: "12px",
           color: "#38bdf8",
         })
         .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true });
+        .setInteractive(
+          new Phaser.Geom.Rectangle(-16, -15, 32, 30),
+          Phaser.Geom.Rectangle.Contains
+        );
 
       arrowR.on("pointerdown", () => {
         if (this.isDestroyed) return;
@@ -546,51 +552,33 @@ export class CreatorUI {
         onNext: () => state.nextColor("feet_1", giColors),
       },
       {
-        label: "Acessório",
+        label: "Acessório Extra",
         getHex: () => giColors[state.p_idx.acc_1],
         onPrev: () => state.prevColor("acc_1", giColors),
         onNext: () => state.nextColor("acc_1", giColors),
       },
-      {
-        label: "Aura do Ki ⚡",
-        getHex: () => {
-          const p = AURA_PRESETS.find((pr) => pr.id === state.aura_preset_id) || AURA_PRESETS[1];
-          return p.color !== -1 ? p.color : 0xffd700;
-        },
-        onPrev: () => {
-          const curIdx = AURA_PRESETS.findIndex((pr) => pr.id === state.aura_preset_id);
-          const nextIdx = (curIdx - 1 + AURA_PRESETS.length) % AURA_PRESETS.length;
-          state.aura_preset_id = AURA_PRESETS[nextIdx].id;
-          AuraManager.setPreference(state.aura_preset_id, state.aura_mode);
-        },
-        onNext: () => {
-          const curIdx = AURA_PRESETS.findIndex((pr) => pr.id === state.aura_preset_id);
-          const nextIdx = (curIdx + 1) % AURA_PRESETS.length;
-          state.aura_preset_id = AURA_PRESETS[nextIdx].id;
-          AuraManager.setPreference(state.aura_preset_id, state.aura_mode);
-        },
-      },
     ];
 
-    const colW = (panelW - 44) / 2;
-    const cardH = 68;
+    const colW = (panelW - 36) / 2;
+    const cardH = 52;
+    const gapY = 6;
 
     colorItems.forEach((item, index) => {
       const col = index % 2;
       const row = Math.floor(index / 2);
-      const cardX = 16 + col * (colW + 12);
-      const cardY = 8 + row * (cardH + 8);
+      const cardX = 14 + col * (colW + 8);
+      const cardY = 6 + row * (cardH + gapY);
 
       const card = this.scene.add.graphics();
       card.fillStyle(0x0f172a, 0.8);
-      card.fillRoundedRect(cardX, cardY, colW, cardH, 8);
+      card.fillRoundedRect(cardX, cardY, colW, cardH, 6);
       card.lineStyle(1, 0x1e293b, 0.8);
-      card.strokeRoundedRect(cardX, cardY, colW, cardH, 8);
+      card.strokeRoundedRect(cardX, cardY, colW, cardH, 6);
 
       // Title
       const titleTxt = this.scene.add
-        .text(cardX + 12, cardY + 16, item.label, {
-          fontSize: "11px",
+        .text(cardX + 10, cardY + 14, item.label, {
+          fontSize: "10.5px",
           fontStyle: "bold",
           color: "#94a3b8",
           fontFamily: "system-ui, sans-serif",
@@ -603,26 +591,26 @@ export class CreatorUI {
       const drawSwatch = () => {
         swatch.clear();
         swatch.fillStyle(item.getHex(), 1);
-        swatch.fillRoundedRect(cardX + 12, cardY + 32, 22, 22, 4);
+        swatch.fillRoundedRect(cardX + 10, cardY + 25, 20, 20, 4);
         swatch.lineStyle(1, 0xffffff, 0.6);
-        swatch.strokeRoundedRect(cardX + 12, cardY + 32, 22, 22, 4);
+        swatch.strokeRoundedRect(cardX + 10, cardY + 25, 20, 20, 4);
       };
       drawSwatch();
 
       // Color Name & Selector Pill
-      const pillW = colW - 50;
-      const pillCenterX = cardX + 42 + pillW / 2;
-      const pillCenterY = cardY + 43;
+      const pillW = colW - 42;
+      const pillCenterX = cardX + 34 + pillW / 2;
+      const pillCenterY = cardY + 35;
 
       const pillBg = this.scene.add.graphics();
       pillBg.fillStyle(0x1e293b, 0.9);
-      pillBg.fillRoundedRect(cardX + 40, cardY + 32, pillW, 22, 4);
+      pillBg.fillRoundedRect(cardX + 34, cardY + 25, pillW, 20, 4);
       pillBg.lineStyle(1, 0x334155, 0.7);
-      pillBg.strokeRoundedRect(cardX + 40, cardY + 32, pillW, 22, 4);
+      pillBg.strokeRoundedRect(cardX + 34, cardY + 25, pillW, 20, 4);
 
       const colorTxt = this.scene.add
         .text(pillCenterX, pillCenterY, this.getColorName(item.getHex()), {
-          fontSize: "11px",
+          fontSize: "10px",
           fontStyle: "bold",
           color: "#f8fafc",
           fontFamily: "system-ui, sans-serif",
@@ -632,12 +620,15 @@ export class CreatorUI {
 
       // Left Arrow
       const arrowL = this.scene.add
-        .text(cardX + 48, pillCenterY, "◀", {
+        .text(cardX + 40, pillCenterY, "◀", {
           fontSize: "10px",
           color: "#38bdf8",
         })
         .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true });
+        .setInteractive(
+          new Phaser.Geom.Rectangle(-12, -10, 24, 20),
+          Phaser.Geom.Rectangle.Contains
+        );
 
       arrowL.on("pointerdown", () => {
         if (this.isDestroyed) return;
@@ -649,12 +640,15 @@ export class CreatorUI {
 
       // Right Arrow
       const arrowR = this.scene.add
-        .text(cardX + 40 + pillW - 8, pillCenterY, "▶", {
+        .text(cardX + 34 + pillW - 6, pillCenterY, "▶", {
           fontSize: "10px",
           color: "#38bdf8",
         })
         .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true });
+        .setInteractive(
+          new Phaser.Geom.Rectangle(-12, -10, 24, 20),
+          Phaser.Geom.Rectangle.Contains
+        );
 
       arrowR.on("pointerdown", () => {
         if (this.isDestroyed) return;
@@ -668,10 +662,10 @@ export class CreatorUI {
     });
   }
 
-  // --- TAB: COR DA AURA ---
-  private renderAuraTab(container: Phaser.GameObjects.Container, panelW: number) {
+  // --- TAB 3: COR DA AURA ---
+  private renderAuraTab(container: Phaser.GameObjects.Container, panelW: number, panelH: number) {
     const state = this.stateRef!;
-    const cardW = panelW - 32;
+    const cardW = panelW - 28;
 
     const currentPreset =
       AURA_PRESETS.find((p) => p.id === state.aura_preset_id) || AURA_PRESETS[1];
@@ -679,24 +673,24 @@ export class CreatorUI {
     const ringHex = currentPreset.ringColor !== -1 ? currentPreset.ringColor : auraHex;
 
     // 1. Active Aura Showcase Banner Card
-    const bannerY = 8;
-    const bannerH = 58;
+    const bannerY = 6;
+    const bannerH = 46;
     const bannerCard = this.scene.add.graphics();
     bannerCard.fillStyle(0x0f172a, 0.92);
-    bannerCard.fillRoundedRect(16, bannerY, cardW, bannerH, 8);
+    bannerCard.fillRoundedRect(14, bannerY, cardW, bannerH, 6);
     bannerCard.lineStyle(1.5, auraHex, 0.9);
-    bannerCard.strokeRoundedRect(16, bannerY, cardW, bannerH, 8);
+    bannerCard.strokeRoundedRect(14, bannerY, cardW, bannerH, 6);
 
     // Swatch Circle on left of banner
     const bannerSwatch = this.scene.add.graphics();
     bannerSwatch.fillStyle(auraHex, 1);
-    bannerSwatch.fillCircle(42, bannerY + bannerH / 2, 14);
+    bannerSwatch.fillCircle(38, bannerY + bannerH / 2, 12);
     bannerSwatch.lineStyle(2, ringHex, 1);
-    bannerSwatch.strokeCircle(42, bannerY + bannerH / 2, 14);
+    bannerSwatch.strokeCircle(38, bannerY + bannerH / 2, 12);
 
     const bannerTitle = this.scene.add
-      .text(68, bannerY + 18, `⚡ AURA: ${currentPreset.name.toUpperCase()}`, {
-        fontSize: "13px",
+      .text(60, bannerY + 15, `⚡ AURA: ${currentPreset.name.toUpperCase()}`, {
+        fontSize: "12px",
         fontStyle: "900",
         color: `#${auraHex.toString(16).padStart(6, "0")}`,
         fontFamily: "system-ui, sans-serif",
@@ -706,8 +700,8 @@ export class CreatorUI {
       .setOrigin(0, 0.5);
 
     const bannerDesc = this.scene.add
-      .text(68, bannerY + 39, currentPreset.description || "Aura de energia de combate lendária.", {
-        fontSize: "11px",
+      .text(60, bannerY + 31, currentPreset.description || "Aura de energia de combate lendária.", {
+        fontSize: "10px",
         color: "#94a3b8",
         fontFamily: "system-ui, sans-serif",
         resolution: 2,
@@ -715,10 +709,10 @@ export class CreatorUI {
       .setOrigin(0, 0.5);
 
     // 2. Presets Grid Header
-    const gridTitleY = bannerY + bannerH + 12;
+    const gridTitleY = bannerY + bannerH + 8;
     const gridTitle = this.scene.add
-      .text(18, gridTitleY, "ESCOLHA UMA AURA LENDÁRIA", {
-        fontSize: "11px",
+      .text(16, gridTitleY, "ESCOLHA UMA AURA LENDÁRIA", {
+        fontSize: "10px",
         fontStyle: "bold",
         color: "#64748b",
         fontFamily: "system-ui, sans-serif",
@@ -729,18 +723,18 @@ export class CreatorUI {
 
     // 3. Grid of Aura Presets (3 columns x 4 rows)
     const cols = 3;
-    const gridGapX = 8;
-    const gridGapY = 8;
+    const gridGapX = 6;
+    const gridGapY = 5;
     const btnW = Math.floor((cardW - (cols - 1) * gridGapX) / cols);
-    const btnH = 44;
-    const gridStartY = gridTitleY + 12;
+    const btnH = 34;
+    const gridStartY = gridTitleY + 10;
 
     const presetCards: Phaser.GameObjects.Container[] = [];
 
     AURA_PRESETS.forEach((preset, index) => {
       const col = index % cols;
       const row = Math.floor(index / cols);
-      const bx = 16 + col * (btnW + gridGapX) + btnW / 2;
+      const bx = 14 + col * (btnW + gridGapX) + btnW / 2;
       const by = gridStartY + row * (btnH + gridGapY) + btnH / 2;
 
       const pCont = this.scene.add.container(bx, by);
@@ -752,27 +746,27 @@ export class CreatorUI {
       const drawCard = (hover: boolean) => {
         pBg.clear();
         pBg.fillStyle(isSelected ? 0x1e293b : 0x0f172a, 0.95);
-        pBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+        pBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 5);
         pBg.lineStyle(
           isSelected ? 2 : hover ? 1.5 : 1,
           isSelected ? pColor : hover ? 0x60a5fa : 0x334155,
           isSelected ? 1 : hover ? 0.9 : 0.6
         );
-        pBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
+        pBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 5);
       };
       drawCard(false);
 
       // Swatch circle
       const dot = this.scene.add.graphics();
       dot.fillStyle(pColor, 1);
-      dot.fillCircle(-btnW / 2 + 16, 0, 8);
+      dot.fillCircle(-btnW / 2 + 13, 0, 6);
       dot.lineStyle(1.5, pRing, 0.9);
-      dot.strokeCircle(-btnW / 2 + 16, 0, 8);
+      dot.strokeCircle(-btnW / 2 + 13, 0, 6);
 
       // Name Text
       const nameTxt = this.scene.add
-        .text(-btnW / 2 + 30, 0, preset.name, {
-          fontSize: "11px",
+        .text(-btnW / 2 + 24, 0, preset.name, {
+          fontSize: "10px",
           fontStyle: isSelected ? "900" : "bold",
           color: isSelected ? "#f8fafc" : "#cbd5e1",
           fontFamily: "system-ui, sans-serif",
@@ -784,8 +778,8 @@ export class CreatorUI {
       let checkTxt: Phaser.GameObjects.Text | null = null;
       if (isSelected) {
         checkTxt = this.scene.add
-          .text(btnW / 2 - 12, 0, "✓", {
-            fontSize: "12px",
+          .text(btnW / 2 - 10, 0, "✓", {
+            fontSize: "11px",
             fontStyle: "bold",
             color: "#38bdf8",
           })
@@ -815,7 +809,7 @@ export class CreatorUI {
         if (this.scene.cache.audio.exists("sfx_select")) {
           this.scene.sound.play("sfx_select", { volume: 0.5 });
         }
-        this.refreshTabs(panelW, 450);
+        this.refreshTabs(panelW, panelH);
         this.onUpdate();
       });
 
@@ -826,10 +820,10 @@ export class CreatorUI {
     });
 
     // 4. Bottom Controls: Centered Test Ki Action Button
-    const bottomControlsY = gridStartY + 4 * (btnH + gridGapY) + 12;
+    const bottomControlsY = gridStartY + 4 * (btnH + gridGapY) + 8;
     const testBtnW = cardW;
-    const testBtnH = 36;
-    const testBtnX = 16 + testBtnW / 2;
+    const testBtnH = 32;
+    const testBtnX = 14 + testBtnW / 2;
     const testBtnY = bottomControlsY + testBtnH / 2;
 
     const chargeBtnCont = this.scene.add.container(testBtnX, testBtnY);
@@ -838,26 +832,26 @@ export class CreatorUI {
     const drawChargeBtn = (hover: boolean) => {
       chargeBtnBg.clear();
       chargeBtnBg.fillStyle(hover ? 0x92400e : 0x78350f, hover ? 0.95 : 0.85);
-      chargeBtnBg.fillRoundedRect(-testBtnW / 2, -testBtnH / 2, testBtnW, testBtnH, 8);
+      chargeBtnBg.fillRoundedRect(-testBtnW / 2, -testBtnH / 2, testBtnW, testBtnH, 6);
       chargeBtnBg.lineStyle(
         hover ? 2 : 1.5,
         hover ? 0xfef08a : 0xf59e0b,
         hover ? 1 : 0.85
       );
-      chargeBtnBg.strokeRoundedRect(-testBtnW / 2, -testBtnH / 2, testBtnW, testBtnH, 8);
+      chargeBtnBg.strokeRoundedRect(-testBtnW / 2, -testBtnH / 2, testBtnW, testBtnH, 6);
     };
     drawChargeBtn(false);
 
     const chargeIcon = this.scene.add
-      .text(-testBtnW / 2 + 20, 0, "⚡", {
-        fontSize: "15px",
+      .text(-testBtnW / 2 + 18, 0, "⚡", {
+        fontSize: "13px",
         color: "#fbbf24",
       })
       .setOrigin(0.5);
 
     const chargeBtnTxt = this.scene.add
       .text(0, 0, "⚡ TESTAR EMANAÇÃO DO KI", {
-        fontSize: "13px",
+        fontSize: "12px",
         fontStyle: "900",
         color: "#fef3c7",
         fontFamily: "system-ui, sans-serif",
@@ -908,22 +902,22 @@ export class CreatorUI {
     ]);
   }
 
-  // --- TAB 3: GOLPES & MAGIAS ---
+  // --- TAB 4: GOLPES & MAGIAS ---
   private renderSkillsTab(container: Phaser.GameObjects.Container, panelW: number) {
-    const cardW = panelW - 32;
-    const cardH = 120;
+    const cardW = panelW - 28;
+    const cardH = 100;
 
     // Card 1: Especial 1
-    const sp1CardY = 14;
+    const sp1CardY = 8;
     const sp1Card = this.scene.add.graphics();
     sp1Card.fillStyle(0x0f172a, 0.85);
-    sp1Card.fillRoundedRect(16, sp1CardY, cardW, cardH, 10);
+    sp1Card.fillRoundedRect(14, sp1CardY, cardW, cardH, 8);
     sp1Card.lineStyle(1.5, 0x0284c7, 0.9);
-    sp1Card.strokeRoundedRect(16, sp1CardY, cardW, cardH, 10);
+    sp1Card.strokeRoundedRect(14, sp1CardY, cardW, cardH, 8);
 
     const sp1Tag = this.scene.add
-      .text(32, sp1CardY + 22, "⚡ GOLPE ESPECIAL 1", {
-        fontSize: "12px",
+      .text(28, sp1CardY + 20, "⚡ GOLPE ESPECIAL 1", {
+        fontSize: "11px",
         fontStyle: "900",
         color: "#38bdf8",
         letterSpacing: 1,
@@ -933,8 +927,8 @@ export class CreatorUI {
       .setOrigin(0, 0.5);
 
     const sp1NameTxt = this.scene.add
-      .text(32, sp1CardY + 56, this.customSp1Name || "Kamehameha", {
-        fontSize: "18px",
+      .text(28, sp1CardY + 48, this.customSp1Name || "Kamehameha", {
+        fontSize: "16px",
         fontStyle: "bold",
         color: "#ffffff",
         fontFamily: "system-ui, sans-serif",
@@ -943,8 +937,8 @@ export class CreatorUI {
       .setOrigin(0, 0.5);
 
     const sp1Desc = this.scene.add
-      .text(32, sp1CardY + 84, "Ataque rápido de energia concentrada com dano moderado.", {
-        fontSize: "11px",
+      .text(28, sp1CardY + 74, "Ataque rápido de energia concentrada com dano moderado.", {
+        fontSize: "10.5px",
         color: "#94a3b8",
         fontFamily: "system-ui, sans-serif",
         resolution: 2,
@@ -952,10 +946,10 @@ export class CreatorUI {
       .setOrigin(0, 0.5);
 
     const sp1Btn = this.createCompactButton(
-      panelW - 90,
-      sp1CardY + 56,
-      110,
-      36,
+      panelW - 74,
+      sp1CardY + 48,
+      95,
+      32,
       "ALTERAR",
       0x0284c7,
       () => {
@@ -969,16 +963,16 @@ export class CreatorUI {
     );
 
     // Card 2: Super Especial 2
-    const sp2CardY = sp1CardY + cardH + 16;
+    const sp2CardY = sp1CardY + cardH + 12;
     const sp2Card = this.scene.add.graphics();
     sp2Card.fillStyle(0x0f172a, 0.85);
-    sp2Card.fillRoundedRect(16, sp2CardY, cardW, cardH, 10);
+    sp2Card.fillRoundedRect(14, sp2CardY, cardW, cardH, 8);
     sp2Card.lineStyle(1.5, 0xeab308, 0.9);
-    sp2Card.strokeRoundedRect(16, sp2CardY, cardW, cardH, 10);
+    sp2Card.strokeRoundedRect(14, sp2CardY, cardW, cardH, 8);
 
     const sp2Tag = this.scene.add
-      .text(32, sp2CardY + 22, "🔥 SUPER GOLPE SUPREMO (ULTIMATE)", {
-        fontSize: "12px",
+      .text(28, sp2CardY + 20, "🔥 SUPER GOLPE SUPREMO (ULTIMATE)", {
+        fontSize: "11px",
         fontStyle: "900",
         color: "#facc15",
         letterSpacing: 1,
@@ -988,8 +982,8 @@ export class CreatorUI {
       .setOrigin(0, 0.5);
 
     const sp2NameTxt = this.scene.add
-      .text(32, sp2CardY + 56, this.customSp2Name || "Spirit Bomb", {
-        fontSize: "18px",
+      .text(28, sp2CardY + 48, this.customSp2Name || "Spirit Bomb", {
+        fontSize: "16px",
         fontStyle: "bold",
         color: "#fef08a",
         fontFamily: "system-ui, sans-serif",
@@ -998,8 +992,8 @@ export class CreatorUI {
       .setOrigin(0, 0.5);
 
     const sp2Desc = this.scene.add
-      .text(32, sp2CardY + 84, "Ataque devastador em área consumindo barra cheia de Ki.", {
-        fontSize: "11px",
+      .text(28, sp2CardY + 74, "Ataque devastador em área consumindo barra cheia de Ki.", {
+        fontSize: "10.5px",
         color: "#94a3b8",
         fontFamily: "system-ui, sans-serif",
         resolution: 2,
@@ -1007,10 +1001,10 @@ export class CreatorUI {
       .setOrigin(0, 0.5);
 
     const sp2Btn = this.createCompactButton(
-      panelW - 90,
-      sp2CardY + 56,
-      110,
-      36,
+      panelW - 74,
+      sp2CardY + 48,
+      95,
+      32,
       "ALTERAR",
       0xca8a04,
       () => {
