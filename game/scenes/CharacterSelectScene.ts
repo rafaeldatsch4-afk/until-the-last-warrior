@@ -186,9 +186,14 @@ export default class CharacterSelectScene extends Phaser.Scene {
     backBtnContainer.add([backBg, backTxt]);
 
     const backHit = this.add
-      .rectangle(0, 0, btnW, btnH, 0x000000, 0)
+      .rectangle(0, 0, 135, 50, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
     backBtnContainer.add(backHit);
+
+    const exitToMenu = () => {
+      if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      transitionTo(this, "MenuScene");
+    };
 
     backHit.on("pointerover", () => {
       drawBackBtn(true);
@@ -199,9 +204,16 @@ export default class CharacterSelectScene extends Phaser.Scene {
       this.tweens.add({ targets: backBtnContainer, scale: 1, duration: 100 });
     });
     backHit.on("pointerdown", () => {
-      if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-      transitionTo(this, "MenuScene");
+      this.tweens.add({
+        targets: backBtnContainer,
+        scale: 0.93,
+        duration: 70,
+        yoyo: true,
+        onComplete: exitToMenu,
+      });
     });
+
+    this.input.keyboard?.on("keydown-ESC", exitToMenu);
 
     // 2. Header Title (Centered, Safe From Back Button)
     this.headerText = this.add

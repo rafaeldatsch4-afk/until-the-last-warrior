@@ -773,37 +773,50 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     text: string,
     onClick: () => void,
   ) {
-    const container = this.add.container(x, y);
+    const container = this.add.container(x, y).setDepth(200);
     const bg = this.add
-      .rectangle(0, 0, 120, 38, 0x333333)
-      .setStrokeStyle(2, 0xffffff);
+      .rectangle(0, 0, 120, 38, 0x1e293b)
+      .setStrokeStyle(1.5, 0x64748b);
     const txt = this.add
-      .text(0, 0, text, {
-        fontSize: "16px",
+      .text(0, 0, text.startsWith("←") ? text : `← ${text}`, {
+        fontSize: "14px",
         color: "#ffffff",
         fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+        resolution: 3,
       })
       .setOrigin(0.5);
 
     container.add([bg, txt]);
 
     const hitArea = this.add
-      .rectangle(0, 0, 120, 38, 0, 0)
+      .rectangle(0, 0, 140, 50, 0, 0)
       .setInteractive({ useHandCursor: true });
     container.add(hitArea);
 
     hitArea.on("pointerover", () => {
-      bg.setFillStyle(0x555555);
-      this.tweens.add({ targets: container, scale: 1.1, duration: 100 });
+      bg.setFillStyle(0x334155);
+      bg.setStrokeStyle(1.5, 0x38bdf8);
+      this.tweens.add({ targets: container, scale: 1.06, duration: 100 });
     });
     hitArea.on("pointerout", () => {
-      bg.setFillStyle(0x333333);
+      bg.setFillStyle(0x1e293b);
+      bg.setStrokeStyle(1.5, 0x64748b);
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
     hitArea.on("pointerdown", () => {
-      this.sound.play("sfx_select");
+      if (this.sound && this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      this.tweens.add({
+        targets: container,
+        scale: 0.93,
+        duration: 70,
+        yoyo: true,
+        onComplete: onClick,
+      });
+    });
+
+    this.input.keyboard?.on("keydown-ESC", () => {
+      if (this.sound && this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
       onClick();
     });
   }

@@ -1094,7 +1094,9 @@ export default class MenuScene extends Phaser.Scene {
       });
 
       if (pulseTween) {
-        pulseTween.stop();
+        try {
+          if (pulseTween.stop) pulseTween.stop();
+        } catch (e) {}
         pulseTween = null;
         this.tweens.add({
           targets: container,

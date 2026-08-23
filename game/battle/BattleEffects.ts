@@ -718,7 +718,11 @@ export class BattleEffects {
 
             this.createImpactEffect(endX, hand.y, col, "beam");
             this.scene.takeDamage(!isP, dmg);
-            if (particles) particles.stop();
+            if (particles) {
+              try {
+                if (particles.stop) particles.stop();
+              } catch (e) {}
+            }
 
             // Shockwave rings at impact
             for (let i = 0; i < 3; i++) {
@@ -919,7 +923,7 @@ export class BattleEffects {
     // Kill active managed tweens
     this.activeTweens.forEach((tw) => {
       try {
-        tw.stop();
+        if (tw && tw.stop) tw.stop();
       } catch (e) {}
     });
     this.activeTweens.clear();

@@ -442,9 +442,14 @@ export default class ModeSelectScene extends Phaser.Scene {
     container.add([graphics, txt]);
 
     const hitArea = this.add
-      .rectangle(0, 0, btnWidth, btnHeight, 0x000000, 0)
+      .rectangle(0, 0, 130, 48, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
     container.add(hitArea);
+
+    this.input.keyboard?.on("keydown-ESC", () => {
+      if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      onClick();
+    });
 
     hitArea.on("pointerover", () => {
       drawBtn(true);

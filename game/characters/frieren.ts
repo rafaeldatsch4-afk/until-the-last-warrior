@@ -320,8 +320,16 @@ export class FrierenFighter extends Fighter {
           onComplete: () => {
             if (!bs.scene.isActive()) return;
 
-            if (suckParticles) suckParticles.stop();
-            swirlTween.stop();
+            if (suckParticles) {
+              try {
+                if (suckParticles.stop) suckParticles.stop();
+              } catch (e) {}
+            }
+            if (swirlTween) {
+              try {
+                if (swirlTween.stop) swirlTween.stop();
+              } catch (e) {}
+            }
 
             // Massive explosion
             bs.createScreenFlash(0xffffff, 600, 1);

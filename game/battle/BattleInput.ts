@@ -302,8 +302,15 @@ export class BattleInput {
         if (onUp) onUp();
       };
 
+      const circleContains = (c: Phaser.Geom.Circle, x: number, y: number) => {
+        if (c.radius <= 0) return false;
+        const dx = c.x - x;
+        const dy = c.y - y;
+        return dx * dx + dy * dy <= c.radius * c.radius;
+      };
+
       const hitArea = new Phaser.Geom.Circle(0, 0, radius * 1.5);
-      btnGroup.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
+      btnGroup.setInteractive(hitArea, circleContains);
       this.scene.input.setDraggable(btnGroup);
 
       btnGroup.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
@@ -367,7 +374,13 @@ export class BattleInput {
     this.mobileControls.push(joyContainer);
 
     // Make joystick draggable in HUD edit mode
-    joyContainer.setInteractive(new Phaser.Geom.Circle(0, 0, 75), Phaser.Geom.Circle.Contains);
+    const joyCircleContains = (c: Phaser.Geom.Circle, x: number, y: number) => {
+      if (c.radius <= 0) return false;
+      const dx = c.x - x;
+      const dy = c.y - y;
+      return dx * dx + dy * dy <= c.radius * c.radius;
+    };
+    joyContainer.setInteractive(new Phaser.Geom.Circle(0, 0, 75), joyCircleContains);
     this.scene.input.setDraggable(joyContainer);
     
     joyContainer.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {

@@ -3410,8 +3410,14 @@ export default class BattleScene extends Phaser.Scene {
                 return;
               }
               attacker.clearTint();
-              emitter.stop();
-              this.time.delayedCall(1000, () => emitter.destroy());
+              if (emitter) {
+                try {
+                  if (emitter.stop) emitter.stop();
+                } catch (e) {}
+                this.time.delayedCall(1000, () => {
+                  try { emitter.destroy(); } catch (e) {}
+                });
+              }
               // Let onSpecialComplete handle returning to idle
             },
           });

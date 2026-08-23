@@ -193,11 +193,23 @@ export class GojoFighter extends Fighter {
             red.destroy();
             redGlow.destroy();
             redCore.destroy();
-            if (blueParticles) blueParticles.stop();
-            if (redParticles) redParticles.stop();
+            if (blueParticles) {
+              try {
+                if (blueParticles.stop) blueParticles.stop();
+              } catch (e) {}
+            }
+            if (redParticles) {
+              try {
+                if (redParticles.stop) redParticles.stop();
+              } catch (e) {}
+            }
             bs.time.delayedCall(200, () => {
-              if (blueParticles) blueParticles.destroy();
-              if (redParticles) redParticles.destroy();
+              try {
+                if (blueParticles) blueParticles.destroy();
+              } catch (e) {}
+              try {
+                if (redParticles) redParticles.destroy();
+              } catch (e) {}
             });
 
             bs.createScreenFlash(0x8a2be2, 500, 1);

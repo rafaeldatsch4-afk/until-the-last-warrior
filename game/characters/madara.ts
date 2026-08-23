@@ -131,8 +131,14 @@ export class MadaraFighter extends Fighter {
 
     bs.time.delayedCall(500, () => {
       if (!bs.scene.isActive()) return;
-      inhale.stop();
-      bs.time.delayedCall(400, () => inhale.destroy());
+      if (inhale) {
+        try {
+          if (inhale.stop) inhale.stop();
+        } catch (e) {}
+        bs.time.delayedCall(400, () => {
+          try { inhale.destroy(); } catch (e) {}
+        });
+      }
 
       if (bs.soundManager) bs.soundManager.playBeamFire();
 
@@ -196,8 +202,14 @@ export class MadaraFighter extends Fighter {
 
       bs.time.delayedCall(800, () => {
         if (!bs.scene.isActive()) return;
-        fireParticles.stop();
-        bs.time.delayedCall(1000, () => fireParticles.destroy());
+        if (fireParticles) {
+          try {
+            if (fireParticles.stop) fireParticles.stop();
+          } catch (e) {}
+          bs.time.delayedCall(1000, () => {
+            try { fireParticles.destroy(); } catch (e) {}
+          });
+        }
 
         bs.takeDamage(!isPlayer, dmg);
 

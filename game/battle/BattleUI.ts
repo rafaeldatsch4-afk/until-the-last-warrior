@@ -13,6 +13,8 @@ export class BattleUI {
   logText!: Phaser.GameObjects.Text;
   p1KiPulseTween?: Phaser.Tweens.Tween;
   p2KiPulseTween?: Phaser.Tweens.Tween;
+  p1KiPulseDuration: number = 0;
+  p2KiPulseDuration: number = 0;
   p1KiReadyGlow!: Phaser.GameObjects.Rectangle;
   p2KiReadyGlow!: Phaser.GameObjects.Rectangle;
   p1NameText!: Phaser.GameObjects.Text;
@@ -82,8 +84,12 @@ export class BattleUI {
     this.p2HudContainer = bs.add.container(p2HudX, p2HudY).setScrollFactor(0).setDepth(11);
     this.uiContainer.add(this.p2HudContainer);
 
+    const rectContains = (r: Phaser.Geom.Rectangle, x: number, y: number) => {
+      return x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
+    };
+
     // Draggable setup for P1
-    this.p1HudContainer.setInteractive(new Phaser.Geom.Rectangle(25, 10, 250, 100), Phaser.Geom.Rectangle.Contains);
+    this.p1HudContainer.setInteractive(new Phaser.Geom.Rectangle(25, 10, 250, 100), rectContains);
     bs.input.setDraggable(this.p1HudContainer);
     this.p1HudContainer.on('drag', (pointer: any, dragX: number, dragY: number) => {
       if (!bs.battleInput?.isEditingHUD) return;
@@ -96,7 +102,7 @@ export class BattleUI {
     });
 
     // Draggable setup for P2
-    this.p2HudContainer.setInteractive(new Phaser.Geom.Rectangle(685, 10, 250, 100), Phaser.Geom.Rectangle.Contains);
+    this.p2HudContainer.setInteractive(new Phaser.Geom.Rectangle(685, 10, 250, 100), rectContains);
     bs.input.setDraggable(this.p2HudContainer);
     this.p2HudContainer.on('drag', (pointer: any, dragX: number, dragY: number) => {
       if (!bs.battleInput?.isEditingHUD) return;
@@ -540,12 +546,15 @@ export class BattleUI {
         this.p1KiReadyGlow.fillColor = glowColor;
         
         // If the tween exists but the duration needs to change
-        if (this.p1KiPulseTween && (this.p1KiPulseTween.data[0].duration !== pulseDuration)) {
-           this.p1KiPulseTween.stop();
-           this.p1KiPulseTween = undefined;
+        if (this.p1KiPulseTween && this.p1KiPulseDuration !== pulseDuration) {
+          try {
+            if (this.p1KiPulseTween.stop) this.p1KiPulseTween.stop();
+          } catch (e) {}
+          this.p1KiPulseTween = undefined;
         }
 
         if (!this.p1KiPulseTween) {
+          this.p1KiPulseDuration = pulseDuration;
           this.p1KiPulseTween = this.scene.tweens.add({
             targets: this.p1KiReadyGlow,
             alpha: { from: 0, to: pulseAlpha },
@@ -557,8 +566,11 @@ export class BattleUI {
         }
       } else {
         if (this.p1KiPulseTween) {
-          this.p1KiPulseTween.stop();
+          try {
+            if (this.p1KiPulseTween.stop) this.p1KiPulseTween.stop();
+          } catch (e) {}
           this.p1KiPulseTween = undefined;
+          this.p1KiPulseDuration = 0;
           this.p1KiReadyGlow.setAlpha(0);
         }
       }
@@ -573,12 +585,15 @@ export class BattleUI {
         
         this.p2KiReadyGlow.fillColor = glowColor;
 
-        if (this.p2KiPulseTween && (this.p2KiPulseTween.data[0].duration !== pulseDuration)) {
-           this.p2KiPulseTween.stop();
-           this.p2KiPulseTween = undefined;
+        if (this.p2KiPulseTween && this.p2KiPulseDuration !== pulseDuration) {
+          try {
+            if (this.p2KiPulseTween.stop) this.p2KiPulseTween.stop();
+          } catch (e) {}
+          this.p2KiPulseTween = undefined;
         }
 
         if (!this.p2KiPulseTween) {
+          this.p2KiPulseDuration = pulseDuration;
           this.p2KiPulseTween = this.scene.tweens.add({
             targets: this.p2KiReadyGlow,
             alpha: { from: 0, to: pulseAlpha },
@@ -590,8 +605,11 @@ export class BattleUI {
         }
       } else {
         if (this.p2KiPulseTween) {
-          this.p2KiPulseTween.stop();
+          try {
+            if (this.p2KiPulseTween.stop) this.p2KiPulseTween.stop();
+          } catch (e) {}
           this.p2KiPulseTween = undefined;
+          this.p2KiPulseDuration = 0;
           this.p2KiReadyGlow.setAlpha(0);
         }
       }
@@ -732,11 +750,15 @@ export class BattleUI {
       this.p2ComboHideTimer = undefined;
     }
     if (this.p1KiPulseTween) {
-      this.p1KiPulseTween.stop();
+      try {
+        if (this.p1KiPulseTween.stop) this.p1KiPulseTween.stop();
+      } catch (e) {}
       this.p1KiPulseTween = undefined;
     }
     if (this.p2KiPulseTween) {
-      this.p2KiPulseTween.stop();
+      try {
+        if (this.p2KiPulseTween.stop) this.p2KiPulseTween.stop();
+      } catch (e) {}
       this.p2KiPulseTween = undefined;
     }
     if (this.uiContainer) {

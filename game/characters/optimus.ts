@@ -178,8 +178,12 @@ export class OptimusFighter extends Fighter {
             m.destroy();
             mGlow.destroy();
             if (smoke) {
-              smoke.stop();
-              bs.time.delayedCall(600, () => smoke.destroy());
+              try {
+                if (smoke.stop) smoke.stop();
+              } catch (e) {}
+              bs.time.delayedCall(600, () => {
+                try { smoke.destroy(); } catch (e) {}
+              });
             }
 
             bs.createImpactEffect(targetX, targetY, 0xffaa00);

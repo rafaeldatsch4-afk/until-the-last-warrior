@@ -23,8 +23,9 @@ export default class LeaderboardScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.fadeIn(300, 0, 0, 0);
+    ResponsiveUtils.init(this);
     const { width, height } = this.cameras.main;
-    const bounds = ResponsiveUtils.getSafeBounds();
+    const bounds = ResponsiveUtils.getSafeBounds(this);
 
     // 1. Rich Atmospheric Background
     const bg = this.add.graphics();
@@ -63,15 +64,19 @@ export default class LeaderboardScene extends Phaser.Scene {
       this.cameras.main.postFX.addVignette(0.5, 0.5, 0.75, 0.35);
     }
 
-    // 2. Back Button (Top Left, Elevated Z-Index)
+    // 2. HEADER TOP BAR
+    const headerY = Math.max(26, bounds.top + 22);
+
+    // Back Button (Securely on the Left Side)
+    const backBtnX = Math.min(130, Math.max(68, bounds.left + 50));
     const backBtnContainer = this.add
-      .container(bounds.left + 55, bounds.top + 26)
+      .container(backBtnX, headerY)
       .setDepth(500);
 
     const backBg = this.add.graphics();
-    const btnW = 100;
-    const btnH = 32;
-    const radius = 6;
+    const btnW = 106;
+    const btnH = 34;
+    const radius = 7;
 
     const drawBackBtn = (isHover: boolean) => {
       backBg.clear();
@@ -79,10 +84,10 @@ export default class LeaderboardScene extends Phaser.Scene {
       backBg.fillStyle(0x000000, 0.5);
       backBg.fillRoundedRect(-btnW / 2 + 2, -btnH / 2 + 2, btnW, btnH, radius);
       // Surface
-      backBg.fillStyle(isHover ? 0x334155 : 0x1e293b, 0.95);
+      backBg.fillStyle(isHover ? 0xd93829 : 0x1e293b, 0.95);
       backBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
       // Border
-      backBg.lineStyle(1.5, isHover ? 0x38bdf8 : 0x475569, 0.9);
+      backBg.lineStyle(1.5, isHover ? 0xfca5a5 : 0x475569, 0.9);
       backBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
     };
 
@@ -93,7 +98,7 @@ export default class LeaderboardScene extends Phaser.Scene {
         fontSize: "13px",
         fontStyle: "bold",
         color: "#ffffff",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
         resolution: 2,
       })
       .setOrigin(0.5);
@@ -101,13 +106,18 @@ export default class LeaderboardScene extends Phaser.Scene {
     backBtnContainer.add([backBg, backTxt]);
 
     const backHit = this.add
-      .rectangle(0, 0, btnW, btnH, 0x000000, 0)
+      .rectangle(0, 0, 130, 48, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
     backBtnContainer.add(backHit);
 
+    const exitToMenu = () => {
+      if (this.sound && this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      transitionTo(this, "MenuScene");
+    };
+
     backHit.on("pointerover", () => {
       drawBackBtn(true);
-      backTxt.setColor("#38bdf8");
+      backTxt.setColor("#ffffff");
       this.tweens.add({ targets: backBtnContainer, scale: 1.05, duration: 100 });
     });
     backHit.on("pointerout", () => {
@@ -116,35 +126,74 @@ export default class LeaderboardScene extends Phaser.Scene {
       this.tweens.add({ targets: backBtnContainer, scale: 1, duration: 100 });
     });
     backHit.on("pointerdown", () => {
-      transitionTo(this, "MenuScene");
+      this.tweens.add({
+        targets: backBtnContainer,
+        scale: 0.93,
+        duration: 70,
+        yoyo: true,
+        onComplete: exitToMenu,
+      });
     });
 
-    // 3. Header Title & Trophy Decorator
-    const headerContainer = this.add.container(width / 2, bounds.top + 26).setDepth(100);
+    this.input.keyboard?.on("keydown-ESC", exitToMenu);
 
-    // Decorative Wings / Lines around Title
+    // Live Indicator Pill on the Right Side
+    const livePillX = width - backBtnX;
+    const liveContainer = this.add.container(livePillX, headerY).setDepth(200);
+
+    const liveBg = this.add.graphics();
+    liveBg.fillStyle(0x0f172a, 0.9);
+    liveBg.fillRoundedRect(-54, -16, 108, 32, 6);
+    liveBg.lineStyle(1, 0x334155, 0.8);
+    liveBg.strokeRoundedRect(-54, -16, 108, 32, 6);
+
+    const liveDot = this.add.circle(-34, 0, 4, 0x22c55e);
+    this.tweens.add({
+      targets: liveDot,
+      alpha: 0.3,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+    });
+
+    const liveTxt = this.add
+      .text(-22, 0, "AO VIVO", {
+        fontSize: "11px",
+        fontStyle: "bold",
+        color: "#22c55e",
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0, 0.5);
+
+    liveContainer.add([liveBg, liveDot, liveTxt]);
+
+    // 3. Header Title in the Center
+    const headerContainer = this.add.container(width / 2, headerY).setDepth(100);
+
+    // Decorative Lines around Title
     const headerDecor = this.add.graphics();
-    headerDecor.lineStyle(2, 0xd4af37, 0.6);
-    headerDecor.moveTo(-180, 0).lineTo(-100, 0);
-    headerDecor.moveTo(100, 0).lineTo(180, 0);
+    headerDecor.lineStyle(1.5, 0xd4af37, 0.6);
+    headerDecor.moveTo(-150, 0).lineTo(-90, 0);
+    headerDecor.moveTo(90, 0).lineTo(150, 0);
     headerDecor.strokePath();
 
     // Diamond accents
     headerDecor.fillStyle(0xf1c40f, 0.9);
-    headerDecor.fillCircle(-100, 0, 3.5);
-    headerDecor.fillCircle(100, 0, 3.5);
+    headerDecor.fillCircle(-90, 0, 3);
+    headerDecor.fillCircle(90, 0, 3);
 
-    // Main Title Text (Safe from broken emoji glyphs)
+    // Main Title Text
     const headerTitle = this.add
-      .text(0, -4, "TOP GLOBAL", {
-        fontSize: "22px",
+      .text(0, -5, "TOP GLOBAL", {
+        fontSize: "21px",
         fontStyle: "900",
         color: "#facc15",
         stroke: "#000000",
-        strokeThickness: 4,
-        letterSpacing: 3,
+        strokeThickness: 3.5,
+        letterSpacing: 2.5,
         fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+          "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
         shadow: {
           offsetY: 2,
           color: "#000000",
@@ -157,11 +206,11 @@ export default class LeaderboardScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const headerSub = this.add
-      .text(0, 14, "CLASSIFICAÇÃO OFICIAL DOS GUERREIROS", {
-        fontSize: "9px",
+      .text(0, 13, "CLASSIFICAÇÃO GERAL DOS GUERREIROS", {
+        fontSize: "9.5px",
         fontStyle: "bold",
         color: "#94a3b8",
-        letterSpacing: 2,
+        letterSpacing: 1.5,
         fontFamily: "system-ui, sans-serif",
         resolution: 2,
       })
@@ -171,7 +220,7 @@ export default class LeaderboardScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: headerContainer,
-      y: bounds.top + 24,
+      y: headerY - 2,
       duration: 2500,
       yoyo: true,
       repeat: -1,
@@ -179,11 +228,11 @@ export default class LeaderboardScene extends Phaser.Scene {
     });
 
     // 4. Main Frame & Table Layout
-    this.tableTopY = bounds.top + 58;
-    const tableW = Math.min(840, width - 40);
+    this.tableTopY = headerY + 30;
+    const tableW = Math.min(860, width - 48);
     const tableX = width / 2;
     const tableLeft = tableX - tableW / 2;
-    const tableBottom = bounds.bottom - 22;
+    const tableBottom = bounds.bottom - 18;
     const totalFrameH = tableBottom - this.tableTopY;
 
     // Outer Glass Panel Frame
@@ -288,7 +337,7 @@ export default class LeaderboardScene extends Phaser.Scene {
 
     // Scroll Interactivity Zone
     const zone = this.add
-      .zone(tableX, listStartY + this.maskHeight / 2, tableW, this.maskHeight)
+      .rectangle(tableX, listStartY + this.maskHeight / 2, tableW, this.maskHeight, 0x000000, 0)
       .setInteractive();
 
     this.input.on("wheel", (_pointer: any, _gameObjects: any, _deltaX: number, deltaY: number) => {
@@ -349,8 +398,8 @@ export default class LeaderboardScene extends Phaser.Scene {
     // Update Scrollbar Thumb
     if (this.scrollBarThumb && this.maxScroll > 0) {
       this.scrollBarThumb.clear();
-      const bounds = ResponsiveUtils.getSafeBounds();
-      const tableW = Math.min(840, this.cameras.main.width - 40);
+      const bounds = ResponsiveUtils.getSafeBounds(this);
+      const tableW = Math.min(860, this.cameras.main.width - 48);
       const tableLeft = this.cameras.main.width / 2 - tableW / 2;
       const sbX = tableLeft + tableW + 2;
 
@@ -419,16 +468,16 @@ export default class LeaderboardScene extends Phaser.Scene {
     });
 
     const { width } = this.cameras.main;
-    const tableW = Math.min(840, width - 40);
+    const tableW = Math.min(860, width - 48);
     const tableX = width / 2;
     const tableLeft = tableX - tableW / 2;
 
-    const colRankX = tableLeft + 45;
-    const colPlayerAvatarX = tableLeft + 112;
-    const colPlayerNameX = tableLeft + 140;
+    const colRankX = tableLeft + 42;
+    const colPlayerAvatarX = tableLeft + 104;
+    const colPlayerNameX = tableLeft + 134;
     const colEloX = tableLeft + tableW * 0.52;
-    const colWinRateX = tableLeft + tableW * 0.68;
-    const colWinsX = tableLeft + tableW * 0.82;
+    const colWinRateX = tableLeft + tableW * 0.69;
+    const colWinsX = tableLeft + tableW * 0.83;
     const colMatchesX = tableLeft + tableW * 0.93;
 
     if (this.players.length === 0) {
@@ -442,7 +491,7 @@ export default class LeaderboardScene extends Phaser.Scene {
         fontSize: "15px",
         fontStyle: "bold",
         color: "#facc15",
-        fontFamily: "system-ui, sans-serif",
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
         resolution: 2,
       }).setOrigin(0.5);
 
@@ -460,7 +509,9 @@ export default class LeaderboardScene extends Phaser.Scene {
     }
 
     let yPos = 4;
-    const rowHeight = 46;
+    const cardHeight = 48;
+    const rowGap = 8;
+    const rowHeight = cardHeight + rowGap;
 
     this.players.forEach((data, index) => {
       const rank = index + 1;
@@ -484,18 +535,18 @@ export default class LeaderboardScene extends Phaser.Scene {
 
       if (isTop1) {
         rankColor = "#facc15";
-        borderCol = 0xeab308;
-        bgCol = 0x1f1606;
+        borderCol = 0xf59e0b;
+        bgCol = 0x241804;
         rankPrefix = `👑 #1`;
       } else if (isTop2) {
         rankColor = "#e2e8f0";
         borderCol = 0x94a3b8;
-        bgCol = 0x172033;
+        bgCol = 0x131d2e;
         rankPrefix = `🥈 #2`;
       } else if (isTop3) {
         rankColor = "#fdba74";
         borderCol = 0xd97706;
-        bgCol = 0x1c1510;
+        bgCol = 0x1a1209;
         rankPrefix = `🥉 #3`;
       }
 
@@ -503,35 +554,35 @@ export default class LeaderboardScene extends Phaser.Scene {
 
       // Card Background
       const rowCard = this.add.graphics();
-      rowCard.fillStyle(bgCol, 0.92);
-      rowCard.fillRoundedRect(tableLeft, 0, tableW, 40, 7);
-      rowCard.lineStyle(1.5, borderCol, isTop1 ? 1 : 0.7);
-      rowCard.strokeRoundedRect(tableLeft, 0, tableW, 40, 7);
+      rowCard.fillStyle(bgCol, 0.94);
+      rowCard.fillRoundedRect(tableLeft, 0, tableW, cardHeight, 8);
+      rowCard.lineStyle(1.5, borderCol, isTop1 ? 1 : 0.75);
+      rowCard.strokeRoundedRect(tableLeft, 0, tableW, cardHeight, 8);
 
-      const centerY = 20;
+      const centerY = cardHeight / 2;
 
       // 1. Rank Badge
       const txtRank = this.add
         .text(colRankX, centerY, rankPrefix, {
-          fontSize: isTop1 ? "14px" : "13px",
+          fontSize: isTop1 ? "15px" : "13.5px",
           color: rankColor,
           fontStyle: "900",
           fontFamily:
-            "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+            "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
           resolution: 2,
         })
         .setOrigin(0.5);
 
       // 2. Avatar Box with rounded frame
       const avatarFrame = this.add.graphics();
-      avatarFrame.fillStyle(0x1e293b, 0.8);
-      avatarFrame.fillRoundedRect(colPlayerAvatarX - 14, centerY - 14, 28, 28, 6);
-      avatarFrame.lineStyle(1, isTop1 ? 0xfacc15 : 0x475569, 0.8);
-      avatarFrame.strokeRoundedRect(colPlayerAvatarX - 14, centerY - 14, 28, 28, 6);
+      avatarFrame.fillStyle(0x1e293b, 0.85);
+      avatarFrame.fillRoundedRect(colPlayerAvatarX - 16, centerY - 16, 32, 32, 7);
+      avatarFrame.lineStyle(1.5, isTop1 ? 0xfacc15 : 0x475569, 0.85);
+      avatarFrame.strokeRoundedRect(colPlayerAvatarX - 16, centerY - 16, 32, 32, 7);
 
       const txtAvatar = this.add
         .text(colPlayerAvatarX, centerY, avatar, {
-          fontSize: "16px",
+          fontSize: "17px",
           fontFamily: "system-ui",
           resolution: 2,
         })
@@ -539,39 +590,39 @@ export default class LeaderboardScene extends Phaser.Scene {
 
       // 3. Username + Subtitle Title
       const txtName = this.add
-        .text(colPlayerNameX, centerY - 5, username, {
-          fontSize: "13px",
+        .text(colPlayerNameX, centerY - 6, username, {
+          fontSize: "13.5px",
           color: isTop1 ? "#fef08a" : "#f8fafc",
           fontStyle: "bold",
-          fontFamily: "system-ui, sans-serif",
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
           resolution: 2,
         })
         .setOrigin(0, 0.5);
 
       const txtTitleBadge = this.add
         .text(colPlayerNameX, centerY + 9, isTop1 ? "REI DA ARENA" : tier.title, {
-          fontSize: "8.5px",
+          fontSize: "9px",
           color: isTop1 ? "#fbbf24" : tier.color,
           fontStyle: "bold",
           letterSpacing: 1,
-          fontFamily: "system-ui, sans-serif",
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
           resolution: 2,
         })
         .setOrigin(0, 0.5);
 
       // 4. Elo Badge Pill
       const eloBg = this.add.graphics();
-      eloBg.fillStyle(0x18181b, 0.9);
-      eloBg.fillRoundedRect(colEloX - 38, centerY - 11, 76, 22, 5);
-      eloBg.lineStyle(1, tier.badgeColor, 0.8);
-      eloBg.strokeRoundedRect(colEloX - 38, centerY - 11, 76, 22, 5);
+      eloBg.fillStyle(0x18181b, 0.95);
+      eloBg.fillRoundedRect(colEloX - 44, centerY - 12, 88, 24, 6);
+      eloBg.lineStyle(1, tier.badgeColor, 0.85);
+      eloBg.strokeRoundedRect(colEloX - 44, centerY - 12, 88, 24, 6);
 
       const txtElo = this.add
         .text(colEloX, centerY, `✦ ${elo}`, {
-          fontSize: "11.5px",
+          fontSize: "12px",
           color: tier.color,
           fontStyle: "bold",
-          fontFamily: "system-ui, sans-serif",
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
           resolution: 2,
         })
         .setOrigin(0.5);
@@ -580,10 +631,10 @@ export default class LeaderboardScene extends Phaser.Scene {
       const wrColor = winRate >= 60 ? "#22c55e" : winRate >= 45 ? "#eab308" : "#94a3b8";
       const txtWinRate = this.add
         .text(colWinRateX, centerY, `${winRate}%`, {
-          fontSize: "13px",
+          fontSize: "13.5px",
           color: wrColor,
           fontStyle: "bold",
-          fontFamily: "system-ui, sans-serif",
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
           resolution: 2,
         })
         .setOrigin(0.5);
@@ -591,10 +642,10 @@ export default class LeaderboardScene extends Phaser.Scene {
       // 6. Wins (Green Victory Tag)
       const txtWins = this.add
         .text(colWinsX, centerY, `${wins} V`, {
-          fontSize: "12px",
+          fontSize: "12.5px",
           color: "#4ade80",
           fontStyle: "bold",
-          fontFamily: "system-ui, sans-serif",
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
           resolution: 2,
         })
         .setOrigin(0.5);
@@ -602,33 +653,33 @@ export default class LeaderboardScene extends Phaser.Scene {
       // 7. Matches
       const txtMatches = this.add
         .text(colMatchesX, centerY, `${matches}`, {
-          fontSize: "12px",
+          fontSize: "12.5px",
           color: "#60a5fa",
           fontStyle: "bold",
-          fontFamily: "system-ui, sans-serif",
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
           resolution: 2,
         })
         .setOrigin(0.5);
 
       // Row Hover Interaction
       const hitZone = this.add
-        .rectangle(tableX, centerY, tableW, 40, 0x000000, 0)
+        .rectangle(tableX, centerY, tableW, cardHeight, 0x000000, 0)
         .setInteractive({ useHandCursor: true });
 
       hitZone.on("pointerover", () => {
         rowCard.clear();
-        rowCard.fillStyle(isTop1 ? 0x2e2008 : 0x1e293b, 0.98);
-        rowCard.fillRoundedRect(tableLeft, 0, tableW, 40, 7);
+        rowCard.fillStyle(isTop1 ? 0x362306 : 0x1e293b, 0.98);
+        rowCard.fillRoundedRect(tableLeft, 0, tableW, cardHeight, 8);
         rowCard.lineStyle(1.5, isTop1 ? 0xfde047 : 0x38bdf8, 1);
-        rowCard.strokeRoundedRect(tableLeft, 0, tableW, 40, 7);
+        rowCard.strokeRoundedRect(tableLeft, 0, tableW, cardHeight, 8);
       });
 
       hitZone.on("pointerout", () => {
         rowCard.clear();
-        rowCard.fillStyle(bgCol, 0.92);
-        rowCard.fillRoundedRect(tableLeft, 0, tableW, 40, 7);
-        rowCard.lineStyle(1.5, borderCol, isTop1 ? 1 : 0.7);
-        rowCard.strokeRoundedRect(tableLeft, 0, tableW, 40, 7);
+        rowCard.fillStyle(bgCol, 0.94);
+        rowCard.fillRoundedRect(tableLeft, 0, tableW, cardHeight, 8);
+        rowCard.lineStyle(1.5, borderCol, isTop1 ? 1 : 0.75);
+        rowCard.strokeRoundedRect(tableLeft, 0, tableW, cardHeight, 8);
       });
 
       rowContainer.add([
@@ -650,7 +701,30 @@ export default class LeaderboardScene extends Phaser.Scene {
       yPos += rowHeight;
     });
 
-    const totalHeight = this.players.length * rowHeight;
+    // Helper footer hint if list has few entries
+    if (this.players.length > 0 && this.players.length < 6) {
+      const helperContainer = this.add.container(tableX, yPos + 10);
+      const helperBg = this.add.graphics();
+      helperBg.fillStyle(0x0f172a, 0.6);
+      helperBg.fillRoundedRect(-tableW / 2 + 10, 0, tableW - 20, 32, 6);
+      helperBg.lineStyle(1, 0x1e293b, 0.5);
+      helperBg.strokeRoundedRect(-tableW / 2 + 10, 0, tableW - 20, 32, 6);
+
+      const helperTxt = this.add
+        .text(0, 16, "⚔️ Vença batalhas para subir no ranking e desbloquear novos títulos lendários!", {
+          fontSize: "11px",
+          color: "#64748b",
+          fontFamily: "system-ui, sans-serif",
+          resolution: 2,
+        })
+        .setOrigin(0.5);
+
+      helperContainer.add([helperBg, helperTxt]);
+      this.listContainer.add(helperContainer);
+      yPos += 46;
+    }
+
+    const totalHeight = yPos;
     this.maxScroll = Math.max(0, totalHeight - this.maskHeight + 15);
     this.constrainScroll();
   }

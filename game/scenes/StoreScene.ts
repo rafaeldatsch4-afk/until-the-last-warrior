@@ -1,5 +1,6 @@
 import { transitionTo } from "../utils/sceneTransition";
 import { syncCloudSaveImmediate } from "../systems/CloudSave";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import Phaser from "phaser";
 import { GameState } from "../types";
 
@@ -53,63 +54,161 @@ export default class StoreScene extends Phaser.Scene {
       // saturation removed
     }
 
-    // --- Static Header ---
-    // Back Button (Top Left)
-    const backContainer = this.add.container(80, 40);
-    const backBtn = this.add
-      .rectangle(0, 0, 100, 40, 0xe74c3c)
-      .setStrokeStyle(2, 0xffffff);
+    // --- Header Background & Top Bar ---
+    const bounds = ResponsiveUtils.getSafeBounds(this);
+    const headerY = Math.max(26, bounds.top + 20);
+
+    // Header Background Bar (Depth 150)
+    const headerBar = this.add.graphics().setDepth(150);
+    headerBar.fillStyle(0x0a101d, 0.95);
+    headerBar.fillRect(0, 0, 960, headerY + 26);
+    headerBar.lineStyle(1.5, 0xd4af37, 0.5);
+    headerBar.moveTo(0, headerY + 26).lineTo(960, headerY + 26);
+    headerBar.strokePath();
+
+    // Back Button (Top Left - High Depth & Touch-Friendly Hitbox)
+    const backBtnX = Math.min(130, Math.max(68, bounds.left + 50));
+    const backContainer = this.add.container(backBtnX, headerY).setDepth(250);
+
+    const btnW = 104;
+    const btnH = 32;
+    const radius = 7;
+    const backBg = this.add.graphics();
+
+    const drawBackBtn = (isHover: boolean) => {
+      backBg.clear();
+      // Drop Shadow
+      backBg.fillStyle(0x000000, 0.6);
+      backBg.fillRoundedRect(-btnW / 2 + 2, -btnH / 2 + 2, btnW, btnH, radius);
+      // Main Surface
+      backBg.fillStyle(isHover ? 0xd93829 : 0x1e293b, 0.95);
+      backBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
+      // Border
+      backBg.lineStyle(1.5, isHover ? 0xfca5a5 : 0x475569, 0.9);
+      backBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
+    };
+    drawBackBtn(false);
+
     const backTxt = this.add
-      .text(0, 0, "BACK", {
-        fontSize: "18px",
+      .text(0, 0, "← VOLTAR", {
+        fontSize: "13px",
         fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-    backContainer.add([backBtn, backTxt]);
-
-    backBtn
-      .setInteractive({ useHandCursor: true })
-      .on("pointerover", () => backBtn.setFillStyle(0xc0392b))
-      .on("pointerout", () => backBtn.setFillStyle(0xe74c3c))
-      .on("pointerdown", () => {
-        this.sound.play("sfx_select");
-        transitionTo(this, "MenuScene");
-      });
-
-    this.add
-      .text(480, 40, "WARRIOR STORE", {
-        fontSize: "32px",
         color: "#ffffff",
-        fontStyle: "bold",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        resolution: 2,
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+        resolution: 3,
       })
       .setOrigin(0.5);
-    this.coinsText = this.add
-      .text(920, 40, `COINS: ${state.coins}`, {
-        fontSize: "24px",
-        color: "#ffd54a",
-        fontStyle: "bold",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        resolution: 2,
-      })
-      .setOrigin(1, 0.5);
 
-    // Info Text about controls
-    this.add
-      .text(480, 85, "Nav: WASD / Arrows | Buy: SPACE / ENTER", {
-        fontSize: "14px",
-        color: "#888888",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
+    // Enlarged invisible hitbox (130x48px) for effortless tapping on mobile
+    const backHit = this.add
+      .rectangle(0, 0, 130, 48, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+
+    backContainer.add([backBg, backTxt, backHit]);
+
+    const exitToMenu = () => {
+      if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      transitionTo(this, "MenuScene");
+    };
+
+    backHit.on("pointerover", () => {
+      drawBackBtn(true);
+      this.tweens.add({ targets: backContainer, scale: 1.05, duration: 100 });
+    });
+    backHit.on("pointerout", () => {
+      drawBackBtn(false);
+      this.tweens.add({ targets: backContainer, scale: 1, duration: 100 });
+    });
+    backHit.on("pointerdown", () => {
+      this.tweens.add({
+        targets: backContainer,
+        scale: 0.93,
+        duration: 70,
+        yoyo: true,
+        onComplete: exitToMenu,
+      });
+    });
+
+    // Keyboard ESC & Backspace shortcuts
+    this.input.keyboard?.on("keydown-ESC", exitToMenu);
+    this.input.keyboard?.on("keydown-BACKSPACE", exitToMenu);
+
+    // Title (Centered, Depth 200)
+    const titleContainer = this.add.container(480, headerY).setDepth(200);
+
+    const titleDecor = this.add.graphics();
+    titleDecor.lineStyle(1.5, 0xd4af37, 0.6);
+    titleDecor.moveTo(-160, 0).lineTo(-105, 0);
+    titleDecor.moveTo(105, 0).lineTo(160, 0);
+    titleDecor.strokePath();
+    titleDecor.fillCircle(-105, 0, 3);
+    titleDecor.fillCircle(105, 0, 3);
+
+    const storeTitleText = this.add
+      .text(0, 0, "LOJA DE GUERREIROS", {
+        fontSize: "21px",
+        color: "#facc15",
+        fontStyle: "900",
+        stroke: "#000000",
+        strokeThickness: 3.5,
+        letterSpacing: 2,
+        fontFamily:
+          "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+        shadow: {
+          offsetY: 2,
+          color: "#000000",
+          blur: 4,
+          fill: true,
+        },
+        resolution: 3,
       })
       .setOrigin(0.5);
+
+    titleContainer.add([titleDecor, storeTitleText]);
+
+    // Coins Pill (Top Right, Depth 200)
+    const coinsX = Math.min(900, bounds.right - 50);
+    const coinsContainer = this.add.container(coinsX, headerY).setDepth(200);
+
+    const coinsBg = this.add.graphics();
+    coinsBg.fillStyle(0x1e1b18, 0.95);
+    coinsBg.fillRoundedRect(-68, -16, 136, 32, 7);
+    coinsBg.lineStyle(1.5, 0xf59e0b, 0.9);
+    coinsBg.strokeRoundedRect(-68, -16, 136, 32, 7);
+
+    this.coinsText = this.add
+      .text(0, 0, `🪙 ${state.coins}`, {
+        fontSize: "14.5px",
+        color: "#fbbf24",
+        fontStyle: "bold",
+        fontFamily:
+          "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+        resolution: 3,
+      })
+      .setOrigin(0.5);
+
+    coinsContainer.add([coinsBg, this.coinsText]);
+
+    // Bottom Help Banner (Depth 150)
+    const bottomBar = this.add.graphics().setDepth(150);
+    bottomBar.fillStyle(0x090e17, 0.92);
+    bottomBar.fillRect(0, 514, 960, 26);
+    bottomBar.lineStyle(1, 0x1e293b, 0.8);
+    bottomBar.moveTo(0, 514).lineTo(960, 514);
+    bottomBar.strokePath();
+
+    this.add
+      .text(480, 527, "Navegar: WASD / Setas | Comprar: ESPAÇO / ENTER | Toque nos cards", {
+        fontSize: "11.5px",
+        color: "#94a3b8",
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+        resolution: 2,
+      })
+      .setOrigin(0.5)
+      .setDepth(160);
 
     // --- Scrollable Content Setup ---
+    this.visibleArea = { y: headerY + 28, height: 512 - (headerY + 28) };
     this.listContainer = this.add.container(0, this.visibleArea.y);
 
     // Mask logic
@@ -121,19 +220,19 @@ export default class StoreScene extends Phaser.Scene {
 
     // Selection Highlight
     this.selectionRect = this.add
-      .rectangle(0, 0, 290, 150, 0xffd700, 0)
-      .setStrokeStyle(4, 0xffd700)
+      .rectangle(0, 0, 280, 146, 0xffd700, 0)
+      .setStrokeStyle(3.5, 0xfacc15)
       .setVisible(false);
     this.listContainer.add(this.selectionRect); // Add to container so it scrolls
 
     // Scrollbar UI
-    const trackX = 945;
+    const trackX = 948;
     const trackY = this.visibleArea.y + this.visibleArea.height / 2;
     this.scrollBarTrack = this.add
-      .rectangle(trackX, trackY, 10, this.visibleArea.height, 0x222222)
+      .rectangle(trackX, trackY, 6, this.visibleArea.height - 10, 0x1e293b)
       .setDepth(10);
     this.scrollBarThumb = this.add
-      .rectangle(trackX, this.visibleArea.y + 40, 10, 80, 0x666666)
+      .rectangle(trackX, this.visibleArea.y + 40, 6, 70, 0x64748b)
       .setDepth(11);
     this.scrollBarThumb.setInteractive({ draggable: true });
 
@@ -142,8 +241,8 @@ export default class StoreScene extends Phaser.Scene {
     let startScrollY = 0;
 
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-      if (pointer.x < 900) {
-        // Dragging anywhere in the list area
+      // Only drag if the touch started within the scrollable cards area
+      if (pointer.y >= this.visibleArea.y && pointer.x < 900) {
         isDraggingList = true;
         dragStartY = pointer.y;
         startScrollY = this.scrollYPos;
@@ -393,86 +492,127 @@ export default class StoreScene extends Phaser.Scene {
     this.itemContainers.forEach((c) => c.destroy());
     this.itemContainers = [];
 
-    const startY = 80; // Initial offset inside container
-    const rowHeight = 180;
-    const colWidth = 300;
+    const startY = 82; // Initial offset inside container
+    const rowHeight = 152;
+    const colWidth = 286;
     const cols = 3;
 
     state.characters.forEach((char, index) => {
       const col = index % cols;
       const row = Math.floor(index / cols);
 
-      const x = 180 + col * colWidth;
+      const x = 184 + col * colWidth;
       const y = startY + row * rowHeight;
 
       const container = this.add.container(x, y);
-      const bg = this.add
-        .rectangle(0, 0, 280, 140, 0x1a2b45)
-        .setStrokeStyle(3, 0x3a4866);
+      
+      const cardBg = this.add.graphics();
+      cardBg.fillStyle(0x131f33, 0.92);
+      cardBg.fillRoundedRect(-137, -68, 274, 136, 8);
+      cardBg.lineStyle(1.5, char.unlocked ? 0x334155 : 0xf59e0b, 0.7);
+      cardBg.strokeRoundedRect(-137, -68, 274, 136, 8);
 
-      // Fix: Position at -70 to offset the bottom-heavy sprite drawing
-      // Use frame 0 explicitly to ensure correct render
-      const sprite = this.add.sprite(-80, -70, char.key, "0").setScale(2);
+      // Sprite framed cleanly inside the left section of the card
+      const sprite = this.add
+        .sprite(-78, 6, char.key, "0")
+        .setScale(1.9)
+        .setOrigin(0.5, 0.5);
 
       if (this.anims.exists(`${char.key}_idle`)) {
         sprite.play(`${char.key}_idle`, true);
       }
 
       const name = this.add
-        .text(40, -35, char.name.toUpperCase(), {
-          fontSize: "24px",
+        .text(38, -36, char.name.toUpperCase(), {
+          fontSize: "19px",
           fontStyle: "bold",
+          color: "#f8fafc",
           fontFamily:
-            "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+            "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
           resolution: 2,
         })
         .setOrigin(0.5);
 
       const special = this.add
-        .text(40, -10, `50%: ${char.specialName}`, {
-          fontSize: "12px",
-          color: "#aaa",
+        .text(38, -12, `50%: ${char.specialName}`, {
+          fontSize: "11px",
+          color: "#94a3b8",
           fontStyle: "italic",
-          fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-          resolution: 2,
-        })
-        .setOrigin(0.5);
-      const superAttack = this.add
-        .text(40, 5, `100%: ${char.superName}`, {
-          fontSize: "12px",
-          color: "#ffd700",
-          fontStyle: "italic",
-          fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
           resolution: 2,
         })
         .setOrigin(0.5);
 
-      container.add([bg, sprite, name, special, superAttack]);
+      const superAttack = this.add
+        .text(38, 6, `100%: ${char.superName}`, {
+          fontSize: "11px",
+          color: "#fbbf24",
+          fontStyle: "italic",
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+          resolution: 2,
+        })
+        .setOrigin(0.5);
+
+      container.add([cardBg, sprite, name, special, superAttack]);
 
       if (char.unlocked) {
+        const statusBg = this.add.graphics();
+        statusBg.fillStyle(0x064e3b, 0.7);
+        statusBg.fillRoundedRect(-22, 24, 120, 26, 5);
+        statusBg.lineStyle(1, 0x10b981, 0.6);
+        statusBg.strokeRoundedRect(-22, 24, 120, 26, 5);
+
         const status = this.add
-          .text(40, 30, "OWNED", {
-            fontSize: "20px",
-            color: "#00ff00",
+          .text(38, 37, "✓ ADQUIRIDO", {
+            fontSize: "12px",
+            color: "#34d399",
             fontStyle: "bold",
-            fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+            letterSpacing: 1,
+            fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
             resolution: 2,
           })
           .setOrigin(0.5);
-        container.add(status);
+        container.add([statusBg, status]);
       } else {
-        const btnBg = this.add.rectangle(40, 30, 140, 40, 0xd35400);
+        const btnBg = this.add.graphics();
+        btnBg.fillStyle(0xd97706, 0.95);
+        btnBg.fillRoundedRect(-22, 23, 120, 28, 6);
+        btnBg.lineStyle(1, 0xfde68a, 0.8);
+        btnBg.strokeRoundedRect(-22, 23, 120, 28, 6);
+
         const btnTxt = this.add
-          .text(40, 30, `${char.price} G`, {
-            fontSize: "20px",
+          .text(38, 37, `🪙 ${char.price} G`, {
+            fontSize: "13px",
             fontStyle: "bold",
-            fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+            color: "#ffffff",
+            fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
             resolution: 2,
           })
           .setOrigin(0.5);
 
+        // Invisible touch hitbox for buy button
+        const btnHit = this.add
+          .rectangle(38, 37, 120, 28, 0x000000, 0)
+          .setInteractive({ useHandCursor: true });
+
+        btnHit.on("pointerover", () => {
+          btnBg.clear();
+          btnBg.fillStyle(0xf59e0b, 1);
+          btnBg.fillRoundedRect(-22, 23, 120, 28, 6);
+          btnBg.lineStyle(1.5, 0xffffff, 1);
+          btnBg.strokeRoundedRect(-22, 23, 120, 28, 6);
+        });
+
+        btnHit.on("pointerout", () => {
+          btnBg.clear();
+          btnBg.fillStyle(0xd97706, 0.95);
+          btnBg.fillRoundedRect(-22, 23, 120, 28, 6);
+          btnBg.lineStyle(1, 0xfde68a, 0.8);
+          btnBg.strokeRoundedRect(-22, 23, 120, 28, 6);
+        });
+
         // Buy Button Interaction
-        btnBg.setInteractive({ useHandCursor: true }).on("pointerup", () => {
+        btnHit.on("pointerup", () => {
           // If we dragged more than a few pixels, cancel the buy because it was a swipe
           if (
             Math.abs(
@@ -485,7 +625,8 @@ export default class StoreScene extends Phaser.Scene {
           this.updateSelectionHighlight();
           this.attemptBuy(char);
         });
-        container.add([btnBg, btnTxt]);
+
+        container.add([btnBg, btnTxt, btnHit]);
       }
 
       this.listContainer.add(container);

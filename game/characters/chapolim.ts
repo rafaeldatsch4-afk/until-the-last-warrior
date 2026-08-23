@@ -302,8 +302,12 @@ export class ChapolimFighter extends Fighter {
 
             rock.destroy();
             if (trail) {
-              trail.stop();
-              bs.time.delayedCall(300, () => trail.destroy());
+              try {
+                if (trail.stop) trail.stop();
+              } catch (e) {}
+              bs.time.delayedCall(300, () => {
+                try { trail.destroy(); } catch (e) {}
+              });
             }
 
             // Deal damage on the last hit

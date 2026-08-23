@@ -175,7 +175,11 @@ export class ObitoFighter extends Fighter {
       ease: "Cubic.easeIn",
       onComplete: () => {
         if (!bs.scene.isActive()) return;
-        spiral.stop();
+        if (spiral) {
+          try {
+            if (spiral.stop) spiral.stop();
+          } catch (e) {}
+        }
 
         // Warp attacker out
         bs.tweens.add({

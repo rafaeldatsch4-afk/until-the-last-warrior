@@ -329,7 +329,11 @@ export class MiniPekkaFighter extends Fighter {
           ease: "Cubic.easeIn",
           onComplete: () => {
             if (!bs.scene.isActive()) return;
-            if (trail) trail.stop();
+            if (trail) {
+              try {
+                if (trail.stop) trail.stop();
+              } catch (e) {}
+            }
 
             bs.createScreenFlash(0xffaa00, 500, 1);
             bs.cameras.main.shake(1200, 0.12); // MASSIVE SHAKE

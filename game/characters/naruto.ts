@@ -233,8 +233,16 @@ export class NarutoFighter extends Fighter {
           onComplete: () => {
             if (!bs.scene.isActive()) return;
 
-            swirlTween.stop();
-            particles.stop();
+            if (swirlTween) {
+              try {
+                if (swirlTween.stop) swirlTween.stop();
+              } catch (e) {}
+            }
+            if (particles) {
+              try {
+                if (particles.stop) particles.stop();
+              } catch (e) {}
+            }
 
             // 3. Impact!
             bs.createScreenFlash(color, 500, 1);
@@ -415,7 +423,11 @@ export class NarutoFighter extends Fighter {
           onComplete: () => {
             if (!bs.scene.isActive()) return;
 
-            wind.stop();
+            if (wind) {
+              try {
+                if (wind.stop) wind.stop();
+              } catch (e) {}
+            }
 
             // Massive explosion sphere
             bs.createScreenFlash(color, 600, 1);

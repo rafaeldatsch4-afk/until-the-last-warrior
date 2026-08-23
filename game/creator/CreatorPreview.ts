@@ -28,6 +28,7 @@ export class CreatorPreview {
   private scene: Phaser.Scene;
   public posX: number = 750;
   public posY: number = 240;
+  public previewScale: number = 1.9;
 
   // Debounce e controle de ciclo de vida
   private debounceTimer: Phaser.Time.TimerEvent | null = null;
@@ -48,20 +49,27 @@ export class CreatorPreview {
     "custom_preview_charge",
   ];
 
-  constructor(scene: Phaser.Scene, x: number = 750, y: number = 240) {
+  constructor(scene: Phaser.Scene, x: number = 750, y: number = 240, availableH?: number) {
     this.scene = scene;
     this.posX = x;
     this.posY = y;
+    if (availableH) {
+      this.previewScale = Phaser.Math.Clamp(availableH / 125, 1.85, 2.35);
+    }
   }
 
-  public setPosition(x: number, y: number) {
+  public setPosition(x: number, y: number, availableH?: number) {
     this.posX = x;
     this.posY = y;
+    if (availableH) {
+      this.previewScale = Phaser.Math.Clamp(availableH / 125, 1.85, 2.35);
+    }
     if (this.previewSprite) {
       this.previewSprite.setPosition(x, y);
+      this.previewSprite.setScale(this.previewScale);
     }
     if (this.previewAura) {
-      this.previewAura.setPosition(x, y + 20);
+      this.previewAura.setPosition(x, y + Math.round(2 * this.previewScale));
     }
   }
 
@@ -193,7 +201,13 @@ export class CreatorPreview {
 
     // Parar animações ativas no sprite anterior antes de descartar texturas
     if (this.previewSprite) {
-      this.previewSprite.stop();
+      try {
+        if (this.previewSprite.anims?.stop) {
+          this.previewSprite.anims.stop();
+        } else if ((this.previewSprite as any).stop) {
+          (this.previewSprite as any).stop();
+        }
+      } catch (e) {}
       if (this.scene.textures.exists("dummy")) {
         this.previewSprite.setTexture("dummy");
       }
@@ -202,13 +216,21 @@ export class CreatorPreview {
     }
 
     if (this.auraTween) {
-      this.auraTween.stop();
-      this.auraTween.remove();
+      try {
+        if (this.auraTween.stop) this.auraTween.stop();
+      } catch (e) {}
+      try {
+        this.auraTween.remove();
+      } catch (e) {}
       this.auraTween = null;
     }
     if (this.auraRingTween) {
-      this.auraRingTween.stop();
-      this.auraRingTween.remove();
+      try {
+        if (this.auraRingTween.stop) this.auraRingTween.stop();
+      } catch (e) {}
+      try {
+        this.auraRingTween.remove();
+      } catch (e) {}
       this.auraRingTween = null;
     }
 
@@ -271,33 +293,43 @@ export class CreatorPreview {
     if (this.stagePedestal) this.stagePedestal.destroy();
     if (this.stageRing) this.stageRing.destroy();
 
-    this.stagePedestal = this.scene.add.graphics();
+    const scale = this.previewScale;
+    const pedestalOffsetY = Math.round(24 * scale);
+
+    this.stagePedestal = this.scene.add.graphics().setDepth(5);
     this.stagePedestal.fillStyle(0x0f172a, 0.85);
-    this.stagePedestal.fillEllipse(this.posX, this.posY + 44, 135, 36);
+    this.stagePedestal.fillEllipse(this.posX, this.posY + pedestalOffsetY + 2, 70 * scale, 18 * scale);
     this.stagePedestal.fillStyle(0x1e293b, 0.9);
-    this.stagePedestal.fillEllipse(this.posX, this.posY + 42, 115, 28);
-    this.stagePedestal.lineStyle(2, 0x38bdf8, 0.6);
-    this.stagePedestal.strokeEllipse(this.posX, this.posY + 42, 115, 28);
+    this.stagePedestal.fillEllipse(this.posX, this.posY + pedestalOffsetY, 60 * scale, 14 * scale);
+    this.stagePedestal.lineStyle(1.5, 0x38bdf8, 0.6);
+    this.stagePedestal.strokeEllipse(this.posX, this.posY + pedestalOffsetY, 60 * scale, 14 * scale);
     this.stagePedestal.lineStyle(1, effectiveRingColor, 0.8);
-    this.stagePedestal.strokeEllipse(this.posX, this.posY + 42, 90, 20);
+    this.stagePedestal.strokeEllipse(this.posX, this.posY + pedestalOffsetY, 46 * scale, 10 * scale);
 
     // 1. Outer Flame Aura (Glow)
+    const auraW = Math.round(58 * scale);
+    const auraH = Math.round(82 * scale);
     this.previewAura = this.scene.add
-      .ellipse(this.posX, this.posY + 6, 115, 165, effectiveAuraColor)
+      .ellipse(this.posX, this.posY + Math.round(2 * scale), auraW, auraH, effectiveAuraColor)
       .setAlpha(isTransformed ? 0.65 : 0.38)
-      .setBlendMode(Phaser.BlendModes.ADD);
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(6);
 
     // 2. Inner Bright Core
+    const coreW = Math.round(38 * scale);
+    const coreH = Math.round(62 * scale);
     this.previewAuraCore = this.scene.add
-      .ellipse(this.posX, this.posY + 8, 75, 125, effectiveRingColor)
+      .ellipse(this.posX, this.posY + Math.round(4 * scale), coreW, coreH, effectiveRingColor)
       .setAlpha(isTransformed ? 0.55 : 0.25)
-      .setBlendMode(Phaser.BlendModes.ADD);
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(7);
 
     // 3. Ground Ki Shockwave Ring
     this.previewAuraRing = this.scene.add
-      .circle(this.posX, this.posY + 42, 48, 0x000000, 0)
-      .setStrokeStyle(2.5, effectiveRingColor, 0.8)
-      .setBlendMode(Phaser.BlendModes.ADD);
+      .circle(this.posX, this.posY + pedestalOffsetY, 24 * scale, 0x000000, 0)
+      .setStrokeStyle(2 * scale, effectiveRingColor, 0.8)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(8);
 
     // 4. Pulsing Tweens
     this.auraTween = this.scene.tweens.add({
@@ -326,19 +358,20 @@ export class CreatorPreview {
     for (let i = 0; i < 10; i++) {
       const spark = this.scene.add
         .circle(
-          this.posX + Phaser.Math.Between(-32, 32),
-          this.posY + 42,
-          Phaser.Math.Between(2, 3.5),
+          this.posX + Phaser.Math.Between(Math.round(-18 * scale), Math.round(18 * scale)),
+          this.posY + pedestalOffsetY,
+          Phaser.Math.Between(2, 3) * (scale / 2),
           effectiveRingColor,
           0.9
         )
-        .setBlendMode(Phaser.BlendModes.ADD);
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(11);
       this.previewSparks.push(spark);
 
       this.scene.tweens.add({
         targets: spark,
-        y: this.posY - Phaser.Math.Between(35, 75),
-        x: spark.x + Phaser.Math.Between(-14, 14),
+        y: this.posY - Phaser.Math.Between(Math.round(20 * scale), Math.round(45 * scale)),
+        x: spark.x + Phaser.Math.Between(Math.round(-10 * scale), Math.round(10 * scale)),
         alpha: 0,
         scale: 0.25,
         duration: Phaser.Math.Between(650, 1350),
@@ -361,7 +394,8 @@ export class CreatorPreview {
 
     this.previewSprite = this.scene.add
       .sprite(this.posX, this.posY, texName)
-      .setScale(2.2);
+      .setScale(scale)
+      .setDepth(10);
 
     if (this.scene.textures.exists(texName)) {
       this.previewSprite.play(animName);
@@ -486,12 +520,14 @@ export class CreatorPreview {
           const arc = this.scene.add
             .line(0, 0, startX, startY, midX, midY, 0xffffff, 0.95)
             .setLineWidth(1.8)
-            .setBlendMode(Phaser.BlendModes.ADD);
+            .setBlendMode(Phaser.BlendModes.ADD)
+            .setDepth(12);
 
           const arc2 = this.scene.add
             .line(0, 0, midX, midY, endX, endY, color, 0.85)
             .setLineWidth(1.4)
-            .setBlendMode(Phaser.BlendModes.ADD);
+            .setBlendMode(Phaser.BlendModes.ADD)
+            .setDepth(12);
 
           this.previewLightningArcs.push(arc, arc2);
 
@@ -574,19 +610,35 @@ export class CreatorPreview {
     this.clearLightning();
 
     if (this.auraTween) {
-      this.auraTween.stop();
-      this.auraTween.remove();
+      try {
+        if (this.auraTween.stop) this.auraTween.stop();
+      } catch (e) {}
+      try {
+        this.auraTween.remove();
+      } catch (e) {}
       this.auraTween = null;
     }
     if (this.auraRingTween) {
-      this.auraRingTween.stop();
-      this.auraRingTween.remove();
+      try {
+        if (this.auraRingTween.stop) this.auraRingTween.stop();
+      } catch (e) {}
+      try {
+        this.auraRingTween.remove();
+      } catch (e) {}
       this.auraRingTween = null;
     }
 
     if (this.previewSprite) {
-      this.previewSprite.stop();
-      this.previewSprite.destroy();
+      try {
+        if (this.previewSprite.anims?.stop) {
+          this.previewSprite.anims.stop();
+        } else if ((this.previewSprite as any).stop) {
+          (this.previewSprite as any).stop();
+        }
+      } catch (e) {}
+      try {
+        this.previewSprite.destroy();
+      } catch (e) {}
       this.previewSprite = undefined;
     }
 

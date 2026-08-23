@@ -47,9 +47,72 @@ export default class TournamentScene extends Phaser.Scene {
       .setBlendMode(Phaser.BlendModes.ADD);
 
     // Title
+    const bounds = ResponsiveUtils.getSafeBounds(this);
+    const headerY = Math.max(34, bounds.top + 22);
+
+    // Back Button (Top Left)
+    const backBtnX = Math.max(74, bounds.left + 54);
+    const backContainer = this.add.container(backBtnX, headerY).setDepth(200);
+    const btnW = 116;
+    const btnH = 36;
+    const radius = 8;
+    const backBg = this.add.graphics();
+
+    const drawBackBtn = (isHover: boolean) => {
+      backBg.clear();
+      backBg.fillStyle(0x000000, 0.6);
+      backBg.fillRoundedRect(-btnW / 2 + 2, -btnH / 2 + 2, btnW, btnH, radius);
+      backBg.fillStyle(isHover ? 0xd93829 : 0x1e293b, 0.95);
+      backBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
+      backBg.lineStyle(1.5, isHover ? 0xfca5a5 : 0x64748b, 0.9);
+      backBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
+    };
+    drawBackBtn(false);
+
+    const backTxt = this.add
+      .text(0, 0, "← VOLTAR", {
+        fontSize: "14px",
+        fontStyle: "bold",
+        color: "#ffffff",
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+        resolution: 3,
+      })
+      .setOrigin(0.5);
+
+    const backHit = this.add
+      .rectangle(0, 0, 140, 52, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+
+    backContainer.add([backBg, backTxt, backHit]);
+
+    const exitTournament = () => {
+      if (this.sound && this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      transitionTo(this, "ModeSelectScene");
+    };
+
+    backHit.on("pointerover", () => {
+      drawBackBtn(true);
+      this.tweens.add({ targets: backContainer, scale: 1.05, duration: 100 });
+    });
+    backHit.on("pointerout", () => {
+      drawBackBtn(false);
+      this.tweens.add({ targets: backContainer, scale: 1, duration: 100 });
+    });
+    backHit.on("pointerdown", () => {
+      this.tweens.add({
+        targets: backContainer,
+        scale: 0.93,
+        duration: 70,
+        yoyo: true,
+        onComplete: exitTournament,
+      });
+    });
+
+    this.input.keyboard?.on("keydown-ESC", exitTournament);
+
     const title = this.add
-      .text(480, 40, "CHAVES DO TORNEIO", {
-        fontSize: "42px",
+      .text(480, headerY + 6, "CHAVES DO TORNEIO", {
+        fontSize: "36px",
         color: "#f1c40f",
         fontStyle: "bold",
         stroke: "#000000",

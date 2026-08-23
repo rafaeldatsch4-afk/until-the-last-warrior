@@ -78,6 +78,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   private editIconTxt?: Phaser.GameObjects.Text;
   private particleEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
   private rightPanelContainer?: Phaser.GameObjects.Container;
+  private rightPanelBg?: Phaser.GameObjects.Graphics;
   private headerContainer?: Phaser.GameObjects.Container;
   private backButtonContainer?: Phaser.GameObjects.Container;
   private isShuttingDown: boolean = false;
@@ -131,29 +132,30 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     }
 
     // 2. TOP HEADER
-    this.backButtonContainer = this.createHeaderBackButton(bounds.left + 55, bounds.top + 22);
+    const headerY = Math.max(26, bounds.top + 22);
+    this.backButtonContainer = this.createHeaderBackButton(bounds.left + 64, headerY);
 
-    this.headerContainer = this.add.container(width / 2, bounds.top + 22);
+    this.headerContainer = this.add.container(width / 2, headerY);
     const headerTitle = this.add
-      .text(0, -4, "CRIAR PERSONAGEM", {
+      .text(0, -5, "CRIAR PERSONAGEM", {
         fontSize: "20px",
         fontStyle: "900",
         color: "#facc15",
         stroke: "#000000",
         strokeThickness: 3.5,
-        letterSpacing: 2.5,
-        fontFamily: "system-ui, -apple-system, sans-serif",
+        letterSpacing: 2,
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
         shadow: { color: "#000000", blur: 4, fill: true, stroke: true },
         resolution: 2,
       })
       .setOrigin(0.5);
 
     const headerSub = this.add
-      .text(0, 14, "ESTÚDIO DE CUSTOMIZAÇÃO DE GUERREIROS", {
-        fontSize: "9px",
+      .text(0, 13, "ESTÚDIO DE CUSTOMIZAÇÃO DE GUERREIROS", {
+        fontSize: "9.5px",
         fontStyle: "bold",
         color: "#94a3b8",
-        letterSpacing: 2,
+        letterSpacing: 1.5,
         fontFamily: "system-ui, sans-serif",
         resolution: 2,
       })
@@ -161,17 +163,17 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     this.headerContainer.add([headerTitle, headerSub]);
 
-    // 3. RESPONSIVE TWO-COLUMN LAYOUT
+    // 3. RESPONSIVE TWO-COLUMN LAYOUT (Balanced proportions)
     const contentTopY = bounds.top + 46;
-    const contentH = Math.min(460, bounds.bottom - contentTopY - 10);
+    const contentH = Math.min(474, bounds.bottom - contentTopY - 12);
 
     // Dynamic columns for standard & ultra-wide screens
-    const availableW = bounds.width;
-    const leftColW = Math.min(520, Math.floor(availableW * 0.58));
-    const rightColW = Math.min(350, Math.floor(availableW * 0.38));
+    const availableW = bounds.width - 24;
+    const leftColW = Math.min(540, Math.floor(availableW * 0.58));
+    const rightColW = Math.min(370, Math.floor(availableW * 0.40));
     const gap = 14;
     const totalW = leftColW + rightColW + gap;
-    const startX = Math.max(bounds.left + 4, Math.floor(bounds.centerX - totalW / 2));
+    const startX = Math.max(bounds.left + 8, Math.floor(bounds.centerX - totalW / 2));
 
     const leftColX = startX;
     const rightColX = leftColX + leftColW + gap;
@@ -179,11 +181,14 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     // Load saved character data if present
     this.loadInitialCustomData();
 
-    // 4. PREVIEW INITIALIZATION (Centered vertically in the preview viewport between header & actions)
+    // 4. PREVIEW INITIALIZATION (Positioned precisely within the character stage viewport above the buttons)
     const previewCenterX = rightColX + rightColW / 2;
-    const previewCenterY = contentTopY + Math.floor((contentH - 48) / 2);
+    const stageTop = contentTopY + 52;
+    const stageBottom = contentTopY + contentH - 96;
+    const stageH = Math.max(160, stageBottom - stageTop);
+    const previewCenterY = stageTop + Math.floor(stageH * 0.46);
 
-    this.preview = new CreatorPreview(this, previewCenterX, previewCenterY);
+    this.preview = new CreatorPreview(this, previewCenterX, previewCenterY, stageH);
     this.ui = new CreatorUI(this, () => this.updatePreview());
     this.ui.onTestCharge = () => {
       if (this.preview) {
@@ -295,51 +300,55 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     panelW: number,
     panelH: number,
     _previewCenterX: number,
-    previewCenterY: number
+    _previewCenterY: number
   ) {
+    if (this.rightPanelBg) {
+      this.rightPanelBg.destroy();
+      this.rightPanelBg = undefined;
+    }
     if (this.rightPanelContainer) {
       this.rightPanelContainer.destroy(true);
       this.rightPanelContainer = undefined;
     }
 
-    const container = this.add.container(panelX, panelY);
-    this.rightPanelContainer = container;
-
-    // 1. Right Glass Panel
-    const bg = this.add.graphics();
+    // 1. Right Glass Panel Background (Depth 3: underneath character preview, pedestal & auras)
+    const bg = this.add.graphics().setDepth(3);
+    this.rightPanelBg = bg;
     bg.fillStyle(0x0a0f1d, 0.88);
-    bg.fillRoundedRect(0, 0, panelW, panelH, 12);
+    bg.fillRoundedRect(panelX, panelY, panelW, panelH, 12);
     bg.lineStyle(1.5, 0x1e293b, 0.9);
-    bg.strokeRoundedRect(0, 0, panelW, panelH, 12);
+    bg.strokeRoundedRect(panelX, panelY, panelW, panelH, 12);
 
     // Corner accents
     bg.lineStyle(2, 0xfacc15, 0.7);
     const bLen = 14;
     // Top-Left
-    bg.moveTo(0, bLen).lineTo(0, 0).lineTo(bLen, 0);
+    bg.moveTo(panelX, panelY + bLen).lineTo(panelX, panelY).lineTo(panelX + bLen, panelY);
     // Top-Right
-    bg.moveTo(panelW - bLen, 0).lineTo(panelW, 0).lineTo(panelW, bLen);
+    bg.moveTo(panelX + panelW - bLen, panelY).lineTo(panelX + panelW, panelY).lineTo(panelX + panelW, panelY + bLen);
     // Bottom-Left
-    bg.moveTo(0, panelH - bLen).lineTo(0, panelH).lineTo(bLen, panelH);
+    bg.moveTo(panelX, panelY + panelH - bLen).lineTo(panelX, panelY + panelH).lineTo(panelX + bLen, panelY + panelH);
     // Bottom-Right
-    bg.moveTo(panelW - bLen, panelH).lineTo(panelW, panelH).lineTo(panelW, panelH - bLen);
+    bg.moveTo(panelX + panelW - bLen, panelY + panelH).lineTo(panelX + panelW, panelY + panelH).lineTo(panelX + panelW, panelY + panelH - bLen);
     bg.strokePath();
 
-    container.add(bg);
+    // 2. Interactive container for Name Card, SSJ/Random Buttons, and Save Button (Depth 25: on top of stage)
+    const container = this.add.container(panelX, panelY).setDepth(25);
+    this.rightPanelContainer = container;
 
     // 2. Character Name Header Card (Interactive click to edit name)
     const nameCardW = panelW - 24;
     const nameCardH = 38;
-    const nameCardY = 12;
+    const nameCardY = 10;
     const nameCardCenterX = panelW / 2;
 
     const nameCardBg = this.add.graphics();
     const drawNameBg = (isHover: boolean) => {
       nameCardBg.clear();
       nameCardBg.fillStyle(isHover ? 0x1e293b : 0x0f172a, 0.95);
-      nameCardBg.fillRoundedRect(12, nameCardY, nameCardW, nameCardH, 8);
+      nameCardBg.fillRoundedRect(12, nameCardY, nameCardW, nameCardH, 6);
       nameCardBg.lineStyle(1.5, isHover ? 0x38bdf8 : 0x334155, 0.9);
-      nameCardBg.strokeRoundedRect(12, nameCardY, nameCardW, nameCardH, 8);
+      nameCardBg.strokeRoundedRect(12, nameCardY, nameCardW, nameCardH, 6);
     };
     drawNameBg(false);
 
@@ -348,13 +357,13 @@ export default class CharacterCreatorScene extends Phaser.Scene {
         fontSize: "14px",
         fontStyle: "bold",
         color: "#facc15",
-        fontFamily: "system-ui, -apple-system, sans-serif",
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
         resolution: 2,
       })
       .setOrigin(0.5);
 
     this.editIconTxt = this.add
-      .text(nameCardCenterX + this.nameDisplayTxt.width / 2 + 8, nameCardY + nameCardH / 2, "✎", {
+      .text(nameCardCenterX + this.nameDisplayTxt.width / 2 + 10, nameCardY + nameCardH / 2, "✎", {
         fontSize: "13px",
         color: "#38bdf8",
       })
@@ -387,7 +396,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
                 this.builderData.name = newName.trim().substring(0, 16);
                 if (this.nameDisplayTxt && this.editIconTxt) {
                   this.nameDisplayTxt.setText(`⚔️ ${this.builderData.name}`);
-                  this.editIconTxt.setX(nameCardCenterX + this.nameDisplayTxt.width / 2 + 8);
+                  this.editIconTxt.setX(nameCardCenterX + this.nameDisplayTxt.width / 2 + 10);
                 }
               }
             },
@@ -398,33 +407,8 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     container.add([nameCardBg, this.nameDisplayTxt, this.editIconTxt, nameHit]);
 
-    // 3. Stage Pedestal Graphics (Behind sprite)
-    const relPedestalY = previewCenterY - panelY + 44;
-    const pedestal = this.add.graphics();
-    pedestal.fillStyle(0x0284c7, 0.18);
-    pedestal.fillEllipse(panelW / 2, relPedestalY, 130, 32);
-    pedestal.lineStyle(1.5, 0x38bdf8, 0.5);
-    pedestal.strokeEllipse(panelW / 2, relPedestalY, 130, 32);
-
-    const pedestalRing = this.add.graphics();
-    pedestalRing.lineStyle(1, 0xfacc15, 0.35);
-    pedestalRing.strokeEllipse(panelW / 2, relPedestalY, 100, 22);
-
-    this.tweens.add({
-      targets: [pedestal, pedestalRing],
-      scaleX: 1.05,
-      scaleY: 1.05,
-      alpha: 0.7,
-      yoyo: true,
-      repeat: -1,
-      duration: 1800,
-      ease: "Sine.easeInOut",
-    });
-
-    container.add([pedestal, pedestalRing]);
-
-    // 4. Action Row: [ ⚡ SSJ MODE ] & [ 🎲 ALEATÓRIO ]
-    const btnRowY = panelH - 80;
+    // 3. Action Row: [ ⚡ SSJ MODE ] & [ 🎲 ALEATÓRIO ]
+    const btnRowY = panelH - 74;
     const halfBtnW = (panelW - 32) / 2;
 
     const transBtnX = 12 + halfBtnW / 2;
@@ -432,7 +416,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       transBtnX,
       btnRowY,
       halfBtnW,
-      32,
+      34,
       "⚡ SSJ MODE",
       0xd97706,
       () => {
@@ -446,7 +430,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       randBtnX,
       btnRowY,
       halfBtnW,
-      32,
+      34,
       "🎲 ALEATÓRIO",
       0x7c3aed,
       () => {
@@ -456,14 +440,14 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     container.add([transBtn, randBtn]);
 
-    // 5. PRIMARY CTA: [ 💾 SALVAR E EQUIPAR ]
-    const saveBtnY = panelH - 32;
+    // 4. PRIMARY CTA: [ 💾 SALVAR E EQUIPAR ]
+    const saveBtnY = panelH - 30;
     const saveBtnW = panelW - 24;
     const saveBtn = this.createHeroSaveButton(
       panelW / 2,
       saveBtnY,
       saveBtnW,
-      44,
+      46,
       "SALVAR E EQUIPAR",
       () => {
         this.saveAndEquipCharacter();
@@ -496,10 +480,10 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     const txt = this.add
       .text(0, 0, label, {
-        fontSize: "11px",
+        fontSize: "12px",
         fontStyle: "bold",
         color: "#ffffff",
-        fontFamily: "system-ui, sans-serif",
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
         resolution: 2,
       })
       .setOrigin(0.5);
@@ -601,11 +585,13 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     const container = this.add.container(x, y).setDepth(200);
 
     const bg = this.add.graphics();
-    const btnW = 96;
-    const btnH = 32;
+    const btnW = 104;
+    const btnH = 34;
 
     const drawBg = (isHover: boolean) => {
       bg.clear();
+      bg.fillStyle(0x000000, 0.6);
+      bg.fillRoundedRect(-btnW / 2 + 2, -btnH / 2 + 2, btnW, btnH, 6);
       bg.fillStyle(isHover ? 0x334155 : 0x1e293b, 0.95);
       bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
       bg.lineStyle(1.5, isHover ? 0x38bdf8 : 0x475569, 0.9);
@@ -615,17 +601,29 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     const txt = this.add
       .text(0, 0, "← VOLTAR", {
-        fontSize: "12px",
+        fontSize: "13px",
         fontStyle: "bold",
         color: "#ffffff",
         fontFamily: "system-ui, sans-serif",
-        resolution: 2,
+        resolution: 3,
       })
       .setOrigin(0.5);
 
+    // Generous touch hitbox for mobile
     const hit = this.add
-      .rectangle(0, 0, btnW, btnH, 0x000000, 0)
+      .rectangle(0, 0, 130, 48, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
+
+    const handleBack = () => {
+      if (this.isShuttingDown) return;
+      if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      const gs = this.registry.get("gameState");
+      if (gs && gs.gameMode === "story") {
+        transitionTo(this, "ModeSelectScene");
+      } else {
+        transitionTo(this, "MenuScene");
+      }
+    };
 
     hit.on("pointerover", () => {
       if (this.isShuttingDown) return;
@@ -641,13 +639,16 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     });
     hit.on("pointerdown", () => {
       if (this.isShuttingDown) return;
-      const gs = this.registry.get("gameState");
-      if (gs && gs.gameMode === "story") {
-        transitionTo(this, "ModeSelectScene");
-      } else {
-        transitionTo(this, "MenuScene");
-      }
+      this.tweens.add({
+        targets: container,
+        scale: 0.93,
+        duration: 70,
+        yoyo: true,
+        onComplete: handleBack,
+      });
     });
+
+    this.input.keyboard?.on("keydown-ESC", handleBack);
 
     container.add([bg, txt, hit]);
     return container;
@@ -901,6 +902,10 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     }
 
     // 3. Destruir containers locais
+    if (this.rightPanelBg) {
+      this.rightPanelBg.destroy();
+      this.rightPanelBg = undefined;
+    }
     if (this.rightPanelContainer) {
       this.rightPanelContainer.destroy(true);
       this.rightPanelContainer = undefined;

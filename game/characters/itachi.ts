@@ -224,8 +224,14 @@ export class ItachiFighter extends Fighter {
       onComplete: () => {
         fire.destroy();
         fireGlow.destroy();
-        particles.stop();
-        bs.time.delayedCall(800, () => particles.destroy());
+        if (particles) {
+          try {
+            if (particles.stop) particles.stop();
+          } catch (e) {}
+          bs.time.delayedCall(800, () => {
+            try { particles.destroy(); } catch (e) {}
+          });
+        }
       },
     });
 

@@ -431,10 +431,20 @@ export class PiccoloFighter extends Fighter {
               bs.onSpecialComplete(isPlayer);
             }
 
-            trail.stop();
-            bs.time.delayedCall(250, () => trail.destroy());
-            o.orb.destroy();
-            o.orbGlow.destroy();
+            if (trail) {
+              try {
+                if (trail.stop) trail.stop();
+              } catch (e) {}
+              bs.time.delayedCall(250, () => {
+                try { trail.destroy(); } catch (e) {}
+              });
+            }
+            if (o.orb) {
+              try { o.orb.destroy(); } catch (e) {}
+            }
+            if (o.orbGlow) {
+              try { o.orbGlow.destroy(); } catch (e) {}
+            }
           },
         });
       });

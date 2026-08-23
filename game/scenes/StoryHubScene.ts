@@ -80,39 +80,69 @@ export default class StoryHubScene extends Phaser.Scene {
       .setAlpha(0.15)
       .setBlendMode(Phaser.BlendModes.SCREEN);
 
-    const bounds = ResponsiveUtils.getSafeBounds();
-    this.add.text(480, bounds.top + 45, "MODO HISTÓRIA", {
-      fontSize: "36px",
+    const bounds = ResponsiveUtils.getSafeBounds(this);
+    const headerY = Math.max(26, bounds.top + 18);
+
+    // --- Header ---
+    this.add.text(480, headerY - 2, "MODO HISTÓRIA", {
+      fontSize: "22px",
       color: "#f1c40f",
       fontStyle: "900",
-      fontFamily: "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-      stroke: "#000",
-      strokeThickness: 6,
-      shadow: { color: "#e67e22", blur: 10, fill: true }
+      fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+      stroke: "#000000",
+      strokeThickness: 4,
+      shadow: { color: "#e67e22", blur: 8, fill: true },
     }).setOrigin(0.5);
 
+    const storyState = this.gameState?.storyState;
+
+    if (storyState) {
+      this.add.text(480, headerY + 15, `LUTA ${storyState.stage} • PROGRESSÃO DO GUERREIRO`, {
+        fontSize: "11px",
+        color: "#94a3b8",
+        fontStyle: "bold",
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+      }).setOrigin(0.5);
+    }
+
     // Back Button (Top Left)
-    this.createBtn(bounds.left + 70, bounds.top + 40, 140, 40, "VOLTAR", 0x34495e, () => {
+    const backBtnX = Math.max(68, bounds.left + 54);
+    this.createHeaderBtn(backBtnX, headerY, 104, 32, "← VOLTAR", 0x1e293b, 0x64748b, () => {
+      syncCloudSaveImmediate();
+      transitionTo(this, "ModeSelectScene");
+    });
+
+    this.input.keyboard?.on("keydown-ESC", () => {
       syncCloudSaveImmediate();
       transitionTo(this, "ModeSelectScene");
     });
     
     // Config Button (Top Right)
-    this.createBtn(bounds.right - 70, bounds.top + 40, 140, 40, "OPÇÕES", 0x34495e, () => {
+    const configBtnX = Math.min(892, bounds.right - 54);
+    this.createHeaderBtn(configBtnX, headerY, 104, 32, "⚙ OPÇÕES", 0x1e293b, 0x64748b, () => {
       this.showConfigMenu();
     });
 
-    const storyState = this.gameState?.storyState;
     if (!storyState) return;
+
+    // Layout Dimensions for Mobile/Desktop Harmony
+    const panelY = headerY + 30;
+    const panelHeight = Math.min(380, Math.max(340, bounds.bottom - panelY - 58));
+    const leftPanelX = 40;
+    const leftPanelW = 390;
+    const rightPanelX = 450;
+    const rightPanelW = 470;
 
     // LEFT PANEL (Character & Level)
     const leftPanel = this.add.graphics();
-    leftPanel.fillStyle(0x000000, 0.6);
-    leftPanel.fillRoundedRect(50, 95, 380, 360, 12);
-    leftPanel.lineStyle(2, 0x3498db, 0.8);
-    leftPanel.strokeRoundedRect(50, 95, 380, 360, 12);
+    leftPanel.fillStyle(0x0f172a, 0.75);
+    leftPanel.fillRoundedRect(leftPanelX, panelY, leftPanelW, panelHeight, 10);
+    leftPanel.lineStyle(1.5, 0x38bdf8, 0.7);
+    leftPanel.strokeRoundedRect(leftPanelX, panelY, leftPanelW, panelHeight, 10);
 
     const char = storyState.customCharacter;
+    const charCenterX = leftPanelX + leftPanelW / 2;
+
     if (char) {
        // Ensure textures and animations exist for custom character
        if (!this.textures.exists("custom_999")) {
@@ -124,95 +154,140 @@ export default class StoryHubScene extends Phaser.Scene {
        }
        this.ensureCustomAnimsExist("custom_999");
 
-       this.add.text(240, 130, char.name.toUpperCase(), { 
-           fontSize: "32px", 
-           color: "#3498db", 
+       // Character Name Badge
+       this.add.text(charCenterX, panelY + 24, char.name.toUpperCase(), { 
+           fontSize: "20px", 
+           color: "#38bdf8", 
            fontStyle: "900",
            stroke: "#000",
-           strokeThickness: 4,
-           fontFamily: "system-ui, -apple-system, sans-serif"
+           strokeThickness: 3,
+           fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
        }).setOrigin(0.5);
 
+       // Character Shadow
+       const shadowY = panelY + 165;
+       const shadow = this.add.graphics();
+       shadow.fillStyle(0x000000, 0.4);
+       shadow.fillEllipse(charCenterX, shadowY + 36, 60, 16);
+
        const previewKey = "custom_999"; 
+       const spriteY = panelY + 140;
        if (this.anims.exists(previewKey + "_idle")) {
-          const sprite = this.add.sprite(240, 250, previewKey).setScale(2.2);
+          const sprite = this.add.sprite(charCenterX, spriteY, previewKey).setScale(2.1);
           sprite.play(previewKey + "_idle");
        } else if (this.textures.exists(previewKey)) {
-          this.add.sprite(240, 250, previewKey, "0").setScale(2.2);
+          this.add.sprite(charCenterX, spriteY, previewKey, "0").setScale(2.1);
        } else {
-          this.add.text(240, 250, "IMAGEM\nINDISPONÍVEL", { color: "#fff" }).setOrigin(0.5);
+          this.add.text(charCenterX, spriteY, "IMAGEM\nINDISPONÍVEL", { color: "#fff", fontSize: "12px", align: "center" }).setOrigin(0.5);
        }
     }
 
-    // Character Level & EXP Below Character (Just below feet)
+    // Character Level & EXP Progress
     const expNeeded = (storyState.level + 1) * 100;
-    
-    const uiY = 415; // Just below the character's feet
+    const expBarWidth = 280;
+    const expBarY = panelY + panelHeight - 64;
+    const badgeY = expBarY - 26;
 
-    // Exp bar bg
-    const barWidth = 260;
-    const barX = 240; // Centered exactly under character
-    
-    // Level Badge (Centered above the EXP bar)
-    const badgeY = uiY - 28;
+    // Level Badge (Compact & Centered)
     const lvlBadge = this.add.graphics();
-    lvlBadge.fillStyle(0x3498db, 1);
-    lvlBadge.fillCircle(barX, badgeY, 18);
-    lvlBadge.lineStyle(2, 0xffffff, 1);
-    lvlBadge.strokeCircle(barX, badgeY, 18);
-    this.add.text(barX, badgeY - 8, "LVL", { fontSize: "10px", color: "#fff", fontStyle: "bold" }).setOrigin(0.5);
-    this.add.text(barX, badgeY + 6, `${storyState.level}`, { fontSize: "16px", color: "#fff", fontStyle: "900" }).setOrigin(0.5);
+    lvlBadge.fillStyle(0x0284c7, 1);
+    lvlBadge.fillCircle(charCenterX, badgeY, 17);
+    lvlBadge.lineStyle(2, 0xffffff, 0.9);
+    lvlBadge.strokeCircle(charCenterX, badgeY, 17);
+    this.add.text(charCenterX, badgeY - 7, "LVL", { fontSize: "9px", color: "#e0f2fe", fontStyle: "bold" }).setOrigin(0.5);
+    this.add.text(charCenterX, badgeY + 6, `${storyState.level}`, { fontSize: "15px", color: "#ffffff", fontStyle: "900" }).setOrigin(0.5);
 
-    this.add.rectangle(barX, uiY, barWidth, 20, 0x222222).setOrigin(0.5).setStrokeStyle(2, 0x555555);
+    // EXP Bar Background
+    this.add.rectangle(charCenterX, expBarY, expBarWidth, 18, 0x1e293b).setOrigin(0.5).setStrokeStyle(1.5, 0x475569);
     
-    // Exp bar fill
+    // EXP Bar Fill
     const expRatio = Math.min(1, storyState.exp / expNeeded);
-    const expFillWidth = barWidth * expRatio;
+    const expFillWidth = Math.max(0, expBarWidth * expRatio);
     
     const expFill = this.add.graphics();
-    expFill.fillGradientStyle(0x2ecc71, 0x27ae60, 0x2ecc71, 0x27ae60, 1);
-    expFill.fillRect(barX - barWidth/2, uiY - 10, expFillWidth, 20);
+    expFill.fillGradientStyle(0x10b981, 0x059669, 0x10b981, 0x059669, 1);
+    expFill.fillRect(charCenterX - expBarWidth / 2, expBarY - 9, expFillWidth, 18);
     
     // EXP Text (Centered on the bar)
-    this.add.text(barX, uiY, `EXP: ${storyState.exp} / ${expNeeded}`, { 
-        fontSize: "12px", 
-        color: "#fff", 
+    this.add.text(charCenterX, expBarY, `EXP: ${storyState.exp} / ${expNeeded}`, { 
+        fontSize: "11px", 
+        color: "#ffffff", 
         fontStyle: "bold",
-        stroke: "#000",
+        stroke: "#000000",
         strokeThickness: 3 
     }).setOrigin(0.5);
 
+    // Edit Visual Shortcut Button (inside Left Panel)
+    const editSkinBtnY = panelY + panelHeight - 24;
+    const editSkinContainer = this.add.container(charCenterX, editSkinBtnY);
+    const editSkinBg = this.add.graphics();
+    const drawEditSkin = (isHover: boolean) => {
+      editSkinBg.clear();
+      editSkinBg.fillStyle(isHover ? 0x0284c7 : 0x0f172a, 0.9);
+      editSkinBg.fillRoundedRect(-90, -12, 180, 24, 6);
+      editSkinBg.lineStyle(1, isHover ? 0x38bdf8 : 0x334155, 0.9);
+      editSkinBg.strokeRoundedRect(-90, -12, 180, 24, 6);
+    };
+    drawEditSkin(false);
+
+    const editSkinTxt = this.add.text(0, 0, "🎨 EDITAR VISUAL", {
+      fontSize: "11px",
+      color: "#94a3b8",
+      fontStyle: "bold",
+      fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+    }).setOrigin(0.5);
+
+    const editSkinHit = this.add.rectangle(0, 0, 190, 32, 0, 0).setInteractive({ useHandCursor: true });
+    editSkinContainer.add([editSkinBg, editSkinTxt, editSkinHit]);
+
+    editSkinHit.on("pointerover", () => {
+      drawEditSkin(true);
+      editSkinTxt.setColor("#ffffff");
+    });
+    editSkinHit.on("pointerout", () => {
+      drawEditSkin(false);
+      editSkinTxt.setColor("#94a3b8");
+    });
+    editSkinHit.on("pointerdown", () => {
+      if (this.sound && this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      transitionTo(this, "CharacterCreatorScene");
+    });
+
     // RIGHT PANEL (Attributes)
     const rightPanel = this.add.graphics();
-    rightPanel.fillStyle(0x000000, 0.6);
-    rightPanel.fillRoundedRect(470, 95, 440, 360, 12);
-    rightPanel.lineStyle(2, 0xe67e22, 0.8);
-    rightPanel.strokeRoundedRect(470, 95, 440, 360, 12);
+    rightPanel.fillStyle(0x0f172a, 0.75);
+    rightPanel.fillRoundedRect(rightPanelX, panelY, rightPanelW, panelHeight, 10);
+    rightPanel.lineStyle(1.5, 0xf59e0b, 0.7);
+    rightPanel.strokeRoundedRect(rightPanelX, panelY, rightPanelW, panelHeight, 10);
 
-    this.add.text(690, 130, "ATRIBUTOS", { 
-        fontSize: "28px", 
-        color: "#e67e22", 
+    const rightPanelCenterX = rightPanelX + rightPanelW / 2;
+
+    this.add.text(rightPanelX + 24, panelY + 22, "ATRIBUTOS DO GUERREIRO", { 
+        fontSize: "16px", 
+        color: "#f59e0b", 
         fontStyle: "900",
-        fontFamily: "system-ui, -apple-system, sans-serif"
-    }).setOrigin(0.5);
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+    }).setOrigin(0, 0.5);
 
-    const pointsTxt = this.add.text(690, 165, `PONTOS RESTANTES: ${storyState.statPoints}`, { 
-        fontSize: "18px", 
-        color: storyState.statPoints > 0 ? "#f1c40f" : "#7f8c8d",
-        fontStyle: "bold"
-    }).setOrigin(0.5);
+    const pointsTxt = this.add.text(rightPanelX + rightPanelW - 24, panelY + 22, `PONTOS: ${storyState.statPoints}`, { 
+        fontSize: "14px", 
+        color: storyState.statPoints > 0 ? "#fbbf24" : "#64748b",
+        fontStyle: "bold",
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+    }).setOrigin(1, 0.5);
     
     if (storyState.statPoints > 0) {
         this.tweens.add({
             targets: pointsTxt,
-            alpha: 0.5,
+            scale: 1.1,
             yoyo: true,
             repeat: -1,
-            duration: 600
+            duration: 500
         });
     }
 
-    const startY = 210;
+    const startY = panelY + 54;
+    const rowGap = 39;
     const stats = ["attack", "defense", "ki", "speed", "health"];
     const labels: Record<string, string> = {
       attack: "ATAQUE",
@@ -222,60 +297,98 @@ export default class StoryHubScene extends Phaser.Scene {
       health: "VITALIDADE"
     };
     const colors: Record<string, number> = {
-      attack: 0xe74c3c,
-      defense: 0x3498db,
-      ki: 0x9b59b6,
-      speed: 0xf1c40f,
-      health: 0x2ecc71
+      attack: 0xef4444,
+      defense: 0x3b82f6,
+      ki: 0xa855f7,
+      speed: 0xeab308,
+      health: 0x10b981
     };
 
     stats.forEach((stat, i) => {
-       const y = startY + i * 45;
+       const y = startY + i * rowGap;
        const val = (storyState.stats as any)[stat];
        
        // Row background
        const rowBg = this.add.graphics();
-       rowBg.fillStyle(0xffffff, 0.05);
-       rowBg.fillRoundedRect(500, y - 18, 380, 36, 6);
+       rowBg.fillStyle(0xffffff, 0.04);
+       rowBg.fillRoundedRect(rightPanelX + 16, y - 16, rightPanelW - 32, 33, 6);
+       rowBg.lineStyle(1, 0x334155, 0.6);
+       rowBg.strokeRoundedRect(rightPanelX + 16, y - 16, rightPanelW - 32, 33, 6);
 
-       // Color indicator
-       this.add.rectangle(510, y, 8, 20, colors[stat]).setOrigin(0.5);
+       // Color indicator pill
+       this.add.rectangle(rightPanelX + 26, y, 6, 18, colors[stat]).setOrigin(0.5);
 
-       this.add.text(525, y, labels[stat], { fontSize: "18px", color: "#ddd", fontStyle: "bold" }).setOrigin(0, 0.5);
-       const valTxt = this.add.text(780, y, val.toString(), { fontSize: "22px", color: "#fff", fontStyle: "900" }).setOrigin(1, 0.5);
-       
-       // Add Button
-       const btnSize = 30;
-       const btnX = 840;
-       
-       const addBtnBg = this.add.rectangle(btnX, y, btnSize, btnSize, 0x2ecc71).setOrigin(0.5).setInteractive({ useHandCursor: true });
-       const addBtnTxt = this.add.text(btnX, y, "+", { fontSize: "24px", color: "#000", fontStyle: "bold" }).setOrigin(0.5);
-       
-       if (storyState.statPoints <= 0) {
-           addBtnBg.setFillStyle(0x555555);
-           addBtnTxt.setColor("#888");
-       }
+       this.add.text(rightPanelX + 38, y, labels[stat], {
+         fontSize: "14px",
+         color: "#e2e8f0",
+         fontStyle: "bold",
+         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+       }).setOrigin(0, 0.5);
 
-       addBtnBg.on("pointerover", () => {
-           if (storyState.statPoints > 0) addBtnBg.setFillStyle(0x27ae60);
+       const valTxt = this.add.text(rightPanelX + rightPanelW - 74, y, val.toString(), {
+         fontSize: "17px",
+         color: "#ffffff",
+         fontStyle: "900",
+         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+       }).setOrigin(1, 0.5);
+       
+       // Add Button Container & Hitbox
+       const btnX = rightPanelX + rightPanelW - 36;
+       const addBtnContainer = this.add.container(btnX, y);
+       const addBtnBg = this.add.graphics();
+       const btnSize = 28;
+
+       const drawAddBtn = (active: boolean, hover: boolean) => {
+         addBtnBg.clear();
+         if (active) {
+           addBtnBg.fillStyle(hover ? 0x16a34a : 0x22c55e, 1);
+           addBtnBg.fillRoundedRect(-btnSize / 2, -btnSize / 2, btnSize, btnSize, 6);
+           addBtnBg.lineStyle(1.5, 0x86efac, 1);
+           addBtnBg.strokeRoundedRect(-btnSize / 2, -btnSize / 2, btnSize, btnSize, 6);
+         } else {
+           addBtnBg.fillStyle(0x334155, 0.5);
+           addBtnBg.fillRoundedRect(-btnSize / 2, -btnSize / 2, btnSize, btnSize, 6);
+           addBtnBg.lineStyle(1, 0x475569, 0.5);
+           addBtnBg.strokeRoundedRect(-btnSize / 2, -btnSize / 2, btnSize, btnSize, 6);
+         }
+       };
+
+       const isActive = storyState.statPoints > 0;
+       drawAddBtn(isActive, false);
+
+       const addBtnTxt = this.add.text(0, 0, "+", {
+         fontSize: "18px",
+         color: isActive ? "#000000" : "#64748b",
+         fontStyle: "900",
+       }).setOrigin(0.5);
+
+       const addHit = this.add.rectangle(0, 0, 44, 34, 0, 0).setInteractive({ useHandCursor: true });
+       addBtnContainer.add([addBtnBg, addBtnTxt, addHit]);
+
+       addHit.on("pointerover", () => {
+         if (storyState.statPoints > 0) {
+           drawAddBtn(true, true);
+           this.tweens.add({ targets: addBtnContainer, scale: 1.1, duration: 80 });
+         }
        });
-       addBtnBg.on("pointerout", () => {
-           if (storyState.statPoints > 0) addBtnBg.setFillStyle(0x2ecc71);
+       addHit.on("pointerout", () => {
+         drawAddBtn(storyState.statPoints > 0, false);
+         this.tweens.add({ targets: addBtnContainer, scale: 1, duration: 80 });
        });
 
-       addBtnBg.on("pointerdown", () => {
+       addHit.on("pointerdown", () => {
           if (storyState.statPoints > 0) {
              storyState.statPoints--;
              (storyState.stats as any)[stat]++;
              valTxt.setText((storyState.stats as any)[stat].toString());
-             pointsTxt.setText(`PONTOS RESTANTES: ${storyState.statPoints}`);
+             pointsTxt.setText(`PONTOS: ${storyState.statPoints}`);
              
              if (storyState.statPoints <= 0) {
-                 pointsTxt.setColor("#7f8c8d");
+                 pointsTxt.setColor("#64748b");
                  this.tweens.killTweensOf(pointsTxt);
-                 pointsTxt.setAlpha(1);
+                 pointsTxt.setScale(1);
              } else {
-                 pointsTxt.setColor("#f1c40f");
+                 pointsTxt.setColor("#fbbf24");
              }
 
              this.registry.set("gameState", this.gameState);
@@ -287,95 +400,97 @@ export default class StoryHubScene extends Phaser.Scene {
              this.events.emit('update-stat-buttons');
              
              // Pop animation
-             this.tweens.add({ targets: [addBtnBg, addBtnTxt], scale: 1.2, duration: 50, yoyo: true });
+             this.tweens.add({ targets: addBtnContainer, scale: 1.25, duration: 60, yoyo: true });
              this.tweens.add({ targets: valTxt, scale: 1.3, duration: 100, yoyo: true });
           }
        });
        
        this.events.on('update-stat-buttons', () => {
-           if (storyState.statPoints <= 0) {
-               addBtnBg.setFillStyle(0x555555);
-               addBtnTxt.setColor("#888");
-           } else {
-               addBtnBg.setFillStyle(0x2ecc71);
-               addBtnTxt.setColor("#000");
-           }
+           const hasPts = storyState.statPoints > 0;
+           drawAddBtn(hasPts, false);
+           addBtnTxt.setColor(hasPts ? "#000000" : "#64748b");
        });
     });
 
-    // Tip regarding Parry, Combos, and Attributes
-    this.add.text(690, 436, "💡 Dicas: PARRY Perfeito anula dano (ampliado por DEFESA).\nSequências de COMBOS aumentam dano & Ki (turbinados por VELOCIDADE)!", {
-       fontSize: "11px",
-       color: "#bdc3c7",
+    // Tip regarding Combat inside Right Panel
+    this.add.text(rightPanelCenterX, panelY + panelHeight - 24, "💡 PARRY anula dano (DEFESA). COMBOS aumentam Ki e dano (VELOCIDADE).", {
+       fontSize: "10px",
+       color: "#94a3b8",
        align: "center",
-       lineSpacing: 3,
+       fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
     }).setOrigin(0.5);
 
-    // Battle Button
-    const hasPoints = storyState.statPoints > 0;
-    
-    // Slanted Battle Button
-    const battleBtnX = 480;
-    const battleBtnY = Math.min(490, bounds.bottom - 35);
-    
-    const battleBtnContainer = this.add.container(battleBtnX, battleBtnY);
+    // --- Bottom Battle Button ---
+    const battleBtnY = Math.min(508, bounds.bottom - 22);
+    const battleBtnContainer = this.add.container(480, battleBtnY).setDepth(200);
     
     const btnGraphics = this.add.graphics();
-    const btnWidth = 440;
-    const btnHeight = 56;
+    const btnWidth = 410;
+    const btnHeight = 44;
     
-    const drawBtn = (color: number, strokeColor: number = 0xffffff) => {
+    const drawBattleBtn = (isHover: boolean) => {
         btnGraphics.clear();
-        btnGraphics.fillStyle(color, 1);
+        // Drop Shadow
+        btnGraphics.fillStyle(0x000000, 0.5);
         btnGraphics.beginPath();
-        btnGraphics.moveTo(-btnWidth/2 + 20, -btnHeight/2);
-        btnGraphics.lineTo(btnWidth/2, -btnHeight/2);
-        btnGraphics.lineTo(btnWidth/2 - 20, btnHeight/2);
-        btnGraphics.lineTo(-btnWidth/2, btnHeight/2);
+        btnGraphics.moveTo(-btnWidth / 2 + 16 + 2, -btnHeight / 2 + 2);
+        btnGraphics.lineTo(btnWidth / 2 + 2, -btnHeight / 2 + 2);
+        btnGraphics.lineTo(btnWidth / 2 - 16 + 2, btnHeight / 2 + 2);
+        btnGraphics.lineTo(-btnWidth / 2 + 2, btnHeight / 2 + 2);
+        btnGraphics.closePath();
+        btnGraphics.fillPath();
+
+        // Main Surface
+        btnGraphics.fillStyle(isHover ? 0xd93829 : 0xe74c3c, 1);
+        btnGraphics.beginPath();
+        btnGraphics.moveTo(-btnWidth / 2 + 16, -btnHeight / 2);
+        btnGraphics.lineTo(btnWidth / 2, -btnHeight / 2);
+        btnGraphics.lineTo(btnWidth / 2 - 16, btnHeight / 2);
+        btnGraphics.lineTo(-btnWidth / 2, btnHeight / 2);
         btnGraphics.closePath();
         btnGraphics.fillPath();
         
-        btnGraphics.lineStyle(3, strokeColor, 1);
+        // Border
+        btnGraphics.lineStyle(2, isHover ? 0xfef08a : 0xf39c12, 1);
         btnGraphics.strokePath();
     };
     
-    drawBtn(0xe74c3c, 0xf39c12);
+    drawBattleBtn(false);
     
     const battleTxt = this.add.text(0, 0, `⚔ ENTRAR NA BATALHA (LUTA ${storyState.stage})`, { 
-        fontSize: "20px", 
+        fontSize: "17px", 
         color: "#ffffff", 
         fontStyle: "900", 
         stroke: "#000000",
-        strokeThickness: 4,
-        fontFamily: "system-ui, -apple-system, sans-serif" 
+        strokeThickness: 3,
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" 
     }).setOrigin(0.5);
     
     battleBtnContainer.add([btnGraphics, battleTxt]);
     
-    // Reliable interactive hit zone using rectangle
-    const hitZone = this.add.rectangle(0, 0, btnWidth, btnHeight, 0x000000, 0)
+    const battleHitZone = this.add.rectangle(0, 0, btnWidth, btnHeight + 8, 0x000000, 0)
         .setInteractive({ useHandCursor: true });
     
-    battleBtnContainer.add(hitZone);
+    battleBtnContainer.add(battleHitZone);
     
-    hitZone.on("pointerover", () => {
-        drawBtn(0xc0392b, 0xffffff);
+    battleHitZone.on("pointerover", () => {
+        drawBattleBtn(true);
         this.tweens.add({ targets: battleBtnContainer, scale: 1.03, duration: 100 });
     });
     
-    hitZone.on("pointerout", () => {
-        drawBtn(0xe74c3c, 0xf39c12);
+    battleHitZone.on("pointerout", () => {
+        drawBattleBtn(false);
         this.tweens.add({ targets: battleBtnContainer, scale: 1.0, duration: 100 });
     });
     
     let isStarting = false;
-    hitZone.on("pointerdown", () => {
+    battleHitZone.on("pointerdown", () => {
        if (isStarting) return;
        isStarting = true;
        if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
        this.tweens.add({
          targets: battleBtnContainer,
-         scale: 0.95,
+         scale: 0.94,
          duration: 60,
          yoyo: true,
          onComplete: () => {
@@ -383,26 +498,28 @@ export default class StoryHubScene extends Phaser.Scene {
          }
        });
     });
-    
-    if (hasPoints) {
-        this.add.text(battleBtnX, battleBtnY + 34, "Você tem pontos de atributo não gastos!", {
-          fontSize: "12px",
-          color: "#f1c40f",
-          fontStyle: "bold"
-        }).setOrigin(0.5);
-    }
   }
 
   showConfigMenu() {
-    const overlay = this.add.rectangle(480, 270, 960, 540, 0x000000, 0.8).setInteractive();
-    const bg = this.add.rectangle(480, 270, 400, 300, 0x111111).setStrokeStyle(3, 0xf1c40f);
-    const title = this.add.text(480, 160, "OPÇÕES DA HISTÓRIA", { fontSize: "28px", color: "#fff", fontStyle: "bold" }).setOrigin(0.5);
+    const overlay = this.add.rectangle(480, 270, 960, 540, 0x000000, 0.85).setInteractive().setDepth(300);
+    const bg = this.add.graphics().setDepth(301);
+    bg.fillStyle(0x0f172a, 0.98);
+    bg.fillRoundedRect(480 - 210, 270 - 150, 420, 300, 12);
+    bg.lineStyle(2, 0xf1c40f, 0.9);
+    bg.strokeRoundedRect(480 - 210, 270 - 150, 420, 300, 12);
 
-    const editBtn = this.createModalBtn(480, 220, 300, 50, "EDITAR VISUAL DO PERSONAGEM", 0x2ecc71, () => {
+    const title = this.add.text(480, 160, "OPÇÕES DA HISTÓRIA", {
+      fontSize: "20px",
+      color: "#f1c40f",
+      fontStyle: "900",
+      fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+    }).setOrigin(0.5).setDepth(302);
+
+    const editBtn = this.createModalBtn(480, 220, 340, 44, "🎨 EDITAR VISUAL DO PERSONAGEM", 0x0284c7, () => {
        transitionTo(this, "CharacterCreatorScene");
     });
 
-    const deleteBtn = this.createModalBtn(480, 290, 300, 50, "EXCLUIR PROGRESSO (RESET)", 0xe74c3c, () => {
+    const deleteBtn = this.createModalBtn(480, 280, 340, 44, "🗑️ REINICIAR MODO HISTÓRIA", 0xd93829, () => {
        this.gameState.storyState = undefined;
        this.registry.set("gameState", this.gameState);
        if (window.UTLW) window.UTLW.save();
@@ -410,7 +527,7 @@ export default class StoryHubScene extends Phaser.Scene {
        transitionTo(this, "ModeSelectScene");
     });
 
-    const closeBtn = this.createModalBtn(480, 360, 300, 50, "FECHAR", 0x7f8c8d, () => {
+    const closeBtn = this.createModalBtn(480, 345, 340, 44, "✕ FECHAR", 0x334155, () => {
        overlay.destroy();
        bg.destroy();
        title.destroy();
@@ -421,15 +538,40 @@ export default class StoryHubScene extends Phaser.Scene {
   }
 
   createModalBtn(x: number, y: number, width: number, height: number, text: string, color: number, callback: () => void) {
-    const container = this.add.container(x, y);
-    const bg = this.add.rectangle(0, 0, width, height, color).setStrokeStyle(2, 0xffffff);
-    const txt = this.add.text(0, 0, text, { fontSize: Math.floor(height * 0.4) + "px", color: "#fff", fontStyle: "bold", fontFamily: "system-ui" }).setOrigin(0.5);
-    container.add([bg, txt]);
-    const hitArea = this.add.rectangle(0, 0, width, height, 0x000, 0).setInteractive({ useHandCursor: true });
-    container.add(hitArea);
+    const container = this.add.container(x, y).setDepth(302);
+    const bg = this.add.graphics();
+    const radius = 8;
+
+    const drawBtn = (isHover: boolean) => {
+      bg.clear();
+      bg.fillStyle(isHover ? color : color, isHover ? 1 : 0.9);
+      bg.fillRoundedRect(-width / 2, -height / 2, width, height, radius);
+      bg.lineStyle(1.5, isHover ? 0xffffff : 0x94a3b8, isHover ? 1 : 0.6);
+      bg.strokeRoundedRect(-width / 2, -height / 2, width, height, radius);
+    };
+    drawBtn(false);
+
+    const txt = this.add.text(0, 0, text, {
+      fontSize: "13px",
+      color: "#ffffff",
+      fontStyle: "bold",
+      fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+    }).setOrigin(0.5);
+
+    const hitArea = this.add.rectangle(0, 0, width + 10, height + 8, 0x000, 0).setInteractive({ useHandCursor: true });
+    container.add([bg, txt, hitArea]);
+
+    hitArea.on("pointerover", () => {
+       drawBtn(true);
+       this.tweens.add({ targets: container, scale: 1.03, duration: 80 });
+    });
+    hitArea.on("pointerout", () => {
+       drawBtn(false);
+       this.tweens.add({ targets: container, scale: 1.0, duration: 80 });
+    });
     hitArea.on("pointerdown", () => {
        if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-       this.tweens.add({ targets: container, scale: 0.9, duration: 50, yoyo: true, onComplete: callback });
+       this.tweens.add({ targets: container, scale: 0.94, duration: 60, yoyo: true, onComplete: callback });
     });
     
     return {
@@ -437,6 +579,49 @@ export default class StoryHubScene extends Phaser.Scene {
            container.destroy();
        }
     };
+  }
+
+  createHeaderBtn(x: number, y: number, width: number, height: number, text: string, bgColor: number, strokeColor: number, callback: () => void) {
+    const container = this.add.container(x, y).setDepth(200);
+    const radius = 8;
+    const bg = this.add.graphics();
+
+    const drawBtn = (isHover: boolean) => {
+      bg.clear();
+      bg.fillStyle(0x000000, 0.6);
+      bg.fillRoundedRect(-width / 2 + 2, -height / 2 + 2, width, height, radius);
+      bg.fillStyle(isHover ? 0xd93829 : bgColor, 0.95);
+      bg.fillRoundedRect(-width / 2, -height / 2, width, height, radius);
+      bg.lineStyle(1.5, isHover ? 0xfca5a5 : strokeColor, 0.9);
+      bg.strokeRoundedRect(-width / 2, -height / 2, width, height, radius);
+    };
+    drawBtn(false);
+
+    const txt = this.add.text(0, 0, text, {
+      fontSize: "13px",
+      color: "#ffffff",
+      fontStyle: "bold",
+      fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+      resolution: 3,
+    }).setOrigin(0.5);
+
+    const hitArea = this.add.rectangle(0, 0, width + 24, height + 16, 0, 0).setInteractive({ useHandCursor: true });
+    container.add([bg, txt, hitArea]);
+
+    hitArea.on("pointerover", () => {
+       drawBtn(true);
+       this.tweens.add({ targets: container, scale: 1.05, duration: 100 });
+    });
+    hitArea.on("pointerout", () => {
+       drawBtn(false);
+       this.tweens.add({ targets: container, scale: 1, duration: 100 });
+    });
+    hitArea.on("pointerdown", () => {
+       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+       this.tweens.add({ targets: container, scale: 0.93, duration: 70, yoyo: true, onComplete: callback });
+    });
+
+    return container;
   }
 
   startNextBattle() {

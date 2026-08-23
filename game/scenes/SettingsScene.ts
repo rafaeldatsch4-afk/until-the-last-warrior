@@ -1,4 +1,5 @@
 import { transitionTo } from "../utils/sceneTransition";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import Phaser from "phaser";
 import { GameState } from "../types";
 
@@ -33,42 +34,89 @@ export default class SettingsScene extends Phaser.Scene {
       // saturation removed
     }
 
-    // Back Button (Top Left)
-    const backContainer = this.add.container(80, 40);
-    const backBtn = this.add
-      .rectangle(0, 0, 100, 40, 0xe74c3c)
-      .setStrokeStyle(2, 0xffffff);
+    // --- Static Header ---
+    const bounds = ResponsiveUtils.getSafeBounds(this);
+    const headerY = Math.max(34, bounds.top + 22);
+
+    // Back Button (Top Left - High Depth & Touch-Friendly Hitbox)
+    const backBtnX = Math.max(74, bounds.left + 54);
+    const backContainer = this.add.container(backBtnX, headerY).setDepth(200);
+
+    const btnW = 116;
+    const btnH = 36;
+    const radius = 8;
+    const backBg = this.add.graphics();
+
+    const drawBackBtn = (isHover: boolean) => {
+      backBg.clear();
+      // Drop Shadow
+      backBg.fillStyle(0x000000, 0.6);
+      backBg.fillRoundedRect(-btnW / 2 + 2, -btnH / 2 + 2, btnW, btnH, radius);
+      // Main Surface
+      backBg.fillStyle(isHover ? 0xd93829 : 0x1e293b, 0.95);
+      backBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
+      // Border
+      backBg.lineStyle(1.5, isHover ? 0xfca5a5 : 0x64748b, 0.9);
+      backBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, radius);
+    };
+    drawBackBtn(false);
+
     const backTxt = this.add
-      .text(0, 0, "BACK", {
-        fontSize: "18px",
+      .text(0, 0, "← VOLTAR", {
+        fontSize: "14px",
         fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
+        color: "#ffffff",
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+        resolution: 3,
       })
       .setOrigin(0.5);
-    backContainer.add([backBtn, backTxt]);
 
-    backBtn
-      .setInteractive({ useHandCursor: true })
-      .on("pointerover", () => backBtn.setFillStyle(0xc0392b))
-      .on("pointerout", () => backBtn.setFillStyle(0xe74c3c))
-      .on("pointerdown", () => {
-        if (this.returnScene === "PauseScene") {
-          this.scene.stop();
-          this.scene.wake("PauseScene");
-        } else {
-          transitionTo(this, "MenuScene");
-        }
+    const backHit = this.add
+      .rectangle(0, 0, 140, 52, 0x000000, 0)
+      .setInteractive({ useHandCursor: true });
+
+    backContainer.add([backBg, backTxt, backHit]);
+
+    const exitSettings = () => {
+      if (this.sound && this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+      if (this.returnScene === "PauseScene") {
+        this.scene.stop();
+        this.scene.wake("PauseScene");
+      } else {
+        transitionTo(this, "MenuScene");
+      }
+    };
+
+    backHit.on("pointerover", () => {
+      drawBackBtn(true);
+      this.tweens.add({ targets: backContainer, scale: 1.05, duration: 100 });
+    });
+    backHit.on("pointerout", () => {
+      drawBackBtn(false);
+      this.tweens.add({ targets: backContainer, scale: 1, duration: 100 });
+    });
+    backHit.on("pointerdown", () => {
+      this.tweens.add({
+        targets: backContainer,
+        scale: 0.93,
+        duration: 70,
+        yoyo: true,
+        onComplete: exitSettings,
       });
+    });
+
+    // Keyboard ESC & Backspace shortcuts
+    this.input.keyboard?.on("keydown-ESC", exitSettings);
+    this.input.keyboard?.on("keydown-BACKSPACE", exitSettings);
 
     // Title
     this.add
-      .text(480, 45, "SETTINGS", {
-        fontSize: "32px",
+      .text(480, headerY, "SETTINGS", {
+        fontSize: "28px",
         fontStyle: "bold",
         fontFamily:
           "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        resolution: 2,
+        resolution: 3,
       })
       .setOrigin(0.5);
 
