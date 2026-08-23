@@ -197,6 +197,7 @@ export function generateLeonardoSprite(scene: Phaser.Scene) {
           h * SCALE,
         );
       };
+
       const headDot = (x: number, y: number, color: number) => {
         const { ox, oy } =
           typeof getWalkOffsets === "function"
@@ -265,14 +266,24 @@ export function generateLeonardoSprite(scene: Phaser.Scene) {
 
         // Arms
         if (isAttack) {
-          box(21, 14, 10, 3, GREEN); // Right arm striking
-          box(28, 14, 3, 3, PAD); // Wrist wraps stretched
-          // Katana extended in hand!
-          box(31, 14, 14, 2, STEEL); // Blade out
-          box(31, 15, 14, 1, 0x7f8c8d); // Blade shading
-          box(31, 14, 4, 4, GREEN); // Fist holding sword
-          box(31, 14, 2, 2, 0xaaffaa); // Knuckles
-          box(6, 15, 3, 5, GREEN); // left arm back
+          // Left arm held back for balance
+          box(6, 14, 3, 5, GREEN);
+          box(6, 18, 3, 2, PAD); // Left elbow pad
+          box(5, 19, 3, 3, GREEN_SHADOW); // Left fist back
+
+          // Right arm - one-handed katana strike
+          box(20, 13, 4, 4, GREEN); // Right shoulder
+          box(23, 14, 4, 3, GREEN); // Upper arm
+          box(26, 14, 3, 3, PAD); // Wrist wraps
+          box(28, 14, 3, 3, GREEN); // Fist holding sword
+
+          // Katana (One-Handed)
+          box(27, 15, 2, 1, 0x3e2723); // Hilt pommel
+          box(30, 12, 1, 7, 0x2c3e50); // Guard
+          box(31, 14, 16, 2, STEEL); // Blade body
+          box(31, 14, 16, 1, 0xffffff); // Top shine edge
+          box(31, 15, 16, 1, 0x7f8c8d); // Blade bottom shadow
+          box(47, 14, 2, 1, 0xffffff); // Sharp tip
         } else {
           box(8, 14, 3, 8, GREEN);
           box(21, 14, 3, 8, GREEN);

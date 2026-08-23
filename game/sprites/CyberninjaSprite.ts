@@ -299,22 +299,29 @@ export function generateCyberninjaSprite(scene: Phaser.Scene) {
 
         // Arms and Weapons
         if (isAttack) {
-          box(20, 12, 4, 4, SUIT_MAIN); // Right shoulder
-          box(21, 13, 2, 2, NEON); // shoulder glowing bit
+          // Left arm held back for natural balance
+          box(7, 13, 4, 4, SUIT_MAIN); // Left shoulder
+          box(7, 17, 3, 4, SUIT_DARK); // Left upper arm
+          box(6, 20, 4, 3, METAL); // Left gauntlet/fist
 
-          // Dynamic Energy Blade Slash
-          box(24, 14, 6, 2, SUIT_DARK); // Right arm out
-          box(30, 13, 3, 4, METAL); // Metal hand
+          // Right Arm - dynamic one-handed katana slash
+          box(19, 12, 5, 4, SUIT_MAIN); // Right shoulder
+          box(20, 13, 2, 2, NEON); // Shoulder neon core
+          box(23, 14, 4, 3, SUIT_DARK); // Arm
+          box(26, 14, 4, 3, METAL); // Armored Gauntlet
+          box(26, 14, 1, 3, 0xffffff); // Gauntlet shine
 
-          // The Energy Sword
-          box(33, 14, 20, 2, NEON); // Blade core
-          alphaBox(31, 12, 24, 6, NEON, 0.4); // Blade glow aura
-          box(51, 14, 2, 1, 0xffffff); // Tip bright spark
-          box(33, 14, 10, 1, 0xffffff); // Core bright
+          // Katana Hilt & Guard (One-Handed Grip)
+          box(29, 15, 3, 2, METAL_DARK); // Tsuka (grip)
+          box(29, 15, 1, 2, NEON); // Neon pommel ring
+          box(32, 13, 2, 6, METAL_DARK); // Tsuba (crossguard)
+          box(32, 14, 2, 4, NEON); // Glowing guard core
 
-          box(6, 12, 4, 4, SUIT_MAIN); // Left shoulder back
-          box(8, 16, 2, 5, SUIT_DARK); // Left arm pulled
-          box(7, 21, 3, 3, METAL); // Left metal hand
+          // Sleek Cyber Energy Katana Blade
+          box(34, 15, 17, 2, NEON); // Cyber blade body
+          box(34, 15, 16, 1, 0xffffff); // Razor top white edge
+          box(34, 16, 17, 1, SUIT_LIGHT); // Blade underside shade
+          box(51, 15, 2, 1, 0xffffff); // Sharp angled blade tip
         } else {
           box(8, 12, 4, 4, SUIT_MAIN); // Shoulders
           box(20, 12, 4, 4, SUIT_MAIN);

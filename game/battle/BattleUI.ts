@@ -206,28 +206,28 @@ export class BattleUI {
 
     // Player 1 Name
     this.p1NameText = bs.add.text(25, 15, playerData.name, {
-      fontSize: "22px",
-      fontFamily:
-        "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+      fontSize: "20px",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      fontStyle: "bold",
       color: "#fff",
       stroke: "#000",
-      strokeThickness: 4,
+      strokeThickness: 3,
       shadow: { color: "#3498db", blur: 4, fill: true },
-      resolution: 2,
+      resolution: 3,
     });
     this.p1HudContainer.add(this.p1NameText);
 
     // Player 2 Name
     this.p2NameText = bs.add
       .text(935, 15, enemyData.name, {
-        fontSize: "22px",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontSize: "20px",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        fontStyle: "bold",
         color: "#fff",
         stroke: "#000",
-        strokeThickness: 4,
+        strokeThickness: 3,
         shadow: { color: "#e74c3c", blur: 4, fill: true },
-        resolution: 2,
+        resolution: 3,
       })
       .setOrigin(1, 0);
     this.p2HudContainer.add(this.p2NameText);
@@ -247,28 +247,27 @@ export class BattleUI {
 
     this.p1ComboText = bs.add
       .text(20, -4, "", {
-        fontSize: "36px",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontSize: "34px",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         fontStyle: "bold italic",
         color: "#ffcc00",
         stroke: "#000000",
-        strokeThickness: 6,
+        strokeThickness: 4,
         shadow: { color: "#ff0000", blur: 6, fill: true },
-        resolution: 2,
+        resolution: 3,
       })
       .setOrigin(0, 0.5);
     this.p1ComboContainer.add(this.p1ComboText);
 
     this.p1ComboDmgText = bs.add
       .text(20, 26, "", {
-        fontSize: "24px",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        fontSize: "22px",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
         fontStyle: "italic bold",
         color: "#ff5500",
         stroke: "#000000",
-        strokeThickness: 5,
-        resolution: 2,
+        strokeThickness: 3,
+        resolution: 3,
       })
       .setOrigin(0, 0.5);
     this.p1ComboContainer.add(this.p1ComboDmgText);
@@ -293,28 +292,27 @@ export class BattleUI {
 
     this.p2ComboText = bs.add
       .text(-20, -4, "", {
-        fontSize: "36px",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontSize: "34px",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         fontStyle: "bold italic",
         color: "#ffcc00",
         stroke: "#000000",
-        strokeThickness: 6,
+        strokeThickness: 4,
         shadow: { color: "#ff0000", blur: 6, fill: true },
-        resolution: 2,
+        resolution: 3,
       })
       .setOrigin(1, 0.5);
     this.p2ComboContainer.add(this.p2ComboText);
 
     this.p2ComboDmgText = bs.add
       .text(-20, 26, "", {
-        fontSize: "24px",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        fontSize: "22px",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
         fontStyle: "italic bold",
         color: "#ff5500",
         stroke: "#000000",
-        strokeThickness: 5,
-        resolution: 2,
+        strokeThickness: 3,
+        resolution: 3,
       })
       .setOrigin(1, 0.5);
     this.p2ComboContainer.add(this.p2ComboDmgText);
@@ -326,13 +324,14 @@ export class BattleUI {
 
     this.logText = bs.add
       .text(480, 120, "", {
-        fontSize: "26px",
+        fontSize: "24px",
         color: "#fff",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        fontStyle: "bold",
         stroke: "#000",
-        strokeThickness: 5,
-        shadow: { color: "#000", blur: 4, offsetX: 2, offsetY: 2, fill: true },
-        resolution: 2,
+        strokeThickness: 4,
+        shadow: { color: "#000", blur: 4, offsetX: 1, offsetY: 1, fill: true },
+        resolution: 3,
       })
       .setOrigin(0.5);
     this.uiContainer.add(this.logText);

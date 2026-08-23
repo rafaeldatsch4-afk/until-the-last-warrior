@@ -178,8 +178,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
         fontSize: "14px",
         fontStyle: "bold",
         color: "#ffffff",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -206,23 +206,22 @@ export default class CharacterSelectScene extends Phaser.Scene {
     // 2. Header Title (Centered, Safe From Back Button)
     this.headerText = this.add
       .text(width / 2, bounds.top + 26, "", {
-        fontSize: "26px",
+        fontSize: "24px",
         color: "#ffd54a",
         fontStyle: "900",
         stroke: "#000",
-        strokeThickness: 5,
-        letterSpacing: 2,
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        strokeThickness: 4,
+        letterSpacing: 1,
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         shadow: {
           offsetX: 0,
-          offsetY: 3,
+          offsetY: 2,
           color: "#000000",
           blur: 4,
           stroke: true,
           fill: true,
         },
-        resolution: 2,
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -262,24 +261,24 @@ export default class CharacterSelectScene extends Phaser.Scene {
       fontSize: "18px",
       fontStyle: "bold",
       color: "#ffd54a",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-      resolution: 2,
+      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      resolution: 3,
     });
     this.tooltipStats = this.add
       .text(240, -25, "", {
         fontSize: "13px",
         color: "#60a5fa",
         fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-        resolution: 2,
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        resolution: 3,
       })
       .setOrigin(1, 0);
     this.infoDesc = this.add.text(-240, 4, "", {
       fontSize: "13px",
       color: "#cbd5e1",
-      fontFamily: "system-ui, -apple-system, sans-serif",
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
       wordWrap: { width: 480 },
-      resolution: 2,
+      resolution: 3,
     });
     this.tooltipContainer.add([
       bg,
@@ -337,8 +336,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
         color: "#94a3b8",
         fontStyle: "bold",
         letterSpacing: 1,
-        fontFamily: "system-ui, sans-serif",
-        resolution: 2,
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -347,8 +346,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
         fontSize: "13px",
         color: "#ffffff",
         fontStyle: "bold",
-        fontFamily: "system-ui, sans-serif",
-        resolution: 2,
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -544,55 +543,82 @@ export default class CharacterSelectScene extends Phaser.Scene {
   }
 
   showDifficultyDialog() {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+
     const overlay = this.add
-      .rectangle(0, 0, 800, 600, 0x000000, 0.8)
+      .rectangle(0, 0, width, height, 0x000000, 0.85)
       .setOrigin(0, 0)
       .setDepth(100)
+      .setScrollFactor(0)
       .setInteractive();
 
-    const dialog = this.add.container(400, 300).setDepth(101);
+    const dialog = this.add.container(width / 2, height / 2).setDepth(101);
+
+    const cardW = 420;
+    const cardH = 320;
+    const halfW = cardW / 2;
+    const halfH = cardH / 2;
 
     const bg = this.add.graphics();
-    bg.lineStyle(4, 0x3498db);
-    bg.fillStyle(0x1a1a24, 1);
-    bg.strokeRect(-200, -150, 400, 300);
-    bg.fillRect(-200, -150, 400, 300);
+    bg.lineStyle(3, 0x38bdf8, 1);
+    bg.fillStyle(0x0f172a, 0.98);
+    bg.fillRoundedRect(-halfW, -halfH, cardW, cardH, 16);
+    bg.strokeRoundedRect(-halfW, -halfH, cardW, cardH, 16);
+
+    // Inner subtle border
+    bg.lineStyle(1, 0x1e293b, 1);
+    bg.strokeRoundedRect(-halfW + 4, -halfH + 4, cardW - 8, cardH - 8, 12);
 
     const title = this.add
-      .text(0, -100, "SELECIONE A DIFICULDADE", {
-        fontSize: "24px",
-        fontFamily: '"Space Grotesk", sans-serif',
+      .text(0, -halfH + 45, "SELECIONE A DIFICULDADE", {
+        fontSize: "20px",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         color: "#ffffff",
         fontStyle: "bold",
+        resolution: 3,
       })
       .setOrigin(0.5);
 
     dialog.add([bg, title]);
 
     const difficulties = [
-      { label: "FÁCIL", value: 0, color: 0x2ecc71 },
-      { label: "NORMAL", value: 1, color: 0xf1c40f },
-      { label: "DIFÍCIL", value: 2, color: 0xe74c3c },
+      { label: "FÁCIL", value: 0, color: 0x10b981, desc: "Inimigos mais lentos e com menor agressividade" },
+      { label: "NORMAL", value: 1, color: 0xf59e0b, desc: "Equilíbrio padrão de combate e combos da IA" },
+      { label: "DIFÍCIL", value: 2, color: 0xef4444, desc: "IA avançada com parries rápidos e combos mortais" },
     ];
 
     difficulties.forEach((diff, i) => {
-      const btnY = -30 + i * 60;
+      const btnY = -25 + i * 62;
+      const btnW = 280;
+      const btnH = 46;
 
       const btnBg = this.add
-        .rectangle(0, btnY, 200, 40, diff.color)
+        .rectangle(0, btnY, btnW, btnH, diff.color)
+        .setStrokeStyle(1.5, 0xffffff, 0.6)
         .setInteractive({ useHandCursor: true });
+
       const btnText = this.add
         .text(0, btnY, diff.label, {
-          fontSize: "20px",
-          fontFamily: '"JetBrains Mono", monospace',
+          fontSize: "16px",
+          fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
           color: "#000000",
           fontStyle: "bold",
+          resolution: 3,
         })
         .setOrigin(0.5);
 
       btnBg
-        .on("pointerover", () => btnBg.setAlpha(0.8))
-        .on("pointerout", () => btnBg.setAlpha(1))
+        .on("pointerover", () => {
+          btnBg.setAlpha(0.85);
+          btnBg.setScale(1.03);
+          btnText.setScale(1.03);
+        })
+        .on("pointerout", () => {
+          btnBg.setAlpha(1);
+          btnBg.setScale(1);
+          btnText.setScale(1);
+        })
         .on("pointerdown", () => {
           if (this.cache.audio.exists("sfx_select"))
             this.sound.play("sfx_select");
@@ -607,15 +633,18 @@ export default class CharacterSelectScene extends Phaser.Scene {
     });
 
     const closeBtn = this.add
-      .text(175, -135, "X", {
-        fontSize: "24px",
-        fontFamily: '"Space Grotesk", sans-serif',
-        color: "#e74c3c",
+      .text(halfW - 30, -halfH + 30, "✕", {
+        fontSize: "20px",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        color: "#ef4444",
         fontStyle: "bold",
+        resolution: 3,
       })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
+    closeBtn.on("pointerover", () => closeBtn.setScale(1.2));
+    closeBtn.on("pointerout", () => closeBtn.setScale(1));
     closeBtn.on("pointerdown", () => {
       if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
       dialog.destroy();
@@ -797,11 +826,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
       const nameTxt = this.add
         .text(0, cardH / 2 - 11, char.name, {
-          fontSize: isSmall ? "8.5px" : "10px",
+          fontSize: isSmall ? "9px" : "11px",
           fontStyle: "bold",
           color: isSelected ? "#ffffff" : "#cbd5e1",
-          fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-          resolution: 2,
+          fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+          resolution: 3,
         })
         .setOrigin(0.5);
 
@@ -827,8 +856,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
             fontSize: "10px",
             color: "#ffffff",
             fontStyle: "bold",
-            fontFamily: "system-ui, -apple-system, sans-serif",
-            resolution: 2,
+            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+            resolution: 3,
           })
           .setOrigin(0.5);
         card.add([p1Badge, p1Txt]);
@@ -846,8 +875,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
             fontSize: "10px",
             color: "#ffffff",
             fontStyle: "bold",
-            fontFamily: "system-ui, -apple-system, sans-serif",
-            resolution: 2,
+            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+            resolution: 3,
           })
           .setOrigin(0.5);
         card.add([p2Badge, p2Txt]);

@@ -4,6 +4,7 @@ import type BattleScene from "../scenes/BattleScene";
 export class BattleCamera {
   scene: BattleScene;
   camera: Phaser.Cameras.Scene2D.Camera;
+  private lastShakeTime: number = 0;
 
   constructor(scene: BattleScene) {
     this.scene = scene;
@@ -13,7 +14,8 @@ export class BattleCamera {
   setupCamera(mapWidth: number) {
     this.camera.setBounds(-500, -500, mapWidth + 1000, 1500);
 
-    if (this.camera.postFX) {
+    const isPotato = this.scene.gameState?.settings?.lowPerformanceMode;
+    if (this.camera.postFX && !isPotato) {
       this.camera.postFX.addVignette(0.5, 0.5, 0.9, 0.3);
     }
   }
@@ -43,6 +45,19 @@ export class BattleCamera {
   }
 
   shake(duration: number = 200, intensity: number = 0.05) {
+    const isPotato = this.scene.gameState?.settings?.lowPerformanceMode;
+    if (isPotato) {
+      const now = this.scene.time?.now || Date.now();
+      // Throttle micro-shakes to prevent rendering frame-time spikes on low-end devices
+      if (now - this.lastShakeTime < 75) return;
+      this.lastShakeTime = now;
+
+      // Deliver a punchy, short micro-shake that preserves impact feel
+      const balancedDuration = Math.min(Math.round(duration * 0.45), 140);
+      const balancedIntensity = Math.min(intensity * 0.4, 0.015);
+      this.camera.shake(balancedDuration, balancedIntensity);
+      return;
+    }
     this.camera.shake(duration, intensity);
   }
 
@@ -53,6 +68,12 @@ export class BattleCamera {
     b: number = 255,
     force: boolean = false,
   ) {
+    const isPotato = this.scene.gameState?.settings?.lowPerformanceMode;
+    if (isPotato) {
+      // Shorter, softer flash that clears immediately without fill-rate stalls
+      this.camera.flash(Math.min(duration * 0.5, 120), r, g, b, force);
+      return;
+    }
     this.camera.flash(duration, r, g, b, force);
   }
 

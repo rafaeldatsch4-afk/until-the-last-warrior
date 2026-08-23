@@ -50,30 +50,23 @@ export class CyberNinjaFighter extends Fighter {
         duration: 100, // Dash through
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
-          bs.createImpactEffect(target.x, target.y + 120, 0x00ffff);
+          if (bs.soundManager) bs.soundManager.playSwordSlash(isComboFinisher);
+
+          // Minecraft Java Style Sword Sweep Slash Trail
+          const bladeColor = transLevel > 0 ? 0xff0055 : 0x00eaff;
+          if (bs.createSwordSweepSlash) {
+            bs.createSwordSweepSlash(target.x, target.y + 60, isPlayer, bladeColor, 1.3);
+          } else if (bs.effects?.createSwordSweepSlash) {
+            bs.effects.createSwordSweepSlash(target.x, target.y + 60, isPlayer, bladeColor, 1.3);
+          }
+
+          bs.createImpactEffect(target.x, target.y + 60, bladeColor, "melee");
           bs.takeDamage(
             !isPlayer,
             Math.floor(
               (isComboFinisher ? 22 : 12) * bs.getDamageMultiplier(transLevel),
             ),
           );
-
-          // Slash mark
-          const slash = bs.add.graphics().setDepth(6);
-          slash.lineStyle(3, 0xffffff, 1);
-          slash.lineBetween(
-            target.x - 20,
-            target.y - 40,
-            target.x + 20,
-            target.y + 120,
-          );
-          bs.tweens.add({
-            targets: slash,
-            alpha: 0,
-            duration: 150,
-            onComplete: () => slash.destroy(),
-          });
 
           bs.time.delayedCall(200, () => {
             if (!bs.scene.isActive()) return;
@@ -212,41 +205,14 @@ export class CyberNinjaFighter extends Fighter {
 
       bs.createScreenFlash(dashColor, 300, 0.7);
       bs.cameras.main.shake(400, 0.04);
+      if (bs.soundManager) bs.soundManager.playSwordSlash(true);
 
-      // Slash Effect on Target
-      const slashGlow = bs.add
-        .graphics()
-        .setDepth(14)
-        .setBlendMode(Phaser.BlendModes.ADD);
-      slashGlow.lineStyle(12, dashColor, 0.6);
-      slashGlow.lineBetween(
-        target.x - 100,
-        target.y + 120 - 100,
-        target.x + 100,
-        target.y + 120 + 100,
-      );
-
-      const slash = bs.add
-        .graphics()
-        .setDepth(15)
-        .setBlendMode(Phaser.BlendModes.ADD);
-      slash.lineStyle(4, 0xffffff);
-      slash.lineBetween(
-        target.x - 100,
-        target.y + 120 - 100,
-        target.x + 100,
-        target.y + 120 + 100,
-      );
-
-      bs.tweens.add({
-        targets: [slash, slashGlow],
-        alpha: 0,
-        duration: 200,
-        onComplete: () => {
-          slash.destroy();
-          slashGlow.destroy();
-        },
-      });
+      // Minecraft Cyber Blade Sweep Slash
+      if (bs.createSwordSweepSlash) {
+        bs.createSwordSweepSlash(target.x, target.y + 60, !isPlayer, dashColor, 1.6, true);
+      } else if (bs.effects?.createSwordSweepSlash) {
+        bs.effects.createSwordSweepSlash(target.x, target.y + 60, !isPlayer, dashColor, 1.6, true);
+      }
 
       // Shockwave rings
       for (let i = 0; i < 3; i++) {
@@ -370,7 +336,15 @@ export class CyberNinjaFighter extends Fighter {
           dashColor,
         );
 
-        if (i % 2 === 0) bs.cameras.main.shake(80, 0.02);
+        if (i % 2 === 0) {
+          bs.cameras.main.shake(80, 0.02);
+          if (bs.createSwordSweepSlash) {
+            bs.createSwordSweepSlash(target.x + Phaser.Math.Between(-30, 30), target.y + 60 + Phaser.Math.Between(-30, 30), isPlayer, dashColor, 1.2);
+          } else if (bs.effects?.createSwordSweepSlash) {
+            bs.effects.createSwordSweepSlash(target.x + Phaser.Math.Between(-30, 30), target.y + 60 + Phaser.Math.Between(-30, 30), isPlayer, dashColor, 1.2);
+          }
+        }
+        if (bs.soundManager) bs.soundManager.playSwordSlash(false);
       });
     }
 
@@ -379,7 +353,15 @@ export class CyberNinjaFighter extends Fighter {
 
       bs.createScreenFlash(dashColor, 600, 1);
       bs.cameras.main.shake(1000, 0.1);
+      if (bs.soundManager) bs.soundManager.playSwordSlash(true);
       if (bs.soundManager) bs.soundManager.playExplosion(true);
+
+      // Massive Final Minecraft Sword Sweep Arc
+      if (bs.createSwordSweepSlash) {
+        bs.createSwordSweepSlash(target.x, target.y + 60, isPlayer, dashColor, 2.0, true);
+      } else if (bs.effects?.createSwordSweepSlash) {
+        bs.effects.createSwordSweepSlash(target.x, target.y + 60, isPlayer, dashColor, 2.0, true);
+      }
 
       // Final massive slash
       const slashGlow = bs.add

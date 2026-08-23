@@ -38,22 +38,18 @@ export class ItachiFighter extends Fighter {
         onComplete: () => {
           if (!bs.scene.isActive()) return;
 
-          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
+          if (bs.soundManager) bs.soundManager.playSwordSlash(isComboFinisher);
 
           const hitColor = transformLevel === 1 ? 0xff4500 : 0xcccccc; // Susanoo sword or kunai
-          const hitLine = bs.add
-            .rectangle(target.x, target.y + 120, 50, 4, hitColor)
-            .setRotation(isPlayer ? 0.8 : -0.8)
-            .setDepth(6);
-          bs.tweens.add({
-            targets: hitLine,
-            alpha: 0,
-            scaleX: 1.5,
-            duration: 150,
-            onComplete: () => hitLine.destroy(),
-          });
+          
+          // Minecraft Java Style Sword/Kunai Sweep Trail
+          if (bs.createSwordSweepSlash) {
+            bs.createSwordSweepSlash(target.x, target.y + 60, isPlayer, hitColor, transformLevel === 1 ? 1.4 : 1.15);
+          } else if (bs.effects?.createSwordSweepSlash) {
+            bs.effects.createSwordSweepSlash(target.x, target.y + 60, isPlayer, hitColor, transformLevel === 1 ? 1.4 : 1.15);
+          }
 
-          bs.createImpactEffect(target.x, target.y + 120, hitColor);
+          bs.createImpactEffect(target.x, target.y + 60, hitColor, "melee");
           bs.takeDamage(
             !isPlayer,
             Math.floor(

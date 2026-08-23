@@ -296,17 +296,18 @@ export class BattleEffects {
     const isClash = type === "clash";
 
     if (!isBlock && typeof window !== "undefined") {
-      if (!this.scene.gameState?.settings?.lowPerformanceMode) {
-        let intensity = "medium";
-        if (isClash || isSuperMode) intensity = "heavy";
-        else if (isBeam) intensity = "heavy";
-        else {
-          if (damage >= 25) intensity = "heavy";
-          else if (damage >= 10) intensity = "medium";
-          else intensity = "light";
-        }
-        window.dispatchEvent(new CustomEvent("shake-screen", { detail: { intensity } }));
+      let intensity = "medium";
+      if (isClash || isSuperMode) intensity = "heavy";
+      else if (isBeam) intensity = "heavy";
+      else {
+        if (damage >= 25) intensity = "heavy";
+        else if (damage >= 10) intensity = "medium";
+        else intensity = "light";
       }
+      if (this.scene.gameState?.settings?.lowPerformanceMode && intensity === "heavy") {
+        intensity = "medium";
+      }
+      window.dispatchEvent(new CustomEvent("shake-screen", { detail: { intensity } }));
     }
 
     // 1. Main Boom Circle from Pool
@@ -343,8 +344,12 @@ export class BattleEffects {
 
     // 3. Sparks & Particles using Particle System
     const isPotato = this.scene.gameState?.settings?.lowPerformanceMode;
-    const sparkCount = isPotato ? 3 : (isClash ? 35 : isBlock ? 10 : isSuperMode ? 30 : 15);
-    const streakCount = isPotato ? 2 : (isClash ? 15 : isSuperMode ? 10 : 6);
+    const sparkCount = isPotato
+      ? (isClash ? 16 : isSuperMode ? 14 : isBlock ? 6 : 9)
+      : (isClash ? 35 : isBlock ? 10 : isSuperMode ? 30 : 15);
+    const streakCount = isPotato
+      ? (isClash ? 6 : isSuperMode ? 4 : 3)
+      : (isClash ? 15 : isSuperMode ? 10 : 6);
     const sparkColor = isBlock ? 0x3498db : (isClash ? 0xfffc00 : color);
 
     try {
@@ -355,7 +360,7 @@ export class BattleEffects {
         alpha: { start: 1, end: 0 },
         tint: sparkColor,
         blendMode: Phaser.BlendModes.ADD,
-        lifespan: { min: 300, max: isClash ? 700 : 500 },
+        lifespan: { min: isPotato ? 160 : 300, max: isPotato ? 320 : (isClash ? 700 : 500) },
         gravityY: isBlock ? 100 : 400,
         quantity: sparkCount,
         emitting: false,
@@ -372,7 +377,7 @@ export class BattleEffects {
         alpha: { start: 1, end: 0 },
         tint: 0xffffff,
         blendMode: Phaser.BlendModes.ADD,
-        lifespan: { min: 100, max: isClash ? 400 : 300 },
+        lifespan: { min: isPotato ? 80 : 100, max: isPotato ? 200 : (isClash ? 400 : 300) },
         gravityY: 0,
         quantity: streakCount,
         emitting: false,
@@ -384,7 +389,7 @@ export class BattleEffects {
       streaks.explode(streakCount);
       this.activeEmitters.add(streaks);
 
-      this.scene.time.delayedCall(1200, () => {
+      this.scene.time.delayedCall(isPotato ? 600 : 1200, () => {
         if (particles) {
           this.activeEmitters.delete(particles);
           try { particles.destroy(); } catch (e) {}
@@ -453,7 +458,7 @@ export class BattleEffects {
 
     // 6. Debris & Spark Particles using Pooled Rectangles
     const debrisCount = isPotato
-      ? 6
+      ? (isClash ? 16 : isSuperMode ? 10 : isBeam ? 8 : isBlock ? 4 : 6)
       : (isClash ? 40 : isSuperMode ? 25 : isBeam ? 16 : isBlock ? 8 : 12);
 
     for (let i = 0; i < debrisCount; i++) {
@@ -492,8 +497,8 @@ export class BattleEffects {
         scaleX: isClash ? 4 : isSuperMode ? 3 : isBeam ? 2 : 0.1,
         rotation: angle,
         duration: Phaser.Math.Between(
-          isClash ? 700 : isSuperMode ? 600 : 400,
-          isClash ? 1500 : isSuperMode ? 1200 : 800
+          isClash ? (isPotato ? 400 : 700) : isSuperMode ? (isPotato ? 350 : 600) : (isPotato ? 250 : 400),
+          isClash ? (isPotato ? 700 : 1500) : isSuperMode ? (isPotato ? 600 : 1200) : (isPotato ? 400 : 800)
         ),
         ease: "Expo.easeOut",
         onComplete: () => this.rectPool.killAndHide(p),
@@ -502,7 +507,7 @@ export class BattleEffects {
 
     // 7. Shockwave Rings using Pooled Circles with Stroke
     if (isSuperMode || isBeam || isClash) {
-      const ringCount = isClash ? 4 : isSuperMode ? 3 : 1;
+      const ringCount = isClash ? (isPotato ? 2 : 4) : isSuperMode ? (isPotato ? 2 : 3) : 1;
       for (let r = 0; r < ringCount; r++) {
         const ring = this.borrowCircle(x, y, 30 + r * 15);
         ring.isFilled = false;
@@ -523,25 +528,25 @@ export class BattleEffects {
         });
       }
 
-      // Camera Shake & Screen Flash
+      // Camera Shake & Screen Flash (Balanced via BattleCamera)
       if (this.scene.battleCamera) {
         if (isClash) {
           this.scene.battleCamera.flash(400, 255, 255, 255, true);
-          if (!isPotato) this.scene.battleCamera.shake(700, 0.1);
+          this.scene.battleCamera.shake(700, 0.1);
         } else if (isSuperMode) {
           this.scene.battleCamera.flash(300, 255, 255, 255, true);
-          if (!isPotato) this.scene.battleCamera.shake(500, 0.08);
+          this.scene.battleCamera.shake(500, 0.08);
         } else {
           this.scene.battleCamera.flash(150, 255, 255, 255, true);
-          if (!isPotato) this.scene.battleCamera.shake(300, 0.05);
+          this.scene.battleCamera.shake(300, 0.05);
         }
       }
     } else if (isBlock) {
-      if (this.scene.battleCamera && !isPotato) {
+      if (this.scene.battleCamera) {
         this.scene.battleCamera.shake(100, 0.01);
       }
     } else {
-      if (this.scene.battleCamera && !isPotato) {
+      if (this.scene.battleCamera) {
         this.scene.battleCamera.shake(150, 0.02);
       }
     }
@@ -758,6 +763,149 @@ export class BattleEffects {
         });
       },
     });
+  }
+
+  // ==========================================
+  // MINECRAFT JAVA STYLE SWORD SWEEP SLASH
+  // ==========================================
+
+  public createSwordSweepSlash(
+    x: number,
+    y: number,
+    isPlayer: boolean,
+    color: number = 0xffffff,
+    scale: number = 1.0,
+    isSpecial: boolean = false
+  ) {
+    if (!this.scene.scene.isActive()) return;
+
+    const dir = isPlayer ? 1 : -1;
+    const isPotato = this.scene.gameState?.settings?.lowPerformanceMode;
+    const sweepScale = (isSpecial ? 1.4 : 1.0) * scale;
+    const sweepDuration = isSpecial ? 220 : 175;
+
+    // 1. Minecraft Java Sweep Arc Graphics (Multi-layered crescent swoosh)
+    const sweepGraphics = this.borrowGraphics(x - dir * 20 * sweepScale, y);
+    sweepGraphics.setDepth(28);
+
+    // Orientation & Angles: Sweep curved blade wake
+    const startAngle = dir > 0 ? -0.85 : Math.PI - 0.85;
+    const endAngle = dir > 0 ? 0.85 : Math.PI + 0.85;
+    const radius = 55 * sweepScale;
+
+    // Outer glow / energy halo
+    sweepGraphics.lineStyle(12 * sweepScale, color, 0.4);
+    sweepGraphics.beginPath();
+    sweepGraphics.arc(0, 0, radius, startAngle, endAngle, dir < 0);
+    sweepGraphics.strokePath();
+
+    // Mid sweep body (colored crescent trail)
+    sweepGraphics.lineStyle(7 * sweepScale, color, 0.8);
+    sweepGraphics.beginPath();
+    sweepGraphics.arc(0, 0, radius - 2 * sweepScale, startAngle + 0.05, endAngle - 0.05, dir < 0);
+    sweepGraphics.strokePath();
+
+    // Core white cutting razor edge (signature bright blade trail)
+    sweepGraphics.lineStyle(3.5 * sweepScale, 0xffffff, 1.0);
+    sweepGraphics.beginPath();
+    sweepGraphics.arc(0, 0, radius - 4 * sweepScale, startAngle + 0.1, endAngle - 0.1, dir < 0);
+    sweepGraphics.strokePath();
+
+    // Trailing echo swoosh (Minecraft sweep motion blur)
+    sweepGraphics.lineStyle(4 * sweepScale, color, 0.35);
+    sweepGraphics.beginPath();
+    sweepGraphics.arc(-10 * dir * sweepScale, 0, radius * 0.8, startAngle + 0.15, endAngle - 0.15, dir < 0);
+    sweepGraphics.strokePath();
+
+    // Sharp crescent tips
+    sweepGraphics.fillStyle(0xffffff, 0.9);
+    const tipTopX = Math.cos(startAngle) * (radius - 4 * sweepScale);
+    const tipTopY = Math.sin(startAngle) * (radius - 4 * sweepScale);
+    const tipBotX = Math.cos(endAngle) * (radius - 4 * sweepScale);
+    const tipBotY = Math.sin(endAngle) * (radius - 4 * sweepScale);
+    sweepGraphics.fillCircle(tipTopX, tipTopY, 2.5 * sweepScale);
+    sweepGraphics.fillCircle(tipBotX, tipBotY, 2.5 * sweepScale);
+
+    // Initial scale and rapid forward sweep expansion
+    sweepGraphics.setScale(0.4 * sweepScale, 0.7 * sweepScale);
+    sweepGraphics.setAlpha(1);
+
+    this.runManagedTween({
+      targets: sweepGraphics,
+      x: x + dir * 42 * sweepScale,
+      scaleX: 1.55 * sweepScale,
+      scaleY: 1.25 * sweepScale,
+      alpha: 0,
+      duration: sweepDuration,
+      ease: "Cubic.easeOut",
+      onComplete: () => this.graphicsPool.killAndHide(sweepGraphics),
+    });
+
+    // 2. Razor Cut Slice Line through Opponent
+    const sliceLength = (isSpecial ? 120 : 80) * sweepScale;
+    const sliceThick = (isSpecial ? 5 : 3.5) * sweepScale;
+    const sliceLine = this.borrowRect(x, y, sliceLength, sliceThick, 0xffffff);
+    sliceLine.setRotation(dir * 0.25).setDepth(29);
+
+    this.runManagedTween({
+      targets: sliceLine,
+      scaleX: 1.6,
+      scaleY: 0,
+      alpha: 0,
+      duration: sweepDuration - 20,
+      ease: "Expo.easeOut",
+      onComplete: () => this.rectPool.killAndHide(sliceLine),
+    });
+
+    // 3. Minecraft Sweep Pixel Particle Sparks
+    const particleCount = isPotato ? (isSpecial ? 5 : 3) : (isSpecial ? 10 : 7);
+    for (let i = 0; i < particleCount; i++) {
+      const angleOffset = (i / (particleCount - 1) - 0.5) * 1.5;
+      const baseAngle = dir > 0 ? angleOffset : Math.PI - angleOffset;
+      const spawnDist = radius * 0.85;
+      const px = x + Math.cos(baseAngle) * spawnDist;
+      const py = y + Math.sin(baseAngle) * spawnDist;
+
+      const pSize = Phaser.Math.Between(3, 5) * sweepScale;
+      const pColor = i % 2 === 0 ? 0xffffff : color;
+      const p = this.borrowRect(px, py, pSize, pSize, pColor);
+      p.setDepth(30);
+
+      const flyDist = Phaser.Math.Between(30, 75) * sweepScale;
+      this.runManagedTween({
+        targets: p,
+        x: px + Math.cos(baseAngle) * flyDist,
+        y: py + Math.sin(baseAngle) * flyDist + Phaser.Math.Between(-10, 10),
+        scaleX: 0.2,
+        scaleY: 0.2,
+        alpha: 0,
+        duration: Phaser.Math.Between(130, 210),
+        ease: "Quad.easeOut",
+        onComplete: () => this.rectPool.killAndHide(p),
+      });
+    }
+
+    // 4. Secondary Cross-Slash for Special Sword Moves
+    if (isSpecial) {
+      const crossSweep = this.borrowGraphics(x - dir * 15 * sweepScale, y);
+      crossSweep.setDepth(28);
+      crossSweep.lineStyle(6 * sweepScale, 0xffffff, 0.9);
+      crossSweep.beginPath();
+      crossSweep.arc(0, 0, radius * 0.9, endAngle, startAngle, dir > 0);
+      crossSweep.strokePath();
+      crossSweep.setScale(0.4 * sweepScale, 0.6 * sweepScale);
+
+      this.runManagedTween({
+        targets: crossSweep,
+        x: x + dir * 35 * sweepScale,
+        scaleX: 1.4 * sweepScale,
+        scaleY: 1.1 * sweepScale,
+        alpha: 0,
+        duration: sweepDuration,
+        ease: "Cubic.easeOut",
+        onComplete: () => this.graphicsPool.killAndHide(crossSweep),
+      });
+    }
   }
 
   // ==========================================

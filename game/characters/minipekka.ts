@@ -34,30 +34,16 @@ export class MiniPekkaFighter extends Fighter {
           if (!bs.scene.isActive()) return;
           attacker.play(bs.getAnimKey("minipekka", transLevel, "punch"));
 
-          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
+          if (bs.soundManager) bs.soundManager.playSwordSlash(true);
 
-          // Sword arc
-          const arc = bs.add.graphics().setDepth(6);
-          arc.lineStyle(6, 0xaaaaaa, 1);
-          arc.beginPath();
-          arc.arc(
-            attacker.x,
-            attacker.y,
-            40,
-            isPlayer ? -Math.PI / 2 : Math.PI / 2,
-            isPlayer ? Math.PI / 2 : -Math.PI / 2,
-            isPlayer ? false : true,
-          );
-          arc.strokePath();
-          bs.tweens.add({
-            targets: arc,
-            alpha: 0,
-            scale: 1.2,
-            duration: 150,
-            onComplete: () => arc.destroy(),
-          });
+          // Minecraft Java Style Heavy Sword Sweep Slash Trail
+          if (bs.createSwordSweepSlash) {
+            bs.createSwordSweepSlash(target.x, target.y + 60, isPlayer, 0xecf0f1, 1.45);
+          } else if (bs.effects?.createSwordSweepSlash) {
+            bs.effects.createSwordSweepSlash(target.x, target.y + 60, isPlayer, 0xecf0f1, 1.45);
+          }
 
-          bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
+          bs.createImpactEffect(target.x, target.y + 60, 0xffffff, "melee");
           bs.takeDamage(
             !isPlayer,
             Math.floor(

@@ -2,17 +2,18 @@ export function detectLowEndDevice(): boolean {
   try {
     const nav = navigator as any;
 
-    // CPU fraco (poucos núcleos)
-    const lowCores = nav.hardwareConcurrency && nav.hardwareConcurrency <= 4;
+    // CPU com 2 núcleos ou menos (dispositivos de entrada)
+    const veryLowCores = typeof nav.hardwareConcurrency === "number" && nav.hardwareConcurrency <= 2;
 
-    // Pouca memória RAM disponível (API não suportada em todos navegadores, então é opcional)
-    const lowMemory = nav.deviceMemory && nav.deviceMemory <= 4;
+    // Menos de 2 GB de memória RAM disponível
+    const veryLowMemory = typeof nav.deviceMemory === "number" && nav.deviceMemory <= 2;
 
-    // Mobile geralmente se beneficia do modo leve por padrão
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    // Telas de baixa resolução / taxa de quadros reduzida
+    const isSmallScreenLowSpec = (window.innerWidth <= 480 || window.innerHeight <= 480) && (veryLowCores || veryLowMemory);
 
-    return !!(lowCores || lowMemory || isMobile);
+    return !!(veryLowCores || veryLowMemory || isSmallScreenLowSpec);
   } catch (e) {
     return false;
   }
 }
+

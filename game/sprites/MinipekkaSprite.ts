@@ -197,6 +197,7 @@ export function generateMinipekkaSprite(scene: Phaser.Scene) {
           h * SCALE,
         );
       };
+
       const headDot = (x: number, y: number, color: number) => {
         const { ox, oy } =
           typeof getWalkOffsets === "function"
@@ -253,24 +254,43 @@ export function generateMinipekkaSprite(scene: Phaser.Scene) {
         box(13, 14 + offY, 1, 5, 0x111111);
         box(18, 14 + offY, 1, 5, 0x111111);
 
-        // Arms
-        box(7, 15 + offY, 2, 6, METAL_LIGHT);
-        box(23, 15 + offY, 2, 6, METAL_LIGHT); // Upper arm
-        box(7, 21 + offY, 2, 2, METAL_DARK);
-        box(23, 21 + offY, 2, 2, METAL_DARK); // Hand
-        // Arm shading
-        box(7, 15 + offY, 1, 6, METAL_DARK);
-        box(24, 15 + offY, 1, 6, METAL_DARK);
+        // Arms & One-Handed Sword Stance
+        if (isAttack) {
+          // Left arm held back naturally for momentum balance
+          box(7, 16 + offY, 3, 5, METAL_LIGHT);
+          box(7, 21 + offY, 3, 2, METAL_DARK); // Left fist
 
-        // Sword
-        const swordY = f % 2 === 0 ? 14 + offY : 15 + offY;
-        headBox(6, swordY + 6, 2, 4, 0x555555); // Hilt
-        headBox(5, swordY + 5, 4, 1, METAL_DARK); // Guard
-        headBox(5, swordY - 2, 4, 7, 0xecf0f1); // Blade
-        headBox(6, swordY - 3, 2, 1, 0xecf0f1); // Tip
-        // Sword shading
-        headBox(7, swordY - 2, 2, 7, 0xbdc3c7);
-        headBox(7, swordY - 3, 1, 1, 0xbdc3c7);
+          // Right arm swinging sword forward with ONE HAND
+          box(20, 15 + offY, 5, 4, METAL_LIGHT); // Right shoulder/arm
+          box(24, 15 + offY, 3, 4, METAL_DARK); // Heavy gauntlet
+
+          // Heavy Blade in one hand
+          box(26, 16 + offY, 3, 2, 0x555555); // Hilt
+          box(28, 13 + offY, 2, 8, METAL_DARK); // Guard
+          box(30, 15 + offY, 15, 4, 0xecf0f1); // Heavy Blade
+          box(30, 15 + offY, 15, 1, 0xffffff); // Top shine
+          box(30, 18 + offY, 15, 1, 0xbdc3c7); // Spine
+          box(45, 16 + offY, 2, 2, 0xecf0f1); // Tip
+        } else {
+          // Idle / Walk one-handed sword hold
+          box(7, 15 + offY, 2, 6, METAL_LIGHT);
+          box(23, 15 + offY, 2, 6, METAL_LIGHT); // Upper arm
+          box(7, 21 + offY, 2, 2, METAL_DARK);
+          box(23, 21 + offY, 2, 2, METAL_DARK); // Hand
+          // Arm shading
+          box(7, 15 + offY, 1, 6, METAL_DARK);
+          box(24, 15 + offY, 1, 6, METAL_DARK);
+
+          // Sword held in left hand
+          const swordY = f % 2 === 0 ? 14 + offY : 15 + offY;
+          headBox(6, swordY + 6, 2, 4, 0x555555); // Hilt
+          headBox(5, swordY + 5, 4, 1, METAL_DARK); // Guard
+          headBox(5, swordY - 2, 4, 7, 0xecf0f1); // Blade
+          headBox(6, swordY - 3, 2, 1, 0xecf0f1); // Tip
+          // Sword shading
+          headBox(7, swordY - 2, 2, 7, 0xbdc3c7);
+          headBox(7, swordY - 3, 1, 1, 0xbdc3c7);
+        }
 
         // Head
         headBox(11, 10 + offY, 10, 3, METAL_LIGHT); // Lower head

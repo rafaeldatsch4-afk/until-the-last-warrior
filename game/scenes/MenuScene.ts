@@ -173,11 +173,11 @@ export default class MenuScene extends Phaser.Scene {
         color: "#ffd54a",
         fontStyle: "bold",
         letterSpacing: 1.5,
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         stroke: "#000000",
-        strokeThickness: 3,
-        shadow: { color: "#000000", blur: 6, fill: true },
-        resolution: 2,
+        strokeThickness: 2,
+        shadow: { color: "#000000", blur: 4, fill: true },
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -226,8 +226,8 @@ export default class MenuScene extends Phaser.Scene {
         fontSize: "11px",
         color: "#b8860b",
         fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-        resolution: 2,
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -237,9 +237,9 @@ export default class MenuScene extends Phaser.Scene {
         color: "#ffdf00",
         fontStyle: "bold",
         stroke: "#000000",
-        strokeThickness: 3,
-        fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, monospace",
-        resolution: 2,
+        strokeThickness: 2,
+        fontFamily: "'Plus Jakarta Sans', 'JetBrains Mono', monospace",
+        resolution: 3,
       })
       .setOrigin(0, 0.5);
 
@@ -365,8 +365,8 @@ export default class MenuScene extends Phaser.Scene {
         fontSize: "13px",
         color: "#e2e8f0",
         fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-        resolution: 2,
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -495,32 +495,29 @@ export default class MenuScene extends Phaser.Scene {
     // Background Graphic with rounded corners and golden border
     const popupBg = this.add.graphics();
     popupBg.fillStyle(0x0a0f1d, 0.98);
-    popupBg.fillRoundedRect(-halfW, -halfH, modalW, modalH, 14);
-    popupBg.lineStyle(2, 0xf59e0b, 0.85);
-    popupBg.strokeRoundedRect(-halfW, -halfH, modalW, modalH, 14);
+    popupBg.fillRoundedRect(-halfW, -halfH, modalW, modalH, 16);
+    popupBg.lineStyle(2, 0xf59e0b, 0.9);
+    popupBg.strokeRoundedRect(-halfW, -halfH, modalW, modalH, 16);
 
     // Subtle header accent line
     const headerLine = this.add.graphics();
-    headerLine.lineStyle(1, 0x334155, 0.6);
-    headerLine.lineBetween(-halfW + 16, -halfH + 46, halfW - 16, -halfH + 46);
+    headerLine.lineStyle(1, 0x334155, 0.7);
+    headerLine.lineBetween(-halfW + 16, -halfH + 48, halfW - 16, -halfH + 48);
 
     // Header Title
     const popupTitle = this.add
-      .text(0, -halfH + 24, "⚡ MISSÕES DIÁRIAS & RECOMPENSAS", {
+      .text(0, -halfH + 25, "⚡ MISSÕES DIÁRIAS & RECOMPENSAS", {
         fontSize: "18px",
-        fontStyle: "900",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#f59e0b",
-        stroke: "#000000",
-        strokeThickness: 3,
-        resolution: 2,
+        fontStyle: "bold",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        color: "#fbbf24",
+        resolution: 3,
       })
       .setOrigin(0.5);
 
     // Modern Close Button
-    const closeBtnX = halfW - 22;
-    const closeBtnY = -halfH + 22;
+    const closeBtnX = halfW - 24;
+    const closeBtnY = -halfH + 24;
     const closeBtnBg = this.add.graphics();
     closeBtnBg.fillStyle(0x1e293b, 0.9);
     closeBtnBg.fillCircle(closeBtnX, closeBtnY, 14);
@@ -532,8 +529,8 @@ export default class MenuScene extends Phaser.Scene {
         fontSize: "13px",
         color: "#94a3b8",
         fontStyle: "bold",
-        fontFamily: "system-ui, sans-serif",
-        resolution: 2,
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -583,43 +580,42 @@ export default class MenuScene extends Phaser.Scene {
     );
 
     const cardInnerW = modalW - 28;
-    const streakY = -halfH + 74;
+    const streakY = -halfH + 76;
 
     const streakBg = this.add.graphics();
     streakBg.fillStyle(0x111827, 0.95);
-    streakBg.fillRoundedRect(-cardInnerW / 2, streakY - 22, cardInnerW, 44, 8);
-    streakBg.lineStyle(1.5, 0xf97316, 0.7);
-    streakBg.strokeRoundedRect(-cardInnerW / 2, streakY - 22, cardInnerW, 44, 8);
+    streakBg.fillRoundedRect(-cardInnerW / 2, streakY - 22, cardInnerW, 46, 10);
+    streakBg.lineStyle(1.5, 0xf97316, 0.8);
+    streakBg.strokeRoundedRect(-cardInnerW / 2, streakY - 22, cardInnerW, 46, 10);
 
     const streakTitleText = this.add.text(
-      -cardInnerW / 2 + 12,
+      -cardInnerW / 2 + 14,
       streakY - 10,
       `🔥 Sequência Diária: ${streakInfo.currentStreak} ${streakInfo.currentStreak === 1 ? "Dia" : "Dias"}`,
       {
         fontSize: "13px",
         fontStyle: "bold",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         color: "#fb923c",
-        resolution: 2,
+        resolution: 3,
       },
     );
 
     const streakDetailText = this.add.text(
-      -cardInnerW / 2 + 12,
-      streakY + 7,
+      -cardInnerW / 2 + 14,
+      streakY + 8,
       `Bônus diário: +${currentStreakCoins} 🪙 de login`,
       {
         fontSize: "11px",
-        color: "#94a3b8",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
+        color: "#cbd5e1",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        resolution: 3,
       },
     );
 
     popupCard.add([streakBg, streakTitleText, streakDetailText]);
 
-    const streakBtnX = cardInnerW / 2 - 48;
+    const streakBtnX = cardInnerW / 2 - 50;
 
     if (hasClaimedStreakToday) {
       const claimedStreakText = this.add
@@ -627,8 +623,8 @@ export default class MenuScene extends Phaser.Scene {
           fontSize: "11px",
           color: "#22c55e",
           fontStyle: "bold",
-          fontFamily: "system-ui, sans-serif",
-          resolution: 2,
+          fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+          resolution: 3,
         })
         .setOrigin(0.5);
       popupCard.add(claimedStreakText);
@@ -637,7 +633,7 @@ export default class MenuScene extends Phaser.Scene {
       const drawClaimStreak = (isH: boolean) => {
         claimStreakBg.clear();
         claimStreakBg.fillStyle(isH ? 0x16a34a : 0x22c55e, 1);
-        claimStreakBg.fillRoundedRect(streakBtnX - 40, streakY - 13, 80, 26, 6);
+        claimStreakBg.fillRoundedRect(streakBtnX - 42, streakY - 14, 84, 28, 8);
       };
       drawClaimStreak(false);
 
@@ -646,13 +642,13 @@ export default class MenuScene extends Phaser.Scene {
           fontSize: "11px",
           color: "#ffffff",
           fontStyle: "bold",
-          fontFamily: "system-ui, sans-serif",
-          resolution: 2,
+          fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+          resolution: 3,
         })
         .setOrigin(0.5);
 
       const claimStreakHit = this.add
-        .rectangle(streakBtnX, streakY, 80, 26, 0x000000, 0)
+        .rectangle(streakBtnX, streakY, 84, 28, 0x000000, 0)
         .setInteractive({ useHandCursor: true });
 
       claimStreakHit.on("pointerover", () => drawClaimStreak(true));
@@ -668,8 +664,8 @@ export default class MenuScene extends Phaser.Scene {
               fontSize: "11px",
               color: "#22c55e",
               fontStyle: "bold",
-              fontFamily: "system-ui, sans-serif",
-              resolution: 2,
+              fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+              resolution: 3,
             })
             .setOrigin(0.5);
           popupCard.add(claimedStreakText);
@@ -689,7 +685,7 @@ export default class MenuScene extends Phaser.Scene {
       if (p.current >= challenge.target && !p.claimed) claimableCount++;
     });
 
-    let startY = streakY + 52;
+    let startY = streakY + 54;
     const itemGap = 62;
 
     const categoryColors: Record<string, { bg: number; border: number; label: string; text: string }> = {
@@ -706,66 +702,66 @@ export default class MenuScene extends Phaser.Scene {
       const catConfig = categoryColors[challenge.category] || categoryColors.combat;
 
       const chCard = this.add.graphics();
-      chCard.fillStyle(0x0f172a, 0.9);
-      chCard.fillRoundedRect(-cardInnerW / 2, cardY - 26, cardInnerW, 54, 8);
-      chCard.lineStyle(1, isCompleted ? 0x10b981 : 0x1e293b, isCompleted ? 0.8 : 0.6);
-      chCard.strokeRoundedRect(-cardInnerW / 2, cardY - 26, cardInnerW, 54, 8);
+      chCard.fillStyle(0x0f172a, 0.92);
+      chCard.fillRoundedRect(-cardInnerW / 2, cardY - 26, cardInnerW, 54, 10);
+      chCard.lineStyle(1.5, isCompleted ? 0x10b981 : 0x1e293b, isCompleted ? 0.9 : 0.7);
+      chCard.strokeRoundedRect(-cardInnerW / 2, cardY - 26, cardInnerW, 54, 10);
 
       // Icon + Category badge
       const chIconText = this.add.text(-cardInnerW / 2 + 10, cardY - 14, challenge.icon, {
         fontSize: "16px",
-        resolution: 2,
+        resolution: 3,
       });
 
       const catBadgeText = this.add.text(-cardInnerW / 2 + 34, cardY - 15, `[${catConfig.label}]`, {
         fontSize: "10px",
         fontStyle: "bold",
         color: catConfig.text,
-        fontFamily: "system-ui, sans-serif",
-        resolution: 2,
+        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+        resolution: 3,
       });
 
-      const chTitle = this.add.text(-cardInnerW / 2 + 104, cardY - 15, challenge.title, {
-        fontSize: "12px",
+      const chTitle = this.add.text(-cardInnerW / 2 + 106, cardY - 15, challenge.title, {
+        fontSize: "13px",
         fontStyle: "bold",
-        color: "#f8fafc",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
+        color: "#ffffff",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        resolution: 3,
       });
 
-      const chDesc = this.add.text(-cardInnerW / 2 + 12, cardY + 4, challenge.desc, {
-        fontSize: "10px",
-        color: "#94a3b8",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
+      const chDesc = this.add.text(-cardInnerW / 2 + 12, cardY + 5, challenge.desc, {
+        fontSize: "11px",
+        color: "#cbd5e1",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        resolution: 3,
       });
 
       // Progress bar background & fill
       const barW = 100;
-      const barH = 5;
+      const barH = 6;
       const barX = cardInnerW / 2 - 195;
       const barY = cardY + 7;
       const fillRatio = Math.min(1, Math.max(0, p.current / challenge.target));
 
       const barBg = this.add.graphics();
       barBg.fillStyle(0x1e293b, 1);
-      barBg.fillRoundedRect(barX, barY, barW, barH, 2);
+      barBg.fillRoundedRect(barX, barY, barW, barH, 3);
       if (fillRatio > 0) {
         barBg.fillStyle(isCompleted ? 0x22c55e : 0x3b82f6, 1);
-        barBg.fillRoundedRect(barX, barY, Math.max(4, barW * fillRatio), barH, 2);
+        barBg.fillRoundedRect(barX, barY, Math.max(4, barW * fillRatio), barH, 3);
       }
 
       const chProgressText = this.add
         .text(
           barX + barW + 8,
-          barY + 2,
+          barY + 3,
           `${Math.min(p.current, challenge.target)}/${challenge.target}`,
           {
-            fontSize: "10px",
+            fontSize: "11px",
             fontStyle: "bold",
             color: isCompleted ? "#4ade80" : "#94a3b8",
-            fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-            resolution: 2,
+            fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            resolution: 3,
           },
         )
         .setOrigin(0, 0.5);
@@ -776,18 +772,18 @@ export default class MenuScene extends Phaser.Scene {
           cardY - 12,
           `+${challenge.reward} 🪙`,
           {
-            fontSize: "11px",
+            fontSize: "12px",
             fontStyle: "bold",
-            color: "#fbbf24",
-            fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-            resolution: 2,
+            color: "#fde047",
+            fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            resolution: 3,
           },
         )
         .setOrigin(1, 0.5);
 
       popupCard.add([chCard, chIconText, catBadgeText, chTitle, chDesc, barBg, chProgressText, chReward]);
 
-      const actionBtnX = cardInnerW / 2 - 48;
+      const actionBtnX = cardInnerW / 2 - 50;
 
       if (p.claimed) {
         const claimedText = this.add
@@ -795,8 +791,8 @@ export default class MenuScene extends Phaser.Scene {
             fontSize: "11px",
             color: "#22c55e",
             fontStyle: "bold",
-            fontFamily: "system-ui, sans-serif",
-            resolution: 2,
+            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+            resolution: 3,
           })
           .setOrigin(0.5);
         popupCard.add(claimedText);
@@ -805,7 +801,7 @@ export default class MenuScene extends Phaser.Scene {
         const drawClaimBtn = (isH: boolean) => {
           claimBtnBg.clear();
           claimBtnBg.fillStyle(isH ? 0xeab308 : 0xfacc15, 1);
-          claimBtnBg.fillRoundedRect(actionBtnX - 36, cardY - 13, 72, 26, 6);
+          claimBtnBg.fillRoundedRect(actionBtnX - 38, cardY - 14, 76, 28, 8);
         };
         drawClaimBtn(false);
 
@@ -813,14 +809,14 @@ export default class MenuScene extends Phaser.Scene {
           .text(actionBtnX, cardY, "COLETAR", {
             fontSize: "11px",
             color: "#000000",
-            fontStyle: "900",
-            fontFamily: "system-ui, sans-serif",
-            resolution: 2,
+            fontStyle: "bold",
+            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+            resolution: 3,
           })
           .setOrigin(0.5);
 
         const claimHit = this.add
-          .rectangle(actionBtnX, cardY, 72, 26, 0x000000, 0)
+          .rectangle(actionBtnX, cardY, 76, 28, 0x000000, 0)
           .setInteractive({ useHandCursor: true });
 
         claimHit.on("pointerover", () => drawClaimBtn(true));
@@ -835,8 +831,8 @@ export default class MenuScene extends Phaser.Scene {
                 fontSize: "11px",
                 color: "#22c55e",
                 fontStyle: "bold",
-                fontFamily: "system-ui, sans-serif",
-                resolution: 2,
+                fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+                resolution: 3,
               })
               .setOrigin(0.5);
             popupCard.add(claimedText);
@@ -855,11 +851,11 @@ export default class MenuScene extends Phaser.Scene {
       } else {
         const inProgressTxt = this.add
           .text(actionBtnX, cardY, "EM ANDAMENTO", {
-            fontSize: "9px",
-            color: "#64748b",
+            fontSize: "10px",
+            color: "#94a3b8",
             fontStyle: "bold",
-            fontFamily: "system-ui, sans-serif",
-            resolution: 2,
+            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+            resolution: 3,
           })
           .setOrigin(0.5);
         popupCard.add(inProgressTxt);
@@ -875,24 +871,25 @@ export default class MenuScene extends Phaser.Scene {
       const drawCollectAll = (isH: boolean) => {
         collectAllBg.clear();
         collectAllBg.fillStyle(isH ? 0x16a34a : 0x22c55e, 1);
-        collectAllBg.fillRoundedRect(-80, collectAllY - 13, 160, 26, 6);
+        collectAllBg.fillRoundedRect(-80, collectAllY - 14, 160, 28, 8);
       };
       drawCollectAll(false);
 
       const collectAllTxt = this.add
         .text(0, collectAllY, "⚡ COLETAR TUDO", {
-          fontSize: "11px",
+          fontSize: "12px",
           color: "#ffffff",
           fontStyle: "bold",
-          fontFamily: "system-ui, sans-serif",
-          resolution: 2,
+          fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+          resolution: 3,
         })
         .setOrigin(0.5);
 
       const collectAllHit = this.add
-        .rectangle(0, collectAllY, 160, 26, 0x000000, 0)
+        .rectangle(0, collectAllY, 160, 28, 0x000000, 0)
         .setInteractive({ useHandCursor: true });
 
+      claimableCount = 0;
       collectAllHit.on("pointerover", () => drawCollectAll(true));
       collectAllHit.on("pointerout", () => drawCollectAll(false));
       collectAllHit.on("pointerdown", async () => {
@@ -983,13 +980,13 @@ export default class MenuScene extends Phaser.Scene {
       .text(28, height / 2 - 1, text, {
         fontSize: "14px",
         fontStyle: "italic bold",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-        letterSpacing: 1,
-        color: "#e2e8f0",
+        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        letterSpacing: 0.5,
+        color: "#f8fafc",
         stroke: "#000000",
-        strokeThickness: 3,
+        strokeThickness: 2,
         shadow: { offsetX: 1, offsetY: 1, color: "#000", blur: 0, fill: true },
-        resolution: 2,
+        resolution: 3,
       })
       .setOrigin(0, 0.5);
 

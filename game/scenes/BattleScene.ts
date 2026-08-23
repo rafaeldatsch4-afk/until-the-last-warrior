@@ -585,8 +585,8 @@ export default class BattleScene extends Phaser.Scene {
     if (this.playerHp <= 0 || this.enemyHp <= 0) {
       this.isBattleOver = true;
       this.time.timeScale = 0.15;
-      if (this.battleCamera) if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(600, 0.003);
-      else if (!this.gameState.settings?.lowPerformanceMode) this.cameras.main.shake(600, 0.003);
+      if (this.battleCamera) this.battleCamera.shake(600, 0.003);
+      else this.cameras.main.shake(600, 0.003);
 
       this.time.delayedCall(105, () => {
         this.time.timeScale = 1;
@@ -2565,8 +2565,14 @@ export default class BattleScene extends Phaser.Scene {
               if (!this.scene.isActive()) return;
 
               // Impact
-              if (this.soundManager)
-                this.soundManager.playPunchImpact(isComboFinisher);
+              const isSword = this.isSwordCharacter(attackerData);
+              if (this.soundManager) {
+                if (isSword) {
+                  this.soundManager.playSwordSlash(isComboFinisher);
+                } else {
+                  this.soundManager.playPunchImpact(isComboFinisher);
+                }
+              }
 
               const baseDamage = isComboFinisher ? 20 : 10;
               const damage = Math.floor(
@@ -2577,15 +2583,23 @@ export default class BattleScene extends Phaser.Scene {
               this.modifyKi(isPlayer, 5);
 
               // Visual Impact
-              if (this.battleCamera)
-                if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(
+              if (this.battleCamera) {
+                this.battleCamera.shake(
                   isComboFinisher ? 200 : 100,
                   isComboFinisher ? 0.02 : 0.01,
                 );
+              }
 
               if (isComboFinisher) {
                 if (this.battleUI)
                   this.battleUI.showCombo(target.x, target.y - 100);
+              }
+
+              if (isSword) {
+                const slashColor = attackerData.key === "custom_999"
+                  ? (attackerData.customData?.sp1_id === "cyberninja" ? 0x00eaff : 0x38bdf8)
+                  : (attackerData.key === "cyberninja" ? 0x00eaff : (attackerData.key === "leonardo" ? 0x2ecc71 : 0xecf0f1));
+                this.createSwordSweepSlash(target.x, target.y + 60, isPlayer, slashColor, isComboFinisher ? 1.4 : 1.15);
               }
 
               this.createImpactEffect(target.x, target.y + 60, 0xffffff, "melee", damage);
@@ -3020,7 +3034,7 @@ export default class BattleScene extends Phaser.Scene {
         });
         darkAuraElements.push(darkParticle);
       }
-      if (this.battleCamera) if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(800, 0.01);
+      if (this.battleCamera) this.battleCamera.shake(800, 0.01);
     }
 
     // Gathering energy particles
@@ -3163,7 +3177,7 @@ export default class BattleScene extends Phaser.Scene {
                 this.battleCamera.flash(800, 255, 255, 255, true);
             }
 
-            if (this.battleCamera) if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(1000, 0.05);
+            if (this.battleCamera) this.battleCamera.shake(1000, 0.05);
             if (this.soundManager)
               this.soundManager.playTransform(currentLevel + 1);
 
@@ -3316,6 +3330,7 @@ export default class BattleScene extends Phaser.Scene {
   ) {
     attacker.play(animKeySpecial);
 
+    const isPotato = this.gameState.settings?.lowPerformanceMode;
     // Energy burst particles
     const emitter = this.add.particles(attacker.x, attacker.y, "energy_particle", {
       speed: { min: 200, max: 600 },
@@ -3324,10 +3339,10 @@ export default class BattleScene extends Phaser.Scene {
       alpha: { start: 1, end: 0 },
       tint: tintColor || 0xffaa00,
       blendMode: Phaser.BlendModes.ADD,
-      lifespan: { min: 400, max: 800 },
-      quantity: this.gameState.settings?.lowPerformanceMode ? 2 : 12,
+      lifespan: { min: isPotato ? 200 : 400, max: isPotato ? 400 : 800 },
+      quantity: isPotato ? 5 : 12,
       gravityY: -200,
-      frequency: 20,
+      frequency: isPotato ? 40 : 20,
     });
     emitter.setDepth(attacker.depth + 1);
 
@@ -4193,12 +4208,38 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  createSwordSweepSlash(
+    x: number,
+    y: number,
+    isPlayer: boolean,
+    color: number = 0xffffff,
+    scale: number = 1.0,
+    isSpecial: boolean = false
+  ) {
+    if (this.effects) {
+      this.effects.createSwordSweepSlash(x, y, isPlayer, color, scale, isSpecial);
+    }
+  }
+
+  isSwordCharacter(data: any): boolean {
+    if (!data) return false;
+    const key = data.key;
+    if (key === "leonardo" || key === "cyberninja" || key === "minipekka" || key === "madara" || key === "itachi") {
+      return true;
+    }
+    if (key === "custom_999") {
+      if (data.customData?.accessory === "sword" || data.customData?.sword) return true;
+      if (data.baseKey === "leonardo" || data.baseKey === "cyberninja" || data.baseKey === "minipekka") return true;
+    }
+    return false;
+  }
+
   playTurnTransitionEffect() {
     if (!this.scene.isActive()) return;
 
     // Screen shake to emphasize the shift in intensity
     if (this.battleCamera) {
-      if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(200, 0.015);
+      this.battleCamera.shake(200, 0.015);
     }
 
     // Particle dust effect at the midway point
@@ -4574,7 +4615,8 @@ export default class BattleScene extends Phaser.Scene {
   private hitStopTimeout: NodeJS.Timeout | null = null;
 
   triggerHitStop(duration: number) {
-    if (this.gameState.settings?.lowPerformanceMode) return;
+    const isPotato = this.gameState.settings?.lowPerformanceMode;
+    const finalDuration = isPotato ? Math.min(duration, 40) : duration;
     
     // Pause the entire scene (update loop, physics, tweens, animations)
     this.scene.pause();
@@ -4590,7 +4632,7 @@ export default class BattleScene extends Phaser.Scene {
       if (this.sys && this.sys.isActive() === false && this.scene.isPaused()) {
          this.scene.resume();
       }
-    }, duration);
+    }, finalDuration);
   }
 
   takeDamage(isP: boolean, baseDmg: number, fromNetwork = false) {
@@ -4910,11 +4952,11 @@ export default class BattleScene extends Phaser.Scene {
         // normal hit
         if (this.battleCamera) {
           if (isCritical) {
-            // Intense, longer screen shake for critical hits
-            if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(600, 0.06);
+            // Intense screen shake for critical hits
+            this.battleCamera.shake(600, 0.06);
             this.battleCamera.flash(300, 255, 50, 50, true); // Vibrant red flash
           } else {
-            if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(150, 0.02);
+            this.battleCamera.shake(150, 0.02);
           }
         }
         this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee", dmg);
@@ -4960,7 +5002,7 @@ export default class BattleScene extends Phaser.Scene {
               this.battleUI.showLog("💥 ULTRA COMBO! Dano Devastador!");
               if (this.battleCamera) {
                 this.battleCamera.flash(160, 220, 80, 255, true);
-                if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(200, 0.035);
+                this.battleCamera.shake(200, 0.035);
               }
               this.createImpactEffect(target.x, target.y + 50, 0x00ffff, "super", dmg);
               if (this.soundManager) this.soundManager.playClash();
@@ -4969,7 +5011,7 @@ export default class BattleScene extends Phaser.Scene {
               this.battleUI.showLog("👑 WARRIOR GOD COMBO! PODER MÁXIMO DESENCADEADO!");
               if (this.battleCamera) {
                 this.battleCamera.flash(260, 255, 215, 0, true);
-                if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(350, 0.05);
+                this.battleCamera.shake(350, 0.05);
               }
               this.createImpactEffect(target.x, target.y + 50, 0xffd700, "super", dmg);
               if (this.soundManager) this.soundManager.playClash();
@@ -4998,9 +5040,9 @@ export default class BattleScene extends Phaser.Scene {
                this.createImpactEffect(target.x + Phaser.Math.Between(-30, 30), target.y + 60 + Phaser.Math.Between(-30, 30), 0x00ffff, "super", dmg);
             }
 
-            // Shake camera more for higher combos
+            // Shake camera for higher combos
             if (this.battleCamera) {
-               if (!this.gameState.settings?.lowPerformanceMode) this.battleCamera.shake(100 + comboCount * 10, Math.min(0.01 + comboCount * 0.002, 0.04));
+               this.battleCamera.shake(100 + comboCount * 10, Math.min(0.01 + comboCount * 0.002, 0.04));
             }
         }
       }
@@ -5039,6 +5081,7 @@ export default class BattleScene extends Phaser.Scene {
         else this.p2InvulnerableUntil = this.time.now + 1500;
 
         const attacker = isP ? this.enemy : this.player;
+        const isPotato = this.gameState.settings?.lowPerformanceMode;
         [target, attacker].forEach((char) => {
           if (char && char.active) {
             // 1. PostFX Glow (if WebGL supports it and is functional)
@@ -5082,9 +5125,9 @@ export default class BattleScene extends Phaser.Scene {
                 speed: { min: 80, max: 250 },
                 scale: { start: 1.5, end: 0 },
                 blendMode: "ADD",
-                lifespan: 400,
+                lifespan: isPotato ? 250 : 400,
                 tint: 0xffd700,
-                quantity: this.gameState.settings?.lowPerformanceMode ? 3 : 15,
+                quantity: isPotato ? 6 : 15,
               })
               .setDepth(char.depth + 1);
 

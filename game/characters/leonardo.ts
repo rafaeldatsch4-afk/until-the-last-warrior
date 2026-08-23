@@ -31,24 +31,16 @@ export class LeonardoFighter extends Fighter {
         duration: 150,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
+          if (bs.soundManager) bs.soundManager.playSwordSlash(isComboFinisher);
 
-          const slash = bs.add.graphics().setDepth(6);
-          slash.lineStyle(4, 0x00ff00, 1);
-          slash.lineBetween(
-            target.x - 20,
-            target.y - 30,
-            target.x + 20,
-            target.y + 120,
-          );
-          bs.tweens.add({
-            targets: slash,
-            alpha: 0,
-            duration: 150,
-            onComplete: () => slash.destroy(),
-          });
+          // Minecraft Java Style Sword Sweep Slash Trail
+          if (bs.createSwordSweepSlash) {
+            bs.createSwordSweepSlash(target.x, target.y + 60, isPlayer, 0x2ecc71, 1.25);
+          } else if (bs.effects?.createSwordSweepSlash) {
+            bs.effects.createSwordSweepSlash(target.x, target.y + 60, isPlayer, 0x2ecc71, 1.25);
+          }
 
-          bs.createImpactEffect(target.x, target.y + 120, 0x00ff00);
+          bs.createImpactEffect(target.x, target.y + 60, 0x2ecc71, "melee");
           bs.takeDamage(
             !isPlayer,
             Math.floor(
@@ -138,24 +130,15 @@ export class LeonardoFighter extends Fighter {
       duration: 300,
       ease: "Power2",
       onComplete: () => {
-        // Slash effect
-        const slash = bs.add.graphics().setDepth(15);
-        slash.lineStyle(8, 0x00ff00, 1);
-        slash.lineBetween(
-          target.x - 50,
-          target.y - 50,
-          target.x + 50,
-          target.y + 120,
-        );
-        bs.tweens.add({
-          targets: slash,
-          alpha: 0,
-          duration: 200,
-          onComplete: () => slash.destroy(),
-        });
+        // Minecraft Double Sword Sweep Slash Effect
+        if (bs.createSwordSweepSlash) {
+          bs.createSwordSweepSlash(target.x, target.y + 60, isPlayer, 0x2ecc71, 1.5, true);
+        } else if (bs.effects?.createSwordSweepSlash) {
+          bs.effects.createSwordSweepSlash(target.x, target.y + 60, isPlayer, 0x2ecc71, 1.5, true);
+        }
 
-        if (bs.cache.audio.exists("sfx_hit")) if (bs.soundManager) bs.soundManager.playPunchImpact(false);
-        bs.createImpactEffect(target.x, target.y + 50, 0x00ff00);
+        if (bs.soundManager) bs.soundManager.playSwordSlash(true);
+        bs.createImpactEffect(target.x, target.y + 50, 0x00ff00, "super");
         bs.takeDamage(!isPlayer, dmg);
 
         bs.time.delayedCall(400, () => {
@@ -206,23 +189,15 @@ export class LeonardoFighter extends Fighter {
         attacker.x = target.x + (Math.random() - 0.5) * 200;
         attacker.y = target.y - 50 + (Math.random() - 0.5) * 100;
 
-        const slash = bs.add.graphics().setDepth(15);
-        slash.lineStyle(6, 0x00ff00, 1);
-        slash.lineBetween(
-          target.x + (Math.random() - 0.5) * 150,
-          target.y - 50 + (Math.random() - 0.5) * 150,
-          target.x + (Math.random() - 0.5) * 150,
-          target.y + 120 + (Math.random() - 0.5) * 50,
-        );
-        bs.tweens.add({
-          targets: slash,
-          alpha: 0,
-          duration: 150,
-          onComplete: () => slash.destroy(),
-        });
-
-        if (hits % 2 === 0) bs.cameras.main.shake(50, 0.01);
-        if (bs.soundManager) bs.soundManager.playPunchImpact(true);
+        if (hits % 2 === 0) {
+          if (bs.createSwordSweepSlash) {
+            bs.createSwordSweepSlash(target.x + (Math.random() - 0.5) * 60, target.y + 40 + (Math.random() - 0.5) * 40, isPlayer, 0x2ecc71, 1.1);
+          } else if (bs.effects?.createSwordSweepSlash) {
+            bs.effects.createSwordSweepSlash(target.x + (Math.random() - 0.5) * 60, target.y + 40 + (Math.random() - 0.5) * 40, isPlayer, 0x2ecc71, 1.1);
+          }
+          bs.cameras.main.shake(50, 0.01);
+        }
+        if (bs.soundManager) bs.soundManager.playSwordSlash(false);
       },
     });
 

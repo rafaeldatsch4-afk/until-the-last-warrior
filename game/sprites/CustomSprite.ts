@@ -1842,13 +1842,13 @@ export function generateCustomSprite(
         box(14, 16, 3, 4, scarfColor);
         box(14, 17, 3, 3, scarfShade);
       } else if (pAcc === "sword") {
-        // Masterwork Katana (Steel Blade, Golden Tsuba, Braided Tsuka, Slash VFX)
+        // Masterwork Katana - One-Handed Natural Stance & Minecraft Sweep Slash
         let handColor = SKIN_TONE;
         if (pTorso === "vegeta" || pTorso === "saitama") handColor = 0xffffff;
         else if (pTorso === "spiderman") handColor = TORSO_1;
 
         if (isCharge) {
-          // Upward Blade Guard Stance
+          // Upward Single-Handed Blade Stance
           box(21, -16, 3, 18, 0xd1d5db); // Steel blade
           box(23, -16, 1, 18, 0xffffff); // Edge highlight
           box(21, -16, 1, 18, 0x64748b); // Spine shadow
@@ -1857,32 +1857,40 @@ export function generateCustomSprite(
           box(21, 4, 3, 6, 0x451a03); // Wrapped Tsuka
           box(21, 10, 3, 1, 0xffd700); // Pommel
 
-          // Grip fingers over hilt
+          // Single Hand gripping hilt
           box(20, 5, 4, 3, handColor);
-        } else if (isAttack) {
-          // Crescent Energy Slash Trail VFX
-          alphaBox(24, 22, 10, 4, 0x38bdf8, 0.25);
-          alphaBox(32, 17, 14, 4, 0x38bdf8, 0.45);
-          alphaBox(42, 12, 16, 6, 0x38bdf8, 0.7);
-          alphaBox(34, 18, 10, 2, 0xffffff, 0.85);
+        } else if (isDefend) {
+          // One-Handed Defensive Blade Guard
+          box(18, 10, 2, 16, 0xd1d5db);
+          box(19, 10, 1, 16, 0xffffff);
+          box(18, 10, 1, 16, 0x64748b);
 
-          // Forward Thrust Blade
+          box(15, 26, 8, 2, 0xffd700); // Tsuba
+          box(18, 28, 3, 5, 0x451a03); // Tsuka
+          box(18, 33, 3, 1, 0xffd700); // Pommel
+
+          // Single Hand gripping lower hilt
+          box(17, 28, 4, 3, handColor);
+        } else if (isAttack) {
+          // Forward Thrust Katana (One-Handed Strike)
           box(34, 13, 18, 3, 0xd1d5db);
           box(34, 13, 18, 1, 0xffffff); // Top edge shine
-          box(34, 15, 18, 1, 0x64748b);
+          box(34, 15, 18, 1, 0x64748b); // Spine shadow
+          box(52, 14, 2, 1, 0xffffff); // Kissaki tip sharp
 
-          box(32, 11, 2, 7, 0xffd700); // Tsuba
-          box(27, 13, 5, 3, 0x451a03); // Tsuka
+          box(32, 11, 2, 7, 0xffd700); // Golden Tsuba
+          box(27, 13, 5, 3, 0x451a03); // Braided Tsuka
           box(26, 13, 1, 3, 0xffd700); // Pommel
 
+          // Single Hand gripping hilt firmly
           box(28, 13, 3, 3, handColor);
         } else {
-          // Resting Sheathed / Drawn Katana in hand
+          // Natural One-Handed Ready Grip at Hip
           box(16, 23, 2, 3, 0xffd700); // Pommel
           box(18, 23, 6, 3, 0x451a03); // Tsuka (Braided hilt)
           box(24, 21, 2, 7, 0xffd700); // Golden Tsuba
 
-          // Blade extending forward
+          // Blade extending forward naturally
           box(26, 23, 16, 3, 0xd1d5db);
           box(26, 23, 16, 1, 0xffffff); // Top shine
           box(26, 25, 16, 1, 0x64748b); // Spine
@@ -1890,7 +1898,7 @@ export function generateCustomSprite(
           box(42, 24, 2, 2, 0xd1d5db);
           box(42, 24, 2, 1, 0xffffff);
 
-          // Fingers gripping hilt
+          // Single Hand gripping hilt
           box(20, 23, 3, 3, handColor);
         }
       }

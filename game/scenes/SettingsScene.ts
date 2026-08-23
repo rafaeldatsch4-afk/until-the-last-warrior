@@ -211,7 +211,7 @@ export default class SettingsScene extends Phaser.Scene {
 
     // --- DISPLAY / PERFORMANCE ---
     this.add
-      .text(480, 248, "DISPLAY & PERFORMANCE", {
+      .text(480, 238, "DISPLAY & PERFORMANCE", {
         fontSize: "18px",
         color: "#aaa",
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
@@ -221,23 +221,54 @@ export default class SettingsScene extends Phaser.Scene {
 
     let potatoMode = state.settings?.lowPerformanceMode || false;
     const perfBtn = this.add
-      .rectangle(480, 282, 260, 36, potatoMode ? 0xe74c3c : 0x2ecc71)
+      .rectangle(480, 272, 340, 36, potatoMode ? 0x059669 : 0x2563eb)
       .setStrokeStyle(2, 0xffffff);
     const perfTxt = this.add
-      .text(480, 282, potatoMode ? "POTATO MODE: ON" : "POTATO MODE: OFF", {
-        fontSize: "15px",
-        fontStyle: "bold",
-        color: "#000",
-        fontFamily: "system-ui",
-      })
+      .text(
+        480,
+        272,
+        potatoMode ? "MODO POTATO: EQUILIBRADO (60 FPS)" : "MODO POTATO: OFF (ALTO FX)",
+        {
+          fontSize: "14px",
+          fontStyle: "bold",
+          color: "#ffffff",
+          fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+          resolution: 2,
+        }
+      )
       .setOrigin(0.5);
+
+    const perfHint = this.add
+      .text(
+        480,
+        298,
+        potatoMode
+          ? "✦ Modo Otimizado: 60 FPS fluidos, impacto de combate e efeitos balanceados."
+          : "✦ Modo Completo: Partículas máximas, pós-processamento e efeitos em escala total.",
+        {
+          fontSize: "10px",
+          color: potatoMode ? "#6ee7b7" : "#93c5fd",
+          fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+          resolution: 2,
+        }
+      )
+      .setOrigin(0.5);
+
     perfBtn.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
       potatoMode = !potatoMode;
       if (!state.settings) state.settings = {};
       state.settings.lowPerformanceMode = potatoMode;
       window.UTLW.save();
-      perfBtn.setFillStyle(potatoMode ? 0xe74c3c : 0x2ecc71);
-      perfTxt.setText(potatoMode ? "POTATO MODE: ON" : "POTATO MODE: OFF");
+      perfBtn.setFillStyle(potatoMode ? 0x059669 : 0x2563eb);
+      perfTxt.setText(
+        potatoMode ? "MODO POTATO: EQUILIBRADO (60 FPS)" : "MODO POTATO: OFF (ALTO FX)"
+      );
+      perfHint.setText(
+        potatoMode
+          ? "✦ Modo Otimizado: 60 FPS fluidos, impacto de combate e efeitos balanceados."
+          : "✦ Modo Completo: Partículas máximas, pós-processamento e efeitos em escala total."
+      );
+      perfHint.setColor(potatoMode ? "#6ee7b7" : "#93c5fd");
     });
 
     const isMobile = this.sys.game.device.input.touch || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);

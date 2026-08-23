@@ -66,4 +66,16 @@ export function generateAllSprites(scene: Phaser.Scene): void {
       console.error(`Error generating ${item.name}:`, e);
     }
   });
+
+  // Ensure all pixel art character textures use NEAREST filtering so they remain crisp pixel-art
+  scene.textures.getTextureKeys().forEach((key) => {
+    if (key !== "__DEFAULT" && key !== "__MISSING" && !key.startsWith("btn_") && !key.startsWith("ui_")) {
+      try {
+        const tex = scene.textures.get(key);
+        if (tex) {
+          tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
+        }
+      } catch (e) {}
+    }
+  });
 }

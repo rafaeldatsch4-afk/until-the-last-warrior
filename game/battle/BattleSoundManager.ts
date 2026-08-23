@@ -28,6 +28,11 @@ export class BattleSoundManager {
     this.playWithVariation("sfx_attack", 0.6, 100, 200);
   }
 
+  public playSwordSlash(isCritical: boolean = false) {
+    this.playWithVariation("sfx_attack", 0.9, 120, 350);
+    this.playPunchImpact(isCritical);
+  }
+
   public playPunchImpact(isCritical: boolean = false) {
     if (isCritical) {
       this.playWithVariation("sfx_punch_heavy", 1.2, 50, -100);

@@ -34,8 +34,16 @@ export class MadaraFighter extends Fighter {
           for (let i = 0; i < hits; i++) {
             bs.time.delayedCall(i * 100, () => {
               if (!bs.scene.isActive()) return;
-              if (bs.soundManager) bs.soundManager.playPunchImpact(true);
-              bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
+              if (bs.soundManager) bs.soundManager.playSwordSlash(i === hits - 1);
+              
+              const bladeColor = transformLevel > 0 ? 0x3b82f6 : 0xff4500;
+              if (bs.createSwordSweepSlash) {
+                bs.createSwordSweepSlash(target.x, target.y + 60, isPlayer, bladeColor, transformLevel > 0 ? 1.4 : 1.15);
+              } else if (bs.effects?.createSwordSweepSlash) {
+                bs.effects.createSwordSweepSlash(target.x, target.y + 60, isPlayer, bladeColor, transformLevel > 0 ? 1.4 : 1.15);
+              }
+
+              bs.createImpactEffect(target.x, target.y + 60, bladeColor, "melee");
               bs.takeDamage(
                 !isPlayer,
                 Math.floor(6 * bs.getDamageMultiplier(transformLevel)),
