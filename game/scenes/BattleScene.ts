@@ -4612,25 +4612,35 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
-  private hitStopTimeout: NodeJS.Timeout | null = null;
+  private hitStopTimeout: any = null;
 
   triggerHitStop(duration: number) {
+    if (!this.scene.isActive() || this.isBattleOver) return;
     const isPotato = this.gameState.settings?.lowPerformanceMode;
-    const finalDuration = isPotato ? Math.min(duration, 40) : duration;
-    
-    // Pause the entire scene (update loop, physics, tweens, animations)
-    this.scene.pause();
+    const finalDuration = isPotato ? Math.min(duration, 35) : Math.min(duration, 70);
     
     if (this.hitStopTimeout) {
       clearTimeout(this.hitStopTimeout);
+      this.hitStopTimeout = null;
+    }
+
+    try {
+      if (this.scene && !this.scene.isPaused()) {
+        this.scene.pause();
+      }
+    } catch (e) {
+      return;
     }
     
-    // Use a native setTimeout to resume it, since Phaser's timers are paused
+    // Resume using native setTimeout since Phaser's internal clock is paused
     this.hitStopTimeout = setTimeout(() => {
       this.hitStopTimeout = null;
-      // Check if the scene is still alive
-      if (this.sys && this.sys.isActive() === false && this.scene.isPaused()) {
-         this.scene.resume();
+      try {
+        if (this.scene && this.scene.isPaused()) {
+          this.scene.resume();
+        }
+      } catch (e) {
+        console.warn("Hitstop resume error:", e);
       }
     }, finalDuration);
   }
@@ -5312,6 +5322,12 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   public handleShutdown() {
+    // 0. HitStop Timeout
+    if (this.hitStopTimeout) {
+      clearTimeout(this.hitStopTimeout);
+      this.hitStopTimeout = null;
+    }
+
     // 1. Timers & Tweens
     if (this.turnTimer) {
       this.turnTimer.remove();

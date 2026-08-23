@@ -61,7 +61,7 @@ export default class MenuScene extends Phaser.Scene {
 
     this.state = this.registry.get("gameState") as GameState;
     const { width, height } = this.cameras.main;
-    const bounds = ResponsiveUtils.getSafeBounds();
+    const bounds = ResponsiveUtils.getSafeBounds(this);
 
     if (this.registry.get("showPerfToast")) {
       setTimeout(() => {
@@ -147,15 +147,20 @@ export default class MenuScene extends Phaser.Scene {
     this.particlesGroup = this.add.group();
     this.spawnThematicParticles(width, height, currentArena.color);
 
+    // --- Dynamic Mobile-Safe 2-Column Responsive Layout ---
+    const buttonW = 225;
+    const menuColX = Math.round(bounds.right - buttonW - 12);
+    const leftRegionW = Math.max(260, menuColX - bounds.left);
+    const leftColX = Math.round(bounds.left + leftRegionW / 2);
+
     // 4. Hero & Title Section (Left Column - Clean, Centered & Stylized)
-    const leftColX = Math.round(width * 0.28);
     const titleContainer = this.add.container(leftColX, height / 2 - 50);
     titleContainer.setAlpha(0);
     titleContainer.setScale(0.94);
 
     // Stylized Hero Emblem / Card with Rounded Frame & Golden Glow
     const emblemCard = this.add.graphics();
-    const cardW = 260;
+    const cardW = Math.min(270, Math.floor(leftRegionW * 0.9));
     const cardH = 150;
     emblemCard.fillStyle(0x060814, 0.7);
     emblemCard.fillRoundedRect(-cardW / 2, -cardH / 2 - 15, cardW, cardH, 16);
@@ -165,7 +170,7 @@ export default class MenuScene extends Phaser.Scene {
     // Hero Logo Image with Smooth Scale inside Card
     LogoTextureBuilder.ensureLogoTexture(this);
     const logoImg = this.add.image(0, -15, LogoTextureBuilder.LOGO_KEY);
-    logoImg.setDisplaySize(240, 135);
+    logoImg.setDisplaySize(cardW - 20, Math.round((cardW - 20) * 0.56));
 
     const subtitle = this.add
       .text(0, 78, "⚔️ A BATALHA FINAL COMEÇA AQUI ⚔️", {
@@ -208,7 +213,7 @@ export default class MenuScene extends Phaser.Scene {
     this.createWorldBadge(leftColX, Math.min(height - 40, bounds.bottom - 24));
 
     // 6. Coins Display (Top Center)
-    const coinDisplay = this.add.container(width / 2, bounds.top + 10);
+    const coinDisplay = this.add.container(bounds.centerX, bounds.top + 10);
     coinDisplay.setAlpha(0);
     const bgGraphics = this.add.graphics();
     bgGraphics.fillStyle(0x0a0f1d, 0.85);
@@ -263,7 +268,6 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     // 7. Menu Buttons (Right Column - Dedicated, Clean Layout)
-    const menuColX = Math.min(width - 270, bounds.right - 235);
     const menuBlockHeight = 6 * 38 + 34;
     const startY = Math.round((height - menuBlockHeight) / 2) + 8;
     const spacing = 38;
