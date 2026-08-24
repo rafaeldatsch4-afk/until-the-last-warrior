@@ -126,16 +126,16 @@ export default class StoryHubScene extends Phaser.Scene {
     if (!storyState) return;
 
     // Layout Dimensions for Mobile/Desktop Harmony
-    const panelY = headerY + 30;
-    const panelHeight = Math.min(380, Math.max(340, bounds.bottom - panelY - 58));
-    const leftPanelX = 40;
-    const leftPanelW = 390;
-    const rightPanelX = 450;
-    const rightPanelW = 470;
+    const panelY = headerY + 28;
+    const panelHeight = 368;
+    const leftPanelX = 44;
+    const leftPanelW = 380;
+    const rightPanelX = 444;
+    const rightPanelW = 472;
 
     // LEFT PANEL (Character & Level)
     const leftPanel = this.add.graphics();
-    leftPanel.fillStyle(0x0f172a, 0.75);
+    leftPanel.fillStyle(0x0f172a, 0.85);
     leftPanel.fillRoundedRect(leftPanelX, panelY, leftPanelW, panelHeight, 10);
     leftPanel.lineStyle(1.5, 0x38bdf8, 0.7);
     leftPanel.strokeRoundedRect(leftPanelX, panelY, leftPanelW, panelHeight, 10);
@@ -155,8 +155,8 @@ export default class StoryHubScene extends Phaser.Scene {
        this.ensureCustomAnimsExist("custom_999");
 
        // Character Name Badge
-       this.add.text(charCenterX, panelY + 24, char.name.toUpperCase(), { 
-           fontSize: "20px", 
+       this.add.text(charCenterX, panelY + 22, char.name.toUpperCase(), { 
+           fontSize: "18px", 
            color: "#38bdf8", 
            fontStyle: "900",
            stroke: "#000",
@@ -164,69 +164,40 @@ export default class StoryHubScene extends Phaser.Scene {
            fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
        }).setOrigin(0.5);
 
-       // Character Shadow
-       const shadowY = panelY + 165;
+       // Character Pedestal Frame & Shadow
+       const pedestalY = panelY + 160;
        const shadow = this.add.graphics();
-       shadow.fillStyle(0x000000, 0.4);
-       shadow.fillEllipse(charCenterX, shadowY + 36, 60, 16);
+       // Frame background behind character
+       shadow.fillStyle(0x020617, 0.6);
+       shadow.fillRoundedRect(charCenterX - 55, panelY + 42, 110, 126, 8);
+       shadow.lineStyle(1, 0x1e293b, 0.8);
+       shadow.strokeRoundedRect(charCenterX - 55, panelY + 42, 110, 126, 8);
+
+       // Pedestal ellipse
+       shadow.fillStyle(0x000000, 0.5);
+       shadow.fillEllipse(charCenterX, pedestalY + 2, 54, 12);
 
        const previewKey = "custom_999"; 
-       const spriteY = panelY + 140;
        if (this.anims.exists(previewKey + "_idle")) {
-          const sprite = this.add.sprite(charCenterX, spriteY, previewKey).setScale(2.1);
+          const sprite = this.add.sprite(charCenterX, pedestalY + 2, previewKey).setScale(1.85).setOrigin(0.5, 0.92);
           sprite.play(previewKey + "_idle");
        } else if (this.textures.exists(previewKey)) {
-          this.add.sprite(charCenterX, spriteY, previewKey, "0").setScale(2.1);
+          this.add.sprite(charCenterX, pedestalY + 2, previewKey, "0").setScale(1.85).setOrigin(0.5, 0.92);
        } else {
-          this.add.text(charCenterX, spriteY, "IMAGEM\nINDISPONÍVEL", { color: "#fff", fontSize: "12px", align: "center" }).setOrigin(0.5);
+          this.add.text(charCenterX, panelY + 105, "IMAGEM\nINDISPONÍVEL", { color: "#fff", fontSize: "12px", align: "center" }).setOrigin(0.5);
        }
     }
 
-    // Character Level & EXP Progress
-    const expNeeded = (storyState.level + 1) * 100;
-    const expBarWidth = 280;
-    const expBarY = panelY + panelHeight - 64;
-    const badgeY = expBarY - 26;
-
-    // Level Badge (Compact & Centered)
-    const lvlBadge = this.add.graphics();
-    lvlBadge.fillStyle(0x0284c7, 1);
-    lvlBadge.fillCircle(charCenterX, badgeY, 17);
-    lvlBadge.lineStyle(2, 0xffffff, 0.9);
-    lvlBadge.strokeCircle(charCenterX, badgeY, 17);
-    this.add.text(charCenterX, badgeY - 7, "LVL", { fontSize: "9px", color: "#e0f2fe", fontStyle: "bold" }).setOrigin(0.5);
-    this.add.text(charCenterX, badgeY + 6, `${storyState.level}`, { fontSize: "15px", color: "#ffffff", fontStyle: "900" }).setOrigin(0.5);
-
-    // EXP Bar Background
-    this.add.rectangle(charCenterX, expBarY, expBarWidth, 18, 0x1e293b).setOrigin(0.5).setStrokeStyle(1.5, 0x475569);
-    
-    // EXP Bar Fill
-    const expRatio = Math.min(1, storyState.exp / expNeeded);
-    const expFillWidth = Math.max(0, expBarWidth * expRatio);
-    
-    const expFill = this.add.graphics();
-    expFill.fillGradientStyle(0x10b981, 0x059669, 0x10b981, 0x059669, 1);
-    expFill.fillRect(charCenterX - expBarWidth / 2, expBarY - 9, expFillWidth, 18);
-    
-    // EXP Text (Centered on the bar)
-    this.add.text(charCenterX, expBarY, `EXP: ${storyState.exp} / ${expNeeded}`, { 
-        fontSize: "11px", 
-        color: "#ffffff", 
-        fontStyle: "bold",
-        stroke: "#000000",
-        strokeThickness: 3 
-    }).setOrigin(0.5);
-
-    // Edit Visual Shortcut Button (inside Left Panel)
-    const editSkinBtnY = panelY + panelHeight - 24;
+    // Edit Visual Shortcut Button (Compact, right below character frame)
+    const editSkinBtnY = panelY + 195;
     const editSkinContainer = this.add.container(charCenterX, editSkinBtnY);
     const editSkinBg = this.add.graphics();
     const drawEditSkin = (isHover: boolean) => {
       editSkinBg.clear();
-      editSkinBg.fillStyle(isHover ? 0x0284c7 : 0x0f172a, 0.9);
-      editSkinBg.fillRoundedRect(-90, -12, 180, 24, 6);
-      editSkinBg.lineStyle(1, isHover ? 0x38bdf8 : 0x334155, 0.9);
-      editSkinBg.strokeRoundedRect(-90, -12, 180, 24, 6);
+      editSkinBg.fillStyle(isHover ? 0x0284c7 : 0x1e293b, 0.95);
+      editSkinBg.fillRoundedRect(-85, -12, 170, 24, 6);
+      editSkinBg.lineStyle(1, isHover ? 0x38bdf8 : 0x475569, 0.9);
+      editSkinBg.strokeRoundedRect(-85, -12, 170, 24, 6);
     };
     drawEditSkin(false);
 
@@ -237,7 +208,7 @@ export default class StoryHubScene extends Phaser.Scene {
       fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
     }).setOrigin(0.5);
 
-    const editSkinHit = this.add.rectangle(0, 0, 190, 32, 0, 0).setInteractive({ useHandCursor: true });
+    const editSkinHit = this.add.rectangle(0, 0, 170, 26, 0, 0).setInteractive({ useHandCursor: true });
     editSkinContainer.add([editSkinBg, editSkinTxt, editSkinHit]);
 
     editSkinHit.on("pointerover", () => {
@@ -253,24 +224,67 @@ export default class StoryHubScene extends Phaser.Scene {
       transitionTo(this, "CharacterCreatorScene");
     });
 
+    // Character Level & EXP Progress
+    const expNeeded = (storyState.level + 1) * 100;
+    const expBarWidth = 270;
+    const expBarY = panelY + 295;
+    const badgeY = expBarY - 32;
+
+    // Level Badge (Compact & Centered)
+    const lvlBadge = this.add.graphics();
+    lvlBadge.fillStyle(0x0284c7, 1);
+    lvlBadge.fillCircle(charCenterX, badgeY, 16);
+    lvlBadge.lineStyle(2, 0xffffff, 0.9);
+    lvlBadge.strokeCircle(charCenterX, badgeY, 16);
+    this.add.text(charCenterX, badgeY - 7, "LVL", { fontSize: "8.5px", color: "#e0f2fe", fontStyle: "bold" }).setOrigin(0.5);
+    this.add.text(charCenterX, badgeY + 6, `${storyState.level}`, { fontSize: "14px", color: "#ffffff", fontStyle: "900" }).setOrigin(0.5);
+
+    // EXP Bar Background
+    this.add.rectangle(charCenterX, expBarY, expBarWidth, 18, 0x1e293b).setOrigin(0.5).setStrokeStyle(1.5, 0x475569);
+    
+    // EXP Bar Fill
+    const expRatio = Math.min(1, storyState.exp / expNeeded);
+    const expFillWidth = Math.max(0, expBarWidth * expRatio);
+    
+    const expFill = this.add.graphics();
+    expFill.fillGradientStyle(0x10b981, 0x059669, 0x10b981, 0x059669, 1);
+    expFill.fillRect(charCenterX - expBarWidth / 2, expBarY - 9, expFillWidth, 18);
+    
+    // EXP Text (Centered on the bar)
+    this.add.text(charCenterX, expBarY, `EXP: ${storyState.exp} / ${expNeeded}`, { 
+        fontSize: "10.5px", 
+        color: "#ffffff", 
+        fontStyle: "bold",
+        stroke: "#000000",
+        strokeThickness: 3 
+    }).setOrigin(0.5);
+
+    // Subtitle indicator on card footer
+    this.add.text(charCenterX, panelY + 338, "⚔️ STATUS DE BATALHA: PRONTO", {
+        fontSize: "10px",
+        color: "#38bdf8",
+        fontStyle: "bold",
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+    }).setOrigin(0.5);
+
     // RIGHT PANEL (Attributes)
     const rightPanel = this.add.graphics();
-    rightPanel.fillStyle(0x0f172a, 0.75);
+    rightPanel.fillStyle(0x0f172a, 0.85);
     rightPanel.fillRoundedRect(rightPanelX, panelY, rightPanelW, panelHeight, 10);
     rightPanel.lineStyle(1.5, 0xf59e0b, 0.7);
     rightPanel.strokeRoundedRect(rightPanelX, panelY, rightPanelW, panelHeight, 10);
 
     const rightPanelCenterX = rightPanelX + rightPanelW / 2;
 
-    this.add.text(rightPanelX + 24, panelY + 22, "ATRIBUTOS DO GUERREIRO", { 
-        fontSize: "16px", 
+    this.add.text(rightPanelX + 22, panelY + 22, "ATRIBUTOS DO GUERREIRO", { 
+        fontSize: "15px", 
         color: "#f59e0b", 
         fontStyle: "900",
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
     }).setOrigin(0, 0.5);
 
-    const pointsTxt = this.add.text(rightPanelX + rightPanelW - 24, panelY + 22, `PONTOS: ${storyState.statPoints}`, { 
-        fontSize: "14px", 
+    const pointsTxt = this.add.text(rightPanelX + rightPanelW - 22, panelY + 22, `PONTOS: ${storyState.statPoints}`, { 
+        fontSize: "13.5px", 
         color: storyState.statPoints > 0 ? "#fbbf24" : "#64748b",
         fontStyle: "bold",
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
@@ -287,7 +301,7 @@ export default class StoryHubScene extends Phaser.Scene {
     }
 
     const startY = panelY + 54;
-    const rowGap = 39;
+    const rowGap = 41;
     const stats = ["attack", "defense", "ki", "speed", "health"];
     const labels: Record<string, string> = {
       attack: "ATAQUE",
@@ -319,14 +333,14 @@ export default class StoryHubScene extends Phaser.Scene {
        this.add.rectangle(rightPanelX + 26, y, 6, 18, colors[stat]).setOrigin(0.5);
 
        this.add.text(rightPanelX + 38, y, labels[stat], {
-         fontSize: "14px",
+         fontSize: "13.5px",
          color: "#e2e8f0",
          fontStyle: "bold",
          fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
        }).setOrigin(0, 0.5);
 
        const valTxt = this.add.text(rightPanelX + rightPanelW - 74, y, val.toString(), {
-         fontSize: "17px",
+         fontSize: "16px",
          color: "#ffffff",
          fontStyle: "900",
          fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
@@ -413,56 +427,50 @@ export default class StoryHubScene extends Phaser.Scene {
     });
 
     // Tip regarding Combat inside Right Panel
-    this.add.text(rightPanelCenterX, panelY + panelHeight - 24, "💡 PARRY anula dano (DEFESA). COMBOS aumentam Ki e dano (VELOCIDADE).", {
-       fontSize: "10px",
+    this.add.text(rightPanelCenterX, panelY + 338, "💡 DICA: PARRY anula dano (DEFESA) • COMBOS aumentam Ki e dano (VELOCIDADE)", {
+       fontSize: "9.5px",
        color: "#94a3b8",
        align: "center",
        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
     }).setOrigin(0.5);
 
-    // --- Bottom Battle Button ---
-    const battleBtnY = Math.min(508, bounds.bottom - 22);
+    // --- Bottom Battle Button (Harmoniously Centered with Clean Margins) ---
+    const battleBtnY = 484;
     const battleBtnContainer = this.add.container(480, battleBtnY).setDepth(200);
     
     const btnGraphics = this.add.graphics();
-    const btnWidth = 410;
+    const btnWidth = 440;
     const btnHeight = 44;
+    const btnRadius = 8;
     
     const drawBattleBtn = (isHover: boolean) => {
         btnGraphics.clear();
         // Drop Shadow
-        btnGraphics.fillStyle(0x000000, 0.5);
-        btnGraphics.beginPath();
-        btnGraphics.moveTo(-btnWidth / 2 + 16 + 2, -btnHeight / 2 + 2);
-        btnGraphics.lineTo(btnWidth / 2 + 2, -btnHeight / 2 + 2);
-        btnGraphics.lineTo(btnWidth / 2 - 16 + 2, btnHeight / 2 + 2);
-        btnGraphics.lineTo(-btnWidth / 2 + 2, btnHeight / 2 + 2);
-        btnGraphics.closePath();
-        btnGraphics.fillPath();
+        btnGraphics.fillStyle(0x000000, 0.45);
+        btnGraphics.fillRoundedRect(-btnWidth / 2 + 3, -btnHeight / 2 + 3, btnWidth, btnHeight, btnRadius);
 
         // Main Surface
         btnGraphics.fillStyle(isHover ? 0xd93829 : 0xe74c3c, 1);
-        btnGraphics.beginPath();
-        btnGraphics.moveTo(-btnWidth / 2 + 16, -btnHeight / 2);
-        btnGraphics.lineTo(btnWidth / 2, -btnHeight / 2);
-        btnGraphics.lineTo(btnWidth / 2 - 16, btnHeight / 2);
-        btnGraphics.lineTo(-btnWidth / 2, btnHeight / 2);
-        btnGraphics.closePath();
-        btnGraphics.fillPath();
+        btnGraphics.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, btnRadius);
         
+        // Inner Top Highlight
+        btnGraphics.fillStyle(0xffffff, isHover ? 0.2 : 0.12);
+        btnGraphics.fillRoundedRect(-btnWidth / 2 + 2, -btnHeight / 2 + 2, btnWidth - 4, btnHeight / 2 - 2, { tl: btnRadius - 1, tr: btnRadius - 1, bl: 0, br: 0 });
+
         // Border
-        btnGraphics.lineStyle(2, isHover ? 0xfef08a : 0xf39c12, 1);
-        btnGraphics.strokePath();
+        btnGraphics.lineStyle(1.5, isHover ? 0xfef08a : 0xfca5a5, 1);
+        btnGraphics.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, btnRadius);
     };
     
     drawBattleBtn(false);
     
-    const battleTxt = this.add.text(0, 0, `⚔ ENTRAR NA BATALHA (LUTA ${storyState.stage})`, { 
-        fontSize: "17px", 
+    const battleTxt = this.add.text(0, 0, `⚔️ ENTRAR NA BATALHA (LUTA ${storyState.stage})`, { 
+        fontSize: "16px", 
         color: "#ffffff", 
         fontStyle: "900", 
         stroke: "#000000",
         strokeThickness: 3,
+        letterSpacing: 0.5,
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" 
     }).setOrigin(0.5);
     

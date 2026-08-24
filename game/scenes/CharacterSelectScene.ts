@@ -247,7 +247,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     });
 
     // 3. Character Grid Container (Spaced Safely Below Header)
-    this.charContainer = this.add.container(width / 2, bounds.top + 92);
+    this.charContainer = this.add.container(width / 2, bounds.top + 68);
 
     // Botão de Luta e Seletor de Arena
     this.createArenaSelector();
@@ -739,8 +739,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     const { width } = this.cameras.main;
     const isSmall = width < 680;
-    const cardW = isSmall ? 64 : 76;
-    const cardH = isSmall ? 74 : 84;
+    const cardW = isSmall ? 68 : 82;
+    const cardH = isSmall ? 78 : 94;
     const gapX = isSmall ? 6 : 8;
     const gapY = isSmall ? 8 : 10;
 
@@ -767,8 +767,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
       const card = this.add.container(x, y);
 
-      let strokeColor = 0x475569;
-      let bgColor = 0x111827;
+      let strokeColor = 0x334155;
+      let bgColor = 0x0f172a;
       if (isP1) {
         strokeColor = 0x3b82f6;
         bgColor = 0x1e3a8a;
@@ -783,7 +783,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
       const drawCardBg = (isHover: boolean) => {
         cardGraphics.clear();
-        // Shadow
+        // Drop Shadow
         cardGraphics.fillStyle(0x000000, 0.5);
         cardGraphics.fillRoundedRect(
           -cardW / 2 + 2,
@@ -794,7 +794,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
         );
 
         // Main fill
-        cardGraphics.fillStyle(bgColor, isHover ? 1 : 0.85);
+        cardGraphics.fillStyle(bgColor, isHover ? 1 : 0.88);
         cardGraphics.fillRoundedRect(
           -cardW / 2,
           -cardH / 2,
@@ -803,9 +803,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
           radius,
         );
 
+        // Inner Portrait Pedestal
+        cardGraphics.fillStyle(0x000000, 0.4);
+        cardGraphics.fillEllipse(0, cardH / 2 - 23, cardW * 0.65, 7);
+
         // Border
         cardGraphics.lineStyle(
-          isSelected ? 3 : isHover ? 2 : 1.5,
+          isSelected ? 2.5 : isHover ? 2 : 1.2,
           isSelected ? (isP1 ? 0x60a5fa : 0xf87171) : isHover ? 0xffffff : strokeColor,
           1,
         );
@@ -820,11 +824,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
       drawCardBg(false);
 
-      // Character Sprite
-      const spriteScale = isSmall ? 0.65 : 0.8;
+      // Character Sprite anchored at feet on pedestal
+      const spriteScale = isSmall ? 0.82 : 0.98;
       const sprite = this.add
-        .sprite(0, -6, char.key, "0")
-        .setOrigin(0.5, 0.75)
+        .sprite(0, cardH / 2 - 23, char.key, "0")
+        .setOrigin(0.5, 0.92)
         .setScale(spriteScale);
 
       if (this.anims.exists(`${char.key}_idle`)) {
@@ -833,12 +837,12 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
       // Name banner on card footer
       const nameBg = this.add.graphics();
-      nameBg.fillStyle(0x000000, 0.8);
+      nameBg.fillStyle(0x020617, 0.9);
       nameBg.fillRoundedRect(-cardW / 2 + 2, cardH / 2 - 20, cardW - 4, 18, 4);
 
       const nameTxt = this.add
         .text(0, cardH / 2 - 11, char.name, {
-          fontSize: isSmall ? "9px" : "11px",
+          fontSize: isSmall ? "9px" : "10.5px",
           fontStyle: "bold",
           color: isSelected ? "#ffffff" : "#cbd5e1",
           fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",

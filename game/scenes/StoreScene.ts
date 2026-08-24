@@ -507,24 +507,35 @@ export default class StoreScene extends Phaser.Scene {
       const container = this.add.container(x, y);
       
       const cardBg = this.add.graphics();
+      // Main Card Box
       cardBg.fillStyle(0x131f33, 0.92);
       cardBg.fillRoundedRect(-137, -68, 274, 136, 8);
       cardBg.lineStyle(1.5, char.unlocked ? 0x334155 : 0xf59e0b, 0.7);
       cardBg.strokeRoundedRect(-137, -68, 274, 136, 8);
 
-      // Sprite framed cleanly inside the left section of the card
+      // Character Portrait Box (Left Section)
+      cardBg.fillStyle(0x0a101d, 0.9);
+      cardBg.fillRoundedRect(-128, -58, 96, 116, 6);
+      cardBg.lineStyle(1, 0x1e293b, 0.85);
+      cardBg.strokeRoundedRect(-128, -58, 96, 116, 6);
+
+      // Pedestal Shadow under warrior feet
+      cardBg.fillStyle(0x000000, 0.45);
+      cardBg.fillEllipse(-80, 42, 50, 10);
+
+      // Sprite standing firmly on the pedestal within the portrait box
       const sprite = this.add
-        .sprite(-78, 6, char.key, "0")
-        .setScale(1.9)
-        .setOrigin(0.5, 0.5);
+        .sprite(-80, 42, char.key, "0")
+        .setOrigin(0.5, 0.92)
+        .setScale(1.42);
 
       if (this.anims.exists(`${char.key}_idle`)) {
         sprite.play(`${char.key}_idle`, true);
       }
 
       const name = this.add
-        .text(38, -36, char.name.toUpperCase(), {
-          fontSize: "19px",
+        .text(50, -36, char.name.toUpperCase(), {
+          fontSize: "17px",
           fontStyle: "bold",
           color: "#f8fafc",
           fontFamily:
@@ -534,8 +545,8 @@ export default class StoreScene extends Phaser.Scene {
         .setOrigin(0.5);
 
       const special = this.add
-        .text(38, -12, `50%: ${char.specialName}`, {
-          fontSize: "11px",
+        .text(50, -12, `50%: ${char.specialName}`, {
+          fontSize: "10.5px",
           color: "#94a3b8",
           fontStyle: "italic",
           fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
@@ -544,8 +555,8 @@ export default class StoreScene extends Phaser.Scene {
         .setOrigin(0.5);
 
       const superAttack = this.add
-        .text(38, 6, `100%: ${char.superName}`, {
-          fontSize: "11px",
+        .text(50, 6, `100%: ${char.superName}`, {
+          fontSize: "10.5px",
           color: "#fbbf24",
           fontStyle: "italic",
           fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
@@ -558,13 +569,13 @@ export default class StoreScene extends Phaser.Scene {
       if (char.unlocked) {
         const statusBg = this.add.graphics();
         statusBg.fillStyle(0x064e3b, 0.7);
-        statusBg.fillRoundedRect(-22, 24, 120, 26, 5);
+        statusBg.fillRoundedRect(-10, 24, 120, 26, 5);
         statusBg.lineStyle(1, 0x10b981, 0.6);
-        statusBg.strokeRoundedRect(-22, 24, 120, 26, 5);
+        statusBg.strokeRoundedRect(-10, 24, 120, 26, 5);
 
         const status = this.add
-          .text(38, 37, "✓ ADQUIRIDO", {
-            fontSize: "12px",
+          .text(50, 37, "✓ ADQUIRIDO", {
+            fontSize: "11.5px",
             color: "#34d399",
             fontStyle: "bold",
             letterSpacing: 1,
@@ -576,13 +587,13 @@ export default class StoreScene extends Phaser.Scene {
       } else {
         const btnBg = this.add.graphics();
         btnBg.fillStyle(0xd97706, 0.95);
-        btnBg.fillRoundedRect(-22, 23, 120, 28, 6);
+        btnBg.fillRoundedRect(-10, 23, 120, 28, 6);
         btnBg.lineStyle(1, 0xfde68a, 0.8);
-        btnBg.strokeRoundedRect(-22, 23, 120, 28, 6);
+        btnBg.strokeRoundedRect(-10, 23, 120, 28, 6);
 
         const btnTxt = this.add
-          .text(38, 37, `🪙 ${char.price} G`, {
-            fontSize: "13px",
+          .text(50, 37, `🪙 ${char.price} G`, {
+            fontSize: "12.5px",
             fontStyle: "bold",
             color: "#ffffff",
             fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
@@ -592,23 +603,23 @@ export default class StoreScene extends Phaser.Scene {
 
         // Invisible touch hitbox for buy button
         const btnHit = this.add
-          .rectangle(38, 37, 120, 28, 0x000000, 0)
+          .rectangle(50, 37, 120, 28, 0x000000, 0)
           .setInteractive({ useHandCursor: true });
 
         btnHit.on("pointerover", () => {
           btnBg.clear();
           btnBg.fillStyle(0xf59e0b, 1);
-          btnBg.fillRoundedRect(-22, 23, 120, 28, 6);
+          btnBg.fillRoundedRect(-10, 23, 120, 28, 6);
           btnBg.lineStyle(1.5, 0xffffff, 1);
-          btnBg.strokeRoundedRect(-22, 23, 120, 28, 6);
+          btnBg.strokeRoundedRect(-10, 23, 120, 28, 6);
         });
 
         btnHit.on("pointerout", () => {
           btnBg.clear();
           btnBg.fillStyle(0xd97706, 0.95);
-          btnBg.fillRoundedRect(-22, 23, 120, 28, 6);
+          btnBg.fillRoundedRect(-10, 23, 120, 28, 6);
           btnBg.lineStyle(1, 0xfde68a, 0.8);
-          btnBg.strokeRoundedRect(-22, 23, 120, 28, 6);
+          btnBg.strokeRoundedRect(-10, 23, 120, 28, 6);
         });
 
         // Buy Button Interaction
