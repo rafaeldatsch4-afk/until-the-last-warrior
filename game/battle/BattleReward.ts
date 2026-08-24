@@ -162,7 +162,7 @@ export class BattleReward {
     const titleText = s.add
       .text(480, -100, titleMessage, {
         fontFamily: "Impact, sans-serif",
-        fontSize: "80px",
+        fontSize: "64px",
         color: color,
         fontStyle: "italic",
         stroke: "#000",
@@ -174,7 +174,7 @@ export class BattleReward {
 
     s.tweens.add({
       targets: titleText,
-      y: 160,
+      y: 105,
       duration: 800,
       ease: "Bounce.easeOut",
     });
@@ -182,9 +182,9 @@ export class BattleReward {
     // Display Subtitle (Winner Name)
     if (subtitleMessage) {
       const subText = s.add
-        .text(480, 260, subtitleMessage, {
+        .text(480, 185, subtitleMessage, {
           fontFamily: "Impact, sans-serif",
-          fontSize: "56px",
+          fontSize: "44px",
           color: "#ffffff",
           stroke: "#000",
           strokeThickness: 6,
@@ -192,7 +192,7 @@ export class BattleReward {
         .setOrigin(0.5)
         .setDepth(3001)
         .setAlpha(0)
-        .setScale(0.5)
+        .setScale(0.6)
         .setScrollFactor(0);
 
       s.tweens.add({
@@ -200,7 +200,7 @@ export class BattleReward {
         alpha: 1,
         scale: 1,
         duration: 500,
-        delay: 600,
+        delay: 500,
         ease: "Back.easeOut",
       });
     }
@@ -208,10 +208,10 @@ export class BattleReward {
     // Display Coins Earned
     if (coinsEarned > 0) {
       const coinText = s.add
-        .text(480, 340, `REWARD: +${coinsEarned} COINS`, {
+        .text(480, 240, `REWARD: +${coinsEarned} COINS`, {
           fontFamily: "Impact, sans-serif",
-          fontSize: "48px",
-          color: "#f1c40f",
+          fontSize: "36px",
+          color: "#fbbf24",
           stroke: "#000",
           strokeThickness: 6,
         })
@@ -223,24 +223,25 @@ export class BattleReward {
       s.tweens.add({
         targets: coinText,
         alpha: 1,
-        y: 360,
+        y: 255,
         duration: 400,
-        delay: 1100,
+        delay: 900,
         ease: "Power2",
       });
     }
 
     // Story Mode Parry & Combo Performance Display
     if (s.gameState.gameMode === "story") {
-      let nextY = coinsEarned > 0 ? 370 : 330;
+      let nextY = coinsEarned > 0 ? 310 : 260;
 
       if ((s.storyParryCount || 0) > 0) {
         const parryExp = (s.storyParryCount || 0) * 15;
         const parryText = s.add
           .text(480, nextY, `⚡ PARRIES: ${s.storyParryCount} (+${parryExp} EXP BÔNUS)`, {
-            fontFamily: "Impact, sans-serif",
-            fontSize: "24px",
-            color: "#00ffff",
+            fontFamily: "'Plus Jakarta Sans', Impact, sans-serif",
+            fontSize: "20px",
+            color: "#38bdf8",
+            fontStyle: "bold",
             stroke: "#000",
             strokeThickness: 5,
           })
@@ -253,11 +254,11 @@ export class BattleReward {
           targets: parryText,
           alpha: 1,
           duration: 400,
-          delay: 1300,
+          delay: 1100,
           ease: "Power2",
         });
 
-        nextY += 35;
+        nextY += 36;
       }
 
       if ((s.maxStoryCombo || 0) > 1) {
@@ -265,9 +266,10 @@ export class BattleReward {
         const comboCoins = (s.maxStoryCombo || 0) * 10;
         const comboText = s.add
           .text(480, nextY, `🔥 MAIOR COMBO: ${s.maxStoryCombo} HITS (+${comboExp} EXP / +${comboCoins} MOEDAS)`, {
-            fontFamily: "Impact, sans-serif",
-            fontSize: "24px",
-            color: "#ff9900",
+            fontFamily: "'Plus Jakarta Sans', Impact, sans-serif",
+            fontSize: "20px",
+            color: "#fb923c",
+            fontStyle: "bold",
             stroke: "#000",
             strokeThickness: 5,
           })
@@ -280,19 +282,19 @@ export class BattleReward {
           targets: comboText,
           alpha: 1,
           duration: 400,
-          delay: 1400,
+          delay: 1250,
           ease: "Power2",
         });
       }
     }
 
     const btn = s.add
-      .text(480, 480, "CONTINUE", {
+      .text(480, 440, "CONTINUE", {
         fontFamily: "Impact, sans-serif",
-        fontSize: "36px",
+        fontSize: "30px",
         color: "#ffffff",
-        backgroundColor: "#333333",
-        padding: { x: 20, y: 10 },
+        backgroundColor: "#1e293b",
+        padding: { x: 30, y: 10 },
       })
       .setOrigin(0.5)
       .setDepth(3001)
@@ -304,11 +306,11 @@ export class BattleReward {
       targets: btn,
       alpha: 1,
       duration: 400,
-      delay: 1500,
+      delay: 1400,
     });
 
-    btn.on("pointerover", () => btn.setStyle({ color: "#f1c40f" }));
-    btn.on("pointerout", () => btn.setStyle({ color: "#ffffff" }));
+    btn.on("pointerover", () => btn.setStyle({ color: "#fbbf24", backgroundColor: "#334155" }));
+    btn.on("pointerout", () => btn.setStyle({ color: "#ffffff", backgroundColor: "#1e293b" }));
     btn.on("pointerdown", () => {
       if (s.gameState.gameMode === "tournament") {
         if (win) {

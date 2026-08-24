@@ -2595,39 +2595,14 @@ export default class BattleScene extends Phaser.Scene {
                   this.battleUI.showCombo(target.x, target.y - 100);
               }
 
+              let slashColor: number | null = null;
               if (isSword) {
-                const slashColor = attackerData.key === "custom_999"
+                slashColor = attackerData.key === "custom_999"
                   ? (attackerData.customData?.sp1_id === "cyberninja" ? 0x00eaff : 0x38bdf8)
                   : (attackerData.key === "cyberninja" ? 0x00eaff : (attackerData.key === "leonardo" ? 0x2ecc71 : 0xecf0f1));
-                this.createSwordSweepSlash(target.x, target.y + 60, isPlayer, slashColor, isComboFinisher ? 1.4 : 1.15);
               }
 
-              this.createImpactEffect(target.x, target.y + 60, 0xffffff, "melee", damage);
-
-              // Target hit flash
-              this.tweens.add({
-                targets: target,
-                alpha: 0.5,
-                yoyo: true,
-                duration: 50,
-                repeat: 1,
-              });
-
-              // Knockback Target
-              const knockbackDist = isComboFinisher
-                ? isPlayer
-                  ? 80
-                  : -80
-                : isPlayer
-                  ? 30
-                  : -30;
-              this.tweens.add({
-                targets: target,
-                x: target.x + knockbackDist,
-                duration: 100,
-                yoyo: true,
-                ease: "Sine.easeOut",
-              });
+              this.effects.playMeleeHitEffect(target, isPlayer, slashColor, isComboFinisher, damage);
 
               // 3. Recover (Return to start)
               this.time.delayedCall(150, () => {

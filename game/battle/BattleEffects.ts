@@ -912,6 +912,48 @@ export class BattleEffects {
     }
   }
 
+  public playMeleeHitEffect(
+    target: Phaser.GameObjects.Sprite,
+    isPlayer: boolean,
+    slashColor: number | null,
+    isComboFinisher: boolean,
+    damage: number,
+    onComplete?: () => void
+  ) {
+    if (slashColor !== null) {
+      this.createSwordSweepSlash(target.x, target.y + 60, isPlayer, slashColor, isComboFinisher ? 1.4 : 1.15);
+    }
+    this.scene.createImpactEffect(target.x, target.y + 60, 0xffffff, "melee", damage);
+
+    // Target hit flash
+    this.scene.tweens.add({
+      targets: target,
+      alpha: 0.5,
+      yoyo: true,
+      duration: 50,
+      repeat: 1,
+    });
+
+    // Knockback Target
+    const knockbackDist = isComboFinisher
+      ? isPlayer
+        ? 80
+        : -80
+      : isPlayer
+        ? 30
+        : -30;
+    this.scene.tweens.add({
+      targets: target,
+      x: target.x + knockbackDist,
+      duration: 100,
+      yoyo: true,
+      ease: "Sine.easeOut",
+      onComplete: () => {
+        if (onComplete) onComplete();
+      }
+    });
+  }
+
   // ==========================================
   // CLEANUP & LIFECYCLE MANAGEMENT
   // ==========================================
