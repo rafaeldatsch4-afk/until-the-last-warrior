@@ -82,6 +82,19 @@ export class BattleReward {
       this.playVictorySound();
     }
 
+    if (s.effects) {
+      try {
+        s.effects.clearAll();
+      } catch (e) {
+        console.warn("Error clearing battle effects:", e);
+      }
+    }
+
+    if (s.p1Shield) s.p1Shield.setVisible(false);
+    if (s.p2Shield) s.p2Shield.setVisible(false);
+    if (s.p1Aura) s.p1Aura.setVisible(false);
+    if (s.p2Aura) s.p2Aura.setVisible(false);
+
     if (s.battleInput && s.battleInput.mobileControls) {
       s.battleInput.mobileControls.forEach((c: any) => c.destroy());
     }
@@ -89,7 +102,7 @@ export class BattleReward {
     s.cameras.main.centerOn(480, 270);
 
     const bg = s.add
-      .rectangle(480, 270, 20000, 20000, 0x000000, 0.8)
+      .rectangle(480, 270, 20000, 20000, 0x000000, 0.9)
       .setDepth(3000)
       .setScrollFactor(0);
 

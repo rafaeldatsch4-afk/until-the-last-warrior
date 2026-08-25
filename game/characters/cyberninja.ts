@@ -280,6 +280,10 @@ export class CyberNinjaFighter extends Fighter {
       .rectangle(0, 0, 1000, 600, 0x000000, 0.8)
       .setOrigin(0)
       .setDepth(14);
+    
+    bs.time.delayedCall(3000, () => {
+      try { if (dark && dark.active) dark.destroy(); } catch (e) {}
+    });
 
     // Multiple high speed dashes
     for (let i = 0; i < 15; i++) {

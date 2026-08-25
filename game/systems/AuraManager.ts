@@ -271,6 +271,9 @@ export class AuraManager {
       } else if (isKuramaMode) {
         auraColor = 0xffff00;
         ringColor = 0xffaa00;
+      } else if (characterKey === "itachi") {
+        auraColor = 0xff4500;
+        ringColor = 0xffd700;
       } else if (characterKey === "thukuna") {
         auraColor = 0x8b0000;
         ringColor = 0x000000;

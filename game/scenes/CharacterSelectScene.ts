@@ -551,6 +551,11 @@ export default class CharacterSelectScene extends Phaser.Scene {
       return;
     }
 
+    if (this.state.gameMode === "training") {
+      this.proceedToBattle();
+      return;
+    }
+
     this.showDifficultyDialog();
   }
 

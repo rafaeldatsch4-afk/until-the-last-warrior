@@ -265,6 +265,11 @@ export class MadaraFighter extends Fighter {
       .rectangle(0, 0, 960, 540, 0x000000, 0)
       .setOrigin(0)
       .setDepth(18);
+    
+    bs.time.delayedCall(5000, () => {
+      try { if (overlay && overlay.active) overlay.destroy(); } catch (e) {}
+    });
+
     bs.tweens.add({
       targets: overlay,
       fillAlpha: 0.8,

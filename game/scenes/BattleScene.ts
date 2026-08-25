@@ -1105,11 +1105,6 @@ export default class BattleScene extends Phaser.Scene {
           const colors = this.getCharacterAuraColor(true);
           (this.p1Shield as Phaser.GameObjects.Arc).setStrokeStyle(4, colors.ringColor, 0.8);
           this.p1Shield.setScale(1.1 + Math.sin(time * 0.08) * 0.15);
-        } else if (this.playerTransformLevel > 0) {
-          this.p1Shield.setVisible(true);
-          const colors = this.getCharacterAuraColor(true);
-          (this.p1Shield as Phaser.GameObjects.Arc).setStrokeStyle(2, colors.ringColor, 0.4);
-          this.p1Shield.setScale(0.85 + Math.sin(time * 0.024) * 0.05);
         } else {
           this.p1Shield.setVisible(false);
         }
@@ -1160,11 +1155,6 @@ export default class BattleScene extends Phaser.Scene {
           const colors = this.getCharacterAuraColor(false);
           (this.p2Shield as Phaser.GameObjects.Arc).setStrokeStyle(4, colors.ringColor, 0.8);
           this.p2Shield.setScale(1.1 + Math.sin(time * 0.08) * 0.15);
-        } else if (this.enemyTransformLevel > 0) {
-          this.p2Shield.setVisible(true);
-          const colors = this.getCharacterAuraColor(false);
-          (this.p2Shield as Phaser.GameObjects.Arc).setStrokeStyle(2, colors.ringColor, 0.4);
-          this.p2Shield.setScale(0.85 + Math.sin(time * 0.024) * 0.05);
         } else {
           this.p2Shield.setVisible(false);
         }
@@ -1761,8 +1751,9 @@ export default class BattleScene extends Phaser.Scene {
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
 
-    if (aura && aura.active && transLevel === 0) aura.setVisible(false);
-    if (shield && shield.active && transLevel === 0) shield.setVisible(false);
+    const isDefending = isPlayer ? this.playerDefending : this.enemyDefending;
+    if (aura && aura.active && transLevel === 0 && !isDefending) aura.setVisible(false);
+    if (shield && shield.active && !isDefending) shield.setVisible(false);
 
     const sprite = isPlayer ? this.player : this.enemy;
     const data = isPlayer ? this.playerData : this.enemyData;
@@ -5194,6 +5185,33 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   public cleanupAndShowVictory(win: boolean) {
+    if (this.effects) {
+      try {
+        this.effects.clearAll();
+      } catch (e) {
+        console.warn("Error clearing battle effects:", e);
+      }
+    }
+
+    if (this.p1Shield) this.p1Shield.setVisible(false);
+    if (this.p2Shield) this.p2Shield.setVisible(false);
+    if (this.p1Aura) this.p1Aura.setVisible(false);
+    if (this.p2Aura) this.p2Aura.setVisible(false);
+    if (this.p1DebugCircle) this.p1DebugCircle.setVisible(false);
+    if (this.p2DebugCircle) this.p2DebugCircle.setVisible(false);
+
+    // Stop any persistent attack effects or tweens on fighters
+    if (this.player && this.player.active) {
+      this.tweens.killTweensOf(this.player);
+      this.player.clearTint();
+      this.player.setRotation(0);
+    }
+    if (this.enemy && this.enemy.active) {
+      this.tweens.killTweensOf(this.enemy);
+      this.enemy.clearTint();
+      this.enemy.setRotation(0);
+    }
+
     if (this.battleInput && this.battleInput.mobileControls) {
       this.battleInput.mobileControls.forEach((c: any) => {
         try {

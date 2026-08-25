@@ -197,13 +197,29 @@ export class BattleEffects {
     if (!this.scene.scene.isActive()) return;
 
     const flash = this.borrowFlash(480, 270, 960, 540, color, alpha);
+    
+    // Safety auto-hide fallback
+    const hideFlash = () => {
+      try {
+        if (flash && flash.active) {
+          flash.setAlpha(0).setVisible(false).setActive(false);
+          this.flashPool.killAndHide(flash);
+        }
+      } catch (e) {}
+    };
+
+    const safetyTimer = this.scene.time.delayedCall(duration + 200, hideFlash);
+
     this.runManagedTween({
       targets: flash,
       alpha: 0,
       duration: duration,
       ease: "Power2",
       onComplete: () => {
-        this.flashPool.killAndHide(flash);
+        try {
+          if (safetyTimer) safetyTimer.remove();
+        } catch (e) {}
+        hideFlash();
       },
     });
   }

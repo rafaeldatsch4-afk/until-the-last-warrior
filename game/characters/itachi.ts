@@ -26,8 +26,8 @@ export class ItachiFighter extends Fighter {
     const startX = attacker.x;
 
     if (attackType === "melee") {
-      // Itachi Melee: Kunai slash
-      attacker.play(bs.getAnimKey("itachi", transformLevel, "punch"));
+      // Itachi Melee: Totsuka slash (Susanoo) or Kunai slash (Base)
+      attacker.play(bs.getAnimKey("itachi", transformLevel, "attack"));
 
       // Dash forward
       bs.tweens.add({
@@ -180,6 +180,14 @@ export class ItachiFighter extends Fighter {
     const darkOverlay = bs.add
       .rectangle(480, 270, 960, 540, 0x000000, 0)
       .setDepth(13);
+    
+    // Safety auto-destroy fallback
+    bs.time.delayedCall(3000, () => {
+      try {
+        if (darkOverlay && darkOverlay.active) darkOverlay.destroy();
+      } catch (e) {}
+    });
+
     bs.tweens.add({
       targets: darkOverlay,
       fillAlpha: 0.5,
@@ -290,123 +298,149 @@ export class ItachiFighter extends Fighter {
     attacker.play(bs.getAnimKey("itachi", transformLevel, "punch"));
     if (bs.soundManager) bs.soundManager.playBeamFire();
 
-    // Screen turns red/black
+    // Red Tsukuyomi Dimension Background
     const bg = bs.add
       .rectangle(480, 270, 960, 540, 0x8b0000)
       .setDepth(13)
       .setAlpha(0);
 
+    // Guaranteed cleanup safety timer so red screen never freezes
+    const cleanupElements = () => {
+      try {
+        if (bg && bg.active) bg.destroy();
+      } catch (e) {}
+    };
+    bs.time.delayedCall(4500, cleanupElements);
+
     bs.tweens.add({
       targets: bg,
-      alpha: 0.9,
-      duration: 300,
+      alpha: 0.85,
+      duration: 250,
       onComplete: () => {
-        // Giant Sharingan eye in background
+        if (!bs.scene.isActive()) {
+          cleanupElements();
+          return;
+        }
+
+        // Giant Sharingan Eye in Background
         const eyeGlow = bs.add
-          .circle(480, 270, 200, 0xff0000)
+          .circle(480, 270, 180, 0xff0000)
           .setDepth(13)
           .setAlpha(0)
           .setBlendMode(Phaser.BlendModes.ADD);
         const eye = bs.add
-          .circle(480, 270, 150, 0xff0000)
+          .circle(480, 270, 140, 0xd63031)
           .setDepth(14)
           .setAlpha(0);
         const pupil = bs.add
-          .circle(480, 270, 30, 0x000000)
+          .circle(480, 270, 26, 0x111111)
           .setDepth(14)
           .setAlpha(0);
 
-        // Tomoe
+        // Sharingan Tomoe Container
+        const tomoeContainer = bs.add.container(480, 270).setDepth(14).setAlpha(0);
         const tomoes: Phaser.GameObjects.Graphics[] = [];
         for (let i = 0; i < 3; i++) {
-          const t = bs.add.graphics().setDepth(14).setAlpha(0);
-          t.fillStyle(0x000000, 1);
-          t.fillCircle(0, 0, 15);
-          t.setPosition(
-            480 + Math.cos((i * Math.PI * 2) / 3) * 80,
-            270 + Math.sin((i * Math.PI * 2) / 3) * 80,
-          );
+          const t = bs.add.graphics();
+          t.fillStyle(0x111111, 1);
+          t.fillCircle(0, 0, 14);
+          const angle = (i * Math.PI * 2) / 3;
+          t.setPosition(Math.cos(angle) * 70, Math.sin(angle) * 70);
+          tomoeContainer.add(t);
           tomoes.push(t);
         }
 
-        // Invert colors effect
-        // We can't easily invert colors with standard Phaser without a custom pipeline,
-        // so we'll simulate it with a strong flash and color overlay
-        bs.createScreenFlash(0xffffff, 300, 0.9);
-        bs.cameras.main.shake(1000, 0.02);
+        bs.createScreenFlash(0xffffff, 200, 0.8);
+        bs.cameras.main.shake(800, 0.02);
 
+        // Fade in Sharingan Eye
         bs.tweens.add({
-          targets: [eye, pupil, eyeGlow, ...tomoes],
-          alpha: 0.9,
-          scale: 1.8,
-          duration: 500,
-          yoyo: true,
-          hold: 1000,
-          onUpdate: (tween: any) => {
-            // Spin tomoes
-            const progress = tween.getValue();
-            tomoes.forEach((t: any, i: number) => {
-              const angle = (i * Math.PI * 2) / 3 + progress * Math.PI * 6;
-              t.setPosition(
-                480 + Math.cos(angle) * 80 * progress,
-                270 + Math.sin(angle) * 80 * progress,
-              );
-            });
-          },
+          targets: [eye, pupil, eyeGlow, tomoeContainer],
+          alpha: 1,
+          scale: 1.4,
+          duration: 400,
+          ease: "Power2",
           onComplete: () => {
-            eye.destroy();
-            pupil.destroy();
-            eyeGlow.destroy();
-            tomoes.forEach((t: any) => t.destroy());
-
+            // Spin the tomoes smoothly
             bs.tweens.add({
-              targets: bg,
-              alpha: 0,
-              duration: 300,
-              onComplete: () => bg.destroy(),
-            });
-
-            if (bs.soundManager) bs.soundManager.playExplosion(true);
-
-            // Multiple invisible slashes
-            for (let i = 0; i < 8; i++) {
-              bs.time.delayedCall(i * 80, () => {
-                if (!bs.scene.isActive()) return;
-                bs.createImpactEffect(
-                  target.x + Phaser.Math.Between(-40, 40),
-                  target.y + 120 + Phaser.Math.Between(-40, 40),
-                  0x000000,
-                  "melee",
-                );
-                bs.cameras.main.shake(150, 0.03);
-              });
-            }
-
-            bs.time.delayedCall(700, () => {
-              bs.createScreenFlash(0xffffff, 600, 1);
-              bs.takeDamage(!isPlayer, dmg);
-              bs.cameras.main.shake(1000, 0.1);
-
-              // Shockwave rings
-              for (let i = 0; i < 6; i++) {
-                const ring = bs.add
-                  .circle(target.x, target.y + 120, 50, 0x8b0000)
-                  .setStrokeStyle(12, 0x8b0000)
-                  .setDepth(20)
-                  .setAlpha(0)
-                  .setBlendMode(Phaser.BlendModes.ADD);
-                ring.isFilled = false;
+              targets: tomoeContainer,
+              angle: 360,
+              duration: 900,
+              ease: "Linear",
+              onComplete: () => {
+                // Fade out Sharingan Eye
                 bs.tweens.add({
-                  targets: ring,
-                  scale: 12 + i * 6,
-                  alpha: { start: 1, end: 0 },
-                  duration: 500 + i * 150,
-                  ease: "Cubic.easeOut",
-                  onComplete: () => ring.destroy(),
+                  targets: [eye, pupil, eyeGlow, tomoeContainer],
+                  alpha: 0,
+                  scale: 0.8,
+                  duration: 250,
+                  onComplete: () => {
+                    eye.destroy();
+                    pupil.destroy();
+                    eyeGlow.destroy();
+                    tomoeContainer.destroy();
+                  },
                 });
-              }
 
-              bs.onSpecialComplete(isPlayer);
+                // Fade out red background
+                bs.tweens.add({
+                  targets: bg,
+                  alpha: 0,
+                  duration: 300,
+                  onComplete: () => {
+                    cleanupElements();
+                  },
+                });
+
+                if (bs.soundManager) bs.soundManager.playExplosion(true);
+
+                // Multiple Tsukuyomi invisible slashes
+                for (let i = 0; i < 8; i++) {
+                  bs.time.delayedCall(i * 70, () => {
+                    if (!bs.scene.isActive()) return;
+                    bs.createImpactEffect(
+                      target.x + Phaser.Math.Between(-40, 40),
+                      target.y + 120 + Phaser.Math.Between(-40, 40),
+                      0x000000,
+                      "melee",
+                    );
+                    bs.cameras.main.shake(120, 0.02);
+                  });
+                }
+
+                bs.time.delayedCall(650, () => {
+                  if (!bs.scene.isActive()) {
+                    cleanupElements();
+                    return;
+                  }
+
+                  bs.createScreenFlash(0xffffff, 500, 1);
+                  bs.takeDamage(!isPlayer, dmg);
+                  bs.cameras.main.shake(800, 0.08);
+
+                  // Shockwave rings
+                  for (let i = 0; i < 5; i++) {
+                    const ring = bs.add
+                      .circle(target.x, target.y + 120, 40, 0x8b0000)
+                      .setStrokeStyle(10, 0x8b0000)
+                      .setDepth(20)
+                      .setAlpha(0)
+                      .setBlendMode(Phaser.BlendModes.ADD);
+                    ring.isFilled = false;
+                    bs.tweens.add({
+                      targets: ring,
+                      scale: 10 + i * 5,
+                      alpha: { start: 1, end: 0 },
+                      duration: 400 + i * 120,
+                      ease: "Cubic.easeOut",
+                      onComplete: () => ring.destroy(),
+                    });
+                  }
+
+                  cleanupElements();
+                  bs.onSpecialComplete(isPlayer);
+                });
+              },
             });
           },
         });
