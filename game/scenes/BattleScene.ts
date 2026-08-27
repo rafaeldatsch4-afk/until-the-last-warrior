@@ -3,6 +3,7 @@ import { BattleCamera } from "../battle/BattleCamera";
 import { BattleReward } from "../battle/BattleReward";
 import { BattleEffects } from "../battle/BattleEffects";
 import { CombatMath } from "../utils/CombatMath";
+import { StoryStatsMath } from "../systems/StoryStatsMath";
 import { Responsive } from "../utils/Responsive";
 import { BattleInput } from "../battle/BattleInput";
 import { BattleUI } from "../battle/BattleUI";
@@ -332,7 +333,7 @@ export default class BattleScene extends Phaser.Scene {
     this.createFighterSprites();
     const isStoryMode = this.gameState.gameMode === "story";
     const storyStats = isStoryMode ? this.gameState.storyState?.stats : null;
-    const healthBonus = storyStats ? storyStats.health * 5 : 0; // cada ponto = +5 HP máximo
+    const healthBonus = storyStats ? StoryStatsMath.getHealthBonus(storyStats.health) : 0; // cada ponto = +5 HP máximo
     this.playerMaxHp = this.playerData.maxHp + healthBonus;
     this.playerHp = this.playerMaxHp;
     
@@ -678,7 +679,7 @@ export default class BattleScene extends Phaser.Scene {
         let moveSpeed = 6;
         if (this.gameState.gameMode === "story") {
           const speedStat = this.gameState.storyState?.stats.speed || 0;
-          const speedBonus = speedStat * 0.1;
+          const speedBonus = StoryStatsMath.getSpeedBonus(speedStat);
           moveSpeed += speedBonus;
         }
         let isMoving = false;
@@ -1691,7 +1692,7 @@ export default class BattleScene extends Phaser.Scene {
     if (this.gameState.gameMode === "story") {
        if (isPlayer) {
            const kiStat = this.gameState.storyState?.stats.ki || 0;
-           const kiBonus = (kiStat * 0.001) * delta;
+           const kiBonus = StoryStatsMath.getKiChargeBonus(kiStat, delta);
            chargeRate += kiBonus;
        } else if (!isPlayer && this.storyStats) {
            chargeRate += (this.gameState.storyState.stage - 1) * 0.002 * delta;
@@ -4080,7 +4081,7 @@ export default class BattleScene extends Phaser.Scene {
     const isStoryMode = this.gameState.gameMode === "story";
     if (isStoryMode && isPlayer) {
       const attackStat = this.gameState.storyState?.stats.attack || 0;
-      const attackBonus = 1 + (attackStat * 0.03); // cada ponto = +3% de dano
+      const attackBonus = StoryStatsMath.getAttackDamageMultiplier(attackStat); // cada ponto = +3% de dano
       mult *= attackBonus;
     } else if (isStoryMode && !isPlayer && this.storyStats) {
        // enemy scales with stage
@@ -4646,7 +4647,7 @@ export default class BattleScene extends Phaser.Scene {
     if (this.gameState.gameMode === "story") {
        if (isP) {
           const defenseStat = this.gameState.storyState?.stats.defense || 0;
-          const reduction = Math.min(0.5, defenseStat * 0.02); // cada ponto reduz 2% do dano, cap em 50%
+          const reduction = StoryStatsMath.getDefenseDamageReduction(defenseStat); // cada ponto reduz 2% do dano, cap em 50%
           dmg = Math.floor(dmg * (1 - reduction));
        } else if (!isP && this.storyStats) {
           dmg = Math.max(1, Math.floor(dmg * (1 - (this.gameState.storyState.stage - 1) * 0.05)));
@@ -4657,7 +4658,7 @@ export default class BattleScene extends Phaser.Scene {
     const currentTime = this.time.now;
     const isStoryMode = this.gameState.gameMode === "story";
     const speedStat = (isStoryMode && !isP) ? (this.gameState.storyState?.stats.speed || 0) : 0;
-    const p1ComboWindow = isStoryMode ? Math.min(3500, 2000 + speedStat * 120) : 2000;
+    const p1ComboWindow = StoryStatsMath.getComboWindow(speedStat, isStoryMode);
     const p2ComboWindow = 2000;
 
     if (isP) { // Player took damage, so Enemy (P2) gets the combo
@@ -4694,7 +4695,7 @@ export default class BattleScene extends Phaser.Scene {
     if (hitComboCount > 1) {
       if (isStoryMode && !isP) {
         // Story Mode Player: Escalating Combo Multiplier based on Speed & Hit count
-        const perHitScale = 0.15 + (speedStat * 0.02); // 15% base + 2% per point of Speed
+        const perHitScale = StoryStatsMath.getPerHitScale(speedStat); // 15% base + 2% per point of Speed
         let extraSurge = 0;
         if (hitComboCount >= 12) {
           extraSurge = 0.80; // +80% flat surge
@@ -4834,7 +4835,7 @@ export default class BattleScene extends Phaser.Scene {
           }
           // Ki boost for player parry (scaled with Ki stat if in Story Mode)
           const kiStat = isStoryMode ? (this.gameState.storyState?.stats.ki || 0) : 0;
-          const kiBonus = 20 + Math.floor(defStat * 1.5) + (kiStat * 2);
+          const kiBonus = StoryStatsMath.getKiRewardBonus(defStat, kiStat);
           this.modifyKi(true, kiBonus);
 
           // Counter-attack damage buff (+45% base, plus defense scaling)

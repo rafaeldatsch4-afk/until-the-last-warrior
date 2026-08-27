@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "start": "node dist/server.cjs",
     "lint": "tsc --noEmit",
-    "test": "tsx --test game/utils/*.test.ts"
+    "test": "tsx --test game/utils/*.test.ts game/systems/*.test.ts"
   },
   "dependencies": {
     "express": "^5.2.1",
