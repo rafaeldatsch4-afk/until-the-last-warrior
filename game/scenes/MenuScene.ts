@@ -268,9 +268,9 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     // 7. Menu Buttons (Right Column - Dedicated, Clean Layout)
-    const menuBlockHeight = 6 * 38 + 34;
+    const menuBlockHeight = 7 * 36 + 10;
     const startY = Math.round((height - menuBlockHeight) / 2) + 8;
-    const spacing = 38;
+    const spacing = 36;
 
     this.createMenuButton(
       menuColX,
@@ -295,51 +295,25 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "StoreScene");
       },
       0x3498db,
-      170,
+      150,
     );
 
     this.createMenuButton(
       menuColX,
       startY + spacing * 2,
-      "DESAFIOS DO DIA",
+      "PERFIL",
       () => {
         this.resumeAudioContext();
         if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-        this.showChallengesPopup();
+        transitionTo(this, "ProfileScene");
       },
-      0xf1c40f,
-      240,
+      0x38bdf8,
+      200,
     );
 
     this.createMenuButton(
       menuColX,
       startY + spacing * 3,
-      "CONFIGURAÇÕES",
-      () => {
-        this.resumeAudioContext();
-        if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-        transitionTo(this, "SettingsScene");
-      },
-      0x95a5a6,
-      310,
-    );
-
-    this.createMenuButton(
-      menuColX,
-      startY + spacing * 4,
-      "CRIAR PERSONAGEM",
-      () => {
-        this.resumeAudioContext();
-        if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-        transitionTo(this, "CharacterCreatorScene");
-      },
-      0x2ecc71,
-      380,
-    );
-
-    this.createMenuButton(
-      menuColX,
-      startY + spacing * 5,
       "TOP GLOBAL",
       () => {
         this.resumeAudioContext();
@@ -347,7 +321,46 @@ export default class MenuScene extends Phaser.Scene {
         transitionTo(this, "LeaderboardScene");
       },
       0x9b59b6,
-      450,
+      250,
+    );
+
+    this.createMenuButton(
+      menuColX,
+      startY + spacing * 4,
+      "DESAFIOS DO DIA",
+      () => {
+        this.resumeAudioContext();
+        if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+        this.showChallengesPopup();
+      },
+      0xf1c40f,
+      300,
+    );
+
+    this.createMenuButton(
+      menuColX,
+      startY + spacing * 5,
+      "CRIAR PERSONAGEM",
+      () => {
+        this.resumeAudioContext();
+        if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+        transitionTo(this, "CharacterCreatorScene");
+      },
+      0x2ecc71,
+      350,
+    );
+
+    this.createMenuButton(
+      menuColX,
+      startY + spacing * 6,
+      "CONFIGURAÇÕES",
+      () => {
+        this.resumeAudioContext();
+        if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
+        transitionTo(this, "SettingsScene");
+      },
+      0x95a5a6,
+      400,
     );
   }
 

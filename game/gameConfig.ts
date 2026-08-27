@@ -13,6 +13,7 @@ import MultiplayerLobbyScene from "./scenes/MultiplayerLobbyScene";
 import CharacterCreatorScene from "./scenes/CharacterCreatorScene";
 import LeaderboardScene from "./scenes/LeaderboardScene";
 import StoryHubScene from "./scenes/StoryHubScene";
+import ProfileScene from "./scenes/ProfileScene";
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -20,9 +21,9 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   height: 540,
   parent: "game-container",
   backgroundColor: "#071026",
-  pixelArt: false,
-  antialias: true,
-  roundPixels: false,
+  pixelArt: true,
+  antialias: false,
+  roundPixels: true,
   scene: [
     BootScene,
     PreloadScene,
@@ -38,6 +39,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     CharacterCreatorScene,
     LeaderboardScene,
     StoryHubScene,
+    ProfileScene,
   ],
 
   scale: {
@@ -56,10 +58,10 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     zoom: 2,
   },
   render: {
-    pixelArt: false,
-    antialias: true,
-    antialiasGL: true,
-    roundPixels: false,
+    pixelArt: true,
+    antialias: false,
+    antialiasGL: false,
+    roundPixels: true,
     powerPreference: "high-performance",
     batchSize: 4096,
   },
