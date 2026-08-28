@@ -303,8 +303,8 @@ export class ObitoFighter extends Fighter {
         if (!bs.scene.isActive()) return;
         gatherParticles.destroy();
 
-        bs.createScreenFlash(0xcc0000, 500, 0.9);
-        bs.cameras.main.shake(1000, 0.08);
+        bs.createScreenFlash(0xff4444, 200, 0.4);
+        bs.cameras.main.shake(400, 0.04);
 
         // Fire as a massive beam
         const beamOuter = bs.add
@@ -332,8 +332,8 @@ export class ObitoFighter extends Fighter {
             aura.destroy();
             bombGlow.destroy();
 
-            bs.createScreenFlash(0xcc0000, 600, 1);
-            bs.cameras.main.shake(1500, 0.15);
+            bs.createScreenFlash(0xff3333, 250, 0.5);
+            bs.cameras.main.shake(600, 0.07);
 
             bs.createImpactEffect(target.x, target.y + 120, 0xcc0000, "beam");
             bs.takeDamage(!isPlayer, dmg);

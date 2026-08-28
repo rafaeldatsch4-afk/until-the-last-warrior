@@ -76,10 +76,13 @@ export class BattleEffects {
       flash = this.scene.add.rectangle(x, y, width, height, color);
       this.flashPool.add(flash);
     }
+    this.scene.tweens.killTweensOf(flash);
+    const safeAlpha = Math.min(alpha, 0.6);
     flash.setPosition(x, y)
       .setSize(width, height)
       .setFillStyle(color)
-      .setAlpha(alpha)
+      .setAlpha(safeAlpha)
+      .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(30)
       .setScrollFactor(0)
       .setActive(true)
@@ -93,6 +96,7 @@ export class BattleEffects {
       circle = this.scene.add.circle(x, y, radius, fillColor, fillAlpha);
       this.circlePool.add(circle);
     }
+    this.scene.tweens.killTweensOf(circle);
     circle.setPosition(x, y)
       .setRadius(radius)
       .setScale(1)
@@ -115,6 +119,7 @@ export class BattleEffects {
       rect = this.scene.add.rectangle(x, y, width, height, fillColor, fillAlpha);
       this.rectPool.add(rect);
     }
+    this.scene.tweens.killTweensOf(rect);
     rect.setPosition(x, y)
       .setSize(width, height)
       .setScale(1)
@@ -142,6 +147,7 @@ export class BattleEffects {
         textObj.setStyle(style);
       }
     }
+    this.scene.tweens.killTweensOf(textObj);
     textObj.setPosition(x, y)
       .setScale(1)
       .setRotation(0)
@@ -158,6 +164,7 @@ export class BattleEffects {
       g = this.scene.add.graphics({ x, y });
       this.graphicsPool.add(g);
     }
+    this.scene.tweens.killTweensOf(g);
     g.setPosition(x, y)
       .clear()
       .setAlpha(1)
@@ -196,7 +203,9 @@ export class BattleEffects {
   public createScreenFlash(color: number, duration: number, alpha: number = 0.8) {
     if (!this.scene.scene.isActive()) return;
 
-    const flash = this.borrowFlash(480, 270, 960, 540, color, alpha);
+    const safeDuration = Math.min(duration, 250);
+    const safeAlpha = Math.min(alpha, 0.55);
+    const flash = this.borrowFlash(480, 270, 960, 540, color, safeAlpha);
     
     // Safety auto-hide fallback
     const hideFlash = () => {
@@ -208,12 +217,12 @@ export class BattleEffects {
       } catch (e) {}
     };
 
-    const safetyTimer = this.scene.time.delayedCall(duration + 200, hideFlash);
+    const safetyTimer = this.scene.time.delayedCall(safeDuration + 80, hideFlash);
 
     this.runManagedTween({
       targets: flash,
       alpha: 0,
-      duration: duration,
+      duration: safeDuration,
       ease: "Power2",
       onComplete: () => {
         try {

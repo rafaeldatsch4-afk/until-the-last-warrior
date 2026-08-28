@@ -388,8 +388,8 @@ export class ThukunaFighter extends Fighter {
           slashGraphics.destroy();
 
           // Final massive slash
-          bs.createScreenFlash(0xff0000, 400, 0.9);
-          bs.cameras.main.shake(600, 0.06);
+          bs.createScreenFlash(0xff3333, 220, 0.45);
+          bs.cameras.main.shake(350, 0.04);
           if (bs.soundManager) bs.soundManager.playExplosion(true);
 
           const finalSlash = bs.add

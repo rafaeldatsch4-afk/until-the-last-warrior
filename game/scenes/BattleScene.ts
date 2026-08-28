@@ -5,6 +5,7 @@ import { BattleEffects } from "../battle/BattleEffects";
 import { CombatMath } from "../utils/CombatMath";
 import { StoryStatsMath } from "../systems/StoryStatsMath";
 import { Responsive } from "../utils/Responsive";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import { BattleInput } from "../battle/BattleInput";
 import { BattleUI } from "../battle/BattleUI";
 import { BattleAI } from "../battle/BattleAI";
@@ -360,14 +361,14 @@ export default class BattleScene extends Phaser.Scene {
     );
 
     if (this.gameState.gameMode === "training") {
-      const visible = Responsive.getVisibleBounds(this);
-      this.add.text(visible.centerX, visible.top + 30, "MODO TREINO", {
-        fontSize: "24px",
+      const bounds = ResponsiveUtils.getSafeBounds(this);
+      this.add.text(bounds.centerX, Math.max(54, bounds.top + 52), "MODO TREINO", {
+        fontSize: "20px",
         fontStyle: "bold",
         color: "#2ecc71",
         stroke: "#000",
         strokeThickness: 4,
-        fontFamily: "system-ui, -apple-system, sans-serif"
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
       }).setOrigin(0.5).setScrollFactor(0).setDepth(15);
     }
     this.battleInput = new BattleInput(this);
@@ -3054,9 +3055,9 @@ export default class BattleScene extends Phaser.Scene {
 
             // Big Flash & Shake
             if (data.key === "thukuna") {
-              // Invert colors momentarily for an "impact frame" feel
+              // Impact flash
               if (this.battleCamera)
-                this.battleCamera.flash(800, 255, 0, 0, true);
+                this.battleCamera.flash(160, 255, 100, 100, true);
 
               // Thukuna specific slash effects - make them sharper and cleaner
               for (let i = 0; i < 8; i++) {
@@ -3123,7 +3124,7 @@ export default class BattleScene extends Phaser.Scene {
               });
             } else {
               if (this.battleCamera)
-                this.battleCamera.flash(800, 255, 255, 255, true);
+                this.battleCamera.flash(180, 255, 255, 255, true);
             }
 
             if (this.battleCamera) this.battleCamera.shake(1000, 0.05);
@@ -4890,8 +4891,8 @@ export default class BattleScene extends Phaser.Scene {
         if (this.battleCamera) {
           if (isCritical) {
             // Intense screen shake for critical hits
-            this.battleCamera.shake(600, 0.06);
-            this.battleCamera.flash(300, 255, 50, 50, true); // Vibrant red flash
+            this.battleCamera.shake(350, 0.04);
+            this.battleCamera.flash(120, 255, 140, 140, true); // Punchy brief critical flash
           } else {
             this.battleCamera.shake(150, 0.02);
           }
@@ -4933,12 +4934,12 @@ export default class BattleScene extends Phaser.Scene {
               this.battleUI.showLog("⚡ COMBO! Dano aumentado (+15% por golpe)");
             } else if (this.p1HitCombo === 5) {
               this.battleUI.showLog("🔥 COMBO RUSH! Bônus de Dano & Ki ativados!");
-              if (this.battleCamera) this.battleCamera.flash(120, 255, 140, 0, true);
+              if (this.battleCamera) this.battleCamera.flash(100, 255, 180, 50, true);
               this.createImpactEffect(target.x, target.y + 50, 0xff6600, "super", dmg);
             } else if (this.p1HitCombo === 8) {
               this.battleUI.showLog("💥 ULTRA COMBO! Dano Devastador!");
               if (this.battleCamera) {
-                this.battleCamera.flash(160, 220, 80, 255, true);
+                this.battleCamera.flash(120, 220, 100, 255, true);
                 this.battleCamera.shake(200, 0.035);
               }
               this.createImpactEffect(target.x, target.y + 50, 0x00ffff, "super", dmg);
@@ -4947,8 +4948,8 @@ export default class BattleScene extends Phaser.Scene {
             } else if (this.p1HitCombo === 12) {
               this.battleUI.showLog("👑 WARRIOR GOD COMBO! PODER MÁXIMO DESENCADEADO!");
               if (this.battleCamera) {
-                this.battleCamera.flash(260, 255, 215, 0, true);
-                this.battleCamera.shake(350, 0.05);
+                this.battleCamera.flash(180, 255, 220, 50, true);
+                this.battleCamera.shake(300, 0.045);
               }
               this.createImpactEffect(target.x, target.y + 50, 0xffd700, "super", dmg);
               if (this.soundManager) this.soundManager.playClash();
@@ -4959,28 +4960,19 @@ export default class BattleScene extends Phaser.Scene {
 
         const comboCount = isP ? this.p2HitCombo : this.p1HitCombo;
         if (comboCount > 1 && (this.gameState.gameMode === "online_pvp" || this.gameState.gameMode === "local_pvp")) {
-            // PvP specific gratifying visual effects for combos
-            // Screen flash effect depending on combo count
-            const intensity = Math.min(comboCount * 0.05, 0.4); // Max 0.4 alpha
-            const flashColor = comboCount % 5 === 0 ? 0xff0000 : 0xffffff;
-            const flash = this.add.rectangle(480, 270, 960, 540, flashColor, intensity).setScrollFactor(0).setDepth(200);
-            this.tweens.add({
-              targets: flash,
-              alpha: 0,
-              duration: 150 + comboCount * 10,
-              ease: "Power2",
-              onComplete: () => flash.destroy()
-            });
+            // PvP specific gratifying visual effects for combos (managed via effects system)
+            const flashColor = comboCount % 5 === 0 ? 0xffaa00 : 0xffffff;
+            this.createScreenFlash(flashColor, 120, 0.35);
+        }
 
             // Extra particle burst
             if (comboCount % 2 === 0) {
                this.createImpactEffect(target.x + Phaser.Math.Between(-30, 30), target.y + 60 + Phaser.Math.Between(-30, 30), 0x00ffff, "super", dmg);
             }
 
-            // Shake camera for higher combos
-            if (this.battleCamera) {
-               this.battleCamera.shake(100 + comboCount * 10, Math.min(0.01 + comboCount * 0.002, 0.04));
-            }
+        // Shake camera for higher combos
+        if (this.battleCamera) {
+          this.battleCamera.shake(100 + comboCount * 10, Math.min(0.01 + comboCount * 0.002, 0.04));
         }
       }
     }

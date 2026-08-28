@@ -247,7 +247,7 @@ export class ItachiFighter extends Fighter {
       if (!bs.scene.isActive()) return;
       if (bs.soundManager) bs.soundManager.playExplosion(true);
 
-      bs.createScreenFlash(0x8b0000, 500, 1);
+      bs.createScreenFlash(0xff3333, 220, 0.45);
       bs.createImpactEffect(target.x, target.y + 120, 0x000000, "beam");
 
       // Shockwave rings

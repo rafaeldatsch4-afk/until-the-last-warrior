@@ -1,4 +1,5 @@
 import { Responsive } from "../utils/Responsive";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import Phaser from "phaser";
 
 import type BattleScene from "../scenes/BattleScene";
@@ -554,89 +555,140 @@ export class BattleInput {
       });
     }
 
-    // Pause Button (Top Center)
-    const pauseX = gw / 2 - 35;
-    const pauseY = 40;
-    const pauseBtn = this.scene.add
-      .circle(pauseX, pauseY, 30, 0x333333, 0.6)
-      .setInteractive()
-      .setScrollFactor(0)
-      .setDepth(100);
-    const pauseTxt = this.scene.add
-      .text(pauseX, pauseY, "||", { fontSize: "24px", fontStyle: "bold" })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(101);
+    // --- Top Mobile Buttons (Pause, HUD Edit, HUD Visibility) ---
+    const bounds = ResponsiveUtils.getSafeBounds(this.scene);
+    const topBtnY = Math.max(30, bounds.top + 22);
+    const topCenterX = bounds.centerX;
+    const btnSpacing = 54;
+    const btnRadius = 20;
 
-    // Edit HUD Button
-    const editBtn = this.scene.add
-      .circle(pauseX + 70, pauseY, 30, 0x4a69bd, 0.6)
-      .setInteractive()
-      .setScrollFactor(0)
-      .setDepth(100);
+    // Helper to create top rounded button with safe, reliable touch hit target (>= 44px)
+    const createTopBtn = (
+      x: number,
+      y: number,
+      label: string,
+      bgColor: number,
+      borderColor: number,
+      fontSize: string = "13px",
+      onClick: () => void
+    ) => {
+      const container = this.scene.add.container(x, y).setScrollFactor(0).setDepth(102);
+      const bg = this.scene.add.graphics();
       
-    const editTxt = this.scene.add
-      .text(pauseX + 70, pauseY, "HUD", { fontSize: "16px", fontStyle: "bold", color: "#fff" })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(101);
-      
-    this.editHudTextObj = this.scene.add.text(this.scene.cameras.main.width / 2, 100, "HUD EDIT MODE\nDrag buttons to move\nClick HUD button to save", {
-        fontSize: "24px",
+      const drawState = (isDown: boolean) => {
+        bg.clear();
+        bg.fillStyle(0x020617, 0.4);
+        bg.fillCircle(0, 1, btnRadius + 1);
+        bg.fillStyle(bgColor, isDown ? 0.95 : 0.82);
+        bg.fillCircle(0, 0, btnRadius);
+        bg.lineStyle(1.5, borderColor, isDown ? 1.0 : 0.75);
+        bg.strokeCircle(0, 0, btnRadius);
+      };
+      drawState(false);
+
+      const txt = this.scene.add.text(0, 0, label, {
+        fontSize,
+        fontStyle: "900",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 2.5,
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+      }).setOrigin(0.5);
+
+      // Large invisible hit target (48x48px for effortless mobile tapping)
+      const hit = this.scene.add.rectangle(0, 0, 48, 48, 0x000000, 0).setInteractive({ useHandCursor: true });
+      container.add([bg, txt, hit]);
+
+      hit.on("pointerdown", () => {
+        drawState(true);
+        container.setScale(0.92);
+      });
+
+      const resetBtn = () => {
+        drawState(false);
+        container.setScale(1.0);
+      };
+
+      hit.on("pointerup", () => {
+        resetBtn();
+        onClick();
+      });
+      hit.on("pointerout", resetBtn);
+
+      return { container, bg, txt, hit, drawState };
+    };
+
+    // 1. Pause Button (Left of center)
+    const pauseBtnObj = createTopBtn(
+      topCenterX - btnSpacing,
+      topBtnY,
+      "||",
+      0x1e293b,
+      0x64748b,
+      "17px",
+      () => {
+        if (this.scene.cache.audio.exists("sfx_select"))
+          this.scene.sound.play("sfx_select");
+
+        if (this.scene.gameState.gameMode === "online_pvp") {
+          this.scene.scene.launch("PauseScene", { online: true });
+        } else {
+          this.scene.scene.pause();
+          this.scene.scene.launch("PauseScene", { online: false });
+        }
+      }
+    );
+
+    // 2. HUD Edit Button (Center)
+    const editBtnObj = createTopBtn(
+      topCenterX,
+      topBtnY,
+      "HUD",
+      0x1e3a8a,
+      0x38bdf8,
+      "12px",
+      () => {
+        this.isEditingHUD = !this.isEditingHUD;
+        editBtnObj.drawState(this.isEditingHUD);
+        if (this.editHudTextObj) this.editHudTextObj.setVisible(this.isEditingHUD);
+      }
+    );
+
+    // 3. Toggle HUD Button (Right of center)
+    let hudVisible = true;
+    const toggleBtnObj = createTopBtn(
+      topCenterX + btnSpacing,
+      topBtnY,
+      "VIS",
+      0x581c87,
+      0xc084fc,
+      "12px",
+      () => {
+        hudVisible = !hudVisible;
+        toggleBtnObj.drawState(!hudVisible);
+        if (this.scene.battleUI) {
+          if (this.scene.battleUI.p1HudContainer) this.scene.battleUI.p1HudContainer.setVisible(hudVisible);
+          if (this.scene.battleUI.p2HudContainer) this.scene.battleUI.p2HudContainer.setVisible(hudVisible);
+        }
+      }
+    );
+
+    this.editHudTextObj = this.scene.add.text(topCenterX, topBtnY + 46, "MODO DE EDIÇÃO DO HUD\nArraste os botões para reposicionar\nToque em HUD para salvar", {
+        fontSize: "15px",
         color: "#fffc00",
         fontStyle: "bold",
         stroke: "#000",
-        strokeThickness: 4,
-        align: "center"
+        strokeThickness: 3.5,
+        align: "center",
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
     }).setOrigin(0.5).setScrollFactor(0).setDepth(105).setVisible(false);
 
-    editBtn.on("pointerdown", () => {
-      this.isEditingHUD = !this.isEditingHUD;
-      editBtn.setAlpha(this.isEditingHUD ? 1 : 0.6);
-      if (this.editHudTextObj) this.editHudTextObj.setVisible(this.isEditingHUD);
-    });
-
-    // Toggle HUD Button
-    const toggleBtn = this.scene.add
-      .circle(pauseX + 140, pauseY, 30, 0x9b59b6, 0.6)
-      .setInteractive()
-      .setScrollFactor(0)
-      .setDepth(100);
-      
-    const toggleTxt = this.scene.add
-      .text(pauseX + 140, pauseY, "VIS", { fontSize: "16px", fontStyle: "bold", color: "#fff" })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(101);
-
-    let hudVisible = true;
-    toggleBtn.on("pointerdown", () => {
-      hudVisible = !hudVisible;
-      toggleBtn.setAlpha(hudVisible ? 0.6 : 1);
-      
-      if (this.scene.battleUI) {
-        if (this.scene.battleUI.p1HudContainer) this.scene.battleUI.p1HudContainer.setVisible(hudVisible);
-        if (this.scene.battleUI.p2HudContainer) this.scene.battleUI.p2HudContainer.setVisible(hudVisible);
-      }
-    });
-
-    this.mobileControls.push(pauseBtn, pauseTxt, editBtn, editTxt, toggleBtn, toggleTxt, this.editHudTextObj);
-
-    pauseBtn.on("pointerdown", () => {
-      pauseBtn.setAlpha(0.9);
-      if (this.scene.cache.audio.exists("sfx_select"))
-        this.scene.sound.play("sfx_select");
-
-      if (this.scene.gameState.gameMode === "online_pvp") {
-        this.scene.scene.launch("PauseScene", { online: true });
-      } else {
-        this.scene.scene.pause();
-        this.scene.scene.launch("PauseScene", { online: false });
-      }
-    });
-
-    pauseBtn.on("pointerup", () => pauseBtn.setAlpha(0.6));
-    pauseBtn.on("pointerout", () => pauseBtn.setAlpha(0.6));
+    this.mobileControls.push(
+      pauseBtnObj.container,
+      editBtnObj.container,
+      toggleBtnObj.container,
+      this.editHudTextObj
+    );
   }
 
   public destroy() {

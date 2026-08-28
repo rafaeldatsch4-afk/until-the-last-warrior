@@ -68,13 +68,28 @@ export class BattleCamera {
     b: number = 255,
     force: boolean = false,
   ) {
+    // Keep flash punchy and brief (capped at 220ms) to avoid blocking gameplay or getting stuck
+    const safeDuration = Math.min(duration, 220);
     const isPotato = this.scene.gameState?.settings?.lowPerformanceMode;
-    if (isPotato) {
-      // Shorter, softer flash that clears immediately without fill-rate stalls
-      this.camera.flash(Math.min(duration * 0.5, 120), r, g, b, force);
-      return;
+    const finalDuration = isPotato ? Math.min(safeDuration * 0.6, 100) : safeDuration;
+
+    try {
+      this.camera.flash(finalDuration, r, g, b, force);
+    } catch (e) {
+      console.warn("Camera flash error:", e);
     }
-    this.camera.flash(duration, r, g, b, force);
+
+    // Safety watchdog: ensure flashEffect is guaranteed to reset and never stay frozen on screen
+    if (this.scene.time) {
+      this.scene.time.delayedCall(finalDuration + 60, () => {
+        try {
+          const flashEffect = (this.camera as any).flashEffect;
+          if (flashEffect && flashEffect.isRunning) {
+            flashEffect.reset();
+          }
+        } catch (e) {}
+      });
+    }
   }
 
   reset() {

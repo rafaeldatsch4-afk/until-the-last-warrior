@@ -161,8 +161,8 @@ export class ChapolimFighter extends Fighter {
           duration: 200,
           ease: "Cubic.easeIn",
           onComplete: () => {
-            bs.createScreenFlash(0xff0000, 300, 0.8);
-            bs.cameras.main.shake(500, 0.05);
+            bs.createScreenFlash(0xff3333, 200, 0.45);
+            bs.cameras.main.shake(300, 0.035);
 
             // Shockwave rings
             for (let i = 0; i < 2; i++) {
