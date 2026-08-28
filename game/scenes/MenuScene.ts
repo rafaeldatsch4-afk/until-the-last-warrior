@@ -390,32 +390,38 @@ export default class MenuScene extends Phaser.Scene {
     // Left Arrow
     const leftArrow = this.add
       .text(-w / 2 + 18, 0, "◀", {
-        fontSize: "13px",
+        fontSize: "14px",
         color: "#f1c40f",
         fontFamily: "system-ui, sans-serif",
       })
-      .setOrigin(0.5)
+      .setOrigin(0.5);
+
+    const leftHit = this.add
+      .rectangle(-w / 2 + 18, 0, 48, 44, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
 
-    leftArrow.on("pointerdown", () => this.cycleWorld(-1));
-    leftArrow.on("pointerover", () => leftArrow.setColor("#ffffff"));
-    leftArrow.on("pointerout", () => leftArrow.setColor("#f1c40f"));
+    leftHit.on("pointerdown", () => this.cycleWorld(-1));
+    leftHit.on("pointerover", () => leftArrow.setColor("#ffffff"));
+    leftHit.on("pointerout", () => leftArrow.setColor("#f1c40f"));
 
     // Right Arrow
     const rightArrow = this.add
       .text(w / 2 - 18, 0, "▶", {
-        fontSize: "13px",
+        fontSize: "14px",
         color: "#f1c40f",
         fontFamily: "system-ui, sans-serif",
       })
-      .setOrigin(0.5)
+      .setOrigin(0.5);
+
+    const rightHit = this.add
+      .rectangle(w / 2 - 18, 0, 48, 44, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
 
-    rightArrow.on("pointerdown", () => this.cycleWorld(1));
-    rightArrow.on("pointerover", () => rightArrow.setColor("#ffffff"));
-    rightArrow.on("pointerout", () => rightArrow.setColor("#f1c40f"));
+    rightHit.on("pointerdown", () => this.cycleWorld(1));
+    rightHit.on("pointerover", () => rightArrow.setColor("#ffffff"));
+    rightHit.on("pointerout", () => rightArrow.setColor("#f1c40f"));
 
-    this.arenaBadgeContainer.add([bg, this.arenaBadgeText, leftArrow, rightArrow]);
+    this.arenaBadgeContainer.add([bg, this.arenaBadgeText, leftArrow, leftHit, rightArrow, rightHit]);
 
     // Smooth slide-up fade-in for World Badge
     this.tweens.add({
@@ -494,7 +500,7 @@ export default class MenuScene extends Phaser.Scene {
 
   async showChallengesPopup() {
     const { width, height } = this.cameras.main;
-    const bounds = ResponsiveUtils.getSafeBounds();
+    const bounds = ResponsiveUtils.getSafeBounds(this);
 
     const popupOverlay = this.add
       .rectangle(width / 2, height / 2, width, height, 0x000000, 0.8)
@@ -1060,9 +1066,9 @@ export default class MenuScene extends Phaser.Scene {
       },
     });
 
-    // Interactive hit area
+    // Interactive hit area (min 44px height touch area for mobile precision)
     const hitArea = this.add
-      .rectangle(width / 2, height / 2, width, height, 0x000000, 0)
+      .rectangle(width / 2, height / 2, width + 10, 44, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
     container.add(hitArea);
 

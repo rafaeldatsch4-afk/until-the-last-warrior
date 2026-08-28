@@ -1,4 +1,5 @@
 import { transitionTo } from "../utils/sceneTransition";
+import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import Phaser from "phaser";
 
 export default class PauseScene extends Phaser.Scene {
@@ -20,39 +21,100 @@ export default class PauseScene extends Phaser.Scene {
   create() {
     this.cameras.main.fadeIn(300, 0, 0, 0);
     const { width, height } = this.cameras.main;
+    const bounds = ResponsiveUtils.getSafeBounds(this);
 
     // Semi-transparent background
-    this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7);
+    this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.75).setInteractive();
 
-    // Pause Text
+    const panelW = Math.min(380, bounds.width - 24);
+    const panelH = this.isOnline ? 340 : 290;
+    const panelX = bounds.centerX;
+    const panelY = bounds.centerY;
+
+    // Card background
+    const bg = this.add.graphics();
+    bg.fillStyle(0x0a0f1d, 0.95);
+    bg.fillRoundedRect(panelX - panelW / 2, panelY - panelH / 2, panelW, panelH, 16);
+    bg.lineStyle(2, 0xd4af37, 0.85);
+    bg.strokeRoundedRect(panelX - panelW / 2, panelY - panelH / 2, panelW, panelH, 16);
+
+    // Pause Title
     this.add
-      .text(width / 2, height / 2 - 50, "PAUSED", {
-        fontSize: "64px",
-        color: "#ffffff",
+      .text(panelX, panelY - panelH / 2 + 36, "PAUSADO", {
+        fontSize: "26px",
+        color: "#fbbf24",
         fontStyle: "bold",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
         stroke: "#000000",
-        strokeThickness: 6,
-        resolution: 2,
+        strokeThickness: 3,
+        resolution: 3,
       })
       .setOrigin(0.5);
 
-    // Resume Button
-    const resumeBtn = this.add
-      .text(width / 2, height / 2 + 30, "RESUME GAME", {
-        fontSize: "28px",
-        color: "#2ecc71",
-        fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+    let currentY = panelY - panelH / 2 + 90;
+    const btnSpacing = 52;
 
-    resumeBtn.on("pointerover", () => resumeBtn.setColor("#58d68d"));
-    resumeBtn.on("pointerout", () => resumeBtn.setColor("#2ecc71"));
-    resumeBtn.on("pointerdown", () => {
+    // Helper for touch-friendly styled buttons (min 44px touch height)
+    const createPauseButton = (
+      text: string,
+      color: number,
+      hoverColor: number,
+      callback: () => void,
+    ) => {
+      const container = this.add.container(panelX, currentY);
+      const bW = panelW - 48;
+      const bH = 42;
+      const radius = 10;
+
+      const btnG = this.add.graphics();
+      const drawBtn = (isHover: boolean) => {
+        btnG.clear();
+        btnG.fillStyle(isHover ? hoverColor : color, 0.95);
+        btnG.fillRoundedRect(-bW / 2, -bH / 2, bW, bH, radius);
+        btnG.lineStyle(1.5, isHover ? 0xffffff : 0x475569, 0.9);
+        btnG.strokeRoundedRect(-bW / 2, -bH / 2, bW, bH, radius);
+      };
+      drawBtn(false);
+
+      const btnTxt = this.add
+        .text(0, 0, text, {
+          fontSize: "15px",
+          fontStyle: "bold",
+          color: "#ffffff",
+          fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+          resolution: 3,
+        })
+        .setOrigin(0.5);
+
+      const hit = this.add
+        .rectangle(0, 0, bW, 48, 0x000000, 0)
+        .setInteractive({ useHandCursor: true });
+
+      container.add([btnG, btnTxt, hit]);
+
+      hit.on("pointerover", () => {
+        drawBtn(true);
+        this.tweens.add({ targets: container, scale: 1.03, duration: 100 });
+      });
+      hit.on("pointerout", () => {
+        drawBtn(false);
+        this.tweens.add({ targets: container, scale: 1, duration: 100 });
+      });
+      hit.on("pointerdown", () => {
+        this.tweens.add({
+          targets: container,
+          scale: 0.94,
+          duration: 70,
+          yoyo: true,
+          onComplete: callback,
+        });
+      });
+
+      currentY += btnSpacing;
+    };
+
+    // 1. Resume
+    createPauseButton("CONTINUAR COMBATE", 0x16a34a, 0x22c55e, () => {
       this.sound.play("sfx_select");
       if (!this.isOnline) {
         this.scene.resume("BattleScene");
@@ -60,44 +122,16 @@ export default class PauseScene extends Phaser.Scene {
       this.scene.stop();
     });
 
-    // Settings Button
-    const settingsBtn = this.add
-      .text(width / 2, height / 2 + 100, "SETTINGS", {
-        fontSize: "28px",
-        color: "#f39c12",
-        fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-    settingsBtn.on("pointerover", () => settingsBtn.setColor("#f1c40f"));
-    settingsBtn.on("pointerout", () => settingsBtn.setColor("#f39c12"));
-    settingsBtn.on("pointerdown", () => {
+    // 2. Settings
+    createPauseButton("CONFIGURAÇÕES", 0xd97706, 0xf59e0b, () => {
       this.sound.play("sfx_select", { volume: this.registry.get("sfxVolume") ?? 1.0 });
       this.scene.launch("SettingsScene", { fromScene: "PauseScene" });
       this.scene.sleep();
     });
 
-    // Quit Instruction
-    const quitBtn = this.add
-      .text(width / 2, height / 2 + 170, "QUIT TO MENU", {
-        fontSize: "28px",
-        color: "#e74c3c",
-        fontStyle: "bold",
-        fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
-        resolution: 2,
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-
-    quitBtn.on("pointerover", () => quitBtn.setColor("#ff7979"));
-    quitBtn.on("pointerout", () => quitBtn.setColor("#e74c3c"));
-    quitBtn.on("pointerdown", () => {
+    // 3. Quit
+    createPauseButton("SAIR PARA O MENU", 0xdc2626, 0xef4444, () => {
       this.sound.play("sfx_select");
-      if (this.isOnline) {
-        // We'll need to disconnect from multiplayer if online, but BattleScene does it on exit
-      }
       this.scene.stop("BattleScene");
       transitionTo(this, "MenuScene");
     });
@@ -105,17 +139,17 @@ export default class PauseScene extends Phaser.Scene {
     if (this.isOnline) {
       this.add
         .text(
-          width / 2,
-          height / 2 + 160,
-          "* PARTIDAS ONLINE NÃO PAUSAM O COMBATE! *",
+          panelX,
+          panelY + panelH / 2 - 20,
+          "⚠️ Partidas online não pausam o combate!",
           {
-            fontSize: "16px",
-            color: "#f1c40f",
+            fontSize: "12px",
+            color: "#fbbf24",
             fontStyle: "bold",
-            fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
+            fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
             stroke: "#000000",
-            strokeThickness: 3,
-            resolution: 2,
+            strokeThickness: 2,
+            resolution: 3,
           },
         )
         .setOrigin(0.5);
