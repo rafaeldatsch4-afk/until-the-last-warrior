@@ -48,10 +48,10 @@ export default class TournamentScene extends Phaser.Scene {
 
     // Title
     const bounds = ResponsiveUtils.getSafeBounds(this);
-    const headerY = Math.max(34, bounds.top + 22);
+    const headerY = Math.min(38, Math.max(26, bounds.top + 16));
 
     // Back Button (Top Left)
-    const backBtnX = Math.max(74, bounds.left + 54);
+    const backBtnX = Math.min(110, Math.max(68, bounds.left + 45));
     const backContainer = this.add.container(backBtnX, headerY).setDepth(200);
     const btnW = 116;
     const btnH = 36;

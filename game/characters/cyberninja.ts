@@ -193,11 +193,20 @@ export class CyberNinjaFighter extends Fighter {
       duration: 300,
     });
 
+    // Emit initial ghost trail before dash
+    if (bs.createGhostingAfterimage) {
+      bs.createGhostingAfterimage(attacker, { color: dashColor, alpha: 0.85, duration: 320 });
+    }
+
     // Teleport behind enemy
     const behindX = isPlayer ? target.x + 80 : target.x - 80;
     attacker.setPosition(behindX, startY);
     attacker.setVisible(true);
     attacker.setFlipX(isPlayer ? true : false); // Face back towards enemy
+
+    if (bs.createGhostingAfterimage) {
+      bs.createGhostingAfterimage(attacker, { color: 0xffffff, alpha: 0.65, duration: 250 });
+    }
 
     // Impact Delay (The "Omae wa mou shindeiru" effect)
     bs.time.delayedCall(400, () => {

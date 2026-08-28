@@ -150,8 +150,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
     const bounds = ResponsiveUtils.getSafeBounds();
 
     // 1. Botão Voltar (Top Left, Highest Depth, Clean Hit Area)
+    const backBtnX = Math.min(110, Math.max(68, bounds.left + 45));
+    const backBtnY = Math.min(38, Math.max(26, bounds.top + 16));
     const backBtnContainer = this.add
-      .container(bounds.left + 65, bounds.top + 26)
+      .container(backBtnX, backBtnY)
       .setDepth(500);
 
     const backBg = this.add.graphics();

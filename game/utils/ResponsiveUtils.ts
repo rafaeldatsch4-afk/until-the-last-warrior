@@ -138,14 +138,20 @@ export class ResponsiveUtils {
     }
 
     // Margens adaptativas com proteção reforçada para telas ultra-wide
-    const extraMarginRatio = isUltraWide ? 0.07 : 0.04;
+    const extraMarginRatio = isUltraWide ? 0.04 : 0.02;
     const marginX = ResponsiveUtils.BASE_WIDTH * extraMarginRatio;
-    const marginY = ResponsiveUtils.BASE_HEIGHT * 0.04;
+    const marginY = ResponsiveUtils.BASE_HEIGHT * 0.03;
 
-    const left = Math.max(12, gameBleedX + safeLeft + marginX);
-    const right = Math.min(ResponsiveUtils.BASE_WIDTH - 12, ResponsiveUtils.BASE_WIDTH - gameBleedX - safeRight - marginX);
-    const top = Math.max(12, gameBleedY + safeTop + marginY);
-    const bottom = Math.min(ResponsiveUtils.BASE_HEIGHT - 12, ResponsiveUtils.BASE_HEIGHT - gameBleedY - safeBottom - marginY);
+    // Garante que as margens seguras permaneçam estritamente nas bordas do jogo (960x540)
+    const rawLeft = gameBleedX + safeLeft + marginX;
+    const rawRight = ResponsiveUtils.BASE_WIDTH - (gameBleedX + safeRight + marginX);
+    const rawTop = gameBleedY + safeTop + marginY;
+    const rawBottom = ResponsiveUtils.BASE_HEIGHT - (gameBleedY + safeBottom + marginY);
+
+    const left = Phaser.Math.Clamp(rawLeft, 20, 64);
+    const right = Phaser.Math.Clamp(rawRight, ResponsiveUtils.BASE_WIDTH - 64, ResponsiveUtils.BASE_WIDTH - 20);
+    const top = Phaser.Math.Clamp(rawTop, 16, 42);
+    const bottom = Phaser.Math.Clamp(rawBottom, ResponsiveUtils.BASE_HEIGHT - 42, ResponsiveUtils.BASE_HEIGHT - 16);
 
     const safeWidth = Math.max(300, right - left);
     const safeHeight = Math.max(200, bottom - top);

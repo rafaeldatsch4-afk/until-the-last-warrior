@@ -1454,28 +1454,10 @@ export default class BattleScene extends Phaser.Scene {
     const fighterData = getFighter(targetData.key, targetData.baseKey);
     const color = fighterData.specialColor;
 
-    // Create ghost trail effect
-    const ghostTimer = this.time.addEvent({
-      delay: 30,
-      repeat: 6,
-      callback: () => {
-        if (!this.scene.isActive() || !sprite.active) return;
-        const ghost = this.add
-          .sprite(sprite.x, sprite.y, sprite.texture.key, sprite.frame.name)
-          .setFlipX(sprite.flipX)
-          .setTintFill(color)
-          .setAlpha(0.5)
-          .setDepth(sprite.depth - 1);
-
-        this.tweens.add({
-          targets: ghost,
-          alpha: 0,
-          scale: 1.2,
-          duration: 300,
-          onComplete: () => ghost.destroy(),
-        });
-      },
-    });
+    // Create high-velocity ghost trail / afterimage effect
+    if (this.effects) {
+      this.effects.createSpeedDashTrail(sprite, color, direction, 8, 22);
+    }
 
     this.tweens.add({
       targets: sprite,
@@ -4451,6 +4433,35 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  createGhostingAfterimage(
+    sprite: Phaser.GameObjects.Sprite,
+    options?: {
+      color?: number;
+      alpha?: number;
+      duration?: number;
+      scaleXMult?: number;
+      scaleYMult?: number;
+      offsetX?: number;
+      offsetY?: number;
+      blendMode?: Phaser.BlendModes | number;
+      useTintFill?: boolean;
+    }
+  ) {
+    if (!this.scene.isActive() || !this.effects) return null;
+    return this.effects.createGhostingAfterimage(sprite, options);
+  }
+
+  createSpeedDashTrail(
+    sprite: Phaser.GameObjects.Sprite,
+    color: number,
+    direction: number,
+    count: number = 7,
+    intervalMs: number = 28
+  ) {
+    if (!this.scene.isActive() || !this.effects) return;
+    this.effects.createSpeedDashTrail(sprite, color, direction, count, intervalMs);
+  }
+
   triggerSuccessfulDodge(isPlayer: boolean) {
     const target = isPlayer ? this.player : this.enemy;
     if (!target || !target.active) return;
@@ -4503,71 +4514,14 @@ export default class BattleScene extends Phaser.Scene {
       });
     }
 
-    // Motion Blur / Multi-layer Ghosting Trail (Rastro Fantasma Deslocado)
-    const trailColors = [0x00ff88, 0x2ecc71, 0x1abc9c, 0x55efc4, 0xffffff];
-    const dodgeDirection = target.flipX ? 1 : -1;
+    // Retrieve character aura color
+    const targetData = isPlayer ? this.playerData : this.enemyData;
+    const fighterData = getFighter(targetData.key, targetData.baseKey);
+    const color = fighterData?.specialColor || 0x00ff88;
 
-    trailColors.forEach((ghostColor, index) => {
-      try {
-        const offsetDistance = (index + 1) * 26 * dodgeDirection;
-        const ghost = this.add
-          .sprite(target.x + offsetDistance, target.y, target.texture.key, target.frame.name)
-          .setFlipX(target.flipX)
-          .setOrigin(target.originX, target.originY)
-          .setScale(target.scaleX * 1.25, target.scaleY * 0.94) // Horizontal speed blur elongation
-          .setTintFill(ghostColor)
-          .setAlpha(0.85 - index * 0.14)
-          .setDepth(target.depth - 1 - index);
-
-        this.tweens.add({
-          targets: ghost,
-          x: ghost.x + (index + 1) * 18 * dodgeDirection,
-          scaleX: target.scaleX * 1.5,
-          scaleY: target.scaleY * 0.85,
-          alpha: 0,
-          duration: 220 + index * 70,
-          ease: "Cubic.easeOut",
-          onComplete: () => ghost.destroy(),
-        });
-      } catch (e) {
-        // Safe fallback if texture frame is unavailable
-      }
-    });
-
-    // Main Sprite Rapid Blur / Phasing Flicker
-    target.setAlpha(0.35);
-    target.setTintFill(0x00ff88); // Instant bright emerald speed flash
-    this.time.delayedCall(45, () => {
-      if (target && target.active) {
-        target.setAlpha(0.75);
-        target.setTint(0x2ecc71); // Soft green speed sheen
-        this.time.delayedCall(70, () => {
-          if (target && target.active) {
-            target.setAlpha(1.0);
-            target.clearTint(); // Normal sprite restored
-          }
-        });
-      }
-    });
-
-    // Horizontal speed lines / vacuum streaks (Blur de Velocidade)
-    for (let s = 0; s < 4; s++) {
-      const streakY = target.y + Phaser.Math.Between(-40, 50);
-      const streakGraphics = this.add.graphics().setDepth(target.depth + 1);
-      streakGraphics.lineStyle(3, 0x00ff88, 0.85);
-      streakGraphics.beginPath();
-      const startX = target.x - (dodgeDirection * 50);
-      const endX = target.x + (dodgeDirection * 90);
-      streakGraphics.moveTo(startX, streakY);
-      streakGraphics.lineTo(endX, streakY);
-      streakGraphics.strokePath();
-
-      this.tweens.add({
-        targets: streakGraphics,
-        alpha: 0,
-        duration: 240 + s * 40,
-        onComplete: () => streakGraphics.destroy(),
-      });
+    // Trigger high-velocity cinematic ghosting & motion blur
+    if (this.effects) {
+      this.effects.createPerfectDodgeGhosting(target, color);
     }
 
     // Sound effect & Haptics

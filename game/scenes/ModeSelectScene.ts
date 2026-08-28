@@ -85,7 +85,9 @@ export default class ModeSelectScene extends Phaser.Scene {
     }
 
     // 3. Top Back Button (High Depth, Pristine Positioning)
-    this.createBackBtn(bounds.left + 70, bounds.top + 28, "← VOLTAR", () => {
+    const backBtnX = Math.min(110, Math.max(68, bounds.left + 45));
+    const backBtnY = Math.min(38, Math.max(26, bounds.top + 16));
+    this.createBackBtn(backBtnX, backBtnY, "← VOLTAR", () => {
       transitionTo(this, "MenuScene");
     });
 

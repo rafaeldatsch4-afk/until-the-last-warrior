@@ -226,7 +226,7 @@ export default class StoreScene extends Phaser.Scene {
     this.listContainer.add(this.selectionRect); // Add to container so it scrolls
 
     // Scrollbar UI
-    const trackX = 948;
+    const trackX = bounds.right - 12;
     const trackY = this.visibleArea.y + this.visibleArea.height / 2;
     this.scrollBarTrack = this.add
       .rectangle(trackX, trackY, 6, this.visibleArea.height - 10, 0x1e293b)
@@ -242,7 +242,7 @@ export default class StoreScene extends Phaser.Scene {
 
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       // Only drag if the touch started within the scrollable cards area
-      if (pointer.y >= this.visibleArea.y && pointer.x < 900) {
+      if (pointer.y >= this.visibleArea.y && pointer.x < bounds.right) {
         isDraggingList = true;
         dragStartY = pointer.y;
         startScrollY = this.scrollYPos;
@@ -655,8 +655,9 @@ export default class StoreScene extends Phaser.Scene {
   }
 
   showSaveIndicator() {
+    const bounds = ResponsiveUtils.getSafeBounds(this);
     const txt = this.add
-      .text(920, 80, "SAVED!", {
+      .text(bounds.right - 40, 80, "SAVED!", {
         fontSize: "16px",
         color: "#00ff00",
         fontStyle: "bold",

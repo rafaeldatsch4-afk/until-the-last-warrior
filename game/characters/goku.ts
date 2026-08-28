@@ -24,6 +24,9 @@ export class GokuFighter extends Fighter {
 
     if (attackType === "melee") {
       // Goku Melee: Teleport strike
+      if (bs.createGhostingAfterimage) {
+        bs.createGhostingAfterimage(attacker, { color: 0x00ffff, alpha: 0.75, duration: 280 });
+      }
       attacker.setAlpha(0);
       bs.createImpactEffect(attacker.x, attacker.y + 120, 0xffffff); // Teleport poof
 
@@ -32,6 +35,9 @@ export class GokuFighter extends Fighter {
         attacker.setAlpha(1);
         attacker.x = target.x + (attacker.x < target.x ? -40 : 40);
         attacker.y = target.y - (isComboFinisher ? 50 : 0); // Attack from above on finisher
+        if (bs.createGhostingAfterimage) {
+          bs.createGhostingAfterimage(attacker, { color: 0xffa500, alpha: 0.65, duration: 220 });
+        }
         attacker.play(bs.getAnimKey("goku", transformLevel, "punch"));
 
         if (bs.soundManager) bs.soundManager.playPunchImpact(true);

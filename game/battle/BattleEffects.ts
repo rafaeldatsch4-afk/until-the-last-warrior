@@ -977,6 +977,237 @@ export class BattleEffects {
   /**
    * Reseta todos os efeitos ativos e retorna todos os GameObjects para suas pools
    */
+  // ==========================================
+  // GHOSTING & AFTERIMAGE EFFECTS
+  // ==========================================
+
+  /**
+   * Cria um único rastro fantasma (afterimage / ghost) para o sprite do personagem
+   */
+  public createGhostingAfterimage(
+    sprite: Phaser.GameObjects.Sprite,
+    options: {
+      color?: number;
+      alpha?: number;
+      duration?: number;
+      scaleXMult?: number;
+      scaleYMult?: number;
+      offsetX?: number;
+      offsetY?: number;
+      blendMode?: Phaser.BlendModes | number;
+      useTintFill?: boolean;
+    } = {}
+  ): Phaser.GameObjects.Sprite | null {
+    if (!this.scene.scene.isActive() || !sprite || !sprite.active || !sprite.texture) return null;
+
+    const isPotato = this.scene.gameState?.settings?.lowPerformanceMode;
+    const color = options.color ?? 0x00ffff;
+    const initialAlpha = options.alpha ?? (isPotato ? 0.45 : 0.65);
+    const duration = options.duration ?? 280;
+    const scaleXMult = options.scaleXMult ?? 1.05;
+    const scaleYMult = options.scaleYMult ?? 0.98;
+    const offsetX = options.offsetX ?? 0;
+    const offsetY = options.offsetY ?? 0;
+    const useTintFill = options.useTintFill !== undefined ? options.useTintFill : true;
+
+    try {
+      const ghost = this.scene.add
+        .sprite(sprite.x + offsetX, sprite.y + offsetY, sprite.texture.key, sprite.frame.name)
+        .setOrigin(sprite.originX, sprite.originY)
+        .setScale(sprite.scaleX * scaleXMult, sprite.scaleY * scaleYMult)
+        .setFlipX(sprite.flipX)
+        .setRotation(sprite.rotation)
+        .setAlpha(initialAlpha)
+        .setDepth(Math.max(1, sprite.depth - 1));
+
+      if (options.blendMode !== undefined) {
+        ghost.setBlendMode(options.blendMode);
+      } else if (!isPotato) {
+        ghost.setBlendMode(Phaser.BlendModes.ADD);
+      }
+
+      if (useTintFill) {
+        ghost.setTintFill(color);
+      } else {
+        ghost.setTint(color);
+      }
+
+      const tween = this.scene.tweens.add({
+        targets: ghost,
+        alpha: 0,
+        scaleX: ghost.scaleX * 1.15,
+        scaleY: ghost.scaleY * 0.92,
+        duration: duration,
+        ease: "Cubic.easeOut",
+        onComplete: () => {
+          this.activeTweens.delete(tween);
+          ghost.destroy();
+        },
+      });
+
+      this.activeTweens.add(tween);
+      return ghost;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * Cria um rastro contínuo de fantasmas (dash ghost trail) durante movimento rápido
+   */
+  public createSpeedDashTrail(
+    sprite: Phaser.GameObjects.Sprite,
+    color: number,
+    direction: number,
+    count: number = 7,
+    intervalMs: number = 28
+  ) {
+    if (!this.scene.scene.isActive() || !sprite || !sprite.active) return;
+    const isPotato = this.scene.gameState?.settings?.lowPerformanceMode;
+    const actualCount = isPotato ? Math.min(count, 3) : count;
+    const actualInterval = isPotato ? Math.max(intervalMs, 45) : intervalMs;
+
+    let emitted = 0;
+    const timer = this.scene.time.addEvent({
+      delay: actualInterval,
+      repeat: actualCount - 1,
+      callback: () => {
+        if (!this.scene.scene.isActive() || !sprite.active) {
+          timer.remove();
+          return;
+        }
+        emitted++;
+
+        // Alterna entre tom primário e brilho esbranquiçado/neon
+        const ghostColor = emitted % 2 === 0 ? color : 0xffffff;
+        const offsetSpeed = (emitted * 4) * -direction;
+
+        this.createGhostingAfterimage(sprite, {
+          color: ghostColor,
+          alpha: 0.65 - emitted * 0.05,
+          duration: 260 + emitted * 25,
+          scaleXMult: 1.12,
+          scaleYMult: 0.95,
+          offsetX: offsetSpeed,
+          useTintFill: emitted % 3 !== 0,
+        });
+
+        // Partículas de poeira e faíscas de velocidade
+        if (!isPotato && emitted % 2 === 0) {
+          const spark = this.borrowCircle(
+            sprite.x + Phaser.Math.Between(-15, 15) - direction * 20,
+            sprite.y + Phaser.Math.Between(-20, 60),
+            Phaser.Math.Between(2, 4),
+            color,
+            0.8
+          );
+          spark.setDepth(sprite.depth - 2);
+          this.scene.tweens.add({
+            targets: spark,
+            x: spark.x - direction * Phaser.Math.Between(20, 50),
+            alpha: 0,
+            scale: 0.2,
+            duration: 220,
+            onComplete: () => this.recycle(spark),
+          });
+        }
+      },
+    });
+  }
+
+  /**
+   * Efeito cinematográfico de rastro de esquiva perfeita (Perfect Dodge Ghosting)
+   */
+  public createPerfectDodgeGhosting(
+    target: Phaser.GameObjects.Sprite,
+    characterSpecialColor: number = 0x00ff88
+  ) {
+    if (!this.scene.scene.isActive() || !target || !target.active) return;
+    const isPotato = this.scene.gameState?.settings?.lowPerformanceMode;
+    const dodgeDirection = target.flipX ? 1 : -1;
+
+    // Paleta em degradê de esquiva ágil (Emerald / Cyan / Aura Color / White)
+    const trailColors = isPotato
+      ? [0x00ff88, characterSpecialColor, 0xffffff]
+      : [0x00ff88, characterSpecialColor, 0x00f5d4, 0x55efc4, 0xffffff];
+
+    // 1. Múltiplas camadas de fantasmas desfasados espacialmente
+    trailColors.forEach((ghostColor, index) => {
+      const offsetDist = (index + 1) * (isPotato ? 24 : 20) * dodgeDirection;
+      const ghost = this.createGhostingAfterimage(target, {
+        color: ghostColor,
+        alpha: 0.85 - index * 0.12,
+        duration: 240 + index * 60,
+        scaleXMult: 1.25 + index * 0.05,
+        scaleYMult: 0.92,
+        offsetX: offsetDist,
+        useTintFill: index !== 0,
+      });
+
+      if (ghost) {
+        this.scene.tweens.add({
+          targets: ghost,
+          x: ghost.x + (index + 1) * 14 * dodgeDirection,
+          alpha: 0,
+          scaleX: ghost.scaleX * 1.3,
+          scaleY: ghost.scaleY * 0.88,
+          duration: 260 + index * 50,
+          ease: "Cubic.easeOut",
+        });
+      }
+    });
+
+    // 2. Phasing Flicker no sprite principal (brilho de fase instantâneo)
+    target.setAlpha(0.35);
+    target.setTintFill(0x00ff88);
+    this.scene.time.delayedCall(45, () => {
+      if (target && target.active) {
+        target.setAlpha(0.75);
+        target.setTint(characterSpecialColor);
+        this.scene.time.delayedCall(70, () => {
+          if (target && target.active) {
+            target.setAlpha(1.0);
+            target.clearTint();
+          }
+        });
+      }
+    });
+
+    // 3. Linhas de vácuo / Speed Streaks
+    if (!isPotato) {
+      for (let s = 0; s < 4; s++) {
+        const streakY = target.y + Phaser.Math.Between(-30, 50);
+        const streakGraphics = this.borrowGraphics(0, 0).setDepth(target.depth + 1);
+        streakGraphics.lineStyle(3, 0x00ff88, 0.9);
+        streakGraphics.beginPath();
+        const startX = target.x - dodgeDirection * 45;
+        const endX = target.x + dodgeDirection * 85;
+        streakGraphics.moveTo(startX, streakY);
+        streakGraphics.lineTo(endX, streakY);
+        streakGraphics.strokePath();
+
+        this.scene.tweens.add({
+          targets: streakGraphics,
+          alpha: 0,
+          duration: 220 + s * 40,
+          onComplete: () => this.recycle(streakGraphics),
+        });
+      }
+
+      // Anel de choque de esquiva instantânea
+      const shockRing = this.borrowCircle(target.x, target.y + 30, 15);
+      shockRing.setStrokeStyle(3, 0x00ff88, 0.9).setFillStyle(0x00ff88, 0.2).setDepth(target.depth - 2);
+      this.scene.tweens.add({
+        targets: shockRing,
+        radius: 65,
+        alpha: 0,
+        duration: 320,
+        ease: "Cubic.easeOut",
+        onComplete: () => this.recycle(shockRing),
+      });
+    }
+  }
+
   public clearAll() {
     // Kill active managed tweens
     this.activeTweens.forEach((tw) => {

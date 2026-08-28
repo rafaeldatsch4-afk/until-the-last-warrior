@@ -96,7 +96,9 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
 
     // Back / Exit Button
     const bounds = ResponsiveUtils.getSafeBounds();
-    this.createBackBtn(bounds.left + 70, bounds.top + 40, "VOLTAR", () => {
+    const backBtnX = Math.min(110, Math.max(68, bounds.left + 45));
+    const backBtnY = Math.min(38, Math.max(26, bounds.top + 16));
+    this.createBackBtn(backBtnX, backBtnY, "VOLTAR", () => {
       MultiplayerManager.getInstance().leaveLobby();
       MultiplayerManager.getInstance().disconnect();
       transitionTo(this, "CharacterSelectScene");

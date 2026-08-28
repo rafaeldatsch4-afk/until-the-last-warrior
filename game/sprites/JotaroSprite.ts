@@ -251,345 +251,485 @@ export function generateJotaroSprite(scene: Phaser.Scene) {
         const BELT_GREEN = 0x2d6a4f;
         const BELT_RED = 0x9d0208;
 
-        // SP Palette
-        const SP_SKIN_DK = 0x4a0e4e;
-        const SP_SKIN_MD = 0x800080;
-        const SP_SKIN_LT = 0xb14aed;
-        const SP_HAIR = 0x0b090a;
-        const SP_ARMOR_DK = 0xb07d00;
-        const SP_ARMOR_MD = 0xffb700;
-        const SP_ARMOR_LT = 0xffea00;
-        const SP_SCARF_DK = 0x660000;
-        const SP_SCARF_MD = 0xc1121f;
-
-        const jX = isTransformed ? 10 : 0;
+        const jX = isTransformed ? (isAttack ? 0 : 4) : 0;
 
         // ==========================================
-        // === STAR PLATINUM (ANIME ACCURATE REMASTER) ===
+        // === STAR PLATINUM (OFFICIAL ANIME MASTERPIECE) ===
         // ==========================================
         if (isTransformed) {
-          const spX = isAttack ? 4 : -2; // Stand slightly behind Jotaro
-          const spY = f % 4 < 2 ? -1 : 0; // Floating gently
+          // Posicionamento do Stand:
+          // Em idle/walk/defend: Flutuando majestosamente atrás do ombro de Jotaro (spX = -8, spY = -3)
+          // Em attack: Stand avançando e desferindo rajada ORA ORA (spX = 6, spY = -3)
+          const spX = isAttack ? 6 : -8;
+          const spY = f % 4 < 2 ? -3 : -2;
 
-          // True Anime Palette for Star Platinum
-          const SP_SKIN_DK = 0x3d2b56; // Deep purple shadows
-          const SP_SKIN_MD = 0x614894; // Classic Part 3 purple/blue skin
-          const SP_SKIN_LT = 0xa37cf0; // Vivid cyan-purple highlights
-          const SP_HAIR = 0x110b1a; // Almost black
-          const SP_HAIR_HL = 0x2e1a4a; // Purple hue to the hair
-          const SP_ARMOR_DK = 0x997500;
-          const SP_ARMOR_MD = 0xd4a017;
-          const SP_ARMOR_LT = 0xffe259;
-          const SP_SCARF_DK = 0x7a0010;
-          const SP_SCARF_MD = 0xcf1b34;
-          const SP_SCARF_LT = 0xff3b54;
+          // --- PALETA FIEL AO ANIME / ARTE OFICIAL ---
+          // Pele: Azul cerúleo / pervinca com sombras profundas em lilás/violeta
+          const SP_SKIN_SHADOW = 0x38235c; // Sombra violeta profunda
+          const SP_SKIN_DK = 0x4864ab;     // Azul índigo base
+          const SP_SKIN_MD = 0x618ee3;     // Azul celeste icônico
+          const SP_SKIN_LT = 0x8cb4f8;     // Realce de luz azul
+          const SP_SKIN_HL = 0xc2d9ff;     // Brilho especular dos músculos
 
-          // 1. AURA (Subtle purple/blue spiritual fire)
-          alphaBox(spX - 4, spY - 6, 36, 42, SP_SKIN_LT, 0.15);
-          alphaBox(spX - 2, spY - 2, 32, 36, SP_SKIN_MD, 0.2);
+          // Linhas de Energia Douradas (Faixas anatômicas icônicas no peito/abdômen/pernas)
+          const SP_LINE_DK = 0xb45309;
+          const SP_LINE_MD = 0xf59e0b;
+          const SP_LINE_LT = 0xfde047;
 
-          // 2. WILD GOHAN-STYLE SPIKY HAIR
-          // Thick base with tall, rigid, upward-pointing spikes
-          headBox(spX - 2, spY - 9, 20, 10, SP_HAIR); // Hair base
-          headBox(spX + 8, spY - 14, 4, 8, SP_HAIR); // Front spike
-          headBox(spX + 2, spY - 18, 6, 12, SP_HAIR); // Main tall spike (Gohan style)
-          headBox(spX - 4, spY - 16, 6, 10, SP_HAIR); // Middle-back spike
-          headBox(spX - 8, spY - 13, 6, 8, SP_HAIR); // Far-back spike
-          // Purple volume highlights
-          headBox(spX + 3, spY - 14, 2, 6, SP_HAIR_HL);
-          headBox(spX - 3, spY - 13, 2, 5, SP_HAIR_HL);
+          // Cabelo: Juba negra imponente e volumosa com reflexos violeta
+          const SP_HAIR_BLACK = 0x0c0614;
+          const SP_HAIR_DK = 0x1b0e2d;
+          const SP_HAIR_MD = 0x30184f;
+          const SP_HAIR_HL = 0x4d287c;
 
-          // 3. STRONG PROPORTIONED HEAD & JAWLINE
-          headBox(spX + 7, spY - 1, 9, 8, SP_SKIN_DK); // Jaw/Head outline
-          headBox(spX + 8, spY, 8, 7, SP_SKIN_MD); // Face base
+          // Armadura Dourada (Tiara, Ombreiras, Medalhões, Joelheiras)
+          const SP_GOLD_DK = 0x854d0e;
+          const SP_GOLD_MD = 0xd97706;
+          const SP_GOLD_LT = 0xfacc15;
+          const SP_GOLD_HL = 0xfef08a;
 
-          // Cheekbones and Facial Structure
-          headBox(spX + 8, spY + 3, 2, 2, SP_SKIN_LT); // Left cheek highlight
-          headBox(spX + 13, spY + 3, 2, 2, SP_SKIN_LT); // Right cheek highlight
-          headBox(spX + 8, spY + 5, 2, 2, SP_SKIN_DK); // Left cheek shadow
-          headBox(spX + 13, spY + 5, 2, 2, SP_SKIN_DK); // Right cheek shadow
+          // Echarpe: Vermelho-alaranjado / Escarlate vivo
+          const SP_SCARF_DK = 0x991b1b;
+          const SP_SCARF_MD = 0xd94214;
+          const SP_SCARF_LT = 0xf97316;
+          const SP_SCARF_HL = 0xfdba74;
 
-          // Headband (Classic Golden Tiara)
-          headBox(spX + 7, spY - 2, 9, 2, SP_ARMOR_MD);
-          headBox(spX + 8, spY - 2, 7, 1, SP_ARMOR_LT); // Tiara highlight
-          headDot(spX + 11, spY - 2, 0x00ffff); // Flawless Cyan Center Gem
+          // Luvas: Verde-oliva escuro / Couro com anéis de ouro
+          const SP_GLOVE_DK = 0x052e16;
+          const SP_GLOVE_MD = 0x14532d;
+          const SP_GLOVE_LT = 0x166534;
 
-          // Fierce Eyes, Brow & Nose
-          headBox(spX + 8, spY + 1, 3, 1, SP_SKIN_DK); // Heavy brow shadow
-          headBox(spX + 13, spY + 1, 3, 1, SP_SKIN_DK);
-          headBox(spX + 9, spY + 2, 2, 1, 0xffffff); // Left eye
-          headBox(spX + 13, spY + 2, 2, 1, 0xffffff); // Right eye
-          headDot(spX + 10, spY + 2, 0xff00ff); // Iris
-          headDot(spX + 14, spY + 2, 0xff00ff);
+          // Tanga de Seda: Branco com sombras azul-celeste suaves
+          const SP_SILK_DK = 0x94a3b8;
+          const SP_SILK_MD = 0xcbd5e1;
+          const SP_SILK_LT = 0xf8fafc;
 
-          headBox(spX + 11, spY + 4, 3, 2, SP_SKIN_DK); // Nose bridge
-          headBox(spX + 11, spY + 6, 3, 1, 0x221133); // Strong mouth line
+          // 1. AURA ESPIRITUAL (Chama divina azul-violeta translúcida)
+          alphaBox(spX - 2, spY - 5, 24, 40, SP_SKIN_MD, 0.12);
+          alphaBox(spX, spY - 2, 20, 34, SP_SKIN_LT, 0.18);
 
-          // 4. ICONIC RED SCARF
-          // Wraps thick around the neck
-          box(spX + 5, spY + 7, 12, 5, SP_SCARF_DK);
-          box(spX + 6, spY + 8, 10, 2, SP_SCARF_LT);
-          // Flowing trailing scarf behind him
-          const flutter = f % 2 === 0 ? 1 : 0;
-          box(spX + 15, spY + 10, 8 + flutter, 10 + flutter, SP_SCARF_DK);
-          box(spX + 16, spY + 11, 5 + flutter, 7 + flutter, SP_SCARF_MD);
+          // 2. JUBA DE CABELO SELVAGEM (WILD FLOWING MANE - ONDULADA E VOLUMOSA)
+          // Massa posterior descendo suavemente atrás dos ombros
+          headBox(spX + 2, spY - 3, 14, 11, SP_HAIR_BLACK);
+          headBox(spX + 3, spY - 2, 12, 9, SP_HAIR_DK);
 
-          // 5. MASSIVE TORSO & SHADING
-          box(spX + 5, spY + 11, 12, 12, SP_SKIN_DK);
-          box(spX + 6, spY + 11, 10, 11, SP_SKIN_MD);
-          // Pecs (Vivid cyan-purple highlight)
-          box(spX + 7, spY + 12, 3, 4, SP_SKIN_LT);
-          box(spX + 11, spY + 12, 3, 4, SP_SKIN_LT);
-          // Abs (The 8-pack lines)
-          box(spX + 8, spY + 17, 6, 5, SP_SKIN_LT);
-          box(spX + 10, spY + 17, 2, 5, SP_SKIN_DK); // Mid line
-          box(spX + 8, spY + 19, 6, 1, SP_SKIN_DK); // Horiz break
+          // Plumas de cabelo ondulando para cima e para trás (como na arte oficial)
+          headBox(spX + 4, spY - 7, 12, 5, SP_HAIR_BLACK);
+          headBox(spX + 5, spY - 6, 10, 4, SP_HAIR_DK);
+          headBox(spX + 6, spY - 6, 8, 2, SP_HAIR_MD);
 
-          // 6. SPHERICAL GOLDEN SHOULDER PADS
-          // Left Pad
-          box(spX - 2, spY + 7, 7, 7, SP_ARMOR_DK);
-          box(spX - 1, spY + 8, 5, 5, SP_ARMOR_MD);
-          box(spX, spY + 8, 2, 2, SP_ARMOR_LT); // Specular highlight
-          // Right Pad
-          box(spX + 17, spY + 7, 7, 7, SP_ARMOR_DK);
-          box(spX + 18, spY + 8, 5, 5, SP_ARMOR_MD);
-          box(spX + 19, spY + 8, 2, 2, SP_ARMOR_LT);
+          // Crista central e pontas dinâmicas curvadas ao vento
+          headBox(spX + 7, spY - 11, 7, 5, SP_HAIR_BLACK);
+          headBox(spX + 8, spY - 10, 5, 4, SP_HAIR_DK);
+          headBox(spX + 9, spY - 10, 3, 2, SP_HAIR_HL);
 
-          // 7. LOINCLOTH AND GOLD BELT (DETAILED WAIST)
-          box(spX + 6, spY + 22, 10, 2, SP_SKIN_DK); // Obliques/Waist tapering
-          box(spX + 4, spY + 24, 14, 3, SP_ARMOR_DK); // Thick Belt base
-          box(spX + 5, spY + 25, 12, 2, SP_ARMOR_MD); // Gold belt
-          box(spX + 6, spY + 25, 4, 1, SP_ARMOR_LT); // Belt highlight
-          box(spX + 12, spY + 25, 4, 1, SP_ARMOR_LT);
-          box(spX + 6, spY + 27, 10, 7, 0x111115); // Dark shading undercloth
-          box(spX + 7, spY + 27, 8, 6, 0xdcdcdc); // Core white loincloth shadow
-          box(spX + 8, spY + 27, 6, 5, 0xffffff); // Core white loincloth highlight
+          headBox(spX + 3, spY - 10, 4, 4, SP_HAIR_BLACK);
+          headBox(spX + 4, spY - 9, 2, 3, SP_HAIR_MD);
+          headDot(spX + 4, spY - 9, SP_HAIR_HL);
 
-          // 8. TALLER LEGS & KNEE GUARDS (DETAILED MUSCLES)
-          // Thighs
-          box(spX + 5, spY + 26, 4, 6, SP_SKIN_DK); // Left thigh shadow
-          box(spX + 6, spY + 26, 3, 5, SP_SKIN_MD); // Left thigh core
-          box(spX + 7, spY + 26, 1, 4, SP_SKIN_LT); // Left quad highlight
+          headBox(spX + 13, spY - 9, 4, 3, SP_HAIR_BLACK);
+          headDot(spX + 14, spY - 8, SP_HAIR_MD);
 
-          box(spX + 13, spY + 26, 4, 6, SP_SKIN_DK); // Right thigh shadow
-          box(spX + 13, spY + 26, 3, 5, SP_SKIN_MD); // Right thigh core
-          box(spX + 14, spY + 26, 1, 4, SP_SKIN_LT); // Right quad highlight
+          // Mechas pontiagudas laterais emoldurando o rosto
+          headBox(spX + 2, spY + 1, 2, 5, SP_HAIR_BLACK);
+          headBox(spX + 14, spY + 1, 2, 5, SP_HAIR_BLACK);
 
-          // Boots
-          box(spX + 5, spY + 31, 6, 5, 0x0a0a0a); // Left Boot Dk
-          box(spX + 6, spY + 31, 4, 5, 0x1a1a1a); // Left Boot Mid
-          box(spX + 11, spY + 31, 6, 5, 0x0a0a0a); // Right Boot Dk
-          box(spX + 12, spY + 31, 4, 5, 0x1a1a1a); // Right Boot Mid
+          // 3. TIARA DOURADA & JOIA FRONTAL (CURVA COM GEMA TURQUESA)
+          headBox(spX + 3, spY - 1, 12, 2, SP_GOLD_DK);
+          headBox(spX + 4, spY - 1, 10, 1, SP_GOLD_MD);
+          headDot(spX + 4, spY - 1, SP_GOLD_HL);
+          headDot(spX + 13, spY - 1, SP_GOLD_HL);
+          // Medalhão frontal da tiara com gema turquesa/ciano
+          headBox(spX + 8, spY - 2, 2, 2, SP_GOLD_MD);
+          headDot(spX + 8, spY - 1, 0x06b6d4); // Ciano brilhante
+          headDot(spX + 9, spY - 1, 0x22d3ee); // Brilho facetado
 
-          // Gold Knee Pads over boots (More spherical)
-          box(spX + 5, spY + 30, 6, 4, SP_ARMOR_DK);
-          box(spX + 6, spY + 31, 4, 2, SP_ARMOR_MD);
-          box(spX + 6, spY + 31, 1, 1, SP_ARMOR_LT);
+          // 4. ROSTO GUERREIRO & OLHAR ARRASADOR
+          headBox(spX + 4, spY + 1, 10, 6, SP_SKIN_DK);
+          headBox(spX + 5, spY + 1, 8, 6, SP_SKIN_MD);
+          headBox(spX + 4, spY + 1, 10, 1, SP_SKIN_SHADOW); // Sombra sob a tiara
 
-          box(spX + 11, spY + 30, 6, 4, SP_ARMOR_DK);
-          box(spX + 12, spY + 31, 4, 2, SP_ARMOR_MD);
-          box(spX + 12, spY + 31, 1, 1, SP_ARMOR_LT);
+          // Olhos Ferozes (Delineador preto marcante + Esclera branca + Pupila ciano-esmeralda)
+          headBox(spX + 5, spY + 2, 3, 1, 0x000000); // Contorno olho L
+          headBox(spX + 10, spY + 2, 3, 1, 0x000000); // Contorno olho R
+          headBox(spX + 5, spY + 2, 2, 1, 0xffffff); // Esclera L
+          headBox(spX + 11, spY + 2, 2, 1, 0xffffff); // Esclera R
+          headDot(spX + 6, spY + 2, 0x06b6d4); // Íris turquesa L
+          headDot(spX + 11, spY + 2, 0x06b6d4); // Íris turquesa R
 
-          // 9. ARMS AND ATTACK LOGIC (CLOSED FISTS)
+          // Nariz delineado e maçãs do rosto
+          headDot(spX + 8, spY + 3, SP_SKIN_SHADOW); // Ponte do nariz
+          headDot(spX + 9, spY + 3, SP_SKIN_LT);     // Brilho nasal
+          headDot(spX + 4, spY + 4, SP_SKIN_SHADOW); // Marcação facial guerreiro L
+          headDot(spX + 13, spY + 4, SP_SKIN_SHADOW); // Marcação facial guerreiro R
+
+          // Mandíbula e Expressão de Boca
           if (isAttack) {
-            // THE ORA ORA RUSH!
-            // Afterimages covering the flurry area
-            alphaBox(spX + 12, spY + 7, 28, 14, SP_SKIN_LT, 0.4);
-            alphaBox(spX + 16, spY + 9, 24, 10, 0xffffff, 0.2); // Core speed line
-
-            const shiftY1 = (f % 2) * 4;
-            const shiftY2 = f % 2 === 0 ? 0 : 4;
-
-            // Top Punching Arm
-            box(spX + 16, spY + 9 + shiftY1, 14, 5, SP_SKIN_MD); // Arm stretch
-            box(spX + 30, spY + 9 + shiftY1, 6, 5, 0x111111); // Black glove base
-            // Closed fist detail
-            box(spX + 32, spY + 10 + shiftY1, 4, 4, 0x111111); // Fist forward
-            box(spX + 33, spY + 11 + shiftY1, 2, 2, 0x333333); // Knuckle definition
-            box(spX + 33, spY + 10 + shiftY1, 1, 1, SP_ARMOR_LT); // Central gold stud
-
-            // Bottom Punching Arm
-            box(spX + 18, spY + 15 - shiftY2, 14, 5, SP_SKIN_MD);
-            box(spX + 32, spY + 15 - shiftY2, 6, 5, 0x111111);
-            box(spX + 34, spY + 16 - shiftY2, 4, 4, 0x111111);
-            box(spX + 35, spY + 17 - shiftY2, 2, 2, 0x333333);
-            box(spX + 35, spY + 16 - shiftY2, 1, 1, SP_ARMOR_LT);
-
-            // Impact flashes!
-            alphaBox(spX + 36, spY + 10 + shiftY1, 3, 3, SP_ARMOR_LT, 0.8);
-            alphaBox(spX + 38, spY + 16 - shiftY2, 3, 3, SP_ARMOR_LT, 0.8);
-
-            // Shouting mouth
-            headBox(spX + 10, spY + 6, 3, 2, 0x220000);
-            headBox(spX + 11, spY + 6, 1, 1, 0xffffff);
+            headBox(spX + 7, spY + 5, 4, 3, 0x240810); // Boca aberta em rugido ORA
+            headBox(spX + 8, spY + 5, 2, 1, 0xffffff); // Dentes
+            headBox(spX + 6, spY + 7, 6, 1, SP_SKIN_DK); // Queixo
           } else {
-            // Ready Combat Stance (Bent arms, closed fists)
-            box(spX + 3, spY + 12, 4, 7, SP_SKIN_DK); // L Bicep
-            box(spX + 4, spY + 12, 2, 6, SP_SKIN_MD);
+            headBox(spX + 7, spY + 5, 4, 1, 0x1e1533); // Boca cerrada estóica
+            headBox(spX + 6, spY + 6, 6, 1, SP_SKIN_DK); // Queixo modelado
+            headDot(spX + 8, spY + 6, SP_SKIN_LT);
+          }
 
-            box(spX + 15, spY + 12, 4, 7, SP_SKIN_DK); // R Bicep
-            box(spX + 16, spY + 12, 2, 6, SP_SKIN_MD);
+          // 5. ECHARPE ESCARLATE (SCARLET SCARF - DOBRAS NATURAIS)
+          box(spX + 5, spY + 7, 8, 3, SP_SCARF_DK);
+          box(spX + 6, spY + 7, 6, 2, SP_SCARF_MD);
+          box(spX + 7, spY + 8, 4, 1, SP_SCARF_LT);
+          headDot(spX + 8, spY + 7, SP_SCARF_HL);
 
-            // Black Padded Gloves (Compact closed fists)
-            box(spX + 2, spY + 18, 6, 6, 0x111111); // L Glove
-            box(spX + 3, spY + 19, 4, 4, 0x222222); // L Fist structure
-            box(spX + 4, spY + 20, 2, 2, SP_ARMOR_MD); // Golden knuckle stud
+          // 6. OMBREIRAS DOURADAS ESCULPIDAS (CURVED PAULDRONS)
+          // Ombreira Esquerda com detalhes em camadas
+          box(spX, spY + 8, 5, 5, SP_GOLD_DK);
+          box(spX + 1, spY + 8, 3, 4, SP_GOLD_MD);
+          box(spX + 1, spY + 8, 2, 1, SP_GOLD_LT);
+          headDot(spX + 1, spY + 8, SP_GOLD_HL);
 
-            box(spX + 14, spY + 18, 6, 6, 0x111111); // R Glove
-            box(spX + 15, spY + 19, 4, 4, 0x222222); // R Fist structure
-            box(spX + 16, spY + 20, 2, 2, SP_ARMOR_MD); // Golden knuckle stud
+          // Ombreira Direita com detalhes em camadas
+          box(spX + 13, spY + 8, 5, 5, SP_GOLD_DK);
+          box(spX + 14, spY + 8, 3, 4, SP_GOLD_MD);
+          box(spX + 14, spY + 8, 2, 1, SP_GOLD_LT);
+          headDot(spX + 15, spY + 8, SP_GOLD_HL);
+
+          // 7. PEITORAL E ABDÔMEN ESCULPIDO COM FAIXAS DOURADAS
+          box(spX + 4, spY + 10, 10, 11, SP_SKIN_SHADOW); // Base sombreada violeta
+          box(spX + 5, spY + 10, 8, 11, SP_SKIN_MD);       // Pele azul índigo
+
+          // Peitoral Maior (Broad Blue Pecs)
+          box(spX + 5, spY + 10, 3, 4, SP_SKIN_LT);
+          box(spX + 10, spY + 10, 3, 4, SP_SKIN_LT);
+          headDot(spX + 6, spY + 11, SP_SKIN_HL);
+          headDot(spX + 11, spY + 11, SP_SKIN_HL);
+          box(spX + 8, spY + 10, 2, 5, SP_SKIN_SHADOW); // Linha esternal
+
+          // Linhas de Energia Douradas nos Músculos (Golden Body Ribbons)
+          headDot(spX + 4, spY + 11, SP_LINE_MD);
+          headDot(spX + 5, spY + 13, SP_LINE_LT);
+          headDot(spX + 13, spY + 11, SP_LINE_MD);
+          headDot(spX + 12, spY + 13, SP_LINE_LT);
+
+          // Abdômen de 6 gomos (6-Pack Abs)
+          box(spX + 6, spY + 15, 6, 6, SP_SKIN_MD);
+          box(spX + 8, spY + 15, 2, 6, SP_SKIN_SHADOW); // Linea alba
+          box(spX + 6, spY + 17, 6, 1, SP_SKIN_SHADOW); // Divisória horizontal
+          box(spX + 6, spY + 19, 6, 1, SP_SKIN_SHADOW);
+          headDot(spX + 6, spY + 15, SP_SKIN_LT);
+          headDot(spX + 11, spY + 15, SP_SKIN_LT);
+          headDot(spX + 6, spY + 18, SP_SKIN_LT);
+          headDot(spX + 11, spY + 18, SP_SKIN_LT);
+
+          // Linhas douradas nas laterais dos oblíquos
+          headDot(spX + 5, spY + 16, SP_LINE_MD);
+          headDot(spX + 12, spY + 16, SP_LINE_MD);
+          headDot(spX + 5, spY + 19, SP_LINE_MD);
+          headDot(spX + 12, spY + 19, SP_LINE_MD);
+
+          // 8. CINTO DOURADO, MEDALHÕES DE QUADRIL E TANGA BRANCA
+          box(spX + 4, spY + 21, 10, 2, SP_GOLD_DK);
+          box(spX + 5, spY + 21, 8, 2, SP_GOLD_MD);
+          headDot(spX + 8, spY + 21, SP_GOLD_HL);
+          headDot(spX + 9, spY + 21, SP_GOLD_HL);
+
+          // Medalhões dourados circulares nos quadris (como na arte oficial)
+          box(spX + 3, spY + 20, 2, 3, SP_GOLD_MD);
+          headDot(spX + 3, spY + 21, 0x06b6d4); // Gema ciano no medalhão L
+          box(spX + 13, spY + 20, 2, 3, SP_GOLD_MD);
+          headDot(spX + 14, spY + 21, 0x06b6d4); // Gema ciano no medalhão R
+
+          // Tanga de Seda Branca com dobras fluidas (White Silk Loincloth)
+          box(spX + 6, spY + 23, 6, 6, SP_SILK_DK);
+          box(spX + 7, spY + 23, 4, 5, SP_SILK_MD);
+          box(spX + 8, spY + 23, 2, 4, SP_SILK_LT);
+
+          // 9. COXAS MUSCULOSAS AZUIS, JOELHEIRAS DOURADAS & BOTAS
+          // Coxa Esquerda com linha dourada
+          box(spX + 4, spY + 23, 3, 5, SP_SKIN_SHADOW);
+          box(spX + 4, spY + 23, 2, 5, SP_SKIN_MD);
+          headDot(spX + 5, spY + 24, SP_SKIN_LT);
+          headDot(spX + 4, spY + 25, SP_LINE_MD); // Linha dourada na coxa L
+
+          // Coxa Direita com linha dourada
+          box(spX + 11, spY + 23, 3, 5, SP_SKIN_SHADOW);
+          box(spX + 12, spY + 23, 2, 5, SP_SKIN_MD);
+          headDot(spX + 12, spY + 24, SP_SKIN_LT);
+          headDot(spX + 13, spY + 25, SP_LINE_MD); // Linha dourada na coxa R
+
+          // Joelheiras Douradas (Golden Kneeguards)
+          box(spX + 3, spY + 28, 4, 3, SP_GOLD_DK);
+          box(spX + 4, spY + 28, 2, 2, SP_GOLD_MD);
+          headDot(spX + 4, spY + 28, SP_GOLD_HL);
+
+          box(spX + 11, spY + 28, 4, 3, SP_GOLD_DK);
+          box(spX + 12, spY + 28, 2, 2, SP_GOLD_MD);
+          headDot(spX + 12, spY + 28, SP_GOLD_HL);
+
+          // Botas / Faixas Douradas nos Pés
+          box(spX + 3, spY + 31, 4, 3, 0x12101e);
+          box(spX + 3, spY + 32, 4, 1, SP_GOLD_MD);
+          box(spX + 11, spY + 31, 4, 3, 0x12101e);
+          box(spX + 11, spY + 32, 4, 1, SP_GOLD_MD);
+
+          // 10. BRAÇOS, LUVAS VERDES COM REBITES DOURADOS & ATAQUE (ORA ORA)
+          if (isAttack) {
+            // Efeito visual de múltiplos socos (flurry speedlines)
+            alphaBox(spX + 14, spY + 6, 26, 18, SP_SKIN_LT, 0.35);
+            alphaBox(spX + 18, spY + 8, 22, 14, 0xffffff, 0.3);
+
+            const shiftY1 = (f % 2) * 5;
+            const shiftY2 = f % 2 === 0 ? 0 : 5;
+
+            // Braço 1 (Superior) socando para frente (Azul + Faixa Dourada + Luva Verde)
+            box(spX + 10, spY + 8 + shiftY1, 14, 4, SP_SKIN_MD);
+            box(spX + 11, spY + 8 + shiftY1, 12, 1, SP_SKIN_LT);
+            headDot(spX + 16, spY + 8 + shiftY1, SP_LINE_MD); // Faixa dourada no braço
+            box(spX + 22, spY + 8 + shiftY1, 2, 4, SP_GOLD_MD); // Borda dourada da luva
+            box(spX + 24, spY + 8 + shiftY1, 6, 5, SP_GLOVE_DK); // Luva verde-oliva
+            box(spX + 26, spY + 8 + shiftY1, 4, 5, SP_GLOVE_MD); // Punho
+            headDot(spX + 27, spY + 9 + shiftY1, SP_GOLD_LT); // Rebite dourado nos nós dos dedos
+
+            // Braço 2 (Inferior) socando para frente
+            box(spX + 12, spY + 14 - shiftY2, 14, 4, SP_SKIN_MD);
+            box(spX + 13, spY + 14 - shiftY2, 12, 1, SP_SKIN_LT);
+            headDot(spX + 18, spY + 14 - shiftY2, SP_LINE_MD);
+            box(spX + 24, spY + 14 - shiftY2, 2, 4, SP_GOLD_MD);
+            box(spX + 26, spY + 14 - shiftY2, 6, 5, SP_GLOVE_DK);
+            box(spX + 28, spY + 14 - shiftY2, 4, 5, SP_GLOVE_MD);
+            headDot(spX + 29, spY + 15 - shiftY2, SP_GOLD_LT);
+
+            // Flashes de Impacto
+            alphaBox(spX + 30, spY + 8 + shiftY1, 5, 5, SP_GOLD_LT, 0.85);
+            alphaBox(spX + 32, spY + 14 - shiftY2, 5, 5, SP_GOLD_LT, 0.85);
+          } else {
+            // Braços em repouso (Bíceps azul com linhas douradas + Luvas verdes com rebite de ouro)
+            box(spX + 1, spY + 11, 3, 6, SP_SKIN_SHADOW);
+            box(spX + 2, spY + 11, 2, 5, SP_SKIN_MD);
+            box(spX + 2, spY + 12, 1, 4, SP_SKIN_LT);
+            headDot(spX + 2, spY + 13, SP_LINE_MD); // Faixa dourada no bíceps L
+
+            box(spX + 14, spY + 11, 3, 6, SP_SKIN_SHADOW);
+            box(spX + 14, spY + 11, 2, 5, SP_SKIN_MD);
+            box(spX + 15, spY + 12, 1, 4, SP_SKIN_LT);
+            headDot(spX + 15, spY + 13, SP_LINE_MD); // Faixa dourada no bíceps R
+
+            // Luvas Verdes com acabamento dourado (como na arte oficial)
+            box(spX, spY + 17, 4, 1, SP_GOLD_MD); // Borda dourada do punho L
+            box(spX, spY + 18, 4, 4, SP_GLOVE_DK);
+            box(spX, spY + 18, 4, 2, SP_GLOVE_MD);
+            headDot(spX + 1, spY + 20, SP_GOLD_LT); // Anel/Rebite dourado nos dedos L
+
+            box(spX + 14, spY + 17, 4, 1, SP_GOLD_MD); // Borda dourada do punho R
+            box(spX + 14, spY + 18, 4, 4, SP_GLOVE_DK);
+            box(spX + 14, spY + 18, 4, 2, SP_GLOVE_MD);
+            headDot(spX + 15, spY + 20, SP_GOLD_LT); // Anel/Rebite dourado nos dedos R
           }
         }
 
         // ==========================================
-        // === JOTARO KUJO (FIXED SKIN & PANTS) ===
+        // === JOTARO KUJO (ANIME ACCURATE REMASTER) ===
         // ==========================================
 
         // --- PANT & SHOE PROPORTIONS ---
-        // Calças finas e elegantes, nunca grossas
-        box(jX + 11, 24, 4, 8, COAT_DK); // Perna Esq Escura
-        box(jX + 11, 24, 3, 7, COAT_MD); // Perna Esq Interior
-        box(jX + 12, 25, 1, 6, COAT_LT); // Highlight Esq
+        // Pelve / Sombra entre as pernas (impede buracos e riscos flutuantes)
+        box(jX + 14, 23, 4, 2, 0x06060c);
 
-        box(jX + 17, 24, 4, 8, COAT_DK); // Perna Dir Escura
-        box(jX + 17, 24, 3, 7, COAT_MD); // Perna Dir Interior
-        box(jX + 18, 25, 1, 6, COAT_LT); // Highlight Dir
+        // Calças pretas de estudante delinquent (Gakuran Slacks)
+        box(jX + 11, 23, 4, 8, COAT_DK); // Perna Esq Escura
+        box(jX + 12, 23, 3, 8, COAT_MD); // Perna Esq Interior
+        box(jX + 12, 24, 1, 6, COAT_LT); // Vincado / Luz da calça esq
 
-        // Shoes/Loafers curtos e brilhantes
-        box(jX + 10, 31, 5, 3, COAT_DK); // Sola Esq
-        box(jX + 16, 31, 5, 3, COAT_DK); // Sola Dir
-        box(jX + 10, 31, 4, 2, COAT_MD); // Couro Esq
-        box(jX + 16, 31, 4, 2, COAT_MD); // Couro Dir
-        headDot(jX + 11, 31, COAT_LT); // Brilho Esq
-        headDot(jX + 17, 31, COAT_LT); // Brilho Dir
+        box(jX + 17, 23, 4, 8, COAT_DK); // Perna Dir Escura
+        box(jX + 17, 23, 3, 8, COAT_MD); // Perna Dir Interior
+        box(jX + 18, 24, 1, 6, COAT_LT); // Vincado / Luz da calça dir
 
-        // --- TRONCO & GAKURAN ---
-        // Corpo forte mas na proporção certa
-        box(jX + 9, 14, 14, 10, COAT_DK);
+        // Sapatos Sociais Pretos com Brilho de Couro
+        box(jX + 10, 31, 5, 3, 0x050508); // Sola Esq
+        box(jX + 17, 31, 5, 3, 0x050508); // Sola Dir
+        box(jX + 11, 31, 4, 2, COAT_MD); // Couro Esq
+        box(jX + 17, 31, 4, 2, COAT_MD); // Couro Dir
+        headDot(jX + 12, 31, COAT_HL); // Brilho couro esq
+        headDot(jX + 18, 31, COAT_HL); // Brilho couro dir
 
-        // Camisa Interna
-        box(jX + 12, 14, 8, 9, SHIRT_DK);
-        box(jX + 13, 14, 6, 8, SHIRT_MD);
-        box(jX + 14, 15, 2, 5, SHIRT_LT); // Highlights (Abs/Pecs esq)
-        box(jX + 17, 15, 2, 5, SHIRT_LT); // Highlights (Abs/Pecs dir)
+        // --- TRONCO & GAKURAN (Longcoat) ---
+        // Casaco preto imponente (Ombros largos, corte atlético)
+        box(jX + 8, 13, 16, 8, COAT_DK);
 
-        // Lapelas Obertas (Gakuran flaps)
-        box(jX + 9, 14, 3, 10, COAT_MD);
-        box(jX + 11, 14, 1, 10, COAT_LT); // Borda luz esq
-        box(jX + 20, 14, 3, 10, COAT_MD);
-        box(jX + 20, 14, 1, 10, COAT_LT); // Borda luz dir
+        // Camisa Interna (Magenta / Roxo profundo com sombreado muscular)
+        box(jX + 12, 13, 8, 8, SHIRT_DK);
+        box(jX + 13, 14, 6, 6, SHIRT_MD);
+        box(jX + 14, 14, 2, 4, SHIRT_LT); // Pectoral Esq
+        box(jX + 17, 14, 2, 4, SHIRT_LT); // Pectoral Dir
+        box(jX + 15, 17, 2, 3, SHIRT_DK); // Divisória abdominal
 
-        // Gola Alta Rigida
-        box(jX + 10, 10, 12, 4, COAT_DK);
-        box(jX + 11, 11, 10, 3, COAT_MD);
-        box(jX + 11, 11, 3, 2, COAT_LT); // Brilho gola esq
-        box(jX + 18, 11, 3, 2, COAT_LT); // Brilho gola dir
+        // Lapelas Abertas do Casaco (Gakuran Flaps)
+        box(jX + 8, 13, 4, 8, COAT_MD);
+        box(jX + 11, 13, 1, 8, COAT_LT); // Borda luz interna esq
+        box(jX + 20, 13, 4, 8, COAT_MD);
+        box(jX + 20, 13, 1, 8, COAT_LT); // Borda luz interna dir
 
-        // Pescoço (Pele clara, não morena!)
-        box(jX + 14, 12, 4, 2, SKIN_DK); // Sombra do pescoço
-        box(jX + 15, 12, 2, 1, SKIN_MD); // Pescoço em si
+        // Gola Alta Rígida (Gakuran Collar)
+        box(jX + 10, 10, 12, 3, COAT_DK);
+        box(jX + 11, 10, 10, 2, COAT_MD);
+        box(jX + 11, 10, 2, 2, COAT_HL); // Luz da gola esq
+        box(jX + 19, 10, 2, 2, COAT_HL); // Luz da gola dir
 
-        // Corrente Metálica em argolas
-        box(jX + 19, 12, 2, 5, SILVER_DK);
-        headDot(jX + 19, 12, SILVER_LT);
-        headDot(jX + 20, 13, SILVER_MD);
-        headDot(jX + 19, 14, SILVER_LT);
-        headDot(jX + 20, 15, SILVER_MD);
+        // Pescoço & Sombra sob o Queixo
+        box(jX + 13, 11, 6, 2, SKIN_DK); // Sombra do queixo no pescoço
+        box(jX + 14, 12, 4, 1, SKIN_MD); // Pescoço
 
-        // Botões Dourados do Lado Direito
+        // --- CORRENTE DOURADA ICÔNICA (Left Lapel Chain) ---
+        headDot(jX + 12, 10, GOLD_LT); // Broche de fixação na gola
+        headDot(jX + 12, 11, GOLD_MD);
+        headDot(jX + 13, 12, GOLD_LT); // Elos da corrente descendo
+        headDot(jX + 13, 13, GOLD_MD);
+        headDot(jX + 14, 14, GOLD_LT);
+        headDot(jX + 14, 15, GOLD_MD);
+        headDot(jX + 14, 16, GOLD_DK); // Ponta da corrente
+
+        // Botões Dourados da Lapela Direita
         headDot(jX + 21, 15, GOLD_MD);
         headDot(jX + 21, 17, GOLD_MD);
 
-        // Cintos Ultra Detalhados
-        box(jX + 11, 22, 10, 3, COAT_DK); // Fundo sombreado
-        box(jX + 12, 22, 8, 1, BELT_GREEN); // Cinto Cima
-        box(jX + 12, 24, 8, 1, BELT_RED); // Cinto Baixo
+        // --- CINTURA & CINTOS (PERFEITAMENTE CONTIDOS, SEM RISCOS VOANDO) ---
+        box(jX + 10, 21, 12, 2, COAT_DK); // Base escura da cintura
+        box(jX + 11, 21, 10, 1, BELT_GREEN); // Cinto superior verde
+        box(jX + 11, 22, 10, 1, BELT_RED); // Cinto inferior vermelho
+        headDot(jX + 12, 21, 0xfacc15); // Detalhe amarelo cinto verde
+        headDot(jX + 19, 21, 0xfacc15);
+        headDot(jX + 13, 22, 0xf97316); // Detalhe laranja cinto vermelho
+        headDot(jX + 18, 22, 0xf97316);
 
-        // Dupla Fivelagem
-        box(jX + 13, 22, 3, 3, GOLD_DK); // Fivela Maior Base
-        box(jX + 14, 22, 1, 2, GOLD_LT); // Fivela Maior Brilho
-        box(jX + 17, 23, 2, 2, SILVER_MD); // Segunda Fivela
-        headDot(jX + 17, 23, SILVER_LT);
+        // Fivela Dourada Central
+        box(jX + 14, 21, 4, 2, GOLD_DK);
+        box(jX + 15, 21, 2, 2, GOLD_LT);
 
-        // Abas do Casaco (Movimento das costas)
+        // --- ABAS LATERAIS DO SOBRETUDO (Gakuran Coat Flaps) ---
+        // Casaco descendo naturalmente pelas laterais das pernas
+        box(jX + 7, 21, 4, 8, COAT_DK); // Aba lateral esquerda
+        box(jX + 8, 21, 3, 8, COAT_MD);
+        box(jX + 8, 22, 1, 6, COAT_LT);
+
+        box(jX + 21, 21, 4, 8, COAT_DK); // Aba lateral direita
+        box(jX + 21, 21, 3, 8, COAT_MD);
+        box(jX + 23, 22, 1, 6, COAT_LT);
+
+        // Movimento sutil na ponta traseira do casaco
         const cWave = f % 4 === 1 ? 1 : f % 4 === 3 ? -1 : 0;
-        box(jX + 6 + cWave, 20, 4, 10, COAT_DK); // Aba Traseira escura
-        box(jX + 7 + cWave, 21, 2, 8, COAT_MD);
-        box(jX + 21 + cWave * -1, 20, 3, 9, COAT_MD); // Aba Frontal
-        box(jX + 22 + cWave * -1, 20, 1, 8, COAT_LT);
+        box(jX + 6 + cWave, 26, 2, 4, COAT_DK);
 
-        // --- CHAPÉU & CABELO REFEITOS ---
-        // Copa superior do chapéu
-        headBox(jX + 10, -2, 10, 5, COAT_MD);
-        headBox(jX + 11, -2, 8, 1, COAT_HL); // Brilho no topo
+        // --- CHAPÉU & CABELO DO JOTARO (LIMPO, SEM DEGRAUS OU ESPINHOS) ---
+        // Copa do Chapéu
+        headBox(jX + 11, -1, 10, 1, COAT_DK); // Topo suave
+        headBox(jX + 12, -1, 8, 1, COAT_MD);
+        headBox(jX + 13, -1, 6, 1, COAT_HL); // Brilho superior
+        headBox(jX + 11, 0, 10, 3, COAT_DK); // Corpo principal do chapéu
+        headBox(jX + 12, 0, 8, 3, COAT_MD);
 
-        // Spiky Hair tearing into rear of the cap (Jotaro signature silhouette)
-        headBox(jX + 6, 0, 4, 6, HAIR_DK);
-        headBox(jX + 21, 0, 4, 6, HAIR_DK);
-        headDot(jX + 5, 1, HAIR_DK);
-        headDot(jX + 5, 3, HAIR_DK);
-        headDot(jX + 5, 5, HAIR_DK);
-        headDot(jX + 25, 1, HAIR_DK);
-        headDot(jX + 25, 3, HAIR_DK);
-        headDot(jX + 25, 5, HAIR_DK);
+        // Cabelo fundido suavemente atrás do chapéu na nuca (Sem pontos ou espinhos laterais)
+        headBox(jX + 10, 1, 1, 5, HAIR_DK);
+        headBox(jX + 10, 6, 2, 2, HAIR_DK);
 
-        // Aba do Chapéu (Plana e destacada)
-        headBox(jX + 8, 3, 16, 2, COAT_DK); // Sombra da aba grossa
-        headBox(jX + 9, 3, 14, 1, COAT_LT); // Edge highlight
-        headDot(jX + 23, 3, COAT_HL); // Ponta extrema da aba brilhando
+        // Aba frontal do Chapéu
+        headBox(jX + 10, 3, 12, 2, COAT_DK); // Aba base
+        headBox(jX + 11, 3, 11, 1, COAT_LT); // Borda iluminada
+        headDot(jX + 21, 3, COAT_HL); // Brilho no canto direito da aba
 
-        // Emblemas de Ouro (Mão dourada e Broche redondo)
-        headBox(jX + 12, 0, 3, 3, GOLD_MD); // Mão dourada
-        headDot(jX + 12, 0, GOLD_LT);
-        headDot(jX + 13, 1, GOLD_DK);
-        headBox(jX + 17, 0, 2, 2, GOLD_MD); // Broche redondo
-        headDot(jX + 17, 0, GOLD_LT);
+        // Emblemas de Ouro Proporcionais no Chapéu
+        // 1. Mão Dourada (Palma)
+        headBox(jX + 13, 0, 3, 3, GOLD_DK);
+        headBox(jX + 13, 0, 3, 2, GOLD_MD);
+        headDot(jX + 13, 0, GOLD_LT); // Polegar
+        headDot(jX + 14, 0, GOLD_LT); // Dedos
+        headDot(jX + 14, 1, GOLD_DK); // Centro da palma
 
-        // --- ROSTO SUPER CLEAN ANIME ---
-        headBox(jX + 11, 5, 9, 7, SKIN_MD); // Rosto base
+        // 2. Broche Dourado Redondo
+        headBox(jX + 18, 1, 2, 2, GOLD_DK);
+        headDot(jX + 18, 1, GOLD_LT);
+        headDot(jX + 19, 1, GOLD_MD);
 
-        // Sombra da Aba misteriosa
-        headBox(jX + 11, 5, 9, 1, SKIN_DK);
+        // --- ROSTO ESTILIZADO ARAKI (Modelado, Expressivo e Sombreado) ---
+        // Estrutura facial modelada (Têmporas -> Bochechas -> Mandíbula -> Queixo)
+        headBox(jX + 11, 5, 10, 3, SKIN_MD); // Têmporas e olhos (y=5..7)
+        headBox(jX + 11, 8, 10, 1, SKIN_MD); // Bochechas (y=8)
+        headDot(jX + 11, 8, SKIN_DK); // Sombra maçã do rosto esq
+        headDot(jX + 20, 8, SKIN_DK); // Sombra maçã do rosto dir
+        headBox(jX + 12, 9, 8, 1, SKIN_MD);  // Mandíbula afinando (y=9)
+        headBox(jX + 13, 10, 6, 1, SKIN_MD); // Queixo definido (y=10)
 
-        // Olhos nítidos (Estilo Jotaro original piercing eyes)
-        headBox(jX + 12, 7, 3, 1, 0xffffff); // Sclera L
-        headBox(jX + 17, 7, 3, 1, 0xffffff); // Sclera R
-        headDot(jX + 13, 7, 0x0d9488); // Íris L (Teal/Green clássico JoJo)
-        headDot(jX + 18, 7, 0x0d9488); // Íris R
-        headDot(jX + 13, 7, 0x000000); // Pupila L
-        headDot(jX + 18, 7, 0x000000); // Pupila R
+        // Sombra profunda sob a aba do chapéu (Olhar misterioso)
+        headBox(jX + 11, 5, 10, 1, SKIN_DK);
 
-        // Sobrancelhas retas e marcadas estilo mangá
-        headBox(jX + 11, 6, 3, 1, HAIR_DK);
+        // Costeletas pontiagudas conectadas ao cabelo
+        headBox(jX + 10, 5, 1, 4, HAIR_DK);
+        headBox(jX + 21, 5, 1, 4, HAIR_DK);
+
+        // Sobrancelhas Marcadas e Anguladas
+        headBox(jX + 12, 6, 3, 1, HAIR_DK);
         headBox(jX + 17, 6, 3, 1, HAIR_DK);
-        headDot(jX + 15, 6, HAIR_DK);
 
-        // Nariz & Boca determinada
+        // Olhos Penetrantes (Esclera branca + Íris Verde-Azulada nítida + Pupila)
+        headBox(jX + 12, 7, 3, 1, 0xffffff); // Esclera Esq
+        headBox(jX + 17, 7, 3, 1, 0xffffff); // Esclera Dir
+        headDot(jX + 13, 7, 0x0d9488); // Íris Teal/Verde Esq
+        headDot(jX + 18, 7, 0x0d9488); // Íris Teal/Verde Dir
+        headDot(jX + 14, 7, 0x111827); // Canto/Pupila Esq
+        headDot(jX + 19, 7, 0x111827); // Canto/Pupila Dir
+
+        // Nariz & Sombra da Ponte Nasal
         headDot(jX + 15, 8, SKIN_DK);
         headDot(jX + 15, 9, SKIN_DK);
-        headBox(jX + 13, 10, 5, 1, 0x000000); // Boca firme e estóica
 
-        // Costeletas
-        headBox(jX + 10, 6, 2, 4, HAIR_DK);
-        headBox(jX + 20, 6, 2, 4, HAIR_DK);
+        // Boca Estóica Delinquente
+        headBox(jX + 14, 10, 4, 1, 0x3b1c1c);
+        headDot(jX + 15, 10, 0x241010);
 
-        // --- BRAÇOS CROSS/POCKET ---
-        box(jX + 8, 14, 3, 3, COAT_MD); // Ombro Trás
-        box(jX + 21, 14, 3, 3, COAT_MD); // Ombro Frente
-
-        box(jX + 8, 16, 3, 7, COAT_DK); // Braço trás Base
-        box(jX + 9, 17, 1, 5, COAT_MD); // Braço trás Volume
-
-        box(jX + 21, 16, 3, 7, COAT_DK); // Braço frente Base
-        box(jX + 22, 17, 1, 5, COAT_MD); // Braço frente Volume
-
-        // Braço de ataque dele
+        // --- BRAÇOS E MÃOS (POSTURA EQUILIBRADA COM AS DUAS MÃOS VISÍVEIS) ---
         if (isAttack && !isTransformed) {
-          box(jX + 18, 13, 10, 5, COAT_MD);
-          box(jX + 18, 13, 10, 1, COAT_LT);
-          box(jX + 28, 13, 4, 4, SKIN_MD);
-          box(jX + 28, 13, 2, 2, SKIN_LT);
-          box(jX + 8, 14, 4, 8, COAT_DK);
+          // POSTURA DE SOCO DO JOTARO (FORMA BASE)
+          // Braço Esquerdo (Puxado em guarda firme)
+          box(jX + 4, 13, 4, 5, COAT_DK);
+          box(jX + 5, 14, 2, 4, COAT_MD);
+          box(jX + 5, 17, 3, 3, SKIN_MD);
+          headDot(jX + 6, 17, SKIN_LT);
+
+          // Braço Direito (Esticado em potente soco direto)
+          box(jX + 18, 13, 10, 4, COAT_MD);
+          box(jX + 18, 13, 10, 1, COAT_HL);
+          box(jX + 28, 12, 6, 6, SKIN_MD); // Punho fechado frontal
+          box(jX + 29, 13, 4, 4, SKIN_LT);
+          headDot(jX + 31, 14, SKIN_DK); // Divisória dos dedos
+
+          // Efeito de impacto do soco direto
+          alphaBox(jX + 34, 12, 4, 6, 0xffffff, 0.6);
+        } else if (isAttack && isTransformed) {
+          // POSTURA ICÔNICA DO JOTARO APONTANDO ENQUANTO O STAND SOCA ("YARE YARE DAZE")
+          // Braço Esquerdo (Mão no bolso)
+          box(jX + 6, 13, 3, 5, COAT_DK);
+          box(jX + 7, 14, 2, 4, COAT_MD);
+          box(jX + 6, 18, 3, 4, COAT_DK);
+          box(jX + 6, 22, 3, 2, SKIN_MD);
+
+          // Braço Direito (Estendido para frente apontando o dedo com firmeza)
+          box(jX + 20, 13, 8, 4, COAT_MD);
+          box(jX + 20, 13, 8, 1, COAT_HL);
+          box(jX + 28, 13, 4, 3, SKIN_MD); // Mão
+          box(jX + 32, 14, 3, 1, SKIN_LT); // Dedo apontando para frente!
+          headDot(jX + 29, 13, SKIN_LT);
+        } else {
+          // Braço Esquerdo (Idle / Andar / Defender)
+          box(jX + 6, 13, 3, 5, COAT_DK); // Ombro Esq
+          box(jX + 7, 14, 2, 4, COAT_MD);
+          box(jX + 6, 18, 3, 4, COAT_DK); // Antebraço
+          box(jX + 6, 22, 3, 2, SKIN_MD); // Mão Esquerda
+          headDot(jX + 7, 22, SKIN_LT); // Nózinho dos dedos esq
+
+          // Braço Direito (Idle / Andar / Defender)
+          box(jX + 23, 13, 3, 5, COAT_DK); // Ombro Dir
+          box(jX + 23, 14, 2, 4, COAT_MD);
+          box(jX + 23, 18, 3, 4, COAT_DK); // Antebraço
+          box(jX + 23, 22, 3, 2, SKIN_MD); // Mão Direita
+          headDot(jX + 24, 22, SKIN_LT); // Nózinho dos dedos dir
         }
       }
     } // End Switch Equivalent
