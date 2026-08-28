@@ -183,10 +183,10 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     // 4. PREVIEW INITIALIZATION (Positioned precisely within the character stage viewport above the buttons)
     const previewCenterX = rightColX + rightColW / 2;
-    const stageTop = contentTopY + 52;
-    const stageBottom = contentTopY + contentH - 96;
-    const stageH = Math.max(160, stageBottom - stageTop);
-    const previewCenterY = stageTop + Math.floor(stageH * 0.46);
+    const stageTop = contentTopY + 50;
+    const stageBottom = contentTopY + contentH - 80;
+    const stageH = Math.max(140, stageBottom - stageTop);
+    const previewCenterY = stageTop + Math.floor(stageH * 0.50);
 
     this.preview = new CreatorPreview(this, previewCenterX, previewCenterY, stageH);
     this.ui = new CreatorUI(this, () => this.updatePreview());
@@ -696,14 +696,14 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.updatePreview();
 
     const bounds = ResponsiveUtils.getSafeBounds(this);
-    const contentTopY = bounds.top + 48;
-    const contentH = Math.min(450, bounds.bottom - contentTopY - 10);
-    const availableW = bounds.width;
-    const leftColW = Math.min(515, Math.floor(availableW * 0.58));
-    const rightColW = Math.min(345, Math.floor(availableW * 0.38));
-    const gap = 16;
+    const contentTopY = bounds.top + 46;
+    const contentH = Math.min(474, bounds.bottom - contentTopY - 12);
+    const availableW = bounds.width - 24;
+    const leftColW = Math.min(540, Math.floor(availableW * 0.58));
+    const rightColW = Math.min(370, Math.floor(availableW * 0.40));
+    const gap = 14;
     const totalW = leftColW + rightColW + gap;
-    const startX = Math.max(bounds.left + 4, Math.floor(bounds.centerX - totalW / 2));
+    const startX = Math.max(bounds.left + 8, Math.floor(bounds.centerX - totalW / 2));
 
     if (this.ui) {
       this.ui.initStudioPanel(

@@ -148,10 +148,10 @@ export class ResponsiveUtils {
     const rawTop = gameBleedY + safeTop + marginY;
     const rawBottom = ResponsiveUtils.BASE_HEIGHT - (gameBleedY + safeBottom + marginY);
 
-    const left = Phaser.Math.Clamp(rawLeft, 20, 64);
-    const right = Phaser.Math.Clamp(rawRight, ResponsiveUtils.BASE_WIDTH - 64, ResponsiveUtils.BASE_WIDTH - 20);
-    const top = Phaser.Math.Clamp(rawTop, 16, 42);
-    const bottom = Phaser.Math.Clamp(rawBottom, ResponsiveUtils.BASE_HEIGHT - 42, ResponsiveUtils.BASE_HEIGHT - 16);
+    const left = Phaser.Math.Clamp(rawLeft, 16, ResponsiveUtils.BASE_WIDTH * 0.25);
+    const right = Phaser.Math.Clamp(rawRight, ResponsiveUtils.BASE_WIDTH * 0.75, ResponsiveUtils.BASE_WIDTH - 16);
+    const top = Phaser.Math.Clamp(rawTop, 16, ResponsiveUtils.BASE_HEIGHT * 0.25);
+    const bottom = Phaser.Math.Clamp(rawBottom, ResponsiveUtils.BASE_HEIGHT * 0.75, ResponsiveUtils.BASE_HEIGHT - 16);
 
     const safeWidth = Math.max(300, right - left);
     const safeHeight = Math.max(200, bottom - top);

@@ -147,13 +147,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
       });
     }
 
-    const bounds = ResponsiveUtils.getSafeBounds();
+    const bounds = ResponsiveUtils.getSafeBounds(this);
 
     // 1. Botão Voltar (Top Left, Highest Depth, Clean Hit Area)
-    const backBtnX = Math.min(110, Math.max(68, bounds.left + 45));
-    const backBtnY = Math.min(38, Math.max(26, bounds.top + 16));
+    const headerY = Math.max(26, bounds.top + 20);
+    const backBtnX = Math.max(68, bounds.left + 54);
     const backBtnContainer = this.add
-      .container(backBtnX, backBtnY)
+      .container(backBtnX, headerY)
       .setDepth(500);
 
     const backBg = this.add.graphics();
@@ -263,7 +263,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   createTooltip() {
     const { width } = this.cameras.main;
-    const bounds = ResponsiveUtils.getSafeBounds();
+    const bounds = ResponsiveUtils.getSafeBounds(this);
     this.tooltipContainer = this.add
       .container(width / 2, bounds.bottom - 100)
       .setDepth(200)
@@ -319,7 +319,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   createArenaSelector() {
     const { width } = this.cameras.main;
-    const bounds = ResponsiveUtils.getSafeBounds();
+    const bounds = ResponsiveUtils.getSafeBounds(this);
     this.arenaSelectorContainer = this.add.container(
       width / 2,
       bounds.bottom - 74,
@@ -450,7 +450,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
   createFightButton() {
     const { width } = this.cameras.main;
-    const bounds = ResponsiveUtils.getSafeBounds();
+    const bounds = ResponsiveUtils.getSafeBounds(this);
     this.fightBtn = this.add
       .container(width / 2, bounds.bottom - 28)
       .setDepth(300)

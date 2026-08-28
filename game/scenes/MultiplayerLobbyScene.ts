@@ -95,10 +95,10 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     this.drawMainMenu();
 
     // Back / Exit Button
-    const bounds = ResponsiveUtils.getSafeBounds();
-    const backBtnX = Math.min(110, Math.max(68, bounds.left + 45));
-    const backBtnY = Math.min(38, Math.max(26, bounds.top + 16));
-    this.createBackBtn(backBtnX, backBtnY, "VOLTAR", () => {
+    const bounds = ResponsiveUtils.getSafeBounds(this);
+    const headerY = Math.max(26, bounds.top + 20);
+    const backBtnX = Math.max(68, bounds.left + 54);
+    this.createBackBtn(backBtnX, headerY, "VOLTAR", () => {
       MultiplayerManager.getInstance().leaveLobby();
       MultiplayerManager.getInstance().disconnect();
       transitionTo(this, "CharacterSelectScene");

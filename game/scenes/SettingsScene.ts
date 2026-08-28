@@ -36,10 +36,10 @@ export default class SettingsScene extends Phaser.Scene {
 
     // --- Static Header ---
     const bounds = ResponsiveUtils.getSafeBounds(this);
-    const headerY = Math.min(38, Math.max(26, bounds.top + 16));
+    const headerY = Math.max(26, bounds.top + 20);
 
     // Back Button (Top Left - Cleanly placed on the left side)
-    const backBtnX = Math.min(110, Math.max(68, bounds.left + 45));
+    const backBtnX = Math.max(68, bounds.left + 54);
     const backContainer = this.add.container(backBtnX, headerY).setDepth(200);
 
     const btnW = 116;

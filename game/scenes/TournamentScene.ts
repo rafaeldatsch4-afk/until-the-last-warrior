@@ -48,10 +48,10 @@ export default class TournamentScene extends Phaser.Scene {
 
     // Title
     const bounds = ResponsiveUtils.getSafeBounds(this);
-    const headerY = Math.min(38, Math.max(26, bounds.top + 16));
+    const headerY = Math.max(26, bounds.top + 20);
 
     // Back Button (Top Left)
-    const backBtnX = Math.min(110, Math.max(68, bounds.left + 45));
+    const backBtnX = Math.max(68, bounds.left + 54);
     const backContainer = this.add.container(backBtnX, headerY).setDepth(200);
     const btnW = 116;
     const btnH = 36;
@@ -182,7 +182,7 @@ export default class TournamentScene extends Phaser.Scene {
           .setOrigin(0.5);
       }
 
-      const bounds = ResponsiveUtils.getSafeBounds();
+      const bounds = ResponsiveUtils.getSafeBounds(this);
       this.createBtn(
         480,
         bounds.bottom - 40,
@@ -372,7 +372,7 @@ export default class TournamentScene extends Phaser.Scene {
       this.gameState.p2CharacterId = enemyId;
       this.registry.set("gameState", this.gameState);
 
-      const bounds = ResponsiveUtils.getSafeBounds();
+      const bounds = ResponsiveUtils.getSafeBounds(this);
       this.createBtn(
         480,
         bounds.bottom - 45,

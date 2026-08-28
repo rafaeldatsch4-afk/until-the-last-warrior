@@ -41,7 +41,7 @@ export default class ModeSelectScene extends Phaser.Scene {
     }
 
     const { width, height } = this.cameras.main;
-    const bounds = ResponsiveUtils.getSafeBounds();
+    const bounds = ResponsiveUtils.getSafeBounds(this);
 
     // 1. Dark Base Background
     const bg = this.add.graphics();
@@ -84,15 +84,15 @@ export default class ModeSelectScene extends Phaser.Scene {
       });
     }
 
-    // 3. Top Back Button (High Depth, Pristine Positioning)
-    const backBtnX = Math.min(110, Math.max(68, bounds.left + 45));
-    const backBtnY = Math.min(38, Math.max(26, bounds.top + 16));
-    this.createBackBtn(backBtnX, backBtnY, "← VOLTAR", () => {
+    // 3. Top Back Button & Header (High Depth, Pristine Positioning)
+    const headerY = Math.max(26, bounds.top + 20);
+    const backBtnX = Math.max(68, bounds.left + 54);
+    this.createBackBtn(backBtnX, headerY, "← VOLTAR", () => {
       transitionTo(this, "MenuScene");
     });
 
     // 4. Header Title (Centered with generous breathing space)
-    const headerContainer = this.add.container(width / 2, bounds.top + 28);
+    const headerContainer = this.add.container(width / 2, headerY);
 
     const titleShadow = this.add
       .text(0, 2, "MODO DE JOGO", {
@@ -131,7 +131,7 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: headerContainer,
-      y: bounds.top + 26,
+      y: headerY - 2,
       duration: 1800,
       yoyo: true,
       repeat: -1,

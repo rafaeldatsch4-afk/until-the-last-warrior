@@ -67,7 +67,7 @@ export default class StoreScene extends Phaser.Scene {
     headerBar.strokePath();
 
     // Back Button (Top Left - High Depth & Touch-Friendly Hitbox)
-    const backBtnX = Math.min(130, Math.max(68, bounds.left + 50));
+    const backBtnX = Math.max(68, bounds.left + 54);
     const backContainer = this.add.container(backBtnX, headerY).setDepth(250);
 
     const btnW = 104;

@@ -86,7 +86,7 @@ export default class ProfileScene extends Phaser.Scene {
     const headerY = Math.max(26, bounds.top + 20);
 
     // Back Button (Left side)
-    const backBtnX = Math.min(125, Math.max(68, bounds.left + 50));
+    const backBtnX = Math.max(68, bounds.left + 54);
     const backBtnContainer = this.add.container(backBtnX, headerY).setDepth(300);
 
     const backBg = this.add.graphics();

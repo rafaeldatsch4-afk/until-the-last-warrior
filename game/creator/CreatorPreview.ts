@@ -54,7 +54,7 @@ export class CreatorPreview {
     this.posX = x;
     this.posY = y;
     if (availableH) {
-      this.previewScale = Phaser.Math.Clamp(availableH / 125, 1.85, 2.35);
+      this.previewScale = Phaser.Math.Clamp(availableH / 115, 1.25, 2.05);
     }
   }
 
@@ -62,14 +62,20 @@ export class CreatorPreview {
     this.posX = x;
     this.posY = y;
     if (availableH) {
-      this.previewScale = Phaser.Math.Clamp(availableH / 125, 1.85, 2.35);
+      this.previewScale = Phaser.Math.Clamp(availableH / 115, 1.25, 2.05);
     }
     if (this.previewSprite) {
       this.previewSprite.setPosition(x, y);
       this.previewSprite.setScale(this.previewScale);
     }
     if (this.previewAura) {
-      this.previewAura.setPosition(x, y + Math.round(2 * this.previewScale));
+      this.previewAura.setPosition(x, y - Math.round(2 * this.previewScale));
+    }
+    if (this.previewAuraCore) {
+      this.previewAuraCore.setPosition(x, y - Math.round(2 * this.previewScale));
+    }
+    if (this.previewAuraRing) {
+      this.previewAuraRing.setPosition(x, y + Math.round(36 * this.previewScale));
     }
   }
 
@@ -294,39 +300,39 @@ export class CreatorPreview {
     if (this.stageRing) this.stageRing.destroy();
 
     const scale = this.previewScale;
-    const pedestalOffsetY = Math.round(24 * scale);
+    const pedestalOffsetY = Math.round(36 * scale);
 
     this.stagePedestal = this.scene.add.graphics().setDepth(5);
     this.stagePedestal.fillStyle(0x0f172a, 0.85);
-    this.stagePedestal.fillEllipse(this.posX, this.posY + pedestalOffsetY + 2, 70 * scale, 18 * scale);
+    this.stagePedestal.fillEllipse(this.posX, this.posY + pedestalOffsetY + 2, 58 * scale, 14 * scale);
     this.stagePedestal.fillStyle(0x1e293b, 0.9);
-    this.stagePedestal.fillEllipse(this.posX, this.posY + pedestalOffsetY, 60 * scale, 14 * scale);
+    this.stagePedestal.fillEllipse(this.posX, this.posY + pedestalOffsetY, 50 * scale, 11 * scale);
     this.stagePedestal.lineStyle(1.5, 0x38bdf8, 0.6);
-    this.stagePedestal.strokeEllipse(this.posX, this.posY + pedestalOffsetY, 60 * scale, 14 * scale);
+    this.stagePedestal.strokeEllipse(this.posX, this.posY + pedestalOffsetY, 50 * scale, 11 * scale);
     this.stagePedestal.lineStyle(1, effectiveRingColor, 0.8);
-    this.stagePedestal.strokeEllipse(this.posX, this.posY + pedestalOffsetY, 46 * scale, 10 * scale);
+    this.stagePedestal.strokeEllipse(this.posX, this.posY + pedestalOffsetY, 38 * scale, 8 * scale);
 
     // 1. Outer Flame Aura (Glow)
-    const auraW = Math.round(58 * scale);
-    const auraH = Math.round(82 * scale);
+    const auraW = Math.round(52 * scale);
+    const auraH = Math.round(76 * scale);
     this.previewAura = this.scene.add
-      .ellipse(this.posX, this.posY + Math.round(2 * scale), auraW, auraH, effectiveAuraColor)
+      .ellipse(this.posX, this.posY - Math.round(2 * scale), auraW, auraH, effectiveAuraColor)
       .setAlpha(isTransformed ? 0.65 : 0.38)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(6);
 
     // 2. Inner Bright Core
-    const coreW = Math.round(38 * scale);
-    const coreH = Math.round(62 * scale);
+    const coreW = Math.round(34 * scale);
+    const coreH = Math.round(56 * scale);
     this.previewAuraCore = this.scene.add
-      .ellipse(this.posX, this.posY + Math.round(4 * scale), coreW, coreH, effectiveRingColor)
+      .ellipse(this.posX, this.posY - Math.round(2 * scale), coreW, coreH, effectiveRingColor)
       .setAlpha(isTransformed ? 0.55 : 0.25)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(7);
 
     // 3. Ground Ki Shockwave Ring
     this.previewAuraRing = this.scene.add
-      .circle(this.posX, this.posY + pedestalOffsetY, 24 * scale, 0x000000, 0)
+      .circle(this.posX, this.posY + pedestalOffsetY, 20 * scale, 0x000000, 0)
       .setStrokeStyle(2 * scale, effectiveRingColor, 0.8)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(8);
@@ -394,6 +400,7 @@ export class CreatorPreview {
 
     this.previewSprite = this.scene.add
       .sprite(this.posX, this.posY, texName)
+      .setOrigin(0.5, 0.70)
       .setScale(scale)
       .setDepth(10);
 
