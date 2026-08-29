@@ -83,7 +83,7 @@ export default class ProfileScene extends Phaser.Scene {
     }
 
     // 2. HEADER TOP BAR
-    const headerY = Math.max(26, bounds.top + 20);
+    const headerY = Math.max(24, bounds.top + 16);
 
     // Back Button (Left side)
     const backBtnX = Math.max(68, bounds.left + 54);
@@ -111,7 +111,7 @@ export default class ProfileScene extends Phaser.Scene {
         fontStyle: "bold",
         color: "#ffffff",
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
-        resolution: 2,
+        resolution: 3,
       })
       .setOrigin(0.5);
 
@@ -146,21 +146,21 @@ export default class ProfileScene extends Phaser.Scene {
 
     this.input.keyboard?.on("keydown-ESC", exitToMenu);
 
-    // Screen Title in the Center
+    // Screen Title in the Center (Decorative lines placed outside text)
     const titleContainer = this.add.container(width / 2, headerY).setDepth(100);
     const titleDecor = this.add.graphics();
     titleDecor.lineStyle(1.5, 0x38bdf8, 0.6);
-    titleDecor.moveTo(-140, 0).lineTo(-85, 0);
-    titleDecor.moveTo(85, 0).lineTo(140, 0);
+    titleDecor.moveTo(-210, 0).lineTo(-155, 0);
+    titleDecor.moveTo(155, 0).lineTo(210, 0);
     titleDecor.strokePath();
 
     titleDecor.fillStyle(0x38bdf8, 0.9);
-    titleDecor.fillCircle(-85, 0, 3);
-    titleDecor.fillCircle(85, 0, 3);
+    titleDecor.fillCircle(-155, 0, 3);
+    titleDecor.fillCircle(155, 0, 3);
 
     const titleTxt = this.add
-      .text(0, -4, "PERFIL DO GUERREIRO", {
-        fontSize: "20px",
+      .text(0, -6, "PERFIL DO GUERREIRO", {
+        fontSize: "19px",
         fontStyle: "900",
         color: "#38bdf8",
         stroke: "#000000",
@@ -168,12 +168,12 @@ export default class ProfileScene extends Phaser.Scene {
         letterSpacing: 2,
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
         shadow: { offsetY: 2, color: "#000000", blur: 4, fill: true },
-        resolution: 2,
+        resolution: 3,
       })
       .setOrigin(0.5);
 
     const subtitleTxt = this.add
-      .text(0, 13, "ESTATÍSTICAS & CONQUISTAS", {
+      .text(0, 11, "ESTATÍSTICAS & CONQUISTAS", {
         fontSize: "9px",
         fontStyle: "bold",
         color: "#94a3b8",
@@ -186,12 +186,13 @@ export default class ProfileScene extends Phaser.Scene {
     titleContainer.add([titleDecor, titleTxt, subtitleTxt]);
 
     // Coins Display on Top Right
-    const coinsContainer = this.add.container(width - backBtnX, headerY).setDepth(100);
+    const coinsX = Math.min(width - 68, bounds.right - 54);
+    const coinsContainer = this.add.container(coinsX, headerY).setDepth(100);
     const coinsBg = this.add.graphics();
-    coinsBg.fillStyle(0x0f172a, 0.9);
-    coinsBg.fillRoundedRect(-54, -16, 108, 32, 6);
-    coinsBg.lineStyle(1, 0xd97706, 0.85);
-    coinsBg.strokeRoundedRect(-54, -16, 108, 32, 6);
+    coinsBg.fillStyle(0x0f172a, 0.95);
+    coinsBg.fillRoundedRect(-54, -16, 108, 32, 7);
+    coinsBg.lineStyle(1.5, 0xd97706, 0.9);
+    coinsBg.strokeRoundedRect(-54, -16, 108, 32, 7);
 
     const coinIcon = this.add.circle(-34, 0, 7, 0xfacc15).setStrokeStyle(1, 0xb45309);
     const coinSymbol = this.add.text(-34, 0, "$", {
@@ -200,36 +201,36 @@ export default class ProfileScene extends Phaser.Scene {
       fontStyle: "bold",
     }).setOrigin(0.5);
 
-    const coinsText = this.add.text(-22, 0, `${this.state.coins || 0}`, {
-      fontSize: "12px",
+    const coinsText = this.add.text(-20, 0, `${this.state.coins || 0}`, {
+      fontSize: "13px",
       fontStyle: "bold",
       color: "#fde047",
       fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-      resolution: 2,
+      resolution: 3,
     }).setOrigin(0, 0.5);
 
     coinsContainer.add([coinsBg, coinIcon, coinSymbol, coinsText]);
 
     // 3. MAIN CONTENT LAYOUT
-    const contentW = Math.min(880, width - 40);
+    const contentW = Math.min(910, width - Math.max(30, (width - bounds.width) + 16));
     const contentLeft = width / 2 - contentW / 2;
 
     // --- SECTION 1: HEADER USER PROFILE BANNER ---
     const bannerY = headerY + 24;
-    const bannerH = 50;
+    const bannerH = 44;
     this.createProfileBanner(contentLeft, bannerY, contentW, bannerH);
 
     // Two Columns Layout below the banner
     const columnsY = bannerY + bannerH + 8;
-    const columnGap = 12;
+    const columnGap = 10;
     const colW = (contentW - columnGap) / 2;
     const leftColX = contentLeft;
     const rightColX = contentLeft + colW + columnGap;
-    const bottomLimit = bounds.bottom - 12;
-    const totalColsH = bottomLimit - columnsY;
+    const bottomLimit = Math.min(height - 12, bounds.bottom - 10);
+    const totalColsH = Math.max(360, bottomLimit - columnsY);
 
     // --- SECTION 2: ESTATÍSTICAS PRINCIPAIS (Left Top) ---
-    const statsH = 170;
+    const statsH = 138;
     this.createMainStatsSection(leftColX, columnsY, colW, statsH);
 
     // --- SECTION 3: PROGRESSO DO MODO HISTÓRIA (Left Bottom) ---
@@ -395,13 +396,13 @@ export default class ProfileScene extends Phaser.Scene {
     ];
 
     // Grid layout: 2 columns in top row, 3 cards in second row
-    const cardGap = 8;
-    const cardPadX = 12;
-    const startY = 32;
+    const cardGap = 6;
+    const cardPadX = 10;
+    const startY = 28;
 
     // Row 1 (2 cards)
     const row1W = (w - cardPadX * 2 - cardGap) / 2;
-    const row1H = 54;
+    const row1H = 46;
     for (let i = 0; i < 2; i++) {
       const data = statsData[i];
       const cardX = cardPadX + i * (row1W + cardGap);
@@ -411,7 +412,7 @@ export default class ProfileScene extends Phaser.Scene {
 
     // Row 2 (3 cards)
     const row2W = (w - cardPadX * 2 - cardGap * 2) / 3;
-    const row2H = 54;
+    const row2H = 46;
     const row2Y = startY + row1H + cardGap;
     for (let i = 2; i < 5; i++) {
       const data = statsData[i];
@@ -434,22 +435,22 @@ export default class ProfileScene extends Phaser.Scene {
     cardBg.lineStyle(1, data.border, 0.6);
     cardBg.strokeRoundedRect(x, y, w, h, 6);
 
-    const icon = this.add.text(x + 10, y + h / 2, data.icon, {
-      fontSize: "16px",
+    const icon = this.add.text(x + 8, y + h / 2, data.icon, {
+      fontSize: "15px",
       fontFamily: "system-ui",
     }).setOrigin(0, 0.5);
 
-    const textStartX = x + 34;
-    const label = this.add.text(textStartX, y + 14, data.label, {
-      fontSize: "9px",
+    const textStartX = x + 30;
+    const label = this.add.text(textStartX, y + 12, data.label, {
+      fontSize: "8.5px",
       fontStyle: "bold",
       color: "#94a3b8",
       fontFamily: "system-ui, sans-serif",
       resolution: 2,
     }).setOrigin(0, 0.5);
 
-    const val = this.add.text(textStartX, y + 34, data.value, {
-      fontSize: "15px",
+    const val = this.add.text(textStartX, y + 30, data.value, {
+      fontSize: "14px",
       fontStyle: "900",
       color: data.color,
       fontFamily: "'Plus Jakarta Sans', monospace, sans-serif",
@@ -469,8 +470,8 @@ export default class ProfileScene extends Phaser.Scene {
     frame.strokeRoundedRect(0, 0, w, h, 8);
 
     // Section Title
-    const titleTxt = this.add.text(14, 14, "⚔️ PROGRESSO DO MODO HISTÓRIA", {
-      fontSize: "12px",
+    const titleTxt = this.add.text(14, 13, "⚔️ PROGRESSO DO MODO HISTÓRIA", {
+      fontSize: "11px",
       fontStyle: "900",
       color: "#38bdf8",
       letterSpacing: 1,
@@ -484,15 +485,15 @@ export default class ProfileScene extends Phaser.Scene {
     if (!storyState) {
       // Empty story state message
       const emptyContainer = this.add.container(w / 2, h / 2 + 6);
-      const emptyIcon = this.add.text(0, -12, "📖", { fontSize: "24px" }).setOrigin(0.5);
+      const emptyIcon = this.add.text(0, -10, "📖", { fontSize: "22px" }).setOrigin(0.5);
       const emptyTitle = this.add.text(0, 14, "Modo História Não Iniciado", {
-        fontSize: "12px",
+        fontSize: "11px",
         fontStyle: "bold",
         color: "#facc15",
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
       }).setOrigin(0.5);
-      const emptySub = this.add.text(0, 30, "Avance na campanha para evoluir nível e atributos!", {
-        fontSize: "10px",
+      const emptySub = this.add.text(0, 28, "Avance na campanha para evoluir nível e atributos!", {
+        fontSize: "9.5px",
         color: "#64748b",
         fontFamily: "system-ui, sans-serif",
       }).setOrigin(0.5);
@@ -503,17 +504,17 @@ export default class ProfileScene extends Phaser.Scene {
     }
 
     // 1. Level & EXP Bar (Top of story box)
-    const levelX = 14;
-    const levelY = 32;
+    const levelX = 12;
+    const levelY = 26;
 
     const lvlBadge = this.add.graphics();
     lvlBadge.fillStyle(0x0284c7, 1);
-    lvlBadge.fillRoundedRect(levelX, levelY, 48, 20, 5);
+    lvlBadge.fillRoundedRect(levelX, levelY, 46, 18, 4);
     lvlBadge.lineStyle(1, 0x38bdf8, 1);
-    lvlBadge.strokeRoundedRect(levelX, levelY, 48, 20, 5);
+    lvlBadge.strokeRoundedRect(levelX, levelY, 46, 18, 4);
 
-    const lvlTxt = this.add.text(levelX + 24, levelY + 10, `LVL ${storyState.level}`, {
-      fontSize: "10px",
+    const lvlTxt = this.add.text(levelX + 23, levelY + 9, `LVL ${storyState.level}`, {
+      fontSize: "9.5px",
       fontStyle: "900",
       color: "#ffffff",
       fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
@@ -522,15 +523,15 @@ export default class ProfileScene extends Phaser.Scene {
 
     // EXP Bar
     const expNeeded = (storyState.level + 1) * 100;
-    const expBarX = levelX + 54;
-    const expBarW = w - expBarX - 14;
-    const expBarH = 20;
+    const expBarX = levelX + 50;
+    const expBarW = w - expBarX - 12;
+    const expBarH = 18;
 
     const expBarBg = this.add.graphics();
     expBarBg.fillStyle(0x0f172a, 0.95);
-    expBarBg.fillRoundedRect(expBarX, levelY, expBarW, expBarH, 5);
+    expBarBg.fillRoundedRect(expBarX, levelY, expBarW, expBarH, 4);
     expBarBg.lineStyle(1, 0x334155, 0.8);
-    expBarBg.strokeRoundedRect(expBarX, levelY, expBarW, expBarH, 5);
+    expBarBg.strokeRoundedRect(expBarX, levelY, expBarW, expBarH, 4);
 
     const expRatio = Math.min(1, Math.max(0, storyState.exp / expNeeded));
     const expFillW = Math.max(0, (expBarW - 4) * expRatio);
@@ -542,7 +543,7 @@ export default class ProfileScene extends Phaser.Scene {
     }
 
     const expTxt = this.add.text(expBarX + expBarW / 2, levelY + expBarH / 2, `XP: ${storyState.exp} / ${expNeeded}`, {
-      fontSize: "10px",
+      fontSize: "9.5px",
       fontStyle: "bold",
       color: "#ffffff",
       stroke: "#000000",
@@ -562,22 +563,22 @@ export default class ProfileScene extends Phaser.Scene {
       { key: "health", label: "VITALIDADE", val: storyState.stats.health, color: 0x10b981, maxVal: 50 },
     ];
 
-    const statsStartY = levelY + 26;
-    const statRowH = 20;
-    const statGap = 4;
+    const statsStartY = levelY + 22;
+    const statRowH = 17;
+    const statGap = 3;
 
     statsList.forEach((st, idx) => {
       const rowY = statsStartY + idx * (statRowH + statGap);
       const rowBg = this.add.graphics();
       rowBg.fillStyle(0x0f172a, 0.6);
-      rowBg.fillRoundedRect(14, rowY, w - 28, statRowH, 4);
+      rowBg.fillRoundedRect(12, rowY, w - 24, statRowH, 3);
 
       // Color indicator dot
-      const dot = this.add.circle(22, rowY + statRowH / 2, 4, st.color);
+      const dot = this.add.circle(19, rowY + statRowH / 2, 3.5, st.color);
 
       // Label
-      const lbl = this.add.text(32, rowY + statRowH / 2, st.label, {
-        fontSize: "9.5px",
+      const lbl = this.add.text(28, rowY + statRowH / 2, st.label, {
+        fontSize: "8.5px",
         fontStyle: "bold",
         color: "#cbd5e1",
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
@@ -585,23 +586,23 @@ export default class ProfileScene extends Phaser.Scene {
       }).setOrigin(0, 0.5);
 
       // Mini Progress Bar
-      const barX = 135;
-      const barW = w - 28 - barX - 40;
-      const barH = 8;
+      const barX = 118;
+      const barW = w - 24 - barX - 32;
+      const barH = 7;
       const barY = rowY + (statRowH - barH) / 2;
 
       const miniTrack = this.add.graphics();
       miniTrack.fillStyle(0x1e293b, 0.9);
-      miniTrack.fillRoundedRect(barX, barY, barW, barH, 3);
+      miniTrack.fillRoundedRect(barX, barY, barW, barH, 2.5);
 
       const ratio = Math.min(1, Math.max(0.04, st.val / st.maxVal));
       const miniFill = this.add.graphics();
       miniFill.fillStyle(st.color, 1);
-      miniFill.fillRoundedRect(barX, barY, barW * ratio, barH, 3);
+      miniFill.fillRoundedRect(barX, barY, barW * ratio, barH, 2.5);
 
       // Value text
-      const valTxt = this.add.text(w - 20, rowY + statRowH / 2, `${st.val}`, {
-        fontSize: "10.5px",
+      const valTxt = this.add.text(w - 16, rowY + statRowH / 2, `${st.val}`, {
+        fontSize: "9.5px",
         fontStyle: "900",
         color: "#ffffff",
         fontFamily: "'Plus Jakarta Sans', monospace, sans-serif",
@@ -643,7 +644,7 @@ export default class ProfileScene extends Phaser.Scene {
     counterPillBg.lineStyle(1, 0xd4af37, 0.8);
     counterPillBg.strokeRoundedRect(counterPillX, 6, counterPillW, 18, 5);
 
-    const counterTxt = this.add.text(counterPillX + counterPillW / 2, 15, `${unlockedCount} / ${totalCount} ABERTAS`, {
+    const counterTxt = this.add.text(counterPillX + counterPillW / 2, 15, `${unlockedCount} / ${totalCount} LIBERADAS`, {
       fontSize: "8.5px",
       fontStyle: "bold",
       color: "#fde047",
@@ -676,8 +677,8 @@ export default class ProfileScene extends Phaser.Scene {
 
     // Render Achievement Cards
     const cardW = w - 24;
-    const cardH = 46;
-    const cardGap = 6;
+    const cardH = 44;
+    const cardGap = 5;
     let cardY = 4;
 
     ACHIEVEMENTS.forEach((ach) => {
@@ -689,7 +690,7 @@ export default class ProfileScene extends Phaser.Scene {
     const totalHeight = cardY;
     this.maxScroll = Math.max(0, totalHeight - this.maskHeight);
 
-    // Scroll Interactivity
+    // Scroll Interactivity with Mobile Touch Drag Support
     const hitZone = this.add
       .rectangle(x + w / 2, listAbsoluteY + this.maskHeight / 2, w, this.maskHeight, 0x000000, 0)
       .setInteractive();
@@ -714,6 +715,9 @@ export default class ProfileScene extends Phaser.Scene {
       }
     });
     this.input.on("pointerup", () => {
+      isDragging = false;
+    });
+    this.input.on("pointerupoutside", () => {
       isDragging = false;
     });
 
@@ -774,40 +778,40 @@ export default class ProfileScene extends Phaser.Scene {
 
     // Title and description
     const textStartX = 34;
-    const nameTxt = this.add.text(textStartX, 13, ach.name, {
-      fontSize: "12px",
+    const nameTxt = this.add.text(textStartX, 12, ach.name, {
+      fontSize: "11.5px",
       fontStyle: "bold",
       color: unlocked ? "#fef08a" : "#64748b",
       fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
       resolution: 2,
     }).setOrigin(0, 0.5);
 
-    const descTxt = this.add.text(textStartX, 31, ach.desc, {
-      fontSize: "9.5px",
+    const descTxt = this.add.text(textStartX, 29, ach.desc, {
+      fontSize: "9px",
       color: unlocked ? "#94a3b8" : "#475569",
       fontFamily: "system-ui, sans-serif",
       resolution: 2,
     }).setOrigin(0, 0.5);
 
-    // Right Badge (DESBLOQUEADA / BLOQUEADA)
-    const badgeW = 74;
+    // Right Badge (CONCLUÍDA / BLOQUEADA)
+    const badgeW = 76;
     const badgeX = w - badgeW - 8;
     const badgeBg = this.add.graphics();
 
     if (unlocked) {
       badgeBg.fillStyle(0x1e293b, 0.9);
-      badgeBg.fillRoundedRect(badgeX, 12, badgeW, 20, 4);
+      badgeBg.fillRoundedRect(badgeX, 11, badgeW, 20, 4);
       badgeBg.lineStyle(1, 0xfacc15, 0.7);
-      badgeBg.strokeRoundedRect(badgeX, 12, badgeW, 20, 4);
+      badgeBg.strokeRoundedRect(badgeX, 11, badgeW, 20, 4);
     } else {
       badgeBg.fillStyle(0x0f172a, 0.6);
-      badgeBg.fillRoundedRect(badgeX, 12, badgeW, 20, 4);
+      badgeBg.fillRoundedRect(badgeX, 11, badgeW, 20, 4);
       badgeBg.lineStyle(1, 0x1e293b, 0.5);
-      badgeBg.strokeRoundedRect(badgeX, 12, badgeW, 20, 4);
+      badgeBg.strokeRoundedRect(badgeX, 11, badgeW, 20, 4);
     }
 
-    const badgeTxt = this.add.text(badgeX + badgeW / 2, 22, unlocked ? "ABERTA" : "BLOQUEADA", {
-      fontSize: "8.5px",
+    const badgeTxt = this.add.text(badgeX + badgeW / 2, 21, unlocked ? "CONCLUÍDA" : "BLOQUEADA", {
+      fontSize: "8px",
       fontStyle: "bold",
       color: unlocked ? "#facc15" : "#475569",
       fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",

@@ -84,13 +84,15 @@ export class BattleUI {
     this.p2HudContainer = bs.add.container(p2HudX, p2HudY).setScrollFactor(0).setDepth(11);
     this.uiContainer.add(this.p2HudContainer);
 
+    // Draggable setup for P1 (only interactive when editing HUD)
     const rectContains = (r: Phaser.Geom.Rectangle, x: number, y: number) => {
       return x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
     };
 
-    // Draggable setup for P1
     this.p1HudContainer.setInteractive(new Phaser.Geom.Rectangle(25, 10, 250, 100), rectContains);
     bs.input.setDraggable(this.p1HudContainer);
+    this.p1HudContainer.disableInteractive(); // Disabled by default during combat to avoid touch conflicts
+
     this.p1HudContainer.on('drag', (pointer: any, dragX: number, dragY: number) => {
       if (!bs.battleInput?.isEditingHUD) return;
       this.p1HudContainer.x = dragX;
@@ -101,9 +103,11 @@ export class BattleUI {
       localStorage.setItem(`hudPos_P1`, JSON.stringify({ x: this.p1HudContainer.x, y: this.p1HudContainer.y }));
     });
 
-    // Draggable setup for P2
+    // Draggable setup for P2 (only interactive when editing HUD)
     this.p2HudContainer.setInteractive(new Phaser.Geom.Rectangle(685, 10, 250, 100), rectContains);
     bs.input.setDraggable(this.p2HudContainer);
+    this.p2HudContainer.disableInteractive(); // Disabled by default during combat to avoid touch conflicts
+
     this.p2HudContainer.on('drag', (pointer: any, dragX: number, dragY: number) => {
       if (!bs.battleInput?.isEditingHUD) return;
       this.p2HudContainer.x = dragX;
@@ -770,6 +774,23 @@ export class BattleUI {
       try {
         this.pauseOverlay.destroy(true);
       } catch (e) {}
+    }
+  }
+
+  public setHudEditMode(enabled: boolean) {
+    if (this.p1HudContainer) {
+      if (enabled) {
+        this.p1HudContainer.setInteractive();
+      } else {
+        this.p1HudContainer.disableInteractive();
+      }
+    }
+    if (this.p2HudContainer) {
+      if (enabled) {
+        this.p2HudContainer.setInteractive();
+      } else {
+        this.p2HudContainer.disableInteractive();
+      }
     }
   }
 }

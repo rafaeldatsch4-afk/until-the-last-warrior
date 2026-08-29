@@ -22,6 +22,10 @@ export default defineConfig({
       overlay: false
     }
   },
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./"),

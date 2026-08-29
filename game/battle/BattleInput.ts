@@ -58,13 +58,22 @@ export class BattleInput {
   // --- Abstraction Layer ---
   public checkActionDown(action: InputAction, isPlayer1: boolean): boolean {
     if (isPlayer1) {
+      const vx = this.mobileJoystickVector.x;
+      const vy = this.mobileJoystickVector.y;
       switch (action) {
         case "defend": return this.keys.p1_defend.isDown || this.mobileP1Defend;
         case "charge": return this.keys.p1_charge.isDown || this.mobileP1Charge;
-        case "left": return this.keys.p1_left.isDown || this.mobileJoystickVector.x < -0.3;
-        case "right": return this.keys.p1_right.isDown || this.mobileJoystickVector.x > 0.3;
-        case "up": return this.keys.p1_up.isDown || this.mobileJoystickVector.y < -0.3;
-        case "down": return this.keys.p1_down.isDown || this.mobileJoystickVector.y > 0.3;
+        case "left": return this.keys.p1_left.isDown || vx < -0.28;
+        case "right": return this.keys.p1_right.isDown || vx > 0.28;
+        case "up": {
+          // Jump triggers only when the stick is pushed decisively straight up, NOT in diagonal corners
+          const isJoyUp = vy < -0.55 && Math.abs(vx) < 0.45;
+          return this.keys.p1_up.isDown || isJoyUp;
+        }
+        case "down": {
+          const isJoyDown = vy > 0.55 && Math.abs(vx) < 0.55;
+          return this.keys.p1_down.isDown || isJoyDown;
+        }
         case "special": return this.keys.p1_special.isDown || this.mobileP1Special;
         case "attack": return this.keys.p1_attack.isDown || this.mobileP1Attack;
         case "kiblast": return this.keys.p1_kiblast.isDown || this.mobileP1KiBlast;
@@ -425,11 +434,6 @@ export class BattleInput {
       joyThumb.setPosition(dx, dy);
 
       this.mobileJoystickVector = { x: dx / maxDist, y: dy / maxDist };
-
-      // Instant response with very small deadzone (360-like responsiveness)
-      this.keys.p1_up.isDown = dy < -10;
-      this.keys.p1_left.isDown = dx < -10;
-      this.keys.p1_right.isDown = dx > 10;
     };
 
     this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
@@ -465,10 +469,6 @@ export class BattleInput {
         joyBase.setAlpha(opacity);
         joyThumb.setPosition(0, 0);
         this.mobileJoystickVector = { x: 0, y: 0 };
-
-        this.keys.p1_up.isDown = false;
-        this.keys.p1_left.isDown = false;
-        this.keys.p1_right.isDown = false;
       }
     };
 
@@ -514,8 +514,8 @@ export class BattleInput {
       0xff9900,
       38 * btnScale,
       () => { 
-        const isLeft = this.keys.p1_left.isDown;
-        const isRight = this.keys.p1_right.isDown;
+        const isLeft = this.checkActionDown("left", true);
+        const isRight = this.checkActionDown("right", true);
         this.mobileP1Dash = isLeft ? -1 : (isRight ? 1 : 0);
         if (this.mobileP1Dash === 0) {
             const activeObj = this.scene.localPlayerIndex === 1 ? this.scene.player : this.scene.enemy;
@@ -557,12 +557,14 @@ export class BattleInput {
 
     // --- Top Mobile Buttons (Pause, HUD Edit, HUD Visibility) ---
     const bounds = ResponsiveUtils.getSafeBounds(this.scene);
-    const topBtnY = Math.max(30, bounds.top + 22);
+    const topBtnY = Math.max(26, bounds.top + 16);
     const topCenterX = bounds.centerX;
-    const btnSpacing = 54;
-    const btnRadius = 20;
+    const btnSpacing = 82; // Ample spacing to ensure zero touch overlapping
+    const btnW = 68;
+    const btnH = 40;
+    const btnRadius = 10;
 
-    // Helper to create top rounded button with safe, reliable touch hit target (>= 44px)
+    // Helper to create top mobile button with dedicated interactive hit zone & instant touch response
     const createTopBtn = (
       x: number,
       y: number,
@@ -572,64 +574,95 @@ export class BattleInput {
       fontSize: string = "13px",
       onClick: () => void
     ) => {
-      const container = this.scene.add.container(x, y).setScrollFactor(0).setDepth(102);
+      const container = this.scene.add.container(x, y).setScrollFactor(0).setDepth(250);
       const bg = this.scene.add.graphics();
       
-      const drawState = (isDown: boolean) => {
+      const drawState = (isActive: boolean, isPressed: boolean = false) => {
         bg.clear();
-        bg.fillStyle(0x020617, 0.4);
-        bg.fillCircle(0, 1, btnRadius + 1);
-        bg.fillStyle(bgColor, isDown ? 0.95 : 0.82);
-        bg.fillCircle(0, 0, btnRadius);
-        bg.lineStyle(1.5, borderColor, isDown ? 1.0 : 0.75);
-        bg.strokeCircle(0, 0, btnRadius);
+        // Drop shadow for crisp contrast over any background/effects
+        bg.fillStyle(0x000000, 0.7);
+        bg.fillRoundedRect(-btnW / 2, -btnH / 2 + 2, btnW, btnH, btnRadius);
+        
+        // Button surface
+        const currentBg = isActive ? 0x16a34a : (isPressed ? 0x0f172a : bgColor);
+        const currentBorder = isActive ? 0x86efac : (isPressed ? 0xffffff : borderColor);
+        bg.fillStyle(currentBg, 0.95);
+        bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, btnRadius);
+        bg.lineStyle(2, currentBorder, 1.0);
+        bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, btnRadius);
       };
-      drawState(false);
+      drawState(false, false);
 
       const txt = this.scene.add.text(0, 0, label, {
         fontSize,
-        fontStyle: "900",
+        fontStyle: "bold",
         color: "#ffffff",
         stroke: "#000000",
-        strokeThickness: 2.5,
+        strokeThickness: 3,
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
       }).setOrigin(0.5);
 
-      // Large invisible hit target (48x48px for effortless mobile tapping)
-      const hit = this.scene.add.rectangle(0, 0, 48, 48, 0x000000, 0).setInteractive({ useHandCursor: true });
-      container.add([bg, txt, hit]);
+      // Dedicated interactive hit zone covering full button + generous touch padding (76x52px)
+      const hitZone = this.scene.add
+        .zone(0, 0, btnW + 12, btnH + 16)
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
 
-      hit.on("pointerdown", () => {
-        drawState(true);
+      container.add([bg, txt, hitZone]);
+
+      let isPressed = false;
+      let activeState = false;
+
+      // Immediate trigger on pointerdown for instant response on mobile touch
+      hitZone.on("pointerdown", () => {
+        isPressed = true;
+        drawState(activeState, true);
         container.setScale(0.92);
-      });
 
-      const resetBtn = () => {
-        drawState(false);
-        container.setScale(1.0);
-      };
-
-      hit.on("pointerup", () => {
-        resetBtn();
+        if (this.scene.cache.audio.exists("sfx_select")) {
+          this.scene.sound.play("sfx_select", { volume: 0.8 });
+        }
+        
         onClick();
       });
-      hit.on("pointerout", resetBtn);
 
-      return { container, bg, txt, hit, drawState };
+      hitZone.on("pointerup", () => {
+        if (isPressed) {
+          isPressed = false;
+          drawState(activeState, false);
+          container.setScale(1.0);
+        }
+      });
+
+      hitZone.on("pointerout", () => {
+        if (isPressed) {
+          isPressed = false;
+          drawState(activeState, false);
+          container.setScale(1.0);
+        }
+      });
+
+      const setActive = (active: boolean) => {
+        activeState = active;
+        drawState(activeState, false);
+      };
+
+      const setLabel = (newLabel: string) => {
+        txt.setText(newLabel);
+      };
+
+      return { container, bg, txt, hitZone, setActive, setLabel };
     };
 
     // 1. Pause Button (Left of center)
     const pauseBtnObj = createTopBtn(
       topCenterX - btnSpacing,
       topBtnY,
-      "||",
+      "⏸ PAUSA",
       0x1e293b,
       0x64748b,
-      "17px",
+      "12px",
       () => {
-        if (this.scene.cache.audio.exists("sfx_select"))
-          this.scene.sound.play("sfx_select");
-
         if (this.scene.gameState.gameMode === "online_pvp") {
           this.scene.scene.launch("PauseScene", { online: true });
         } else {
@@ -640,32 +673,39 @@ export class BattleInput {
     );
 
     // 2. HUD Edit Button (Center)
+    let isEditing = false;
     const editBtnObj = createTopBtn(
       topCenterX,
       topBtnY,
-      "HUD",
+      "🛠 HUD",
       0x1e3a8a,
       0x38bdf8,
       "12px",
       () => {
-        this.isEditingHUD = !this.isEditingHUD;
-        editBtnObj.drawState(this.isEditingHUD);
-        if (this.editHudTextObj) this.editHudTextObj.setVisible(this.isEditingHUD);
+        isEditing = !isEditing;
+        this.isEditingHUD = isEditing;
+        editBtnObj.setActive(isEditing);
+        editBtnObj.setLabel(isEditing ? "💾 SALVAR" : "🛠 HUD");
+        if (this.scene.battleUI?.setHudEditMode) {
+          this.scene.battleUI.setHudEditMode(isEditing);
+        }
+        if (this.editHudTextObj) this.editHudTextObj.setVisible(isEditing);
       }
     );
 
-    // 3. Toggle HUD Button (Right of center)
+    // 3. Toggle HUD Button (Right of center - Tela Livre)
     let hudVisible = true;
     const toggleBtnObj = createTopBtn(
       topCenterX + btnSpacing,
       topBtnY,
-      "VIS",
+      "👁 HUD",
       0x581c87,
       0xc084fc,
       "12px",
       () => {
         hudVisible = !hudVisible;
-        toggleBtnObj.drawState(!hudVisible);
+        toggleBtnObj.setActive(!hudVisible);
+        toggleBtnObj.setLabel(hudVisible ? "👁 HUD" : "🚫 HUD");
         if (this.scene.battleUI) {
           if (this.scene.battleUI.p1HudContainer) this.scene.battleUI.p1HudContainer.setVisible(hudVisible);
           if (this.scene.battleUI.p2HudContainer) this.scene.battleUI.p2HudContainer.setVisible(hudVisible);
