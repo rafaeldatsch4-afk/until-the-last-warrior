@@ -9,6 +9,7 @@ import {
   updatePassword,
 } from 'firebase/auth';
 import { loadFromCloud, mergeCloudSaveIntoLocal, syncCloudSaveImmediate } from '../game/systems/CloudSave';
+import { ACHIEVEMENTS, Achievement, AchievementSystem, normalizeAchievements } from '../game/systems/Achievements';
 import { doc, setDoc, serverTimestamp, getDoc, deleteDoc, increment, arrayUnion } from 'firebase/firestore';
 
 enum OperationType {
@@ -101,6 +102,10 @@ export const AuthButton: React.FC = () => {
   const refreshLocalStateView = useCallback(() => {
     if (typeof window !== "undefined" && window.UTLW && window.UTLW.state) {
       const s = window.UTLW.state;
+      if (s.unlockedTitles) {
+        s.unlockedTitles = normalizeAchievements(s.unlockedTitles);
+      }
+      AchievementSystem.checkAchievements();
       if (s.stats) {
         setCombatStats({
           totalWins: s.stats.totalWins || 0,
@@ -113,9 +118,12 @@ export const AuthButton: React.FC = () => {
       if (s.storyState) {
         setCampaignStats(s.storyState);
       }
-      if (s.coins !== undefined) {
-        setStats(prev => ({ ...prev, coins: s.coins }));
-      }
+      const updatedTitles = s.unlockedTitles || [];
+      setStats(prev => ({
+        ...prev,
+        coins: s.coins !== undefined ? s.coins : prev.coins,
+        achievements: Array.from(new Set([...prev.achievements, ...updatedTitles]))
+      }));
     }
   }, []);
 
@@ -175,31 +183,10 @@ export const AuthButton: React.FC = () => {
            updateData.losses = increment(1);
         }
 
-        const docSnap = await getDoc(userRef);
-        let newAchievements: string[] = [];
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          const currentWins = (data.wins || 0) + (win ? 1 : 0);
-          const currentLosses = (data.losses || 0) + (win ? 0 : 1);
-          const currentMatches = currentWins + currentLosses;
-          const currentAchievements = data.achievements || [];
-          
-          if (currentWins >= 1 && !currentAchievements.includes("Primeira Vitória!")) {
-             newAchievements.push("Primeira Vitória!");
-          }
-          if (currentWins >= 10 && !currentAchievements.includes("Campeão (10 Vitórias)")) {
-             newAchievements.push("Campeão (10 Vitórias)");
-          }
-          if (currentMatches >= 50 && !currentAchievements.includes("Veterano (50 Partidas)")) {
-             newAchievements.push("Veterano (50 Partidas)");
-          }
-          if (win && gameMode === "arcade" && !currentAchievements.includes("Mestre do Arcade")) {
-             newAchievements.push("Mestre do Arcade");
-          }
-        }
-
-        if (newAchievements.length > 0) {
-           updateData.achievements = arrayUnion(...newAchievements);
+        AchievementSystem.checkAchievements();
+        const currentUnlocked = window.UTLW?.state?.unlockedTitles || [];
+        if (currentUnlocked.length > 0) {
+          updateData.achievements = currentUnlocked;
         }
 
         await setDoc(userRef, updateData, { merge: true });
@@ -220,7 +207,7 @@ export const AuthButton: React.FC = () => {
            matches: prev.matches + 1,
            wins: prev.wins + (win ? 1 : 0),
            losses: prev.losses + (win ? 0 : 1),
-           achievements: [...prev.achievements, ...newAchievements],
+           achievements: currentUnlocked.length > 0 ? currentUnlocked : prev.achievements,
            elo: gameMode === "ranked_pvp" ? Math.max(0, (prev.elo || 1000) + (win ? 25 : -25)) : prev.elo,
            coins: (prev.coins || 0) + earnedCoins
         }));
@@ -273,12 +260,25 @@ export const AuthButton: React.FC = () => {
                  matches: matches,
              }, { merge: true });
 
+             const rawCloudAchs = data?.achievements || [];
+             const normalizedCloudAchs = normalizeAchievements(rawCloudAchs);
+             if (window.UTLW && window.UTLW.state) {
+               if (!window.UTLW.state.unlockedTitles) window.UTLW.state.unlockedTitles = [];
+               normalizedCloudAchs.forEach(a => {
+                 if (!window.UTLW.state.unlockedTitles.includes(a)) {
+                   window.UTLW.state.unlockedTitles.push(a);
+                 }
+               });
+               AchievementSystem.checkAchievements();
+             }
+             const allAchs = window.UTLW?.state?.unlockedTitles || normalizedCloudAchs;
+
              setDbUsername(dbUname);
              setStats({
                matches: matches,
                wins: wins,
                losses: losses,
-               achievements: data?.achievements || [],
+               achievements: allAchs,
                elo: data?.elo || 1000,
                coins: data?.coins || 0,
                avatar: dbAvatar
@@ -735,29 +735,88 @@ export const AuthButton: React.FC = () => {
                        )}
                      </div>
 
-                     {/* Trophy Room Card */}
-                     <div className="bg-black/60 rounded-xl p-4 border border-yellow-500/30 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] flex-1 flex flex-col min-h-[140px]">
-                       <div className="flex items-center gap-2 mb-2 shrink-0">
-                         <span className="text-base">🏆</span>
-                         <h3 className="text-yellow-500 text-xs sm:text-sm font-black uppercase tracking-widest">Sala de Troféus</h3>
-                       </div>
-                       <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
-                          {stats.achievements.length > 0 ? (
-                             <div className="flex flex-col gap-1.5">
-                               {stats.achievements.map((ach, idx) => (
-                                  <div key={idx} className="flex items-center gap-2 bg-gradient-to-r from-yellow-900/60 to-black/40 border-l-2 border-yellow-500 px-3 py-1.5 rounded-r-lg shadow-sm">
-                                     <span className="text-sm">🏆</span>
-                                     <span className="text-yellow-100 text-xs font-bold uppercase tracking-wide">{ach}</span>
-                                  </div>
-                               ))}
+                     {/* Conquistas Card (Emparelhado com ProfileScene) */}
+                     <div className="bg-black/70 rounded-xl p-3 sm:p-4 border border-yellow-500/40 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] flex-1 flex flex-col min-h-[220px] max-h-[260px]">
+                       {(() => {
+                         const isAchUnlocked = (ach: Achievement) => {
+                           const inStats = stats.achievements?.includes(ach.name);
+                           const inState = window.UTLW?.state?.unlockedTitles?.includes(ach.name);
+                           const checkState = window.UTLW?.state ? ach.check(window.UTLW.state) : false;
+                           return Boolean(inStats || inState || checkState);
+                         };
+
+                         const unlockedCount = ACHIEVEMENTS.filter(isAchUnlocked).length;
+                         const totalCount = ACHIEVEMENTS.length;
+
+                         return (
+                           <>
+                             <div className="flex items-center justify-between gap-2 mb-2.5 shrink-0">
+                               <div className="flex items-center gap-2">
+                                 <span className="text-base">🏆</span>
+                                 <h3 className="text-yellow-400 text-xs sm:text-sm font-black uppercase tracking-wider">Conquistas</h3>
+                               </div>
+                               <span className="bg-slate-900/90 border border-yellow-500/70 text-yellow-300 font-bold text-[9px] sm:text-[10px] px-2 py-0.5 rounded shadow-sm">
+                                 {unlockedCount} / {totalCount} LIBERADAS
+                               </span>
                              </div>
-                          ) : (
-                             <div className="flex flex-col items-center justify-center h-full text-center opacity-60 py-4">
-                               <span className="text-2xl mb-1">🏅</span>
-                               <span className="text-gray-400 text-[10px] font-medium">Vença lutas, torneios e arcades para desbloquear títulos.</span>
+
+                             <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 flex flex-col gap-1.5">
+                               {ACHIEVEMENTS.map((ach) => {
+                                 const unlocked = isAchUnlocked(ach);
+                                 const isEquipped = window.UTLW?.state?.equippedTitle === ach.name;
+
+                                 return (
+                                   <div
+                                     key={ach.id}
+                                     onClick={() => {
+                                       if (unlocked && window.UTLW?.state) {
+                                         window.UTLW.state.equippedTitle = ach.name;
+                                         window.UTLW.save();
+                                         refreshLocalStateView();
+                                       }
+                                     }}
+                                     className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border transition-all ${unlocked ? "bg-slate-900/90 border-amber-500/80 hover:border-sky-400 hover:bg-slate-800/90 cursor-pointer shadow-sm" : "bg-[#070b14]/90 border-slate-800/80 opacity-60 cursor-default"}`}
+                                     title={unlocked ? 'Clique para equipar este título' : ach.desc}
+                                   >
+                                     <div className="flex items-center gap-2.5 min-w-0">
+                                        <span className={`text-xs sm:text-sm font-black shrink-0 ${unlocked ? "text-emerald-400" : "text-slate-500"}`}>
+                                         {unlocked ? '✓' : '🔒'}
+                                       </span>
+                                       <div className="flex flex-col min-w-0">
+                                         <div className="flex items-center gap-1.5">
+                                            <span className={`text-xs font-bold truncate ${unlocked ? "text-yellow-200" : "text-slate-400"}`}>
+                                             {ach.name}
+                                           </span>
+                                           {isEquipped && (
+                                             <span className="text-[8px] bg-sky-950 border border-sky-500 text-sky-300 px-1 rounded uppercase font-bold">
+                                               Equipado
+                                             </span>
+                                           )}
+                                         </div>
+                                          <span className={`text-[9.5px] sm:text-[10px] truncate ${unlocked ? "text-slate-300" : "text-slate-500"}`}>
+                                           {ach.desc}
+                                         </span>
+                                       </div>
+                                     </div>
+
+                                     <div className="shrink-0">
+                                       {unlocked ? (
+                                         <span className="bg-slate-800/90 border border-yellow-400/80 text-yellow-300 text-[8.5px] sm:text-[9px] font-bold px-2 py-0.5 rounded shadow-sm uppercase tracking-wide">
+                                           Concluída
+                                         </span>
+                                       ) : (
+                                         <span className="bg-slate-900/60 border border-slate-800 text-slate-500 text-[8.5px] sm:text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">
+                                           Bloqueada
+                                         </span>
+                                       )}
+                                     </div>
+                                   </div>
+                                 );
+                               })}
                              </div>
-                          )}
-                       </div>
+                           </>
+                         );
+                       })()}
                      </div>
                   </div>
                 </div>

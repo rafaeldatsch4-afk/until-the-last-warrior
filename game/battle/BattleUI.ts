@@ -59,14 +59,22 @@ export class BattleUI {
 
     const visible = Responsive.getVisibleBounds(this.scene);
     
+    const clampToSafeArea = (x: number, y: number): { x: number; y: number } => {
+      const margin = 20; // margem mínima visível, mesmo se o HUD estiver "no limite"
+      const clampedX = Math.max(visible.left - 40, Math.min(x, visible.right - margin));
+      const clampedY = Math.max(visible.top - 10, Math.min(y, visible.bottom - margin));
+      return { x: clampedX, y: clampedY };
+    };
+
     // HUD Draggable Containers
     let p1HudX = visible.left, p1HudY = visible.top;
     const savedP1 = localStorage.getItem(`hudPos_P1`);
     if (savedP1) {
       try {
         const parsed = JSON.parse(savedP1);
-        p1HudX = parsed.x;
-        p1HudY = parsed.y;
+        const clamped = clampToSafeArea(parsed.x, parsed.y);
+        p1HudX = clamped.x;
+        p1HudY = clamped.y;
       } catch (e) {}
     }
     this.p1HudContainer = bs.add.container(p1HudX, p1HudY).setScrollFactor(0).setDepth(11);
@@ -77,8 +85,9 @@ export class BattleUI {
     if (savedP2) {
       try {
         const parsed = JSON.parse(savedP2);
-        p2HudX = parsed.x;
-        p2HudY = parsed.y;
+        const clamped = clampToSafeArea(parsed.x, parsed.y);
+        p2HudX = clamped.x;
+        p2HudY = clamped.y;
       } catch (e) {}
     }
     this.p2HudContainer = bs.add.container(p2HudX, p2HudY).setScrollFactor(0).setDepth(11);

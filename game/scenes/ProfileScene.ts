@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { transitionTo } from "../utils/sceneTransition";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import { GameState } from "../types";
-import { ACHIEVEMENTS, Achievement } from "../systems/Achievements";
+import { ACHIEVEMENTS, Achievement, AchievementSystem, normalizeAchievements } from "../systems/Achievements";
 import { auth, db } from "../../firebase/init";
 import { doc, getDoc } from "firebase/firestore";
 
@@ -44,6 +44,10 @@ export default class ProfileScene extends Phaser.Scene {
     if (!this.state && window.UTLW?.state) {
       this.state = window.UTLW.state;
     }
+    if (this.state?.unlockedTitles) {
+      this.state.unlockedTitles = normalizeAchievements(this.state.unlockedTitles);
+    }
+    AchievementSystem.checkAchievements();
 
     // 1. Background Atmosphere
     const bg = this.add.graphics();
@@ -624,7 +628,11 @@ export default class ProfileScene extends Phaser.Scene {
     frame.strokeRoundedRect(0, 0, w, h, 8);
 
     // Header Title & Counter Pill
-    const unlockedCount = ACHIEVEMENTS.filter((ach) => ach.check(this.state)).length;
+    const isAchUnlocked = (ach: Achievement) =>
+      (this.state.unlockedTitles && this.state.unlockedTitles.includes(ach.name)) ||
+      ach.check(this.state);
+
+    const unlockedCount = ACHIEVEMENTS.filter(isAchUnlocked).length;
     const totalCount = ACHIEVEMENTS.length;
 
     const titleTxt = this.add.text(14, 14, "🏆 CONQUISTAS", {
@@ -682,7 +690,7 @@ export default class ProfileScene extends Phaser.Scene {
     let cardY = 4;
 
     ACHIEVEMENTS.forEach((ach) => {
-      const isUnlocked = ach.check(this.state);
+      const isUnlocked = isAchUnlocked(ach);
       this.renderAchievementCard(this.achievementsContainer, 10, cardY, cardW, cardH, ach, isUnlocked);
       cardY += cardH + cardGap;
     });
@@ -866,6 +874,20 @@ export default class ProfileScene extends Phaser.Scene {
         }
         if (data.avatar && this.playerAvatarText) {
           this.playerAvatarText.setText(data.avatar);
+        }
+        if (Array.isArray(data.achievements) && data.achievements.length > 0) {
+          const cloudAchs = normalizeAchievements(data.achievements);
+          let changed = false;
+          if (!this.state.unlockedTitles) this.state.unlockedTitles = [];
+          cloudAchs.forEach((ach) => {
+            if (!this.state.unlockedTitles.includes(ach)) {
+              this.state.unlockedTitles.push(ach);
+              changed = true;
+            }
+          });
+          if (changed && window.UTLW) {
+            window.UTLW.save();
+          }
         }
       }
     } catch (e) {

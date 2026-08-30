@@ -59,6 +59,30 @@ export const ACHIEVEMENTS: Achievement[] = [
   }
 ];
 
+export function normalizeAchievementName(raw: string): string {
+  const map: Record<string, string> = {
+    "Primeira Vitória!": "Lutador",
+    "Primeira Vitória": "Lutador",
+    "Lutador Novato": "Lutador",
+    "Campeão (10 Vitórias)": "Guerreiro Z",
+    "Campeão": "Guerreiro Z",
+    "Veterano (50 Partidas)": "Guerreiro Z",
+    "Mestre do Arcade": "Mestre Arcade",
+    "Campeão do Torneio": "Lenda do Torneio",
+  };
+  return map[raw] || raw;
+}
+
+export function normalizeAchievements(list: string[] = []): string[] {
+  const set = new Set<string>();
+  for (const item of list) {
+    if (typeof item === "string" && item.trim()) {
+      set.add(normalizeAchievementName(item.trim()));
+    }
+  }
+  return Array.from(set);
+}
+
 export class AchievementSystem {
   static checkAchievements() {
     if (!window.UTLW || !window.UTLW.state) return;
@@ -66,6 +90,8 @@ export class AchievementSystem {
     
     if (!state.unlockedTitles) {
       state.unlockedTitles = [];
+    } else {
+      state.unlockedTitles = normalizeAchievements(state.unlockedTitles);
     }
 
     let newlyUnlocked = false;
@@ -86,6 +112,7 @@ export class AchievementSystem {
 
     if (newlyUnlocked) {
       window.UTLW.save();
+      this.syncStatsToCloud();
     }
   }
 
@@ -122,14 +149,16 @@ export class AchievementSystem {
   }
 
   static async syncStatsToCloud() {
-    if (!window.UTLW || !window.UTLW.state || !window.UTLW.state.stats) return;
+    if (!window.UTLW || !window.UTLW.state) return;
     try {
       const user = auth.currentUser;
       if (user) {
         const stats = window.UTLW.state.stats;
-        await updateDoc(doc(db, 'users', user.uid), {
-          wins: stats.totalWins || 0
-        });
+        const achievements = window.UTLW.state.unlockedTitles || [];
+        await setDoc(doc(db, 'users', user.uid), {
+          wins: stats?.totalWins || 0,
+          achievements: achievements
+        }, { merge: true });
         
         let playerName = user.displayName || "Guerreiro";
         let avatar = "🥷";
@@ -143,7 +172,7 @@ export class AchievementSystem {
         await setDoc(doc(db, "leaderboard_public", user.uid), {
           username: playerName,
           avatar: avatar,
-          wins: stats.totalWins || 0,
+          wins: stats?.totalWins || 0,
         }, { merge: true });
       }
     } catch (e) {

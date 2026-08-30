@@ -46,6 +46,7 @@ export default class MenuScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.fadeIn(300, 0, 0, 0);
+    this.cameras.main.setRoundPixels(false);
     window.dispatchEvent(
       new CustomEvent("scene-changed", { detail: "MenuScene" }),
     );
@@ -171,20 +172,25 @@ export default class MenuScene extends Phaser.Scene {
     LogoTextureBuilder.ensureLogoTexture(this);
     const logoImg = this.add.image(0, -15, LogoTextureBuilder.LOGO_KEY);
     logoImg.setDisplaySize(cardW - 20, Math.round((cardW - 20) * 0.56));
+    if (logoImg.texture) {
+      logoImg.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
 
     const subtitle = this.add
       .text(0, 78, "⚔️ A BATALHA FINAL COMEÇA AQUI ⚔️", {
         fontSize: "12px",
         color: "#ffd54a",
         fontStyle: "bold",
-        letterSpacing: 1.5,
-        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        stroke: "#000000",
-        strokeThickness: 2,
-        shadow: { color: "#000000", blur: 4, fill: true },
-        resolution: 3,
+        letterSpacing: 1.8,
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+        stroke: "#1a1200",
+        strokeThickness: 1.5,
+        shadow: { color: "rgba(0, 0, 0, 0.9)", blur: 5, offsetX: 0, offsetY: 2, fill: true },
+        padding: { x: 10, y: 6 },
+        resolution: 4,
       })
       .setOrigin(0.5);
+    subtitle.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
     titleContainer.add([emblemCard, logoImg, subtitle]);
 
@@ -231,22 +237,27 @@ export default class MenuScene extends Phaser.Scene {
         fontSize: "11px",
         color: "#b8860b",
         fontStyle: "bold",
-        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-        resolution: 3,
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+        padding: { x: 4, y: 4 },
+        resolution: 4,
       })
       .setOrigin(0.5);
+    coinSymbol.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
     this.coinText = this.add
       .text(-18, 0, `${this.state.coins || 0}`, {
         fontSize: "16px",
         color: "#ffdf00",
         fontStyle: "bold",
-        stroke: "#000000",
-        strokeThickness: 2,
-        fontFamily: "'Plus Jakarta Sans', 'JetBrains Mono', monospace",
-        resolution: 3,
+        stroke: "#0a0f1d",
+        strokeThickness: 1.5,
+        shadow: { color: "rgba(0, 0, 0, 0.8)", blur: 3, offsetX: 0, offsetY: 1, fill: true },
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif",
+        padding: { x: 6, y: 4 },
+        resolution: 4,
       })
       .setOrigin(0, 0.5);
+    this.coinText.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
     coinDisplay.add([
       bgGraphics,
@@ -530,13 +541,15 @@ export default class MenuScene extends Phaser.Scene {
     // Header Title
     const popupTitle = this.add
       .text(0, -halfH + 25, "⚡ MISSÕES DIÁRIAS & RECOMPENSAS", {
-        fontSize: "18px",
+        fontSize: "17px",
         fontStyle: "bold",
-        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         color: "#fbbf24",
-        resolution: 3,
+        padding: { x: 8, y: 4 },
+        resolution: 4,
       })
       .setOrigin(0.5);
+    popupTitle.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
     // Modern Close Button
     const closeBtnX = halfW - 24;
@@ -552,10 +565,12 @@ export default class MenuScene extends Phaser.Scene {
         fontSize: "13px",
         color: "#94a3b8",
         fontStyle: "bold",
-        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-        resolution: 3,
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+        padding: { x: 4, y: 4 },
+        resolution: 4,
       })
       .setOrigin(0.5);
+    closeBtnTxt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
     const closeHit = this.add
       .circle(closeBtnX, closeBtnY, 18, 0x000000, 0)
@@ -618,11 +633,13 @@ export default class MenuScene extends Phaser.Scene {
       {
         fontSize: "13px",
         fontStyle: "bold",
-        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         color: "#fb923c",
-        resolution: 3,
+        padding: { x: 4, y: 4 },
+        resolution: 4,
       },
     );
+    streakTitleText.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
     const streakDetailText = this.add.text(
       -cardInnerW / 2 + 14,
@@ -631,10 +648,12 @@ export default class MenuScene extends Phaser.Scene {
       {
         fontSize: "11px",
         color: "#cbd5e1",
-        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        resolution: 3,
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        padding: { x: 4, y: 4 },
+        resolution: 4,
       },
     );
+    streakDetailText.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
     popupCard.add([streakBg, streakTitleText, streakDetailText]);
 
@@ -646,10 +665,12 @@ export default class MenuScene extends Phaser.Scene {
           fontSize: "11px",
           color: "#22c55e",
           fontStyle: "bold",
-          fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-          resolution: 3,
+          fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+          padding: { x: 4, y: 4 },
+          resolution: 4,
         })
         .setOrigin(0.5);
+      claimedStreakText.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
       popupCard.add(claimedStreakText);
     } else {
       const claimStreakBg = this.add.graphics();
@@ -665,10 +686,12 @@ export default class MenuScene extends Phaser.Scene {
           fontSize: "11px",
           color: "#ffffff",
           fontStyle: "bold",
-          fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-          resolution: 3,
+          fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+          padding: { x: 4, y: 4 },
+          resolution: 4,
         })
         .setOrigin(0.5);
+      claimStreakTxt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
       const claimStreakHit = this.add
         .rectangle(streakBtnX, streakY, 84, 28, 0x000000, 0)
@@ -687,10 +710,12 @@ export default class MenuScene extends Phaser.Scene {
               fontSize: "11px",
               color: "#22c55e",
               fontStyle: "bold",
-              fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-              resolution: 3,
+              fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+              padding: { x: 4, y: 4 },
+              resolution: 4,
             })
             .setOrigin(0.5);
+          claimedStreakText.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
           popupCard.add(claimedStreakText);
           if (this.coinText)
             this.coinText.setText(`${window.UTLW.state.coins}`);
@@ -733,31 +758,39 @@ export default class MenuScene extends Phaser.Scene {
       // Icon + Category badge
       const chIconText = this.add.text(-cardInnerW / 2 + 10, cardY - 14, challenge.icon, {
         fontSize: "16px",
-        resolution: 3,
+        padding: { x: 2, y: 2 },
+        resolution: 4,
       });
+      chIconText.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
       const catBadgeText = this.add.text(-cardInnerW / 2 + 34, cardY - 15, `[${catConfig.label}]`, {
         fontSize: "10px",
         fontStyle: "bold",
         color: catConfig.text,
-        fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-        resolution: 3,
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+        padding: { x: 2, y: 2 },
+        resolution: 4,
       });
+      catBadgeText.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
       const chTitle = this.add.text(-cardInnerW / 2 + 106, cardY - 15, challenge.title, {
         fontSize: "13px",
         fontStyle: "bold",
         color: "#ffffff",
-        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        resolution: 3,
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        padding: { x: 4, y: 2 },
+        resolution: 4,
       });
+      chTitle.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
       const chDesc = this.add.text(-cardInnerW / 2 + 12, cardY + 5, challenge.desc, {
         fontSize: "11px",
         color: "#cbd5e1",
-        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        resolution: 3,
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        padding: { x: 4, y: 2 },
+        resolution: 4,
       });
+      chDesc.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
       // Progress bar background & fill
       const barW = 100;
@@ -783,11 +816,13 @@ export default class MenuScene extends Phaser.Scene {
             fontSize: "11px",
             fontStyle: "bold",
             color: isCompleted ? "#4ade80" : "#94a3b8",
-            fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-            resolution: 3,
+            fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            padding: { x: 4, y: 2 },
+            resolution: 4,
           },
         )
         .setOrigin(0, 0.5);
+      chProgressText.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
       const chReward = this.add
         .text(
@@ -798,11 +833,13 @@ export default class MenuScene extends Phaser.Scene {
             fontSize: "12px",
             fontStyle: "bold",
             color: "#fde047",
-            fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-            resolution: 3,
+            fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            padding: { x: 4, y: 2 },
+            resolution: 4,
           },
         )
         .setOrigin(1, 0.5);
+      chReward.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
       popupCard.add([chCard, chIconText, catBadgeText, chTitle, chDesc, barBg, chProgressText, chReward]);
 
@@ -814,10 +851,12 @@ export default class MenuScene extends Phaser.Scene {
             fontSize: "11px",
             color: "#22c55e",
             fontStyle: "bold",
-            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-            resolution: 3,
+            fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+            padding: { x: 4, y: 4 },
+            resolution: 4,
           })
           .setOrigin(0.5);
+        claimedText.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
         popupCard.add(claimedText);
       } else if (isCompleted) {
         const claimBtnBg = this.add.graphics();
@@ -833,10 +872,12 @@ export default class MenuScene extends Phaser.Scene {
             fontSize: "11px",
             color: "#000000",
             fontStyle: "bold",
-            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-            resolution: 3,
+            fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+            padding: { x: 4, y: 4 },
+            resolution: 4,
           })
           .setOrigin(0.5);
+        claimBtnTxt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
         const claimHit = this.add
           .rectangle(actionBtnX, cardY, 76, 28, 0x000000, 0)
@@ -854,10 +895,12 @@ export default class MenuScene extends Phaser.Scene {
                 fontSize: "11px",
                 color: "#22c55e",
                 fontStyle: "bold",
-                fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-                resolution: 3,
+                fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+                padding: { x: 4, y: 4 },
+                resolution: 4,
               })
               .setOrigin(0.5);
+            claimedText.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
             popupCard.add(claimedText);
             if (this.coinText)
               this.coinText.setText(`${window.UTLW.state.coins}`);
@@ -877,10 +920,12 @@ export default class MenuScene extends Phaser.Scene {
             fontSize: "10px",
             color: "#94a3b8",
             fontStyle: "bold",
-            fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-            resolution: 3,
+            fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+            padding: { x: 4, y: 4 },
+            resolution: 4,
           })
           .setOrigin(0.5);
+        inProgressTxt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
         popupCard.add(inProgressTxt);
       }
 
@@ -903,10 +948,12 @@ export default class MenuScene extends Phaser.Scene {
           fontSize: "12px",
           color: "#ffffff",
           fontStyle: "bold",
-          fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
-          resolution: 3,
+          fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, sans-serif",
+          padding: { x: 4, y: 4 },
+          resolution: 4,
         })
         .setOrigin(0.5);
+      collectAllTxt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
       const collectAllHit = this.add
         .rectangle(0, collectAllY, 160, 28, 0x000000, 0)
@@ -999,19 +1046,23 @@ export default class MenuScene extends Phaser.Scene {
     const height = 36;
     const width = 225;
 
+    const hexColorStr = "#" + color.toString(16).padStart(6, "0");
+
     const txt = this.add
-      .text(28, height / 2 - 1, text, {
-        fontSize: "14px",
-        fontStyle: "italic bold",
-        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        letterSpacing: 0.5,
+      .text(26, height / 2, text, {
+        fontSize: "13.5px",
+        fontStyle: "bold",
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        letterSpacing: 0.8,
         color: "#f8fafc",
-        stroke: "#000000",
-        strokeThickness: 2,
-        shadow: { offsetX: 1, offsetY: 1, color: "#000", blur: 0, fill: true },
-        resolution: 3,
+        stroke: "#090d16",
+        strokeThickness: 1.5,
+        shadow: { offsetX: 0, offsetY: 1.5, color: "rgba(0, 0, 0, 0.85)", blur: 3, fill: true },
+        padding: { x: 8, y: 6 },
+        resolution: 4,
       })
       .setOrigin(0, 0.5);
+    txt.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
     // Draw slanted polygon geometry for the menu button background
     const d = 12; // Diagonal offset
@@ -1030,19 +1081,21 @@ export default class MenuScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setStrokeStyle(2, color);
 
-    // Right side arrow / accent
-    const accentOriginX = width - d - 8;
-    const accent = this.add
-      .polygon(
-        accentOriginX,
-        height / 2,
-        [0, 6, 5, 0, 0, -6, -2, -6, 3, 0, -2, 6],
-        color,
-        1,
-      )
-      .setAlpha(0.6);
+    // Smooth right-side chevron arrow
+    const chevron = this.add
+      .text(width - d - 10, height / 2, "›", {
+        fontSize: "20px",
+        fontStyle: "bold",
+        fontFamily: "'Montserrat', 'Plus Jakarta Sans', sans-serif",
+        color: hexColorStr,
+        padding: { x: 4, y: 4 },
+        resolution: 4,
+      })
+      .setOrigin(0.5, 0.54)
+      .setAlpha(0.75);
+    chevron.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
-    container.add([polyShadow, hoverGlow, polyMain, txt, accent]);
+    container.add([polyShadow, hoverGlow, polyMain, txt, chevron]);
 
     // Smooth premium entrance animation (slide + scale settle + subtle gleam sweep)
     this.tweens.add({
@@ -1077,7 +1130,7 @@ export default class MenuScene extends Phaser.Scene {
       polyMain.setFillStyle(color);
       polyMain.setStrokeStyle(2.5, 0xffffff);
       txt.setColor("#ffffff");
-      accent.setFillStyle(0xffffff).setAlpha(1);
+      chevron.setColor("#ffffff").setAlpha(1);
       this.tweens.add({ targets: hoverGlow, alpha: 1, duration: 150 });
       this.tweens.add({
         targets: container,
@@ -1102,8 +1155,8 @@ export default class MenuScene extends Phaser.Scene {
     const outFn = () => {
       polyMain.setFillStyle(0x111625);
       polyMain.setStrokeStyle(2, color);
-      txt.setColor("#e2e8f0");
-      accent.setFillStyle(color).setAlpha(0.6);
+      txt.setColor("#f8fafc");
+      chevron.setColor(hexColorStr).setAlpha(0.75);
       this.tweens.add({ targets: hoverGlow, alpha: 0, duration: 150 });
       this.tweens.add({
         targets: container,

@@ -2,12 +2,12 @@ import Phaser from "phaser";
 
 export class LogoTextureBuilder {
   public static readonly LOGO_KEY = "utlw_logo";
-  public static readonly WIDTH = 480;
-  public static readonly HEIGHT = 270;
+  public static readonly WIDTH = 960;
+  public static readonly HEIGHT = 540;
 
   /**
    * Generates or ensures a high-definition, procedural fighting game logo texture.
-   * Completely self-contained, avoiding external network file load errors.
+   * Rendered at high-DPI with anti-aliasing for smooth, ultra-crisp typography.
    */
   public static ensureLogoTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists(this.LOGO_KEY)) {
@@ -21,6 +21,8 @@ export class LogoTextureBuilder {
     );
 
     if (!canvasTexture) return;
+
+    canvasTexture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
     const ctx = canvasTexture.getContext();
     this.drawLogo(ctx, this.WIDTH, this.HEIGHT);
@@ -58,12 +60,23 @@ export class LogoTextureBuilder {
       ctx.save();
       ctx.clearRect(0, 0, w, h);
 
-      const cx = w / 2;
-      const cy = h / 2;
+      // Scale 2x for HD rendering while preserving standard layout ratios
+      const scale = w / 480;
+      ctx.scale(scale, scale);
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+
+      const baseW = 480;
+      const baseH = 270;
+      const cx = baseW / 2;
+      const cy = baseH / 2;
 
       // --- 1. Background Crest (Shield / Rounded Plate) ---
-      const plateW = w - 24;
-      const plateH = h - 20;
+      const plateW = baseW - 24;
+      const plateH = baseH - 20;
       const plateX = 12;
       const plateY = 10;
       const radius = 18;
@@ -80,8 +93,8 @@ export class LogoTextureBuilder {
 
       // Radiant energy glow in center
       const radialGlow = ctx.createRadialGradient(cx, cy, 10, cx, cy, 180);
-      radialGlow.addColorStop(0, "rgba(245, 158, 11, 0.28)");
-      radialGlow.addColorStop(0.4, "rgba(220, 38, 38, 0.18)");
+      radialGlow.addColorStop(0, "rgba(245, 158, 11, 0.32)");
+      radialGlow.addColorStop(0.4, "rgba(220, 38, 38, 0.20)");
       radialGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = radialGlow;
       ctx.fill();
@@ -101,7 +114,7 @@ export class LogoTextureBuilder {
       // Inner subtle chamfer stroke
       this.drawRoundRect(ctx, plateX + 5, plateY + 5, plateW - 10, plateH - 10, radius - 4);
       ctx.lineWidth = 1.2;
-      ctx.strokeStyle = "rgba(245, 158, 11, 0.4)";
+      ctx.strokeStyle = "rgba(245, 158, 11, 0.45)";
       ctx.stroke();
 
       // --- 3. Dynamic Energy Slashes / Crossed Katanas Silhouette ---
@@ -111,7 +124,7 @@ export class LogoTextureBuilder {
       // Left-to-right slash
       const slash1 = ctx.createLinearGradient(-160, -60, 160, 60);
       slash1.addColorStop(0, "rgba(245, 158, 11, 0)");
-      slash1.addColorStop(0.5, "rgba(255, 237, 213, 0.85)");
+      slash1.addColorStop(0.5, "rgba(255, 237, 213, 0.9)");
       slash1.addColorStop(1, "rgba(239, 68, 68, 0)");
 
       ctx.beginPath();
@@ -124,7 +137,7 @@ export class LogoTextureBuilder {
       // Right-to-left slash
       const slash2 = ctx.createLinearGradient(160, -60, -160, 60);
       slash2.addColorStop(0, "rgba(239, 68, 68, 0)");
-      slash2.addColorStop(0.5, "rgba(255, 237, 213, 0.85)");
+      slash2.addColorStop(0.5, "rgba(255, 237, 213, 0.9)");
       slash2.addColorStop(1, "rgba(245, 158, 11, 0)");
 
       ctx.beginPath();
@@ -142,22 +155,25 @@ export class LogoTextureBuilder {
       ctx.textBaseline = "middle";
 
       const subText = "UNTIL  THE  LAST";
-      ctx.font = "900 24px system-ui, -apple-system, 'Arial Black', sans-serif";
+      ctx.font = "900 24px 'Montserrat', 'Plus Jakarta Sans', 'Segoe UI', sans-serif";
 
       // Text Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.9)";
-      ctx.fillText(subText, cx + 2, cy - 42);
+      ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 3;
 
       // Text Gradient
       const subGrad = ctx.createLinearGradient(0, cy - 55, 0, cy - 30);
-      subGrad.addColorStop(0, "#fffbeb");
-      subGrad.addColorStop(0.5, "#fde68a");
+      subGrad.addColorStop(0, "#ffffff");
+      subGrad.addColorStop(0.4, "#fef08a");
       subGrad.addColorStop(1, "#f59e0b");
 
       ctx.lineWidth = 4;
-      ctx.strokeStyle = "#1e1b4b";
+      ctx.strokeStyle = "#090d16";
       ctx.strokeText(subText, cx, cy - 44);
 
+      ctx.shadowColor = "transparent";
       ctx.fillStyle = subGrad;
       ctx.fillText(subText, cx, cy - 44);
       ctx.restore();
@@ -168,18 +184,20 @@ export class LogoTextureBuilder {
       ctx.textBaseline = "middle";
 
       const mainText = "WARRIOR";
-      ctx.font = "900 68px system-ui, -apple-system, 'Impact', 'Arial Black', sans-serif";
+      ctx.font = "900 68px 'Impact', 'Montserrat', 'Arial Black', sans-serif";
 
-      // Heavy 3D Drop Shadow Layers
-      ctx.fillStyle = "rgba(0, 0, 0, 0.95)";
-      ctx.fillText(mainText, cx + 4, cy + 24);
-      ctx.fillText(mainText, cx + 2, cy + 22);
+      // Smooth 3D Drop Shadow Layers
+      ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 6;
 
       // Deep Dark Outline
       ctx.lineWidth = 10;
-      ctx.strokeStyle = "#450a0a";
+      ctx.strokeStyle = "#2e0505";
       ctx.strokeText(mainText, cx, cy + 18);
 
+      ctx.shadowColor = "transparent";
       ctx.lineWidth = 6;
       ctx.strokeStyle = "#000000";
       ctx.strokeText(mainText, cx, cy + 18);
@@ -187,9 +205,9 @@ export class LogoTextureBuilder {
       // Fiery Metallic Gradient Fill
       const mainGrad = ctx.createLinearGradient(0, cy - 18, 0, cy + 50);
       mainGrad.addColorStop(0, "#ffffff");
-      mainGrad.addColorStop(0.15, "#fef08a");
+      mainGrad.addColorStop(0.18, "#fef08a");
       mainGrad.addColorStop(0.45, "#f59e0b");
-      mainGrad.addColorStop(0.75, "#dc2626");
+      mainGrad.addColorStop(0.78, "#dc2626");
       mainGrad.addColorStop(1, "#991b1b");
 
       ctx.fillStyle = mainGrad;
@@ -197,7 +215,7 @@ export class LogoTextureBuilder {
 
       // Top Glossy Sheen Highlight Line
       ctx.lineWidth = 1.5;
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
       ctx.strokeText(mainText, cx, cy + 16);
       ctx.restore();
 
@@ -207,20 +225,26 @@ export class LogoTextureBuilder {
       ctx.textBaseline = "middle";
 
       const ribbonY = cy + 76;
-      const ribbonW = 270;
+      const ribbonW = 280;
       const ribbonH = 22;
 
+      // Glowing soft ribbon pill background
       const ribbonBg = ctx.createLinearGradient(cx - ribbonW / 2, 0, cx + ribbonW / 2, 0);
       ribbonBg.addColorStop(0, "rgba(220, 38, 38, 0)");
-      ribbonBg.addColorStop(0.2, "rgba(185, 28, 28, 0.85)");
-      ribbonBg.addColorStop(0.8, "rgba(185, 28, 28, 0.85)");
+      ribbonBg.addColorStop(0.2, "rgba(185, 28, 28, 0.9)");
+      ribbonBg.addColorStop(0.8, "rgba(185, 28, 28, 0.9)");
       ribbonBg.addColorStop(1, "rgba(220, 38, 38, 0)");
 
       ctx.fillStyle = ribbonBg;
-      ctx.fillRect(cx - ribbonW / 2, ribbonY - ribbonH / 2, ribbonW, ribbonH);
+      ctx.beginPath();
+      this.drawRoundRect(ctx, cx - ribbonW / 2, ribbonY - ribbonH / 2, ribbonW, ribbonH, 11);
+      ctx.fill();
 
-      ctx.font = "bold 11px system-ui, -apple-system, 'Roboto', sans-serif";
-      ctx.fillStyle = "#fef08a";
+      ctx.font = "800 11.5px 'Montserrat', 'Plus Jakarta Sans', 'Segoe UI', sans-serif";
+      ctx.fillStyle = "#fffbeb";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 1;
       ctx.fillText("★ ULTIMATE ANIME FIGHTER ★", cx, ribbonY);
       ctx.restore();
 
@@ -240,3 +264,4 @@ export class LogoTextureBuilder {
     }
   }
 }
+
