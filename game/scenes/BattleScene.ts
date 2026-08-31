@@ -334,13 +334,22 @@ export default class BattleScene extends Phaser.Scene {
     this.createFighterSprites();
     const isStoryMode = this.gameState.gameMode === "story";
     const storyStats = isStoryMode ? this.gameState.storyState?.stats : null;
-    const healthBonus = storyStats ? StoryStatsMath.getHealthBonus(storyStats.health) : 0; // cada ponto = +5 HP máximo
+    const healthBonus = storyStats ? StoryStatsMath.getHealthBonus(storyStats.health) : 0;
     this.playerMaxHp = this.playerData.maxHp + healthBonus;
     this.playerHp = this.playerMaxHp;
     
     let p2HpBonus = 0;
-    if (this.gameState.gameMode === "story" && this.gameState.storyState) {
-       p2HpBonus = (this.gameState.storyState.stage - 1) * 20;
+    if (isStoryMode) {
+      if (this.gameState.storyEnemyState) {
+        p2HpBonus = this.gameState.storyEnemyState.hpBonus;
+      } else if (this.gameState.storyState) {
+        const stage = this.gameState.storyState.stage || 1;
+        const playerLvl = this.gameState.storyState.level || 1;
+        const isBoss = stage % 5 === 0;
+        const enemyLvl = StoryStatsMath.getEnemyLevel(stage, playerLvl);
+        const scaling = StoryStatsMath.getEnemyScaling(playerLvl, enemyLvl, isBoss);
+        p2HpBonus = scaling.hpBonus;
+      }
     }
     this.enemyMaxHp = this.enemyData.maxHp + p2HpBonus;
     this.enemyHp = this.enemyMaxHp;
@@ -1677,8 +1686,11 @@ export default class BattleScene extends Phaser.Scene {
            const kiStat = this.gameState.storyState?.stats.ki || 0;
            const kiBonus = StoryStatsMath.getKiChargeBonus(kiStat, delta);
            chargeRate += kiBonus;
-       } else if (!isPlayer && this.storyStats) {
-           chargeRate += (this.gameState.storyState.stage - 1) * 0.002 * delta;
+       } else {
+           const enemyKiBonus = this.gameState.storyEnemyState
+             ? this.gameState.storyEnemyState.kiChargeBonus * delta
+             : (Math.min(0.04, ((this.gameState.storyState?.stage || 1) * 0.0008)) * delta);
+           chargeRate += enemyKiBonus;
        }
     } // Slightly faster charge
     this.modifyKi(isPlayer, chargeRate);
@@ -4064,11 +4076,13 @@ export default class BattleScene extends Phaser.Scene {
     const isStoryMode = this.gameState.gameMode === "story";
     if (isStoryMode && isPlayer) {
       const attackStat = this.gameState.storyState?.stats.attack || 0;
-      const attackBonus = StoryStatsMath.getAttackDamageMultiplier(attackStat); // cada ponto = +3% de dano
+      const attackBonus = StoryStatsMath.getAttackDamageMultiplier(attackStat);
       mult *= attackBonus;
-    } else if (isStoryMode && !isPlayer && this.storyStats) {
-       // enemy scales with stage
-       mult *= (1 + (this.gameState.storyState.stage - 1) * 0.1);
+    } else if (isStoryMode && !isPlayer) {
+      const enemyMult = this.gameState.storyEnemyState
+        ? this.gameState.storyEnemyState.attackMultiplier
+        : (1 + Math.min(1.5, (this.gameState.storyState?.stage || 1) * 0.02));
+      mult *= enemyMult;
     }
     
     // Parry Counter-Attack Bonus
@@ -4602,10 +4616,13 @@ export default class BattleScene extends Phaser.Scene {
     if (this.gameState.gameMode === "story") {
        if (isP) {
           const defenseStat = this.gameState.storyState?.stats.defense || 0;
-          const reduction = StoryStatsMath.getDefenseDamageReduction(defenseStat); // cada ponto reduz 2% do dano, cap em 50%
+          const reduction = StoryStatsMath.getDefenseDamageReduction(defenseStat);
           dmg = Math.floor(dmg * (1 - reduction));
-       } else if (!isP && this.storyStats) {
-          dmg = Math.max(1, Math.floor(dmg * (1 - (this.gameState.storyState.stage - 1) * 0.05)));
+       } else {
+          const enemyReduction = this.gameState.storyEnemyState
+            ? this.gameState.storyEnemyState.defenseReduction
+            : Math.min(0.5, (this.gameState.storyState?.stage || 1) * 0.015);
+          dmg = Math.max(1, Math.floor(dmg * (1 - enemyReduction)));
        }
     }
 

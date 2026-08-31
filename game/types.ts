@@ -92,6 +92,26 @@ export interface GameState {
     };
     stage: number;
     customCharacter?: CharacterData;
+    highestStageReached?: number;
+    totalStoryWins?: number;
+    bossesDefeated?: number;
+  };
+  storyEnemyState?: {
+    enemyLevel: number;
+    isBoss: boolean;
+    bossTitle?: string;
+    stats: {
+      attack: number;
+      defense: number;
+      ki: number;
+      speed: number;
+      health: number;
+    };
+    hpBonus: number;
+    attackMultiplier: number;
+    defenseReduction: number;
+    kiChargeBonus: number;
+    speedBonus: number;
   };
   stats?: {
     totalWins: number;

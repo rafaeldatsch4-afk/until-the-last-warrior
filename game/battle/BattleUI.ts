@@ -1,4 +1,5 @@
 import { Responsive } from "../utils/Responsive";
+import { StoryStatsMath } from "../systems/StoryStatsMath";
 export class BattleUI {
   scene: any;
   uiContainer!: Phaser.GameObjects.Container;
@@ -223,9 +224,28 @@ export class BattleUI {
     this.lastP1KiP = 0;
     this.lastP2KiP = 0;
 
+    // Format names with levels for story mode
+    let p1DisplayName = playerData.name;
+    let p2DisplayName = enemyData.name;
+
+    if (gameMode === "story") {
+      const storyState = bs.gameState?.storyState;
+      const playerLvl = storyState?.level || 1;
+      p1DisplayName = `LVL ${playerLvl} • ${playerData.name}`;
+
+      const enemyLevel = bs.gameState?.storyEnemyState?.enemyLevel
+        ?? StoryStatsMath.getEnemyLevel(storyState?.stage || 1, playerLvl);
+      const isBoss = bs.gameState?.storyEnemyState?.isBoss
+        ?? ((storyState?.stage || 1) % 5 === 0);
+      
+      p2DisplayName = isBoss
+        ? `👑 LVL ${enemyLevel} • ${enemyData.name}`
+        : `LVL ${enemyLevel} • ${enemyData.name}`;
+    }
+
     // Player 1 Name
-    this.p1NameText = bs.add.text(25, 15, playerData.name, {
-      fontSize: "20px",
+    this.p1NameText = bs.add.text(25, 15, p1DisplayName, {
+      fontSize: gameMode === "story" ? "17px" : "20px",
       fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       fontStyle: "bold",
       color: "#fff",
@@ -238,11 +258,11 @@ export class BattleUI {
 
     // Player 2 Name
     this.p2NameText = bs.add
-      .text(935, 15, enemyData.name, {
-        fontSize: "20px",
+      .text(935, 15, p2DisplayName, {
+        fontSize: gameMode === "story" ? "17px" : "20px",
         fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         fontStyle: "bold",
-        color: "#fff",
+        color: gameMode === "story" && bs.gameState?.storyEnemyState?.isBoss ? "#fbbf24" : "#fff",
         stroke: "#000",
         strokeThickness: 3,
         shadow: { color: "#e74c3c", blur: 4, fill: true },

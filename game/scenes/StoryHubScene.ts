@@ -5,6 +5,7 @@ import { GameState, CharacterData } from "../types";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import { generateCustomSprite } from "../sprites/CustomSprite";
 import { INITIAL_CHARACTERS } from "../data";
+import { StoryStatsMath } from "../systems/StoryStatsMath";
 
 export default class StoryHubScene extends Phaser.Scene {
   private gameState!: GameState;
@@ -97,9 +98,11 @@ export default class StoryHubScene extends Phaser.Scene {
     const storyState = this.gameState?.storyState;
 
     if (storyState) {
-      this.add.text(480, headerY + 14, `LUTA ${storyState.stage} • PROGRESSÃO DO GUERREIRO`, {
-        fontSize: "10.5px",
-        color: "#94a3b8",
+      const stageInfo = StoryStatsMath.getStageInfo(storyState.stage);
+      const bossBadge = stageInfo.isBoss ? "👑 CHEFE • " : "";
+      this.add.text(480, headerY + 14, `LUTA ${storyState.stage} • ${bossBadge}CAPÍTULO ${stageInfo.chapterNumber}: ${stageInfo.chapterTitle.toUpperCase()}`, {
+        fontSize: "11px",
+        color: stageInfo.isBoss ? "#fbbf24" : "#94a3b8",
         fontStyle: "bold",
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
       }).setOrigin(0.5);
@@ -233,7 +236,7 @@ export default class StoryHubScene extends Phaser.Scene {
     });
 
     // Character Level & EXP Progress
-    const expNeeded = (storyState.level + 1) * 100;
+    const expNeeded = StoryStatsMath.getExpNeededForLevel(storyState.level);
     const expBarWidth = Math.min(250, leftPanelW - 40);
     const expBarY = panelY + 236;
     const badgeY = panelY + 206;
@@ -251,7 +254,7 @@ export default class StoryHubScene extends Phaser.Scene {
     this.add.rectangle(charCenterX, expBarY, expBarWidth, 16, 0x1e293b).setOrigin(0.5).setStrokeStyle(1.5, 0x475569);
     
     // EXP Bar Fill
-    const expRatio = Math.min(1, storyState.exp / expNeeded);
+    const expRatio = Math.min(1, Math.max(0, storyState.exp / expNeeded));
     const expFillWidth = Math.max(0, expBarWidth * expRatio);
     
     const expFill = this.add.graphics();
@@ -267,8 +270,10 @@ export default class StoryHubScene extends Phaser.Scene {
         strokeThickness: 3 
     }).setOrigin(0.5);
 
-    // Subtitle indicator on card footer
-    this.add.text(charCenterX, panelY + panelHeight - 16, "⚔️ STATUS DE BATALHA: PRONTO", {
+    // Overall Infinite Story Stats footer on card
+    const totalWins = storyState.totalStoryWins || 0;
+    const bossesDefeated = storyState.bossesDefeated || 0;
+    this.add.text(charCenterX, panelY + panelHeight - 16, `🏆 VITÓRIAS: ${totalWins}  •  👑 CHEFES: ${bossesDefeated}`, {
         fontSize: "9.5px",
         color: "#38bdf8",
         fontStyle: "bold",
@@ -470,8 +475,14 @@ export default class StoryHubScene extends Phaser.Scene {
     
     drawBattleBtn(false);
     
-    const battleTxt = this.add.text(0, 0, `⚔️ ENTRAR NA BATALHA (LUTA ${storyState.stage})`, { 
-        fontSize: "15px", 
+    const stageInfo = StoryStatsMath.getStageInfo(storyState.stage);
+    const enemyLvlPreview = StoryStatsMath.getEnemyLevel(storyState.stage, storyState.level);
+    const btnLabel = stageInfo.isBoss
+      ? `👑 DESAFIAR CHEFE (LUTA ${storyState.stage} • LVL ${enemyLvlPreview})`
+      : `⚔️ ENTRAR NA BATALHA (LUTA ${storyState.stage} • LVL ${enemyLvlPreview})`;
+
+    const battleTxt = this.add.text(0, 0, btnLabel, { 
+        fontSize: "14px", 
         color: "#ffffff", 
         fontStyle: "900", 
         stroke: "#000000", 
@@ -671,21 +682,30 @@ export default class StoryHubScene extends Phaser.Scene {
      const enemyIdx = Math.max(0, (storyState.stage - 1) % baseList.length);
      this.gameState.p2CharacterId = baseList[enemyIdx]?.id ?? INITIAL_CHARACTERS[0].id;
      
-     // 4. Set difficulty based on stage
-     this.gameState.difficulty = Math.min(2, Math.floor(storyState.stage / 5));
+     // 4. Calculate dynamic infinite enemy alignment and stats
+     const stage = storyState.stage || 1;
+     const playerLevel = storyState.level || 1;
+     const stageInfo = StoryStatsMath.getStageInfo(stage);
+     const enemyLevel = StoryStatsMath.getEnemyLevel(stage, playerLevel);
+     const enemyScaling = StoryStatsMath.getEnemyScaling(playerLevel, enemyLevel, stageInfo.isBoss);
+
+     this.gameState.storyEnemyState = {
+       enemyLevel,
+       isBoss: stageInfo.isBoss,
+       bossTitle: stageInfo.bossTitle,
+       stats: enemyScaling.stats,
+       hpBonus: enemyScaling.hpBonus,
+       attackMultiplier: enemyScaling.attackMultiplier,
+       defenseReduction: enemyScaling.defenseReduction,
+       kiChargeBonus: enemyScaling.kiChargeBonus,
+       speedBonus: enemyScaling.speedBonus,
+     };
+
+     // 5. Set difficulty based on stage progression
+     this.gameState.difficulty = Math.min(2, Math.floor(stage / 4));
      
-     // 5. Set thematic battle arena for the stage
-     const storyArenas = [
-       "arena",            // Stage 1: Planeta Terra
-       "arena_namek",      // Stage 2: Namekusei
-       "arena_city",       // Stage 3: Cidade Destruída
-       "arena_tournament", // Stage 4: Torneio de Artes Marciais
-       "arena_ice",        // Stage 5: Geleira Eterna
-       "arena_lava",       // Stage 6: Vulcão Infernal
-       "arena_desert",     // Stage 7: Deserto Esquecido
-       "arena_dark",       // Stage 8: Reino das Trevas (Clímax)
-     ];
-     this.gameState.selectedArena = storyArenas[(storyState.stage - 1) % storyArenas.length];
+     // 6. Set thematic battle arena for the infinite stage
+     this.gameState.selectedArena = stageInfo.arenaKey;
      
      this.registry.set("gameState", this.gameState);
      if (window.UTLW) window.UTLW.save();

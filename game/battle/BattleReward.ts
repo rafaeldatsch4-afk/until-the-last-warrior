@@ -3,6 +3,7 @@ import { syncCloudSaveImmediate } from "../systems/CloudSave";
 import Phaser from "phaser";
 import { DailyChallenges } from "../systems/DailyChallenges";
 import { AchievementSystem } from "../systems/Achievements";
+import { StoryStatsMath } from "../systems/StoryStatsMath";
 
 export class BattleReward {
   scene: any; // Type as BattleScene
@@ -243,17 +244,126 @@ export class BattleReward {
       });
     }
 
-    // Story Mode Parry & Combo Performance Display
+    // Story Mode Rich Rewards & Level Progress Display
+    let storyRewardInfo: any = null;
+    let storyLevelUps = 0;
+    let storyPointsGained = 0;
+    let storyNewLevel = 0;
+
     if (s.gameState.gameMode === "story") {
-      let nextY = coinsEarned > 0 ? 310 : 260;
+      const storyState = s.gameState.storyState;
+      if (storyState) {
+        const stage = storyState.stage || 1;
+        const playerLvl = storyState.level || 1;
+        const isBoss = stage % 5 === 0;
+        const enemyLevel = s.gameState.storyEnemyState?.enemyLevel
+          ?? StoryStatsMath.getEnemyLevel(stage, playerLvl);
+
+        const rewards = StoryStatsMath.calculateBattleRewards(
+          stage,
+          playerLvl,
+          enemyLevel,
+          isBoss,
+          s.storyParryCount || 0,
+          s.maxStoryCombo || 0,
+          win,
+        );
+
+        storyRewardInfo = rewards;
+
+        // Apply EXP & calculate level ups
+        storyState.exp += rewards.totalExp;
+        let expReq = StoryStatsMath.getExpNeededForLevel(storyState.level);
+        while (storyState.exp >= expReq) {
+          storyState.level++;
+          storyState.exp -= expReq;
+          const pts = StoryStatsMath.getStatPointsForLevelUp(storyState.level);
+          storyState.statPoints += pts;
+          storyPointsGained += pts;
+          storyLevelUps++;
+          expReq = StoryStatsMath.getExpNeededForLevel(storyState.level);
+        }
+        storyNewLevel = storyState.level;
+
+        if (win) {
+          storyState.stage += 1;
+          storyState.highestStageReached = Math.max(storyState.highestStageReached || 1, storyState.stage);
+          storyState.totalStoryWins = (storyState.totalStoryWins || 0) + 1;
+          if (isBoss) {
+            storyState.bossesDefeated = (storyState.bossesDefeated || 0) + 1;
+          }
+        }
+
+        s.gameState.coins += rewards.totalCoins;
+        s.registry.set("gameState", s.gameState);
+        if (window.UTLW) window.UTLW.save();
+      }
+
+      let nextY = 245;
+
+      if (storyRewardInfo) {
+        const expText = s.add
+          .text(480, nextY, `⭐ EXP GANHO: +${storyRewardInfo.totalExp} (BASE: +${storyRewardInfo.baseExp})`, {
+            fontFamily: "'Plus Jakarta Sans', Impact, sans-serif",
+            fontSize: "20px",
+            color: "#38bdf8",
+            fontStyle: "bold",
+            stroke: "#000",
+            strokeThickness: 5,
+          })
+          .setOrigin(0.5)
+          .setDepth(3001)
+          .setAlpha(0)
+          .setScrollFactor(0);
+
+        s.tweens.add({
+          targets: expText,
+          alpha: 1,
+          duration: 400,
+          delay: 800,
+          ease: "Power2",
+        });
+
+        nextY += 32;
+      }
+
+      if (storyLevelUps > 0) {
+        const lvlUpText = s.add
+          .text(480, nextY, `🎉 LEVEL UP! NÍVEL ${storyNewLevel} (+${storyPointsGained} PONTOS DE ATRIBUTO!)`, {
+            fontFamily: "'Plus Jakarta Sans', Impact, sans-serif",
+            fontSize: "22px",
+            color: "#22c55e",
+            fontStyle: "900",
+            stroke: "#000",
+            strokeThickness: 6,
+          })
+          .setOrigin(0.5)
+          .setDepth(3001)
+          .setAlpha(0)
+          .setScale(0.8)
+          .setScrollFactor(0);
+
+        s.tweens.add({
+          targets: lvlUpText,
+          alpha: 1,
+          scale: 1.05,
+          duration: 500,
+          delay: 950,
+          yoyo: true,
+          repeat: 1,
+          ease: "Back.easeOut",
+        });
+
+        nextY += 36;
+      }
 
       if ((s.storyParryCount || 0) > 0) {
         const parryExp = (s.storyParryCount || 0) * 15;
         const parryText = s.add
           .text(480, nextY, `⚡ PARRIES: ${s.storyParryCount} (+${parryExp} EXP BÔNUS)`, {
             fontFamily: "'Plus Jakarta Sans', Impact, sans-serif",
-            fontSize: "20px",
-            color: "#38bdf8",
+            fontSize: "18px",
+            color: "#60a5fa",
             fontStyle: "bold",
             stroke: "#000",
             strokeThickness: 5,
@@ -271,16 +381,16 @@ export class BattleReward {
           ease: "Power2",
         });
 
-        nextY += 36;
+        nextY += 30;
       }
 
       if ((s.maxStoryCombo || 0) > 1) {
-        const comboExp = (s.maxStoryCombo || 0) * 20;
-        const comboCoins = (s.maxStoryCombo || 0) * 10;
+        const comboExp = (s.maxStoryCombo || 0) * 18;
+        const comboCoins = (s.maxStoryCombo || 0) * 8;
         const comboText = s.add
           .text(480, nextY, `🔥 MAIOR COMBO: ${s.maxStoryCombo} HITS (+${comboExp} EXP / +${comboCoins} MOEDAS)`, {
             fontFamily: "'Plus Jakarta Sans', Impact, sans-serif",
-            fontSize: "20px",
+            fontSize: "18px",
             color: "#fb923c",
             fontStyle: "bold",
             stroke: "#000",
@@ -367,34 +477,8 @@ export class BattleReward {
           transitionTo(s, "MenuScene");
         }
       } else if (s.gameState.gameMode === "story") {
-        if (win) {
-          const storyState = s.gameState.storyState;
-          if (storyState) {
-            const parryExpBonus = (s.storyParryCount || 0) * 15;
-            const comboExpBonus = (s.maxStoryCombo || 0) > 1 ? (s.maxStoryCombo * 20) : 0;
-            const comboCoinsBonus = (s.maxStoryCombo || 0) > 1 ? (s.maxStoryCombo * 10) : 0;
-
-            storyState.stage += 1;
-            storyState.exp += 50 + (storyState.level * 10) + parryExpBonus + comboExpBonus;
-            if (comboCoinsBonus > 0) {
-              s.gameState.coins += comboCoinsBonus;
-            }
-
-            const expNeeded = (storyState.level + 1) * 100;
-            while (storyState.exp >= expNeeded) {
-               storyState.level++;
-               storyState.exp -= expNeeded;
-               storyState.statPoints += 2;
-            }
-            s.registry.set("gameState", s.gameState);
-            (window as any).UTLW.save();
-          }
-          syncCloudSaveImmediate();
-          transitionTo(s, "StoryHubScene");
-        } else {
-          syncCloudSaveImmediate();
-          transitionTo(s, "StoryHubScene");
-        }
+        syncCloudSaveImmediate();
+        transitionTo(s, "StoryHubScene");
       } else if (s.gameState.gameMode === "arcade") {
         if (win) {
           s.gameState.arcadeRound = (s.gameState.arcadeRound || 1) + 1;
