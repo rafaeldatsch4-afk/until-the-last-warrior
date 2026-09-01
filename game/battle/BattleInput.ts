@@ -559,7 +559,7 @@ export class BattleInput {
     const bounds = ResponsiveUtils.getSafeBounds(this.scene);
     const topBtnY = Math.max(26, bounds.top + 16);
     const topCenterX = bounds.centerX;
-    const btnSpacing = 82; // Ample spacing to ensure zero touch overlapping
+    const btnSpacing = 95; // Espaçamento calculado: hitZone de 80px + 15px de folga real entre bordas
     const btnW = 68;
     const btnH = 40;
     const btnRadius = 10;

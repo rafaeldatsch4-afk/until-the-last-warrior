@@ -761,81 +761,111 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         }
 
         // ---------------------------------------------------------------------
-        // 5. HEAD & FACE BASE
+        // 5. HEAD & FACE BASE (y: 6 to 13, x: 12 to 19)
         // ---------------------------------------------------------------------
-        // Head & Neck (y: 6 to 14)
-        headBox(12, 6, 8, 7, SKIN);
-        headBox(13, 13, 6, 2, SKIN); // Neck exposed in collar V-neck
-        headBox(12, 6, 1, 7, SKIN_SHADOW); // Left cheek shadow
-        headBox(19, 6, 1, 7, SKIN_SHADOW); // Right cheek shadow
-        headBox(13, 12, 6, 1, SKIN_SHADOW); // Jaw shadow
+        const FACE_SKIN = 0xffe0cd;        // Anime porcelain skin tone
+        const FACE_SHADE = 0xdca88e;       // Soft warm shadow
+        const SHARINGAN_PUPIL = 0xcc0000;  // Rich Sharingan crimson
+        const SHARINGAN_DARK = 0x880000;   // Inner tomoe core
+        const TEAR_CREASE = 0xd0967a;      // Itachi's signature soft facial line
+
+        // Face Base
+        headBox(12, 6, 8, 7, FACE_SKIN);
+        headBox(12, 6, 1, 7, FACE_SHADE);  // Left contour
+        headBox(19, 6, 1, 7, FACE_SHADE);  // Right contour
+        headBox(13, 12, 6, 1, FACE_SHADE); // Jaw shadow
 
         // ---------------------------------------------------------------------
-        // RENEGADE KONOHA HEADBAND (HITAI-ATE)
+        // RENEGADE KONOHA HEADBAND (HITAI-ATE) (y: 5 to 6)
         // ---------------------------------------------------------------------
-        headBox(11, 5, 10, 2, HEADBAND); // Dark cloth band (y: 5..6)
-        headBox(13, 5, 6, 2, METAL);    // Metal protector plate
-        headBox(14, 5, 4, 1, 0xffffff); // Top metallic shine
-        headBox(14, 6, 4, 1, 0x111111); // Rogue horizontal slash cut
+        headBox(11, 5, 10, 2, HEADBAND);      // Dark fabric band
+        headBox(13, 5, 6, 2, METAL);          // Metal protector plate
+        headBox(14, 5, 4, 1, 0xffffff);       // Top specular metallic glint
+        headBox(14, 6, 4, 1, 0x111111);       // Rogue horizontal slash cut
+        headDot(13, 5, 0x334155);             // Left rivet
+        headDot(18, 5, 0x334155);             // Right rivet
 
         // ---------------------------------------------------------------------
-        // EYES & SHARINGAN
+        // EYEBROWS & EYES (SHARINGAN)
         // ---------------------------------------------------------------------
-        // Eyebrows (y: 8)
-        headBox(13, 8, 2, 1, HAIR);
-        headBox(17, 8, 2, 1, HAIR);
+        // Eyebrows (y: 7) - Sitting right beneath the headband
+        headBox(13, 7, 2, 1, HAIR);
+        headBox(17, 7, 2, 1, HAIR);
 
-        // Eyes (y: 9) - Sclera white + Crimson Sharingan
-        headDot(13, 9, 0xffffff); // Left eye white
-        headDot(14, 9, SHARINGAN); // Left Sharingan red
-        headDot(17, 9, SHARINGAN); // Right Sharingan red
-        headDot(18, 9, 0xffffff); // Right eye white
-
-        // ---------------------------------------------------------------------
-        // ITACHI'S SIGNATURE TEAR TROUGHS (SOFT SHADOW CREASES)
-        // ---------------------------------------------------------------------
-        headDot(14, 10, SKIN_SHADOW);
-        headDot(17, 10, SKIN_SHADOW);
+        // Eyes (y: 8) - Piercing almond Sharingan eyes
+        // Left Eye (x: 13, 14)
+        headDot(13, 8, 0xffffff);          // Sclera white
+        headDot(14, 8, SHARINGAN_PUPIL);   // Sharingan crimson
+        headDot(14, 8, SHARINGAN_DARK);    // Pupil center
+        // Right Eye (x: 17, 18)
+        headDot(17, 8, SHARINGAN_PUPIL);   // Sharingan crimson
+        headDot(17, 8, SHARINGAN_DARK);    // Pupil center
+        headDot(18, 8, 0xffffff);          // Sclera white
 
         // ---------------------------------------------------------------------
-        // NOSE & CALM MOUTH
+        // ITACHI'S SIGNATURE TEAR TROUGHS (DELICATE, NATURAL FACIAL CREASES)
         // ---------------------------------------------------------------------
-        headDot(15, 11, SKIN_SHADOW); // Nose
-        headDot(16, 12, 0x333333);   // Stoic mouth line
+        // Soft diagonal creases running from inner eye corners (y: 9 and 10)
+        headDot(14, 9, TEAR_CREASE);
+        headDot(13, 10, TEAR_CREASE);
+        headDot(17, 9, TEAR_CREASE);
+        headDot(18, 10, TEAR_CREASE);
 
         // ---------------------------------------------------------------------
-        // HAIR (CENTER PART & LONG FRAMING BANGS)
+        // NOSE & CALM, STOIC MOUTH
         // ---------------------------------------------------------------------
-        // Crown Hair (y: 2..4)
-        headBox(11, 2, 10, 3, HAIR);
-        headBox(12, 1, 8, 1, HAIR);
+        // Nose (y: 10)
+        headDot(15, 10, 0xffede0);         // Nose bridge highlight
+        headDot(16, 10, FACE_SHADE);       // Nose shadow tip
+
+        // Calm, Stoic Mouth (y: 11) - Symmetrically centered at x: 15..16
+        headBox(15, 11, 2, 1, 0xb87a5e);  // Natural calm lip line (clean and centered)
+
+        // ---------------------------------------------------------------------
+        // HAIR (CENTER PART, FLOWING TEXTURE & FRAMING BANGS)
+        // ---------------------------------------------------------------------
+        // Crown Hair (y: 1 to 4)
+        headBox(12, 1, 8, 2, HAIR);
+        headBox(11, 3, 10, 2, HAIR);
+        headDot(13, 2, HAIR_HL);
         headDot(14, 2, HAIR_HL);
         headDot(17, 2, HAIR_HL);
+        headDot(18, 2, HAIR_HL);
+        headDot(15, 4, 0x050505);          // Center part notch
+        headDot(16, 4, 0x050505);
 
-        // Left long tapered bang (alongside cheek)
-        headBox(10, 4, 2, 8, HAIR);
-        headBox(10, 4, 1, 6, HAIR_HL);
+        // Left long tapered bang (Framing cheek smoothly)
+        headBox(10, 4, 2, 4, HAIR);
+        headBox(11, 8, 1, 4, HAIR);
+        headDot(10, 6, HAIR_HL);
 
-        // Right long tapered bang (alongside cheek)
-        headBox(20, 4, 2, 8, HAIR);
-        headBox(21, 4, 1, 6, HAIR_HL);
+        // Right long tapered bang (Framing cheek smoothly)
+        headBox(20, 4, 2, 4, HAIR);
+        headBox(20, 8, 1, 4, HAIR);
+        headDot(21, 6, HAIR_HL);
+
+        // Low Ponytail behind the head
+        headBox(15, 7, 2, 7, HAIR);
+        headBox(15, 7, 2, 1, HEADBAND);    // Dark hair tie
 
         // ---------------------------------------------------------------------
-        // AKATSUKI HIGH FLARING COLLAR & NECKLACE
+        // AKATSUKI HIGH FLARING COLLAR & V-NECK
         // ---------------------------------------------------------------------
-        // Left standing collar
-        box(8, 11, 3, 4, CLOAK);
-        box(8, 11, 1, 4, CLOAK_SHADOW);
-        box(11, 11, 1, 4, RED_COLLAR); // Crimson inner lining
+        // Exposed Throat / Neck in the V-neck collar opening (y: 13..15)
+        box(14, 13, 4, 3, FACE_SKIN);
+        dot(15, 13, FACE_SHADE);
+        dot(16, 13, FACE_SHADE);
+        dot(15, 14, 0x94a3b8);             // Silver ring necklace shine
+        dot(16, 14, 0x94a3b8);
 
-        // Right standing collar
-        box(21, 11, 3, 4, CLOAK);
-        box(23, 11, 1, 4, CLOAK_SHADOW);
-        box(20, 11, 1, 4, RED_COLLAR); // Crimson inner lining
+        // Standing High Collar Flaps (Left & Right)
+        box(8, 10, 3, 5, CLOAK);
+        box(8, 10, 1, 5, CLOAK_SHADOW);
+        box(11, 10, 2, 5, RED_COLLAR);     // Inner crimson lining
 
-        // Silver ring necklace glint inside V-neck opening
-        dot(15, 14, 0xb2bec3);
-        dot(16, 14, 0xb2bec3);
+        box(21, 10, 3, 5, CLOAK);
+        box(23, 10, 1, 5, CLOAK_SHADOW);
+        box(19, 10, 2, 5, RED_COLLAR);     // Inner crimson lining
       }
     } // End Switch Equivalent
 
