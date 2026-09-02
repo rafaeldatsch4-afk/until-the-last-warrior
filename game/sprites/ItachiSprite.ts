@@ -686,6 +686,12 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         // =========================================================================
         const SKIN = 0xffddbb;
         const SKIN_SHADOW = 0xcc9977;
+        const FACE_SKIN = 0xffe2d1;        // Pure anime porcelain skin tone
+        const FACE_SHADE = 0xdca288;       // Soft warm contour shading
+        const SHARINGAN_RED = 0xee0000;    // Vivid piercing Sharingan red
+        const TEAR_CREASE = 0xd59579;      // Delicate facial crease tone
+        const LIP_COLOR = 0x5a2d20;        // Stoic clean lip line
+        const MOUTH_ATTACK = 0x4a0e0e;     // Open mouth during attack
         const HAIR = 0x111111;
         const HAIR_HL = 0x2d3436;
         const CLOAK = 0x141414;
@@ -695,14 +701,28 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         const CLOUD_WHITE = 0xffffff;
         const SHARINGAN = 0xff0000;
         const NAIL_PURPLE = 0x8e44ad;
-        const TEAR_LINE = 0x3d3d3d;
         const HEADBAND = 0x2d3436;
         const METAL = 0xb2bec3;
 
-        // Ponytail (Behind body)
-        box(14, 8, 4, 10, HAIR);
-        box(14, 8, 4, 1, HEADBAND); // Hair tie
+        // ---------------------------------------------------------------------
+        // 1. PONYTAIL & BACKGROUND COLLAR (Rendered behind head & face)
+        // ---------------------------------------------------------------------
+        // Low Ponytail (Behind body)
+        headBox(14, 8, 4, 8, HAIR);
+        headBox(14, 8, 4, 1, HEADBAND); // Hair tie
 
+        // Standing High Collar Flaps (Left & Right - STRICTLY outside face x: 12..19)
+        box(8, 10, 4, 5, CLOAK);
+        box(8, 10, 1, 5, CLOAK_SHADOW);
+        box(11, 10, 1, 5, RED_COLLAR);     // Inner crimson lining (strictly x: 11)
+
+        box(20, 10, 4, 5, CLOAK);
+        box(23, 10, 1, 5, CLOAK_SHADOW);
+        box(20, 10, 1, 5, RED_COLLAR);     // Inner crimson lining (strictly x: 20)
+
+        // ---------------------------------------------------------------------
+        // 2. LOWER BODY & LEGS
+        // ---------------------------------------------------------------------
         // Legs (Shinobi pants)
         box(12, 22, 3, 6, 0x1e272e);
         box(17, 22, 3, 6, 0x1e272e);
@@ -715,7 +735,9 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         box(11, 28, 2, 2, SKIN);
         box(17, 28, 2, 2, SKIN); // Toes
 
-        // Torso (Akatsuki Cloak)
+        // ---------------------------------------------------------------------
+        // 3. TORSO & AKATSUKI CLOAK
+        // ---------------------------------------------------------------------
         box(9, 14, 14, 11, CLOAK);
         box(9, 14, 2, 11, CLOAK_SHADOW);
         box(21, 14, 2, 11, CLOAK_SHADOW);
@@ -730,7 +752,18 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         box(18, 20, 2, 1, RED_CLOUD);
         dot(17, 21, CLOUD_WHITE);
 
-        // Arms & Weapon Slash
+        // ---------------------------------------------------------------------
+        // 4. NECK & THROAT (Exposed V-neck opening)
+        // ---------------------------------------------------------------------
+        box(13, 12, 6, 4, FACE_SKIN);
+        dot(15, 13, FACE_SHADE);
+        dot(16, 13, FACE_SHADE);
+        dot(15, 14, 0xb0bec5);             // Silver ring necklace shine
+        dot(16, 14, 0xb0bec5);
+
+        // ---------------------------------------------------------------------
+        // 5. ARMS & WEAPONS
+        // ---------------------------------------------------------------------
         if (isAttack) {
           // Left arm held back for balance
           box(6, 14, 3, 5, CLOAK);
@@ -761,111 +794,89 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         }
 
         // ---------------------------------------------------------------------
-        // 5. HEAD & FACE BASE (y: 6 to 13, x: 12 to 19)
+        // 6. HEAD & FACE BASE (Rendered cleanly on top of body/neck layers)
         // ---------------------------------------------------------------------
-        const FACE_SKIN = 0xffe0cd;        // Anime porcelain skin tone
-        const FACE_SHADE = 0xdca88e;       // Soft warm shadow
-        const SHARINGAN_PUPIL = 0xcc0000;  // Rich Sharingan crimson
-        const SHARINGAN_DARK = 0x880000;   // Inner tomoe core
-        const TEAR_CREASE = 0xd0967a;      // Itachi's signature soft facial line
-
-        // Face Base
+        // Head Base (Skin porcelain)
         headBox(12, 6, 8, 7, FACE_SKIN);
-        headBox(12, 6, 1, 7, FACE_SHADE);  // Left contour
-        headBox(19, 6, 1, 7, FACE_SHADE);  // Right contour
-        headBox(13, 12, 6, 1, FACE_SHADE); // Jaw shadow
+        headBox(12, 7, 1, 6, FACE_SHADE);  // Left cheek edge
+        headBox(19, 7, 1, 6, FACE_SHADE);  // Right cheek edge
+        headBox(13, 12, 6, 1, FACE_SHADE); // Jawline contour
 
         // ---------------------------------------------------------------------
         // RENEGADE KONOHA HEADBAND (HITAI-ATE) (y: 5 to 6)
         // ---------------------------------------------------------------------
-        headBox(11, 5, 10, 2, HEADBAND);      // Dark fabric band
-        headBox(13, 5, 6, 2, METAL);          // Metal protector plate
+        headBox(11, 5, 10, 2, HEADBAND);      // Dark cloth band
+        headBox(13, 5, 6, 2, METAL);          // Steel forehead plate
         headBox(14, 5, 4, 1, 0xffffff);       // Top specular metallic glint
         headBox(14, 6, 4, 1, 0x111111);       // Rogue horizontal slash cut
         headDot(13, 5, 0x334155);             // Left rivet
         headDot(18, 5, 0x334155);             // Right rivet
 
         // ---------------------------------------------------------------------
-        // EYEBROWS & EYES (SHARINGAN)
+        // EYEBROWS (FOCUSED, SEPARATED & CALM) (y: 7)
         // ---------------------------------------------------------------------
-        // Eyebrows (y: 7) - Sitting right beneath the headband
-        headBox(13, 7, 2, 1, HAIR);
-        headBox(17, 7, 2, 1, HAIR);
+        // Left Eyebrow (x: 13..14)
+        headBox(13, 7, 2, 1, 0x111111);
+        // Right Eyebrow (x: 17..18)
+        headBox(17, 7, 2, 1, 0x111111);
+        // Center forehead between eyebrows is clean skin (x: 15..16)
 
-        // Eyes (y: 8) - Piercing almond Sharingan eyes
+        // ---------------------------------------------------------------------
+        // EYES & SHARINGAN (y: 8)
+        // ---------------------------------------------------------------------
         // Left Eye (x: 13, 14)
         headDot(13, 8, 0xffffff);          // Sclera white
-        headDot(14, 8, SHARINGAN_PUPIL);   // Sharingan crimson
-        headDot(14, 8, SHARINGAN_DARK);    // Pupil center
+        headDot(14, 8, SHARINGAN_RED);     // Sharingan iris
         // Right Eye (x: 17, 18)
-        headDot(17, 8, SHARINGAN_PUPIL);   // Sharingan crimson
-        headDot(17, 8, SHARINGAN_DARK);    // Pupil center
+        headDot(17, 8, SHARINGAN_RED);     // Sharingan iris
         headDot(18, 8, 0xffffff);          // Sclera white
+        // Center bridge between eyes is clean skin (x: 15..16)
 
         // ---------------------------------------------------------------------
         // ITACHI'S SIGNATURE TEAR TROUGHS (DELICATE, NATURAL FACIAL CREASES)
         // ---------------------------------------------------------------------
-        // Soft diagonal creases running from inner eye corners (y: 9 and 10)
+        // Slanted lines descending from inner corners down the cheeks (leaving nose & mouth pure)
         headDot(14, 9, TEAR_CREASE);
         headDot(13, 10, TEAR_CREASE);
         headDot(17, 9, TEAR_CREASE);
         headDot(18, 10, TEAR_CREASE);
 
         // ---------------------------------------------------------------------
-        // NOSE & CALM, STOIC MOUTH
+        // NOSE & MOUTH (SUBTLE, STOIC & CLEAN)
         // ---------------------------------------------------------------------
-        // Nose (y: 10)
-        headDot(15, 10, 0xffede0);         // Nose bridge highlight
-        headDot(16, 10, FACE_SHADE);       // Nose shadow tip
+        // Nose (y: 10) - delicate single shadow point with bridge highlight
+        headDot(15, 9, 0xfff0e4);          // Nose bridge light
+        headDot(15, 10, FACE_SHADE);       // Nose tip shadow
 
-        // Calm, Stoic Mouth (y: 11) - Symmetrically centered at x: 15..16
-        headBox(15, 11, 2, 1, 0xb87a5e);  // Natural calm lip line (clean and centered)
+        // Mouth (y: 11) - cleanly separated from nose and tear creases
+        if (isAttack) {
+          headBox(15, 11, 2, 1, MOUTH_ATTACK); // Small focused combat shout
+        } else if (isDefend) {
+          headBox(15, 11, 2, 1, 0xffffff);     // Clenched teeth
+        } else {
+          headBox(15, 11, 2, 1, LIP_COLOR);    // Calm, stoic shinobi mouth
+        }
 
         // ---------------------------------------------------------------------
-        // HAIR (CENTER PART, FLOWING TEXTURE & FRAMING BANGS)
+        // HAIR (NATURAL CROWN, CENTER PART & LONG SIDE-FRAMING BANGS)
         // ---------------------------------------------------------------------
-        // Crown Hair (y: 1 to 4)
-        headBox(12, 1, 8, 2, HAIR);
-        headBox(11, 3, 10, 2, HAIR);
-        headDot(13, 2, HAIR_HL);
-        headDot(14, 2, HAIR_HL);
+        // Smooth Crown (y: 2..4) - Natural rounded anime hair, no chunky spikes
+        headBox(12, 2, 8, 3, HAIR);
+        headBox(13, 1, 6, 1, HAIR);
+        headDot(14, 2, HAIR_HL);           // Subtle crown highlights
         headDot(17, 2, HAIR_HL);
-        headDot(18, 2, HAIR_HL);
-        headDot(15, 4, 0x050505);          // Center part notch
-        headDot(16, 4, 0x050505);
+        headDot(15, 4, 0x0a0a0a);          // Center part notch
+        headDot(16, 4, 0x0a0a0a);
 
-        // Left long tapered bang (Framing cheek smoothly)
-        headBox(10, 4, 2, 4, HAIR);
-        headBox(11, 8, 1, 4, HAIR);
+        // Left Long Tapered Bang (framing the cheek down to the collar)
+        headBox(10, 4, 2, 6, HAIR);
+        headBox(11, 9, 1, 3, HAIR);
         headDot(10, 6, HAIR_HL);
 
-        // Right long tapered bang (Framing cheek smoothly)
-        headBox(20, 4, 2, 4, HAIR);
-        headBox(20, 8, 1, 4, HAIR);
+        // Right Long Tapered Bang (framing the cheek down to the collar)
+        headBox(20, 4, 2, 6, HAIR);
+        headBox(20, 9, 1, 3, HAIR);
         headDot(21, 6, HAIR_HL);
-
-        // Low Ponytail behind the head
-        headBox(15, 7, 2, 7, HAIR);
-        headBox(15, 7, 2, 1, HEADBAND);    // Dark hair tie
-
-        // ---------------------------------------------------------------------
-        // AKATSUKI HIGH FLARING COLLAR & V-NECK
-        // ---------------------------------------------------------------------
-        // Exposed Throat / Neck in the V-neck collar opening (y: 13..15)
-        box(14, 13, 4, 3, FACE_SKIN);
-        dot(15, 13, FACE_SHADE);
-        dot(16, 13, FACE_SHADE);
-        dot(15, 14, 0x94a3b8);             // Silver ring necklace shine
-        dot(16, 14, 0x94a3b8);
-
-        // Standing High Collar Flaps (Left & Right)
-        box(8, 10, 3, 5, CLOAK);
-        box(8, 10, 1, 5, CLOAK_SHADOW);
-        box(11, 10, 2, 5, RED_COLLAR);     // Inner crimson lining
-
-        box(21, 10, 3, 5, CLOAK);
-        box(23, 10, 1, 5, CLOAK_SHADOW);
-        box(19, 10, 2, 5, RED_COLLAR);     // Inner crimson lining
       }
     } // End Switch Equivalent
 
@@ -887,13 +898,18 @@ export function generateItachiSprite(scene: Phaser.Scene) {
     }
   };
 
-  if (!scene.textures.exists("itachi")) {
-    generateForm(0);
+  if (scene.textures.exists("itachi")) {
+    scene.textures.remove("itachi");
   }
-  if (!scene.textures.exists("itachi_ssj")) {
-    generateForm(1);
+  generateForm(0);
+
+  if (scene.textures.exists("itachi_ssj")) {
+    scene.textures.remove("itachi_ssj");
   }
-  if (!scene.textures.exists("itachi_ui")) {
-    generateForm(2);
+  generateForm(1);
+
+  if (scene.textures.exists("itachi_ui")) {
+    scene.textures.remove("itachi_ui");
   }
+  generateForm(2);
 }

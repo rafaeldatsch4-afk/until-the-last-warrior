@@ -2,6 +2,7 @@ import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
 import { GameState } from "../types";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
+import { generateItachiSprite } from "../sprites/ItachiSprite";
 
 export default class CharacterSelectScene extends Phaser.Scene {
   declare registry: Phaser.Data.DataManager;
@@ -82,6 +83,22 @@ export default class CharacterSelectScene extends Phaser.Scene {
       );
       this.state.p2CharacterId = different ? different.id : unlockedChars[0].id;
     }
+
+    generateItachiSprite(this);
+    if (this.anims.exists("itachi_idle")) {
+      this.anims.remove("itachi_idle");
+    }
+    const tex = this.textures.get("itachi");
+    const frames: Phaser.Types.Animations.AnimationFrame[] = [];
+    for (let i = 0; i <= 3; i++) {
+      frames.push({ key: "itachi", frame: i.toString() });
+    }
+    this.anims.create({
+      key: "itachi_idle",
+      frames: frames,
+      frameRate: 10,
+      repeat: -1,
+    });
 
     const { width, height } = this.cameras.main;
     this.selectionStep = 0;

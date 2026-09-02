@@ -7,6 +7,7 @@ import {
   SPRITE_GENERATORS,
 } from "../sprites/SpriteRegistry";
 import { generateCustomSprite } from "../sprites/CustomSprite";
+import { generateItachiSprite } from "../sprites/ItachiSprite";
 import { ArenaTextureBuilder } from "../battle/ArenaTextureBuilder";
 import { LogoTextureBuilder } from "../utils/LogoTextureBuilder";
 
@@ -177,6 +178,7 @@ export default class PreloadScene extends Phaser.Scene {
     if (customChar) {
       generateCustomSprite(this, customChar as any);
     }
+    generateItachiSprite(this);
 
     const charsToGenerate = [...chars];
     const hasGohan = chars.some((c) => c.key === "gohan");
@@ -223,7 +225,9 @@ export default class PreloadScene extends Phaser.Scene {
       if (!this.textures.exists(texture)) {
         return;
       }
-      if (this.anims.exists(animKey)) return;
+      if (this.anims.exists(animKey)) {
+        this.anims.remove(animKey);
+      }
 
       const tex = this.textures.get(texture);
       const frames: Phaser.Types.Animations.AnimationFrame[] = [];
