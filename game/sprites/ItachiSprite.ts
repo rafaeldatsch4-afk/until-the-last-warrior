@@ -708,17 +708,17 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         // 1. PONYTAIL & BACKGROUND COLLAR (Rendered behind head & face)
         // ---------------------------------------------------------------------
         // Low Ponytail (Behind body)
-        headBox(14, 8, 4, 8, HAIR);
+        headBox(14, 7, 4, 6, HAIR);
         headBox(14, 8, 4, 1, HEADBAND); // Hair tie
 
-        // Standing High Collar Flaps (Left & Right - STRICTLY outside face x: 12..19)
-        box(8, 10, 4, 5, CLOAK);
-        box(8, 10, 1, 5, CLOAK_SHADOW);
-        box(11, 10, 1, 5, RED_COLLAR);     // Inner crimson lining (strictly x: 11)
+        // Standing High Collar Flaps (Left & Right - positioned naturally on shoulders)
+        box(8, 11, 3, 4, CLOAK);
+        box(8, 11, 1, 4, CLOAK_SHADOW);
+        box(10, 11, 1, 4, RED_COLLAR);     // Inner crimson lining
 
-        box(20, 10, 4, 5, CLOAK);
-        box(23, 10, 1, 5, CLOAK_SHADOW);
-        box(20, 10, 1, 5, RED_COLLAR);     // Inner crimson lining (strictly x: 20)
+        box(21, 11, 3, 4, CLOAK);
+        box(23, 11, 1, 4, CLOAK_SHADOW);
+        box(21, 11, 1, 4, RED_COLLAR);     // Inner crimson lining
 
         // ---------------------------------------------------------------------
         // 2. LOWER BODY & LEGS
@@ -858,25 +858,27 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         }
 
         // ---------------------------------------------------------------------
-        // HAIR (NATURAL CROWN, CENTER PART & LONG SIDE-FRAMING BANGS)
+        // HAIR (SLEEK SHINOBI CROWN, CENTER PART & STREAMLINED FRAMING BANGS)
         // ---------------------------------------------------------------------
-        // Smooth Crown (y: 2..4) - Natural rounded anime hair, no chunky spikes
-        headBox(12, 2, 8, 3, HAIR);
-        headBox(13, 1, 6, 1, HAIR);
-        headDot(14, 2, HAIR_HL);           // Subtle crown highlights
-        headDot(17, 2, HAIR_HL);
-        headDot(15, 4, 0x0a0a0a);          // Center part notch
-        headDot(16, 4, 0x0a0a0a);
+        // Sleek Crown (y: 3..4) - Natural rounded skull curve sitting closely above the headband
+        headBox(13, 3, 6, 1, HAIR);         // Rounded top apex
+        headBox(12, 4, 8, 1, HAIR);         // Smooth skull contour
+        headDot(14, 3, HAIR_HL);            // Soft hair sheen
+        headDot(17, 3, HAIR_HL);
+        headDot(15, 4, 0x050505);           // Center part notch
+        headDot(16, 4, 0x050505);
 
-        // Left Long Tapered Bang (framing the cheek down to the collar)
-        headBox(10, 4, 2, 6, HAIR);
-        headBox(11, 9, 1, 3, HAIR);
-        headDot(10, 6, HAIR_HL);
+        // Left Bang (Streamlined strand framing the cheek down to the jaw)
+        headDot(12, 5, HAIR);               // Parting strand starting over headband edge
+        headBox(11, 5, 1, 7, HAIR);         // Sleek vertical strand (y: 5..11)
+        headDot(12, 10, HAIR);              // Delicate taper towards jaw
+        headDot(11, 7, HAIR_HL);            // Strands highlight
 
-        // Right Long Tapered Bang (framing the cheek down to the collar)
-        headBox(20, 4, 2, 6, HAIR);
-        headBox(20, 9, 1, 3, HAIR);
-        headDot(21, 6, HAIR_HL);
+        // Right Bang (Streamlined strand framing the cheek down to the jaw)
+        headDot(19, 5, HAIR);               // Parting strand starting over headband edge
+        headBox(20, 5, 1, 7, HAIR);         // Sleek vertical strand (y: 5..11)
+        headDot(19, 10, HAIR);              // Delicate taper towards jaw
+        headDot(20, 7, HAIR_HL);            // Strands highlight
       }
     } // End Switch Equivalent
 
