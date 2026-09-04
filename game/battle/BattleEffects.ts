@@ -333,6 +333,9 @@ export class BattleEffects {
         intensity = "medium";
       }
       window.dispatchEvent(new CustomEvent("shake-screen", { detail: { intensity } }));
+      if (this.scene.soundManager) {
+        this.scene.soundManager.playShakeScreenAudio(intensity);
+      }
     }
 
     // 1. Main Boom Circle from Pool

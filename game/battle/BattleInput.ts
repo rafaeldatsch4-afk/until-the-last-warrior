@@ -359,8 +359,9 @@ export class BattleInput {
     if (savedJoy) {
       try {
         const parsed = JSON.parse(savedJoy);
-        defaultJoyX = parsed.x;
-        defaultJoyY = parsed.y;
+        const margin = 20;
+        defaultJoyX = Math.max(visible.left - 40, Math.min(parsed.x, visible.right - margin));
+        defaultJoyY = Math.max(visible.top - 10, Math.min(parsed.y, visible.bottom - margin));
       } catch (e) {}
     }
 

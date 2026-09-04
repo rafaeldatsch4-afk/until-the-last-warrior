@@ -216,13 +216,15 @@ const App: React.FC = () => {
     window.addEventListener('request-text-input', handleTextInput);
 
     const handleShakeScreen = (e: any) => {
-      const intensity = e.detail?.intensity || 'medium';
-      setIsShaking(intensity);
-      
+      let intensity = e.detail?.intensity || 'medium';
       let duration = 400;
       if (intensity === 'light') duration = 200;
-      if (intensity === 'heavy') duration = 600;
-      
+      else if (intensity === 'heavy') duration = 600;
+      else if (intensity === 'super') {
+        intensity = 'heavy';
+        duration = 750;
+      }
+      setIsShaking(intensity);
       setTimeout(() => setIsShaking(false), duration);
     };
     window.addEventListener('shake-screen', handleShakeScreen);

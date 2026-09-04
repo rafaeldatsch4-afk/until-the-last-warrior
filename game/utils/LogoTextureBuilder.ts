@@ -7,7 +7,7 @@ export class LogoTextureBuilder {
 
   /**
    * Generates or ensures a high-definition, procedural fighting game logo texture.
-   * Rendered at high-DPI with anti-aliasing for smooth, ultra-crisp typography.
+   * Rendered at high-DPI based on devicePixelRatio with anti-aliasing for smooth, ultra-crisp typography.
    */
   public static ensureLogoTexture(scene: Phaser.Scene): void {
     if (scene.textures.exists(this.LOGO_KEY)) {

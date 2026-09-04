@@ -10,6 +10,7 @@ import { generateCustomSprite } from "../sprites/CustomSprite";
 import { generateItachiSprite } from "../sprites/ItachiSprite";
 import { ArenaTextureBuilder } from "../battle/ArenaTextureBuilder";
 import { LogoTextureBuilder } from "../utils/LogoTextureBuilder";
+import { HighResTextureManager } from "../utils/HighResTextureManager";
 
 export default class PreloadScene extends Phaser.Scene {
   declare cameras: Phaser.Cameras.Scene2D.CameraManager;
@@ -52,13 +53,14 @@ export default class PreloadScene extends Phaser.Scene {
     this.progressBox.fillStyle(0x1e293b, 1);
     this.progressBox.fillRect(width / 2 - 160, height / 2 - 25, 320, 50);
 
+    const textResolution = HighResTextureManager.getTextResolution(2);
     this.loadingText = this.add
       .text(width / 2, height / 2 - 60, "Desenhando Guerreiros...", {
         fontFamily: "system-ui, -apple-system, 'Roboto', sans-serif",
         fontSize: "20px",
         color: "#e2e8f0",
         fontStyle: "bold",
-        resolution: 2,
+        resolution: textResolution,
       })
       .setOrigin(0.5, 0.5);
 
@@ -90,6 +92,9 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.on("loaderror", (fileObj: Phaser.Loader.File) => {
       console.warn("Preload non-fatal asset notice, fallback enabled:", fileObj?.key);
     });
+
+    // Proactively load high-resolution textures based on devicePixelRatio (if available)
+    this.loadHighResTexturesIfAvailable();
 
     // Build ultra-crisp procedural logo texture without relying on network loading
     LogoTextureBuilder.ensureLogoTexture(this);
@@ -272,11 +277,37 @@ export default class PreloadScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Loads high-resolution textures based on devicePixelRatio (if available),
+   * ensuring the game doesn't look pixelated on Retina and high-DPI screens.
+   */
+  private loadHighResTexturesIfAvailable() {
+    const isRetina = HighResTextureManager.isRetina();
+    const dpr = HighResTextureManager.getResolutionMultiplier();
+
+    // Candidate textures with possible high-resolution variants
+    const highResAssets = [
+      { key: "icon_app", defaultUrl: "/icon-192-any.png", highResUrl: "/icon-512-any.png" },
+      { key: "icon_maskable", defaultUrl: "/icon-192-maskable.png", highResUrl: "/icon-512-maskable.png" },
+    ];
+
+    for (const asset of highResAssets) {
+      if (!this.textures.exists(asset.key)) {
+        HighResTextureManager.loadHighResImage(this.load, asset.key, asset.defaultUrl, {
+          highResUrl: isRetina ? asset.highResUrl : asset.defaultUrl,
+          resolution: isRetina ? dpr : 1,
+          filterMode: Phaser.Textures.FilterMode.LINEAR,
+        });
+      }
+    }
+  }
+
   createFXAssets() {
     if (this.textures.exists("particle")) {
       console.log("FX Assets already constructed. Skipping.");
       return;
     }
+
     // Energy Ball
     const p = this.make.graphics({ x: 0, y: 0 });
     p.fillStyle(0xffffff, 1);
@@ -347,26 +378,29 @@ export default class PreloadScene extends Phaser.Scene {
     const soundManager = this.sound as Phaser.Sound.WebAudioSoundManager;
     if (!soundManager.context) return;
 
-    // Helper to synthesize sound
+    // Advanced Helper to synthesize rich sound effects with multi-wave mixing, frequency sweeps, and noise
     const generateSynthSound = (
       name: string,
       duration: number,
-      type: "square" | "sawtooth" | "sine" | "triangle",
+      type: "square" | "sawtooth" | "sine" | "triangle" | "noise" | "hybrid",
       freqStart: number,
       freqEnd: number,
       vol: number = 0.5,
+      noiseAmount: number = 0,
+      subBassFreq: number = 0
     ) => {
       try {
         const ctx = soundManager.context;
         const sampleRate = ctx.sampleRate;
-        const frameCount = duration * sampleRate;
+        const frameCount = Math.floor(duration * sampleRate);
         const buffer = ctx.createBuffer(1, frameCount, sampleRate);
         const data = buffer.getChannelData(0);
 
         for (let i = 0; i < frameCount; i++) {
           const t = i / sampleRate;
           const progress = i / frameCount;
-          const currentFreq = freqStart + (freqEnd - freqStart) * progress;
+          // Exponential pitch drop for natural impact punch
+          const currentFreq = freqStart * Math.pow(freqEnd / Math.max(1, freqStart), progress);
 
           let val = 0;
           const phase = t * currentFreq * 2 * Math.PI;
@@ -376,34 +410,61 @@ export default class PreloadScene extends Phaser.Scene {
           else if (type === "sawtooth") val = ((t * currentFreq) % 1) * 2 - 1;
           else if (type === "triangle")
             val = Math.abs(((t * currentFreq) % 1) * 4 - 2) - 1;
+          else if (type === "noise")
+            val = (Math.random() * 2 - 1);
+          else if (type === "hybrid")
+            val = 0.5 * Math.sin(phase) + 0.5 * (((t * currentFreq) % 1) * 2 - 1);
 
-          // Envelope
-          const envelope = 1 - Math.pow(progress, 2);
-          data[i] = val * vol * envelope;
+          // Add dynamic noise texture (punch crunch / whoosh friction)
+          if (noiseAmount > 0) {
+            const noise = (Math.random() * 2 - 1) * noiseAmount;
+            val = val * (1 - noiseAmount) + noise;
+          }
+
+          // Add sub-bass resonant punch
+          if (subBassFreq > 0) {
+            const subPhase = t * subBassFreq * 2 * Math.PI;
+            val += Math.sin(subPhase) * 0.45;
+          }
+
+          // Dynamic attack and decay envelope
+          let envelope = 1 - Math.pow(progress, 1.8);
+          // 5ms rapid attack to avoid click
+          const attackSamples = Math.min(220, frameCount * 0.05);
+          if (i < attackSamples) {
+            envelope *= (i / attackSamples);
+          }
+
+          data[i] = Math.max(-1, Math.min(1, val * vol * envelope));
         }
         this.cache.audio.add(name, buffer);
       } catch (e) {
-        console.warn("Audio synthesis failed", e);
+        console.warn(`Audio synthesis failed for ${name}`, e);
       }
     };
 
-    // Generate SFX
-    generateSynthSound("sfx_select", 0.1, "sine", 800, 1200, 0.3);
-    generateSynthSound("sfx_attack", 0.1, "square", 200, 50, 0.5);
-    generateSynthSound("sfx_hit", 0.15, "sawtooth", 150, 50, 0.6);
-    generateSynthSound("sfx_punch_heavy", 0.25, "square", 100, 20, 0.8);
-    generateSynthSound("sfx_block", 0.1, "sine", 400, 300, 0.4);
-    generateSynthSound("sfx_clash", 0.2, "sawtooth", 800, 200, 0.7);
-    generateSynthSound("sfx_parry", 0.28, "sawtooth", 1600, 350, 0.85);
-    generateSynthSound("sfx_parry_ping", 0.35, "sine", 2200, 600, 0.75);
-    generateSynthSound("sfx_dodge", 0.24, "sine", 1400, 180, 0.7);
-    generateSynthSound("sfx_beam", 1.0, "sawtooth", 400, 100, 0.3);
-    generateSynthSound("sfx_beam_charge", 1.2, "sine", 100, 600, 0.3);
-    generateSynthSound("sfx_beam_fire", 0.6, "square", 800, 100, 0.5);
-    generateSynthSound("sfx_explosion", 0.8, "sawtooth", 200, 20, 0.6);
-    generateSynthSound("sfx_transform", 1.5, "square", 100, 300, 0.4);
-    generateSynthSound("sfx_transform_mech", 1.5, "sawtooth", 50, 600, 0.6);
-    generateSynthSound("sfx_error", 0.2, "sawtooth", 150, 100, 0.4);
+    // Generate SFX Palette
+    generateSynthSound("sfx_select", 0.1, "sine", 800, 1200, 0.35);
+    generateSynthSound("sfx_attack", 0.12, "hybrid", 280, 60, 0.55, 0.3);
+    generateSynthSound("sfx_attack_heavy", 0.18, "sawtooth", 180, 40, 0.7, 0.4, 60);
+    generateSynthSound("sfx_hit_light", 0.08, "triangle", 320, 100, 0.55, 0.35);
+    generateSynthSound("sfx_hit", 0.16, "sawtooth", 220, 45, 0.7, 0.45, 75);
+    generateSynthSound("sfx_punch_heavy", 0.28, "square", 120, 25, 0.9, 0.4, 50);
+    generateSynthSound("sfx_block", 0.12, "sine", 500, 320, 0.45, 0.15);
+    generateSynthSound("sfx_clash", 0.24, "sawtooth", 900, 180, 0.8, 0.4, 80);
+    generateSynthSound("sfx_parry", 0.3, "sawtooth", 1800, 400, 0.85, 0.2);
+    generateSynthSound("sfx_parry_ping", 0.38, "sine", 2400, 700, 0.8);
+    generateSynthSound("sfx_dodge", 0.22, "sine", 1600, 200, 0.75, 0.25);
+    generateSynthSound("sfx_ki_fire", 0.15, "triangle", 1200, 250, 0.65, 0.2);
+    generateSynthSound("sfx_beam", 1.0, "sawtooth", 450, 120, 0.35, 0.25, 60);
+    generateSynthSound("sfx_beam_charge", 1.2, "sine", 120, 700, 0.35);
+    generateSynthSound("sfx_beam_fire", 0.65, "square", 850, 90, 0.6, 0.35, 65);
+    generateSynthSound("sfx_explosion", 0.85, "sawtooth", 240, 20, 0.75, 0.6, 45);
+    generateSynthSound("sfx_shake_rumble", 0.35, "sine", 85, 25, 0.85, 0.2, 40);
+    generateSynthSound("sfx_transform", 1.5, "square", 100, 320, 0.45, 0.3);
+    generateSynthSound("sfx_transform_mech", 1.5, "sawtooth", 60, 650, 0.65, 0.4);
+    generateSynthSound("sfx_error", 0.2, "sawtooth", 160, 90, 0.4);
+    generateSynthSound("sfx_step", 0.08, "triangle", 140, 50, 0.45, 0.5);
 
     // Generate Simple Looping BGM
     const generateLoop = (name: string, pattern: number[]) => {

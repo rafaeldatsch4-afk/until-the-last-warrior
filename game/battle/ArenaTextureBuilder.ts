@@ -31,6 +31,7 @@ export class ArenaTextureBuilder {
         ArenaTextureBuilder.HEIGHT
       );
       if (canvasTexture) {
+        canvasTexture.setFilter(Phaser.Textures.FilterMode.LINEAR);
         const ctx = canvasTexture.getContext();
         def.draw(ctx, ArenaTextureBuilder.WIDTH, ArenaTextureBuilder.HEIGHT);
         canvasTexture.refresh();

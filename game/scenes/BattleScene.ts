@@ -300,6 +300,10 @@ export default class BattleScene extends Phaser.Scene {
       .setScrollFactor(0.22, 0.22)
       .setDepth(-10);
 
+    if (bgImage.texture) {
+      bgImage.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+    }
+
     // Intelligently balance background tone so fighting characters stand out with rich contrast
     if (bgImage.postFX && !this.gameState.settings?.lowPerformanceMode) {
       const bgMatrix = bgImage.postFX.addColorMatrix();
@@ -2018,6 +2022,9 @@ export default class BattleScene extends Phaser.Scene {
 
     this.setActionState(isPlayer, true);
     attacker.play(this.getAnimKey(attackerData.key, transLevel, "punch"));
+    if (this.soundManager) {
+      this.soundManager.playMeleeWhiff();
+    }
 
     this.tweens.add({
       targets: attacker,
@@ -2087,6 +2094,11 @@ export default class BattleScene extends Phaser.Scene {
       }
       this.p2LastAttackTime = currentTime;
       comboCount = this.p2ComboCount;
+    }
+
+    // Dynamic Attack Sound Launch
+    if (this.soundManager) {
+      this.soundManager.playAttackLaunch(attackType, comboCount);
     }
 
     const isComboFinisher = comboCount % 3 === 0;
@@ -4899,7 +4911,7 @@ export default class BattleScene extends Phaser.Scene {
       if (targetActing) {
         // CLASH EFFECT! (Both attacking / exchanging blows)
         this.createImpactEffect(target.x, target.y + 60, 0xfffc00, "clash", dmg);
-        if (this.soundManager) this.soundManager.playClash();
+        if (this.soundManager) this.soundManager.playDamageImpact(dmg, isCritical, false, true);
 
         // Haptic feedback: Quick double pulse for clash
         triggerVibration("clash");
@@ -4915,7 +4927,7 @@ export default class BattleScene extends Phaser.Scene {
           }
         }
         this.createImpactEffect(target.x, target.y + 60, 0xffaa00, "melee", dmg);
-        if (this.soundManager) this.soundManager.playPunchImpact(isCritical);
+        if (this.soundManager) this.soundManager.playDamageImpact(dmg, isCritical, false, false);
 
         // Haptic feedback: Standard vs Critical hits
         triggerVibration(isCritical ? "critical" : "medium");

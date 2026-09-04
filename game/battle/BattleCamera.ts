@@ -46,6 +46,21 @@ export class BattleCamera {
 
   shake(duration: number = 200, intensity: number = 0.05) {
     const isPotato = this.scene.gameState?.settings?.lowPerformanceMode;
+
+    // Determine shake intensity tier for synchronized audio feedback
+    let intensityTier: "light" | "medium" | "heavy" | "super" = "medium";
+    if (intensity >= 0.08 || duration >= 600) {
+      intensityTier = "super";
+    } else if (intensity >= 0.035 || duration >= 350) {
+      intensityTier = "heavy";
+    } else if (intensity <= 0.015 && duration <= 150) {
+      intensityTier = "light";
+    }
+
+    if (this.scene.soundManager) {
+      this.scene.soundManager.playShakeScreenAudio(intensityTier, duration);
+    }
+
     if (isPotato) {
       const now = this.scene.time?.now || Date.now();
       // Throttle micro-shakes to prevent rendering frame-time spikes on low-end devices
