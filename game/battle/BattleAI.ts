@@ -30,6 +30,10 @@ export class BattleAI {
       loop: true,
       callback: () => {
         if (s.isBattleOver || !s.scene.isActive()) return;
+        if (s.time.now < s.p2StunnedUntil) {
+          s.aiMoveDir = 0;
+          return;
+        }
         if (s.p2ActionActive || s.enemyDefending) {
           s.aiMoveDir = 0;
           return;
@@ -73,11 +77,26 @@ export class BattleAI {
   enemyDecide() {
     const s = this.scene;
     if (s.isBattleOver || s.p2ActionActive || !s.scene.isActive()) return;
+    if (s.time.now < s.p2StunnedUntil) return; // AI is stunned from Guard Break!
 
     const r = Math.random();
     const playerHpPct = s.playerHp / s.playerData.maxHp;
     const enemyHpPct = s.enemyHp / s.enemyData.maxHp;
     const dist = Math.abs(s.player.x - s.enemy.x);
+
+    // TACTICAL PUNISH: If Player's Guard is broken, capitalize immediately with a Charged/Special attack!
+    if (s.time.now < s.p1StunnedUntil) {
+      if (s.enemyKi >= 80) {
+        s.performSpecial(false, true); // Devastating Super Punish!
+        return;
+      } else if (s.enemyKi >= 40) {
+        s.performSpecial(false, false); // Special Attack Punish!
+        return;
+      } else {
+        s.performAttack(false, dist < 200 ? "melee" : "ki");
+        return;
+      }
+    }
 
     // SMARTER AI: Check player state
     const playerIsAttacking = s.p1ActionActive;

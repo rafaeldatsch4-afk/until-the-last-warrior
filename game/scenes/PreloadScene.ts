@@ -111,6 +111,37 @@ export default class PreloadScene extends Phaser.Scene {
     graphicsStreak.generateTexture("hit_spark_streak", 24, 16);
     graphicsStreak.destroy();
 
+    // Metallic shard texture for Guard Break visual shatter
+    const graphicsShard = this.make.graphics({ x: 0, y: 0 });
+    graphicsShard.fillStyle(0xffffff, 1);
+    graphicsShard.beginPath();
+    graphicsShard.moveTo(0, 8);
+    graphicsShard.lineTo(12, 0);
+    graphicsShard.lineTo(24, 6);
+    graphicsShard.lineTo(16, 16);
+    graphicsShard.lineTo(4, 14);
+    graphicsShard.closePath();
+    graphicsShard.fillPath();
+    graphicsShard.generateTexture("metal_shard", 24, 16);
+    graphicsShard.destroy();
+
+    // Dizzy 4-pointed star texture for Stun visual effect
+    const graphicsStar = this.make.graphics({ x: 0, y: 0 });
+    graphicsStar.fillStyle(0xffffff, 1);
+    graphicsStar.beginPath();
+    graphicsStar.moveTo(8, 0);
+    graphicsStar.lineTo(10, 6);
+    graphicsStar.lineTo(16, 8);
+    graphicsStar.lineTo(10, 10);
+    graphicsStar.lineTo(8, 16);
+    graphicsStar.lineTo(6, 10);
+    graphicsStar.lineTo(0, 8);
+    graphicsStar.lineTo(6, 6);
+    graphicsStar.closePath();
+    graphicsStar.fillPath();
+    graphicsStar.generateTexture("dizzy_star", 16, 16);
+    graphicsStar.destroy();
+
     // Generate all 8 high-definition detailed battle arena backgrounds
     ArenaTextureBuilder.buildAllArenaTextures(this);
   }
@@ -465,6 +496,9 @@ export default class PreloadScene extends Phaser.Scene {
     generateSynthSound("sfx_transform_mech", 1.5, "sawtooth", 60, 650, 0.65, 0.4);
     generateSynthSound("sfx_error", 0.2, "sawtooth", 160, 90, 0.4);
     generateSynthSound("sfx_step", 0.08, "triangle", 140, 50, 0.45, 0.5);
+    generateSynthSound("sfx_guard_break", 0.42, "sawtooth", 1950, 85, 0.95, 0.45, 80);
+    generateSynthSound("sfx_metal_sparks", 0.22, "hybrid", 2400, 320, 0.85, 0.35);
+    generateSynthSound("sfx_stun_stars", 0.35, "sine", 1350, 800, 0.7, 0.1);
 
     // Generate Simple Looping BGM
     const generateLoop = (name: string, pattern: number[]) => {

@@ -91,6 +91,7 @@ export interface SpriteCustomState {
   isCharging?: boolean;
   isJumping?: boolean;
   isHitStunned?: boolean;
+  isGuardBroken?: boolean;
   hollowPurpleTriggered?: boolean;
   transformLevel?: number;
   fighterKey?: string;

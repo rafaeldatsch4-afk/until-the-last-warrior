@@ -158,6 +158,22 @@ export class BattleSoundManager {
     this.playWithVariation("sfx_block", 0.85, 100);
   }
 
+  public playGuardBreak() {
+    this.playWithVariation("sfx_guard_break", 1.45, 60, -50);
+    this.playWithVariation("sfx_clash", 1.25, 80, 50);
+    this.playWithVariation("sfx_punch_heavy", 1.05, 50, -180);
+    this.playWithVariation("sfx_metal_sparks", 1.15, 100, 100);
+    this.playShakeScreenAudio("heavy", 500);
+  }
+
+  public playMetalSparks() {
+    this.playWithVariation("sfx_metal_sparks", 0.95, 120, 80);
+  }
+
+  public playDizzyStun() {
+    this.playWithVariation("sfx_stun_stars", 0.8, 100, 40);
+  }
+
   public playParry() {
     this.playWithVariation("sfx_parry", 1.4, 60, 50);
     this.playWithVariation("sfx_parry_ping", 1.15, 40, 100);

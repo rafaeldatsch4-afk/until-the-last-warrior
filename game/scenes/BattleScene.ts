@@ -149,6 +149,18 @@ export default class BattleScene extends Phaser.Scene {
   public p2CounterBonusUntil: number = 0;
   public p2CounterBonus: number = 1.0;
 
+  // Quebra de Guarda (Guard Break) & Stun Posture System
+  public p1GuardGauge: number = 0; // 0 to 100
+  public p2GuardGauge: number = 0; // 0 to 100
+  public p1ConsecutiveBlocks: number = 0;
+  public p2ConsecutiveBlocks: number = 0;
+  public p1LastBlockTime: number = 0;
+  public p2LastBlockTime: number = 0;
+  public p1StunnedUntil: number = 0;
+  public p2StunnedUntil: number = 0;
+  public p1StunTween?: Phaser.Tweens.Tween;
+  public p2StunTween?: Phaser.Tweens.Tween;
+
   // Action Flags to prevent spamming
   public p1ActionActive: boolean = false;
   public p1SuperActive: boolean = false;
@@ -257,6 +269,18 @@ export default class BattleScene extends Phaser.Scene {
     this.p1CounterBonus = 1.0;
     this.p2CounterBonusUntil = 0;
     this.p2CounterBonus = 1.0;
+
+    // Reset Guard Break Posture System
+    this.p1GuardGauge = 0;
+    this.p2GuardGauge = 0;
+    this.p1ConsecutiveBlocks = 0;
+    this.p2ConsecutiveBlocks = 0;
+    this.p1LastBlockTime = 0;
+    this.p2LastBlockTime = 0;
+    this.p1StunnedUntil = 0;
+    this.p2StunnedUntil = 0;
+    if (this.p1StunTween) { this.p1StunTween.stop(); this.p1StunTween = undefined; }
+    if (this.p2StunTween) { this.p2StunTween.stop(); this.p2StunTween = undefined; }
 
     const chars = this.gameState.characters;
     this.playerData =
@@ -589,12 +613,49 @@ export default class BattleScene extends Phaser.Scene {
     this.lastPlayerHp = this.playerHp;
     this.lastEnemyHp = this.enemyHp;
 
+    // --- POSTURE & GUARD RECOVERY / EXTENDED DEFENSE SYSTEM ---
+    // Player 1 Posture Tracking
+    if (this.playerDefending) {
+      const p1DefDuration = this.time.now - this.p1DefendStartTime;
+      // Holding defense continuously without parrying accumulates posture pressure
+      if (p1DefDuration > 1400) {
+        this.p1GuardGauge = Math.min(100, this.p1GuardGauge + delta * 0.04);
+        if (this.p1GuardGauge >= 100 || p1DefDuration >= 3800) {
+          this.triggerGuardBreak(true);
+        }
+      }
+    } else if (this.time.now - this.p1LastBlockTime > 1100) {
+      // Natural stance recovery when not defending
+      if (this.p1GuardGauge > 0) {
+        this.p1GuardGauge = Math.max(0, this.p1GuardGauge - delta * 0.035);
+        if (this.p1GuardGauge === 0) this.p1ConsecutiveBlocks = 0;
+      }
+    }
+
+    // Player 2 Posture Tracking
+    if (this.enemyDefending) {
+      const p2DefDuration = this.time.now - this.p2DefendStartTime;
+      if (p2DefDuration > 1400) {
+        this.p2GuardGauge = Math.min(100, this.p2GuardGauge + delta * 0.04);
+        if (this.p2GuardGauge >= 100 || p2DefDuration >= 3800) {
+          this.triggerGuardBreak(false);
+        }
+      }
+    } else if (this.time.now - this.p2LastBlockTime > 1100) {
+      if (this.p2GuardGauge > 0) {
+        this.p2GuardGauge = Math.max(0, this.p2GuardGauge - delta * 0.035);
+        if (this.p2GuardGauge === 0) this.p2ConsecutiveBlocks = 0;
+      }
+    }
+
     if (this.battleUI)
       this.battleUI.updateBars(
         this.playerHp / (this.playerMaxHp || this.playerData.maxHp),
         this.enemyHp / (this.enemyMaxHp || this.enemyData.maxHp),
         this.playerKi / 100,
         this.enemyKi / 100,
+        this.p1GuardGauge / 100,
+        this.p2GuardGauge / 100,
       );
 
     if (this.playerHp <= 0 || this.enemyHp <= 0) {
@@ -4713,7 +4774,8 @@ export default class BattleScene extends Phaser.Scene {
     if (isP) this.isP1Jumping = false;
     else this.isP2Jumping = false;
 
-    const def = isP ? this.playerDefending : this.enemyDefending;
+    const isTargetStunned = this.time.now < (isP ? this.p1StunnedUntil : this.p2StunnedUntil);
+    const def = isTargetStunned ? false : (isP ? this.playerDefending : this.enemyDefending);
     const target = isP ? this.player : this.enemy;
     const attacker = isP ? this.enemy : this.player;
 
@@ -4727,6 +4789,14 @@ export default class BattleScene extends Phaser.Scene {
       const isParry = (this.time.now - defendStartTime) < parryWindow;
 
       if (isParry) {
+        // Successful parry completely resets defender's posture and consecutive block pressure
+        if (isP) {
+          this.p1GuardGauge = 0;
+          this.p1ConsecutiveBlocks = 0;
+        } else {
+          this.p2GuardGauge = 0;
+          this.p2ConsecutiveBlocks = 0;
+        }
         dmg = 0; // Negate all damage
         this.createFloatingDamage(target.x, target.y + 20, 0, false, true);
 
@@ -4873,14 +4943,61 @@ export default class BattleScene extends Phaser.Scene {
 
         return; // Stop processing damage
       } else {
-        // Normal block
+        // Normal block without parry: posture damage accumulates from consecutive hits!
+        const currentNow = this.time.now;
+        if (isP) {
+          if (currentNow - this.p1LastBlockTime < 1800) {
+            this.p1ConsecutiveBlocks++;
+          } else {
+            this.p1ConsecutiveBlocks = 1;
+          }
+          this.p1LastBlockTime = currentNow;
+        } else {
+          if (currentNow - this.p2LastBlockTime < 1800) {
+            this.p2ConsecutiveBlocks++;
+          } else {
+            this.p2ConsecutiveBlocks = 1;
+          }
+          this.p2LastBlockTime = currentNow;
+        }
+
+        const blocks = isP ? this.p1ConsecutiveBlocks : this.p2ConsecutiveBlocks;
+        const postureDmg = Math.max(26, Math.floor(baseDmg * 1.5 + blocks * 8));
+
+        if (isP) {
+          this.p1GuardGauge = Math.min(100, this.p1GuardGauge + postureDmg);
+        } else {
+          this.p2GuardGauge = Math.min(100, this.p2GuardGauge + postureDmg);
+        }
+
+        const currentGuard = isP ? this.p1GuardGauge : this.p2GuardGauge;
+
+        // Posture ruptured! Trigger Quebra de Guarda!
+        if (currentGuard >= 100 || blocks >= 4) {
+          this.triggerGuardBreak(isP);
+          return;
+        }
+
         dmg = Math.floor(baseDmg * 0.3);
       }
+
+      const currentGuard = isP ? this.p1GuardGauge : this.p2GuardGauge;
+      const isGuardStrained = currentGuard >= 60;
+
       // Block effect
-      
-      // Block effect
-      this.createImpactEffect(target.x, target.y + 40, 0x3498db, "block"); // Blue shield spark
-      if (this.soundManager) this.soundManager.playBlock();
+      this.createImpactEffect(
+        target.x,
+        target.y + 40,
+        isGuardStrained ? 0xff4400 : 0x3498db,
+        "block",
+      ); // Blue shield spark or red strained spark
+      if (this.soundManager) {
+        if (isGuardStrained) {
+          this.soundManager.playMetalSparks();
+        } else {
+          this.soundManager.playBlock();
+        }
+      }
       
       // Floating text for block
       this.createFloatingDamage(target.x, target.y + 20, 0, false, true); // We'll hijack this to show "BLOCKED"
@@ -4888,9 +5005,12 @@ export default class BattleScene extends Phaser.Scene {
       // Shield Hit Flash
       const shield = isP ? this.p1Shield : this.p2Shield;
       if (shield) {
+        if (isGuardStrained) {
+          (shield as Phaser.GameObjects.Arc).setStrokeStyle(5, 0xff3300, 1);
+        }
         this.tweens.add({
           targets: shield,
-          scale: 1.8,
+          scale: isGuardStrained ? 2.1 : 1.8,
           alpha: 1,
           yoyo: true,
           duration: 100,
@@ -4904,7 +5024,58 @@ export default class BattleScene extends Phaser.Scene {
       // Haptic feedback: Subtle block haptic
       triggerVibration("light");
     } else {
-      isCritical = dmg > 25; // threshold for critical visual
+      const isChargedAttack = isP
+        ? (this.p2SuperActive || this.p2SpecialHoldTime > 0 || baseDmg >= 16)
+        : (this.p1SuperActive || this.p1SpecialHoldTime > 0 || baseDmg >= 16);
+
+      if (isTargetStunned) {
+        if (isChargedAttack) {
+          // Devastating charged attack punish against guard-broken target!
+          dmg = Math.floor(dmg * 1.85);
+          isCritical = true;
+          this.triggerHitStop(140);
+          if (this.soundManager) this.soundManager.playExplosion(true);
+          if (this.battleCamera) this.battleCamera.shake(360, 0.04);
+
+          const punishText = this.add.text(target.x, target.y - 45, "💥 PUNISH CARREGADO!", {
+            fontSize: "28px",
+            color: "#ff3300",
+            fontStyle: "bold",
+            stroke: "#000000",
+            strokeThickness: 6,
+            shadow: { color: "#ff8800", blur: 10, fill: true },
+          }).setOrigin(0.5).setDepth(150);
+          this.tweens.add({
+            targets: punishText,
+            y: target.y - 95,
+            scale: { from: 1.4, to: 1.0 },
+            alpha: { from: 1, to: 0 },
+            duration: 900,
+            ease: "Back.easeOut",
+            onComplete: () => punishText.destroy(),
+          });
+        } else {
+          dmg = Math.floor(dmg * 1.4);
+          isCritical = true;
+          const vulnText = this.add.text(target.x, target.y - 30, "⚡ VULNERÁVEL!", {
+            fontSize: "22px",
+            color: "#ffd700",
+            fontStyle: "bold",
+            stroke: "#000000",
+            strokeThickness: 5,
+          }).setOrigin(0.5).setDepth(150);
+          this.tweens.add({
+            targets: vulnText,
+            y: target.y - 70,
+            alpha: { from: 1, to: 0 },
+            duration: 800,
+            onComplete: () => vulnText.destroy(),
+          });
+        }
+        this.clearDizzyStun(isP);
+      } else {
+        isCritical = dmg > 25; // threshold for critical visual
+      }
       const targetActing = isP ? this.p1ActionActive : this.p2ActionActive;
 
       // Add requested screen-shake and particle burst
@@ -5160,6 +5331,128 @@ export default class BattleScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Quebra de Guarda (Guard Break):
+   * Postura rompida por defender golpes consecutivos sem parry ou por tempo prolongado.
+   * Causa atordoamento com faíscas metálicas, estrelas dizzies e vulnerabilidade extrema a golpes carregados.
+   */
+  public triggerGuardBreak(isP: boolean) {
+    if (this.isBattleOver || !this.scene.isActive()) return;
+
+    const target = isP ? this.player : this.enemy;
+    const targetData = isP ? this.playerData : this.enemyData;
+    const targetLevel = isP ? this.playerTransformLevel : this.enemyTransformLevel;
+
+    // 1. Reset guard, shields and posture values
+    if (isP) {
+      this.playerDefending = false;
+      this.p1GuardGauge = 0;
+      this.p1ConsecutiveBlocks = 0;
+      this.p1StunnedUntil = this.time.now + 2400; // 2.4s dizzy stun window
+      if (this.p1Shield) this.p1Shield.setVisible(false);
+      this.setActionState(true, false);
+    } else {
+      this.enemyDefending = false;
+      this.p2GuardGauge = 0;
+      this.p2ConsecutiveBlocks = 0;
+      this.p2StunnedUntil = this.time.now + 2400; // 2.4s dizzy stun window
+      if (this.p2Shield) this.p2Shield.setVisible(false);
+      this.setActionState(false, false);
+    }
+
+    // 2. Audio & Haptics
+    if (this.soundManager) {
+      this.soundManager.playGuardBreak();
+    }
+    triggerVibration("critical");
+
+    // 3. Visual Effects: Metallic Sparks, Guard Break Banner, Dizzy Orbiting Stars, Screen Flash
+    const effectY = target.y + 30;
+    if (this.effects) {
+      this.effects.createMetallicGuardBreakSparks(target.x, effectY);
+      this.effects.createGuardBreakBanner(target.x, target.y);
+      this.effects.createScreenFlash(0xffffff, 220, 0.7);
+      this.effects.createDizzyStars(target, 2400);
+    }
+
+    // 4. Camera Shake & DOM Screen Shake
+    if (this.battleCamera) {
+      this.battleCamera.shake(400, 0.04);
+    }
+    window.dispatchEvent(
+      new CustomEvent("shake-screen", {
+        detail: { intensity: "heavy", duration: 450 },
+      }),
+    );
+
+    // 5. Stagger & Dizzy Wobble Animation
+    target.setTint(0xffd54f);
+    const hitAnim = this.getAnimKey(targetData.key, targetLevel, "hit");
+    try {
+      target.play(hitAnim, true);
+    } catch (e) {}
+
+    // Cancel existing stun tween if any
+    const existingTween = isP ? this.p1StunTween : this.p2StunTween;
+    if (existingTween) {
+      existingTween.stop();
+    }
+
+    const wobbleTween = this.tweens.add({
+      targets: target,
+      rotation: { from: -0.16, to: 0.16 },
+      duration: 160,
+      yoyo: true,
+      repeat: 7, // ~2.4s total duration
+      ease: "Sine.easeInOut",
+      onComplete: () => {
+        target.clearTint();
+        target.setRotation(0);
+        if (this.scene.isActive() && !this.isBattleOver) {
+          const idleAnim = this.getAnimKey(targetData.key, targetLevel, "idle");
+          try {
+            target.play(idleAnim, true);
+          } catch (e) {}
+        }
+      },
+    });
+
+    if (isP) this.p1StunTween = wobbleTween;
+    else this.p2StunTween = wobbleTween;
+
+    // 6. Battle Log Announcement
+    if (this.battleUI) {
+      const defenderName = isP ? "JOGADOR" : this.enemyData.name.toUpperCase();
+      this.battleUI.showLog(`💥 QUEBRA DE GUARDA: ${defenderName}! ALVO VULNERÁVEL A GOLPE CARREGADO!`);
+    }
+  }
+
+  public clearDizzyStun(isP: boolean) {
+    if (isP) {
+      this.p1StunnedUntil = 0;
+      if (this.p1StunTween) {
+        this.p1StunTween.stop();
+        this.p1StunTween = undefined;
+      }
+      if (this.player && this.player.active) {
+        this.player.clearTint();
+        this.player.setRotation(0);
+        if (this.effects) this.effects.clearDizzyStars(this.player);
+      }
+    } else {
+      this.p2StunnedUntil = 0;
+      if (this.p2StunTween) {
+        this.p2StunTween.stop();
+        this.p2StunTween = undefined;
+      }
+      if (this.enemy && this.enemy.active) {
+        this.enemy.clearTint();
+        this.enemy.setRotation(0);
+        if (this.effects) this.effects.clearDizzyStars(this.enemy);
+      }
+    }
+  }
+
   public cleanupAndShowVictory(win: boolean) {
     if (this.effects) {
       try {
@@ -5292,6 +5585,8 @@ export default class BattleScene extends Phaser.Scene {
           this.enemyHp / (this.enemyMaxHp || this.enemyData.maxHp),
           this.playerKi / 100,
           this.enemyKi / 100,
+          this.p1GuardGauge / 100,
+          this.p2GuardGauge / 100,
         );
     }
   }

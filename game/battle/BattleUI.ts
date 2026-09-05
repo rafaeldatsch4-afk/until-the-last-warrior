@@ -40,10 +40,16 @@ export class BattleUI {
 
   p1KiGlow!: Phaser.GameObjects.Rectangle;
   p2KiGlow!: Phaser.GameObjects.Rectangle;
+  p1GuardBar!: Phaser.GameObjects.Rectangle;
+  p2GuardBar!: Phaser.GameObjects.Rectangle;
+  p1GuardText?: Phaser.GameObjects.Text;
+  p2GuardText?: Phaser.GameObjects.Text;
   lastP1HpP: number = 1;
   lastP2HpP: number = 1;
   lastP1KiP: number = 0;
   lastP2KiP: number = 0;
+  lastP1GuardP: number = 0;
+  lastP2GuardP: number = 0;
 
   constructor(scene: any) {
     this.scene = scene;
@@ -182,6 +188,25 @@ export class BattleUI {
     this.p1HudContainer.add(this.p1KiReadyGlow);
     this.p1KiReadyGlow.scaleX = 0;
 
+    // Player 1 Guard / Posture Bar
+    const p1GuardBg = bs.add
+      .rectangle(150, 95, 250, 5, 0x111111)
+      .setStrokeStyle(1, 0x555555, 0.7);
+    this.p1GuardBar = bs.add
+      .rectangle(25, 95, 250, 5, 0x3498db)
+      .setOrigin(0, 0.5);
+    this.p1GuardBar.scaleX = 0;
+    this.p1GuardText = bs.add
+      .text(25, 103, "🛡️ POSTURA", {
+        fontSize: "10px",
+        fontStyle: "bold",
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+        color: "#94a3b8",
+        stroke: "#000",
+        strokeThickness: 2,
+      });
+    this.p1HudContainer.add([p1GuardBg, this.p1GuardBar, this.p1GuardText]);
+
     this.p2DmgBar = bs.add
       .rectangle(685, 50, 250, 22, 0xffaa00)
       .setOrigin(0, 0.5);
@@ -218,11 +243,33 @@ export class BattleUI {
     this.p2HudContainer.add(this.p2KiReadyGlow);
     this.p2KiReadyGlow.scaleX = 0;
 
+    // Player 2 Guard / Posture Bar
+    const p2GuardBg = bs.add
+      .rectangle(810, 95, 250, 5, 0x111111)
+      .setStrokeStyle(1, 0x555555, 0.7);
+    this.p2GuardBar = bs.add
+      .rectangle(685, 95, 250, 5, 0x3498db)
+      .setOrigin(0, 0.5);
+    this.p2GuardBar.scaleX = 0;
+    this.p2GuardText = bs.add
+      .text(935, 103, "POSTURA 🛡️", {
+        fontSize: "10px",
+        fontStyle: "bold",
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+        color: "#94a3b8",
+        stroke: "#000",
+        strokeThickness: 2,
+      })
+      .setOrigin(1, 0);
+    this.p2HudContainer.add([p2GuardBg, this.p2GuardBar, this.p2GuardText]);
+
     // Reset tracking state for new rounds
     this.lastP1HpP = 1;
     this.lastP2HpP = 1;
     this.lastP1KiP = 0;
     this.lastP2KiP = 0;
+    this.lastP1GuardP = 0;
+    this.lastP2GuardP = 0;
 
     // Format names with levels for story mode
     let p1DisplayName = playerData.name;
@@ -430,7 +477,7 @@ export class BattleUI {
     }
   }
 
-  updateBars(p1HpP: number, p2HpP: number, p1KiP: number, p2KiP: number) {
+  updateBars(p1HpP: number, p2HpP: number, p1KiP: number, p2KiP: number, p1GuardP: number = 0, p2GuardP: number = 0) {
 
     if (this.p1HpBar && this.p1HpBar.active) {
       if (this.p1HpText) {
@@ -644,6 +691,57 @@ export class BattleUI {
           this.p2KiPulseTween = undefined;
           this.p2KiPulseDuration = 0;
           this.p2KiReadyGlow.setAlpha(0);
+        }
+      }
+
+      // Guard / Posture Bars Update
+      if (this.p1GuardBar && this.p1GuardBar.active) {
+        const clampedP1Guard = Phaser.Math.Clamp(p1GuardP, 0, 1);
+        this.p1GuardBar.scaleX = clampedP1Guard;
+
+        if (clampedP1Guard >= 0.85) {
+          this.p1GuardBar.fillColor = 0xff2200; // Danger Red
+          if (this.p1GuardText) {
+            this.p1GuardText.setText(clampedP1Guard >= 1 ? "💥 QUEBRADA!" : "⚠️ POSTURA CRÍTICA!");
+            this.p1GuardText.setColor("#ff3333");
+          }
+        } else if (clampedP1Guard >= 0.5) {
+          this.p1GuardBar.fillColor = 0xf39c12; // Warning Amber
+          if (this.p1GuardText) {
+            this.p1GuardText.setText("🛡️ INSTÁVEL");
+            this.p1GuardText.setColor("#f59e0b");
+          }
+        } else {
+          this.p1GuardBar.fillColor = 0x3498db; // Normal Stance
+          if (this.p1GuardText) {
+            this.p1GuardText.setText("🛡️ POSTURA");
+            this.p1GuardText.setColor("#94a3b8");
+          }
+        }
+      }
+
+      if (this.p2GuardBar && this.p2GuardBar.active) {
+        const clampedP2Guard = Phaser.Math.Clamp(p2GuardP, 0, 1);
+        this.p2GuardBar.scaleX = clampedP2Guard;
+
+        if (clampedP2Guard >= 0.85) {
+          this.p2GuardBar.fillColor = 0xff2200;
+          if (this.p2GuardText) {
+            this.p2GuardText.setText(clampedP2Guard >= 1 ? "QUEBRADA! 💥" : "POSTURA CRÍTICA! ⚠️");
+            this.p2GuardText.setColor("#ff3333");
+          }
+        } else if (clampedP2Guard >= 0.5) {
+          this.p2GuardBar.fillColor = 0xf39c12;
+          if (this.p2GuardText) {
+            this.p2GuardText.setText("INSTÁVEL 🛡️");
+            this.p2GuardText.setColor("#f59e0b");
+          }
+        } else {
+          this.p2GuardBar.fillColor = 0x3498db;
+          if (this.p2GuardText) {
+            this.p2GuardText.setText("POSTURA 🛡️");
+            this.p2GuardText.setColor("#94a3b8");
+          }
         }
       }
     }

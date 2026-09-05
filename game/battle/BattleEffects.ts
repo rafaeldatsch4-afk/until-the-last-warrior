@@ -1220,7 +1220,304 @@ export class BattleEffects {
     }
   }
 
+  // Active dizzy star tracking for clean management
+  private activeDizzyStars: Map<Phaser.GameObjects.Sprite, { tween: Phaser.Tweens.Tween; stars: Phaser.GameObjects.Sprite[] }> = new Map();
+
+  /**
+   * Spawns high-impact metallic sparks, shattered shield shards, and radial shockwaves for Guard Break
+   */
+  public createMetallicGuardBreakSparks(x: number, y: number) {
+    if (!this.scene.scene.isActive()) return;
+
+    // 1. Dual Shockwave Rings (Golden outer + Cyan inner)
+    const outerRing = this.borrowCircle(x, y, 20);
+    outerRing.setStrokeStyle(6, 0xffd700, 1).setFillStyle(0xffffff, 0.25).setDepth(200);
+    this.scene.tweens.add({
+      targets: outerRing,
+      radius: 180,
+      alpha: 0,
+      duration: 400,
+      ease: "Cubic.easeOut",
+      onComplete: () => this.recycle(outerRing),
+    });
+
+    const innerRing = this.borrowCircle(x, y, 10);
+    innerRing.setStrokeStyle(4, 0x00ffff, 1).setFillStyle(0x00ffff, 0.35).setDepth(201);
+    this.scene.tweens.add({
+      targets: innerRing,
+      radius: 120,
+      alpha: 0,
+      duration: 320,
+      ease: "Quad.easeOut",
+      onComplete: () => this.recycle(innerRing),
+    });
+
+    // 2. High-intensity Central Metallic Flare
+    const flare = this.borrowCircle(x, y, 35, 0xffffff, 1);
+    flare.setDepth(202);
+    this.scene.tweens.add({
+      targets: flare,
+      scaleX: 2.2,
+      scaleY: 2.2,
+      alpha: 0,
+      duration: 180,
+      ease: "Quad.easeOut",
+      onComplete: () => this.recycle(flare),
+    });
+
+    // 3. Dense Metallic Spark Shower (Gold, Cyan, White, Silver)
+    try {
+      const sparkColors = [0xffd700, 0x00ffff, 0xffffff, 0xffbb00, 0xd0e8ff];
+      const emitter = this.scene.add.particles(x, y, "hit_spark", {
+        speed: { min: 280, max: 750 },
+        angle: { min: 0, max: 360 },
+        scale: { start: 1.4, end: 0.1 },
+        alpha: { start: 1, end: 0 },
+        lifespan: { min: 450, max: 800 },
+        gravityY: 550,
+        blendMode: "ADD",
+        tint: sparkColors,
+        emitting: false,
+      });
+      emitter.setDepth(205);
+      emitter.explode(45);
+      this.activeEmitters.add(emitter);
+
+      this.scene.time.delayedCall(850, () => {
+        this.activeEmitters.delete(emitter);
+        emitter.destroy();
+      });
+
+      // 4. Metallic Streaks
+      const streakEmitter = this.scene.add.particles(x, y, "hit_spark_streak", {
+        speed: { min: 400, max: 900 },
+        angle: { min: 0, max: 360 },
+        scaleX: { start: 1.8, end: 0.2 },
+        scaleY: { start: 0.9, end: 0.1 },
+        alpha: { start: 1, end: 0 },
+        lifespan: { min: 280, max: 550 },
+        blendMode: "ADD",
+        tint: [0xffd700, 0x00ffff, 0xffffff],
+        emitting: false,
+      });
+      streakEmitter.setDepth(206);
+      streakEmitter.explode(22);
+      this.activeEmitters.add(streakEmitter);
+
+      this.scene.time.delayedCall(600, () => {
+        this.activeEmitters.delete(streakEmitter);
+        streakEmitter.destroy();
+      });
+
+      // 5. Broken Metallic Shield Shards
+      const shardTexture = this.scene.textures.exists("metal_shard") ? "metal_shard" : "hit_spark";
+      const shardEmitter = this.scene.add.particles(x, y, shardTexture, {
+        speed: { min: 200, max: 600 },
+        angle: { min: 0, max: 360 },
+        scale: { start: 1.2, end: 0.3 },
+        alpha: { start: 1, end: 0 },
+        lifespan: { min: 500, max: 950 },
+        gravityY: 700,
+        rotate: { min: 0, max: 720 },
+        tint: [0xd6eaf8, 0xffffff, 0xf1c40f, 0x85c1e9],
+        emitting: false,
+      });
+      shardEmitter.setDepth(207);
+      shardEmitter.explode(16);
+      this.activeEmitters.add(shardEmitter);
+
+      this.scene.time.delayedCall(1000, () => {
+        this.activeEmitters.delete(shardEmitter);
+        shardEmitter.destroy();
+      });
+
+      // 6. Secondary delayed spark crackle for prolonged sizzle
+      this.scene.time.delayedCall(70, () => {
+        if (!this.scene.scene.isActive()) return;
+        const delayedEmitter = this.scene.add.particles(x, y, "hit_spark", {
+          speed: { min: 150, max: 480 },
+          angle: { min: 200, max: 340 },
+          scale: { start: 1.0, end: 0.1 },
+          alpha: { start: 0.9, end: 0 },
+          lifespan: { min: 350, max: 650 },
+          gravityY: 600,
+          blendMode: "ADD",
+          tint: [0xffd700, 0xff5500, 0xffffff],
+          emitting: false,
+        });
+        delayedEmitter.setDepth(205);
+        delayedEmitter.explode(18);
+        this.activeEmitters.add(delayedEmitter);
+
+        this.scene.time.delayedCall(700, () => {
+          this.activeEmitters.delete(delayedEmitter);
+          delayedEmitter.destroy();
+        });
+      });
+    } catch (e) {
+      console.warn("Could not create particle emitter for guard break", e);
+    }
+  }
+
+  /**
+   * Floating 3D Arcade Announcement for Guard Break
+   */
+  public createGuardBreakBanner(x: number, y: number) {
+    if (!this.scene.scene.isActive()) return;
+
+    const mainText = this.borrowText(x, y - 60, "💥 QUEBRA DE GUARDA!", {
+      fontSize: "32px",
+      color: "#ff2200",
+      fontStyle: "900",
+      stroke: "#000000",
+      strokeThickness: 7,
+      shadow: {
+        offsetX: 0,
+        offsetY: 4,
+        color: "#ffd700",
+        blur: 10,
+        fill: true,
+      },
+    });
+    mainText.setOrigin(0.5, 0.5);
+    mainText.setDepth(300);
+    mainText.setScale(0.3);
+    mainText.setAlpha(1);
+
+    const subText = this.borrowText(x, y - 26, "⚡ POSTURA ROMPIDA • ALVO VULNERÁVEL!", {
+      fontSize: "16px",
+      color: "#ffd700",
+      fontStyle: "bold",
+      stroke: "#000000",
+      strokeThickness: 5,
+    });
+    subText.setOrigin(0.5, 0.5);
+    subText.setDepth(300);
+    subText.setScale(0.5);
+    subText.setAlpha(1);
+
+    // Pop-in and rise tween
+    this.scene.tweens.add({
+      targets: mainText,
+      scaleX: 1.15,
+      scaleY: 1.15,
+      y: y - 85,
+      duration: 350,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        this.scene.tweens.add({
+          targets: mainText,
+          y: y - 110,
+          alpha: 0,
+          duration: 900,
+          delay: 400,
+          ease: "Quad.easeIn",
+          onComplete: () => this.recycle(mainText),
+        });
+      },
+    });
+
+    this.scene.tweens.add({
+      targets: subText,
+      scaleX: 1.0,
+      scaleY: 1.0,
+      y: y - 52,
+      duration: 350,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        this.scene.tweens.add({
+          targets: subText,
+          y: y - 76,
+          alpha: 0,
+          duration: 850,
+          delay: 450,
+          ease: "Quad.easeIn",
+          onComplete: () => this.recycle(subText),
+        });
+      },
+    });
+  }
+
+  /**
+   * Spawns 3 orbiting dizzy stars above the stunned target in an elliptical 3D path
+   */
+  public createDizzyStars(target: Phaser.GameObjects.Sprite, durationMs: number) {
+    if (!this.scene.scene.isActive() || !target || !target.active) return;
+
+    // Clear existing dizzy stars on target first
+    this.clearDizzyStars(target);
+
+    const starTexture = this.scene.textures.exists("dizzy_star") ? "dizzy_star" : "hit_spark";
+    const starColors = [0xffd700, 0xffee55, 0xffa500];
+    const stars: Phaser.GameObjects.Sprite[] = [];
+
+    for (let i = 0; i < 3; i++) {
+      const star = this.scene.add.sprite(target.x, target.y - 45, starTexture);
+      star.setTint(starColors[i]);
+      star.setScale(1.2);
+      star.setDepth(target.depth + 2);
+      stars.push(star);
+    }
+
+    const animState = { angle: 0 };
+    const tween = this.scene.tweens.add({
+      targets: animState,
+      angle: 360,
+      duration: 1100,
+      repeat: -1,
+      ease: "Linear",
+      onUpdate: () => {
+        if (!target.active || !this.scene.scene.isActive()) {
+          this.clearDizzyStars(target);
+          return;
+        }
+        for (let i = 0; i < stars.length; i++) {
+          const star = stars[i];
+          if (!star.active) continue;
+          const currentRad = Phaser.Math.DegToRad(animState.angle + (i * 120));
+          const sx = target.x + Math.cos(currentRad) * 38;
+          const sy = target.y - 45 + Math.sin(currentRad) * 14;
+          star.setPosition(sx, sy);
+          const depthFactor = Math.sin(currentRad);
+          star.setScale(0.9 + depthFactor * 0.35);
+          star.setDepth(target.depth + (depthFactor > 0 ? 3 : -3));
+          star.setRotation(currentRad * 2);
+        }
+      },
+    });
+
+    this.activeDizzyStars.set(target, { tween, stars });
+
+    // Auto cleanup after duration
+    if (durationMs > 0) {
+      this.scene.time.delayedCall(durationMs, () => {
+        this.clearDizzyStars(target);
+      });
+    }
+  }
+
+  /**
+   * Cleans up orbiting dizzy stars from target
+   */
+  public clearDizzyStars(target: Phaser.GameObjects.Sprite) {
+    const entry = this.activeDizzyStars.get(target);
+    if (entry) {
+      if (entry.tween) entry.tween.stop();
+      entry.stars.forEach((s) => {
+        try {
+          this.scene.tweens.killTweensOf(s);
+          s.destroy();
+        } catch (e) {}
+      });
+      this.activeDizzyStars.delete(target);
+    }
+  }
+
   public clearAll() {
+    // Clear active dizzy stars
+    this.activeDizzyStars.forEach((_, target) => this.clearDizzyStars(target));
+    this.activeDizzyStars.clear();
+
     // Kill active managed tweens
     this.activeTweens.forEach((tw) => {
       try {
