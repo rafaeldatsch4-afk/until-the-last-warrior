@@ -1,7 +1,7 @@
 import { detectLowEndDevice } from "../systems/DeviceCapability";
 import { transitionTo } from "../utils/sceneTransition";
-import { saveToCloud } from "../systems/CloudSave";
-import { auth } from "../../firebase/init";
+import { startCloudSaveSync, syncCloudSaveImmediate } from "../systems/CloudSave";
+import { trackCoins, validCoins } from "../systems/CoinSync";
 import Phaser from "phaser";
 import { INITIAL_CHARACTERS } from "../data";
 import { AchievementSystem } from "../systems/Achievements";
@@ -65,8 +65,11 @@ console.log("Initializing Game State...");
           console.log("Found save data:", parsed);
 
           // Restore basic stats safely
-          if (typeof parsed.coins === "number" && !isNaN(parsed.coins))
+          if (validCoins(parsed.coins))
             defaultState.coins = parsed.coins;
+          if (parsed.coinSync && validCoins(parsed.coinSync.balance) && Number.isFinite(parsed.coinSync.updatedAt)) {
+            defaultState.coinSync = parsed.coinSync;
+          }
           if (
             typeof parsed.difficulty === "number" &&
             !isNaN(parsed.difficulty)
@@ -144,12 +147,16 @@ console.log("Initializing Game State...");
         // Fallback to default state silently if corrupt
       }
 
+      defaultState.coinSync ||= { balance: defaultState.coins, updatedAt: 0, ownerId: null };
+
       // Set Global Object with Save Method
       window.UTLW = {
         state: defaultState,
         save: () => {
           try {
+            window.UTLW.state.coinSync = trackCoins(window.UTLW.state.coins, window.UTLW.state.coinSync);
             const dataToSave = {
+              coinSync: window.UTLW.state.coinSync,
               coins: window.UTLW.state.coins,
               difficulty: window.UTLW.state.difficulty,
               gameMode: window.UTLW.state.gameMode,
@@ -173,41 +180,16 @@ console.log("Initializing Game State...");
         },
       };
 
-      // --- AUTO SAVE SYSTEM ---
-      // Automatically save every 5 seconds to prevent data loss on reload/crash
-      setInterval(() => {
-        if (window.UTLW && window.UTLW.save) {
-          window.UTLW.save();
-        }
-      }, 5000);
-
-      // --- CLOUD AUTO SAVE SYSTEM ---
-      setInterval(() => {
-        const user = auth.currentUser;
-        if (user && window.UTLW) {
-          saveToCloud(user.uid, {
-            coins: window.UTLW.state.coins,
-            stats: window.UTLW.state.stats,
-            storyState: window.UTLW.state.storyState,
-            unlockedTitles: window.UTLW.state.unlockedTitles,
-            equippedTitle: window.UTLW.state.equippedTitle,
-            characters: window.UTLW.state.characters,
-          });
-        }
-      }, 30000);
-
-      window.addEventListener("beforeunload", () => {
-        const user = auth.currentUser;
-        if (user && window.UTLW) {
-          saveToCloud(user.uid, {
-            coins: window.UTLW.state.coins,
-            stats: window.UTLW.state.stats,
-            storyState: window.UTLW.state.storyState,
-            unlockedTitles: window.UTLW.state.unlockedTitles,
-            equippedTitle: window.UTLW.state.equippedTitle,
-            characters: window.UTLW.state.characters,
-          });
-        }
+      const stopCloudSync = startCloudSaveSync();
+      const localTimer = setInterval(() => window.UTLW?.save(), 5000);
+      const cloudTimer = setInterval(() => { void syncCloudSaveImmediate(); }, 30000);
+      const saveBeforeUnload = () => window.UTLW?.save();
+      window.addEventListener('beforeunload', saveBeforeUnload);
+      this.game.events.once('destroy', () => {
+        clearInterval(localTimer);
+        clearInterval(cloudTimer);
+        stopCloudSync();
+        window.removeEventListener('beforeunload', saveBeforeUnload);
       });
       console.log("Auto-Save initialized (5s interval)");
     }
