@@ -191,17 +191,7 @@ export const AuthButton: React.FC = () => {
 
         await setDoc(userRef, updateData, { merge: true });
 
-        const updatedSnap = await getDoc(userRef);
-        if (updatedSnap.exists()) {
-          const updatedData = updatedSnap.data();
-          await setDoc(doc(db, 'leaderboard_public', u.uid), {
-            username: updatedData.username || 'Jogador',
-            avatar: updatedData.avatar || '🥷',
-            wins: updatedData.wins || 0,
-            elo: updatedData.elo || 1000,
-            matches: updatedData.matches || 0,
-          }, { merge: true });
-        }
+        // Private progress is client-owned; never publish it as a verified score.
 
         setStats(prev => ({
            matches: prev.matches + 1,
@@ -252,14 +242,6 @@ export const AuthButton: React.FC = () => {
                  await setDoc(userRef, { matches }, { merge: true });
              }
              
-             await setDoc(doc(db, 'leaderboard_public', u.uid), {
-                 username: dbUname,
-                 avatar: dbAvatar,
-                 wins: wins,
-                 elo: data?.elo || 1000,
-                 matches: matches,
-             }, { merge: true });
-
              const rawCloudAchs = data?.achievements || [];
              const normalizedCloudAchs = normalizeAchievements(rawCloudAchs);
              if (window.UTLW && window.UTLW.state) {
@@ -371,14 +353,6 @@ export const AuthButton: React.FC = () => {
             elo: 1000,
             coins: 1000,
           });
-          await setDoc(doc(db, 'leaderboard_public', cred.user.uid), {
-            username: username,
-            avatar: selectedAvatar,
-            wins: 0,
-            elo: 1000,
-            matches: 0,
-          });
-
           // Upload current local progress as initial cloud save
           if (window.UTLW && window.UTLW.state) {
             syncCloudSaveImmediate();

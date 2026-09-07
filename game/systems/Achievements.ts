@@ -1,5 +1,5 @@
 import { auth, db } from "../../firebase/init";
-import { doc, updateDoc, setDoc, getDoc } from "firebase/firestore";
+import { doc, updateDoc, setDoc } from "firebase/firestore";
 import { GameState } from "../types";
 
 export interface Achievement {
@@ -160,20 +160,7 @@ export class AchievementSystem {
           achievements: achievements
         }, { merge: true });
         
-        let playerName = user.displayName || "Guerreiro";
-        let avatar = "🥷";
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            playerName = userDoc.data().username || playerName;
-            avatar = userDoc.data().avatar || avatar;
-          }
-        } catch (err) {}
-        await setDoc(doc(db, "leaderboard_public", user.uid), {
-          username: playerName,
-          avatar: avatar,
-          wins: stats?.totalWins || 0,
-        }, { merge: true });
+        // Achievements remain private progress, not verified leaderboard results.
       }
     } catch (e) {
       console.warn("Failed to sync stats", e);

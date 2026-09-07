@@ -1,5 +1,12 @@
 # Security Specification
 
+## Public leaderboard trust boundary
+- Clients cannot create or update `leaderboard_public` entries, including their own.
+- Public reads and owner-only deletion remain allowed.
+- Private profile stats and saves are untrusted and must not be copied into the ranking.
+- New scores are paused until a trusted backend validates match outcomes.
+- See `docs/RANKING_SECURITY.md` for rollout, limitations and emulator tests.
+
 ## Data Invariants
 - A user's profile can only be created, read, or modified by the user themselves.
 - The `matches`, `wins`, and `losses` fields must be numbers.

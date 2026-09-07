@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "start": "node dist/server.cjs",
     "lint": "tsc --noEmit",
-    "test": "tsx --test game/utils/*.test.ts game/systems/*.test.ts"
+    "test": "tsx --test game/utils/*.test.ts game/systems/*.test.ts",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-utlw-rules --config firebase.emulator.json \"node --test tests/firestore.rules.test.mjs\""
   },
   "dependencies": {
     "express": "^5.2.1",
@@ -23,11 +24,13 @@
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
     "@resvg/resvg-js": "^2.6.2",
     "@types/express": "^5.0.6",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "esbuild": "^0.28.0",
+    "firebase-tools": "^14.27.0",
     "sharp": "^0.35.3",
     "tsx": "^4.22.3",
     "typescript": "~5.8.2",
