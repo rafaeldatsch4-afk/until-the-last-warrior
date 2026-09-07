@@ -589,6 +589,7 @@ export default class BattleScene extends Phaser.Scene {
     if (this.isMatchPaused) return; // Freeze logic if paused
 
     if (this.battleEnvironment) this.battleEnvironment.update(time, delta);
+    if (this.battleInput) this.battleInput.update();
 
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
 

@@ -50,9 +50,27 @@ export class BattleInput {
   mobileP1SpecialJustUp = false;
   isEditingHUD = false;
   editHudTextObj: Phaser.GameObjects.Text | null = null;
+  updateJoystickPositionFn: ((p: Phaser.Input.Pointer) => void) | null = null;
+  releaseJoystickFn: ((p?: Phaser.Input.Pointer) => void) | null = null;
+  enableJoyDragFn: ((enable: boolean) => void) | null = null;
 
   constructor(scene: BattleScene) {
     this.scene = scene;
+  }
+
+  public update() {
+    if (this.mobileJoystickPointerId !== null) {
+      const activePtr = (this.scene.input.manager as any)?.pointers?.find(
+        (p: any) => p.id === this.mobileJoystickPointerId
+      );
+      if (!activePtr || !activePtr.isDown) {
+        if (this.releaseJoystickFn) {
+          this.releaseJoystickFn();
+        }
+      } else if (this.updateJoystickPositionFn) {
+        this.updateJoystickPositionFn(activePtr);
+      }
+    }
   }
 
   // --- Abstraction Layer ---
@@ -63,15 +81,15 @@ export class BattleInput {
       switch (action) {
         case "defend": return this.keys.p1_defend.isDown || this.mobileP1Defend;
         case "charge": return this.keys.p1_charge.isDown || this.mobileP1Charge;
-        case "left": return this.keys.p1_left.isDown || vx < -0.28;
-        case "right": return this.keys.p1_right.isDown || vx > 0.28;
+        case "left": return this.keys.p1_left.isDown || vx < -0.22;
+        case "right": return this.keys.p1_right.isDown || vx > 0.22;
         case "up": {
-          // Jump triggers only when the stick is pushed decisively straight up, NOT in diagonal corners
-          const isJoyUp = vy < -0.55 && Math.abs(vx) < 0.45;
+          // Jump triggers smoothly when stick is pushed up
+          const isJoyUp = vy < -0.45 && Math.abs(vx) < 0.7;
           return this.keys.p1_up.isDown || isJoyUp;
         }
         case "down": {
-          const isJoyDown = vy > 0.55 && Math.abs(vx) < 0.55;
+          const isJoyDown = vy > 0.45 && Math.abs(vx) < 0.7;
           return this.keys.p1_down.isDown || isJoyDown;
         }
         case "special": return this.keys.p1_special.isDown || this.mobileP1Special;
@@ -351,18 +369,33 @@ export class BattleInput {
     };
 
     // --- Virtual Joystick ---
-    let defaultJoyX = dpadPos.x;
-    let defaultJoyY = dpadPos.y;
-    
-    // Check localStorage for saved joystick position
+    const joyRadius = 60 * dpadScale;
+    const joyThumbRadius = 26 * dpadScale;
+    const maxDist = 45 * dpadScale;
+    const safeMargin = 16;
+
+    // Strict boundary limits keeping the joystick 100% inside visible screen area
+    const minJoyX = visible.left + joyRadius + safeMargin;
+    const maxJoyX = Math.min(visible.centerX - 50, visible.left + 240);
+    const minJoyY = Math.max(visible.centerY + 30, visible.bottom - 220);
+    const maxJoyY = visible.bottom - joyRadius - safeMargin;
+
+    let defaultJoyX = minJoyX + 10;
+    let defaultJoyY = maxJoyY - 10;
+
+    // Check localStorage for saved joystick position, strictly clamped to safe screen bounds
     const savedJoy = localStorage.getItem(`hudPos_JOYSTICK`);
     if (savedJoy) {
       try {
         const parsed = JSON.parse(savedJoy);
-        const margin = 20;
-        defaultJoyX = Math.max(visible.left - 40, Math.min(parsed.x, visible.right - margin));
-        defaultJoyY = Math.max(visible.top - 10, Math.min(parsed.y, visible.bottom - margin));
+        if (typeof parsed.x === "number" && typeof parsed.y === "number") {
+          defaultJoyX = Phaser.Math.Clamp(parsed.x, minJoyX, maxJoyX);
+          defaultJoyY = Phaser.Math.Clamp(parsed.y, minJoyY, maxJoyY);
+        }
       } catch (e) {}
+    } else if (cfg?.dpadPos) {
+      defaultJoyX = Phaser.Math.Clamp(cfg.dpadPos.x, minJoyX, maxJoyX);
+      defaultJoyY = Phaser.Math.Clamp(cfg.dpadPos.y, minJoyY, maxJoyY);
     }
 
     let joyRootX = defaultJoyX;
@@ -372,59 +405,77 @@ export class BattleInput {
       .container(joyRootX, joyRootY)
       .setScrollFactor(0)
       .setDepth(100);
-    const joyBase = this.scene.add
-      .circle(0, 0, 75, 0x000000, 0.4)
-      .setStrokeStyle(3, 0xffffff, 0.3);
-    const joyThumb = this.scene.add
-      .circle(0, 0, 35, 0xffffff, 0.6)
-      .setStrokeStyle(2, 0x000000, 0.5);
 
-    joyContainer.add([joyBase, joyThumb]);
+    const joyBase = this.scene.add
+      .circle(0, 0, joyRadius, 0x071026, 0.45)
+      .setStrokeStyle(2.5, 0x38bdf8, 0.5);
+
+    const joyBaseInner = this.scene.add
+      .circle(0, 0, joyRadius * 0.45, 0x0f172a, 0.25)
+      .setStrokeStyle(1.5, 0xffffff, 0.2);
+
+    const joyThumb = this.scene.add
+      .circle(0, 0, joyThumbRadius, 0xffffff, 0.85)
+      .setStrokeStyle(2, 0x0284c7, 0.7);
+
+    joyContainer.add([joyBase, joyBaseInner, joyThumb]);
     joyContainer.setScale(dpadScale);
     joyBase.setAlpha(opacity);
     this.mobileControls.push(joyContainer);
 
-    // Make joystick draggable in HUD edit mode
+    if (this.scene.battleUI?.uiContainer) {
+      this.scene.battleUI?.uiContainer.add(joyContainer);
+    }
+
+    // Draggable in HUD edit mode ONLY
     const joyCircleContains = (c: Phaser.Geom.Circle, x: number, y: number) => {
       if (c.radius <= 0) return false;
       const dx = c.x - x;
       const dy = c.y - y;
       return dx * dx + dy * dy <= c.radius * c.radius;
     };
-    joyContainer.setInteractive(new Phaser.Geom.Circle(0, 0, 75), joyCircleContains);
-    this.scene.input.setDraggable(joyContainer);
-    
-    joyContainer.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+
+    joyContainer.on("drag", (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
       if (!this.isEditingHUD) return;
-      joyContainer.x = dragX;
-      joyContainer.y = dragY;
+      joyContainer.x = Phaser.Math.Clamp(dragX, minJoyX, maxJoyX);
+      joyContainer.y = Phaser.Math.Clamp(dragY, minJoyY, maxJoyY);
     });
-    
-    joyContainer.on('dragend', () => {
+
+    joyContainer.on("dragend", () => {
       if (!this.isEditingHUD) return;
       defaultJoyX = joyContainer.x;
       defaultJoyY = joyContainer.y;
       localStorage.setItem(`hudPos_JOYSTICK`, JSON.stringify({ x: joyContainer.x, y: joyContainer.y }));
     });
 
-    // Large invisible hit area on the bottom-left quadrant for the FLOATING joystick
-    // We remove the old rectangle hit area and use global checking for this too.
-    if (this.scene.battleUI?.uiContainer) {
-      this.scene.battleUI?.uiContainer.add(joyContainer);
-    }
+    this.enableJoyDragFn = (enable: boolean) => {
+      if (enable) {
+        joyContainer.setInteractive(new Phaser.Geom.Circle(0, 0, joyRadius), joyCircleContains);
+        this.scene.input.setDraggable(joyContainer);
+      } else {
+        joyContainer.disableInteractive();
+      }
+    };
+    this.enableJoyDragFn(false);
 
     const getLocalPnt = (pointer: Phaser.Input.Pointer) => {
+      if (this.scene.battleUI?.uiContainer) {
+        const uc = this.scene.battleUI.uiContainer;
+        return {
+          x: (pointer.x - uc.x) / uc.scaleX,
+          y: (pointer.y - uc.y) / uc.scaleY,
+        };
+      }
       return { x: pointer.x, y: pointer.y };
     };
 
-    const handleJoystick = (pointer: Phaser.Input.Pointer) => {
+    const updateJoystickWithPointer = (pointer: Phaser.Input.Pointer) => {
       if (this.mobileJoystickPointerId !== pointer.id) return;
 
       const loc = getLocalPnt(pointer);
 
       let dx = loc.x - joyRootX;
       let dy = loc.y - joyRootY;
-      const maxDist = 75;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist > maxDist) {
@@ -434,33 +485,16 @@ export class BattleInput {
 
       joyThumb.setPosition(dx, dy);
 
-      this.mobileJoystickVector = { x: dx / maxDist, y: dy / maxDist };
+      // Deadzone is 2.5px to filter micro-jitter, followed by smooth normalized vector
+      this.mobileJoystickVector = {
+        x: dist > 2.5 ? dx / maxDist : 0,
+        y: dist > 2.5 ? dy / maxDist : 0,
+      };
     };
+    this.updateJoystickPositionFn = updateJoystickWithPointer;
 
-    this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
-      if (this.isEditingHUD) return;
-      if (currentlyOver && currentlyOver.length > 0) return; // Prevent triggering if clicking a button
-      const loc = getLocalPnt(pointer);
-      // Only trigger joystick if the pointer is on the left half of the screen
-      if (loc.x < gw / 2 && loc.y > gh / 2 - 50) {
-        if (this.mobileJoystickPointerId === null) {
-          this.mobileJoystickPointerId = pointer.id;
-
-          // Standard Floating Joystick Behavior
-          joyRootX = loc.x;
-          joyRootY = loc.y;
-          joyContainer.setPosition(joyRootX, joyRootY);
-          joyBase.setAlpha(Math.min(1, opacity * 1.5));
-
-          handleJoystick(pointer);
-        }
-      }
-    });
-
-    this.scene.input.on("pointermove", handleJoystick);
-
-    const releaseJoystick = (pointer: Phaser.Input.Pointer) => {
-      if (this.mobileJoystickPointerId === pointer.id) {
+    const releaseJoystick = (pointer?: Phaser.Input.Pointer) => {
+      if (!pointer || this.mobileJoystickPointerId === pointer.id) {
         this.mobileJoystickPointerId = null;
 
         joyRootX = defaultJoyX;
@@ -472,9 +506,73 @@ export class BattleInput {
         this.mobileJoystickVector = { x: 0, y: 0 };
       }
     };
+    this.releaseJoystickFn = releaseJoystick;
 
-    this.scene.input.on("pointerup", releaseJoystick);
-    this.scene.input.on("pointerout", releaseJoystick);
+    this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
+      if (this.isEditingHUD) return;
+
+      // Do not capture if user clicked an action button
+      if (currentlyOver && currentlyOver.length > 0) {
+        const hitOtherButton = currentlyOver.some((obj: any) => {
+          if (obj === joyContainer || (joyContainer.list && joyContainer.list.includes(obj))) {
+            return false;
+          }
+          return true;
+        });
+        if (hitOtherButton) return;
+      }
+
+      const loc = getLocalPnt(pointer);
+
+      // Move zone: left 50% of the screen and below 35% height
+      const inMoveZone = (loc.x < gw * 0.5 && loc.y > gh * 0.35);
+      const distToDefault = Phaser.Math.Distance.Between(loc.x, loc.y, defaultJoyX, defaultJoyY);
+      const isNearJoy = distToDefault <= joyRadius * 1.5;
+
+      if (inMoveZone || isNearJoy) {
+        if (this.mobileJoystickPointerId === null) {
+          this.mobileJoystickPointerId = pointer.id;
+
+          if (isNearJoy) {
+            // Keep home base stationary when touching near it for instant response
+            joyRootX = defaultJoyX;
+            joyRootY = defaultJoyY;
+          } else {
+            // Floating joystick: anchor near touch within safe screen bounds
+            joyRootX = Phaser.Math.Clamp(loc.x, minJoyX, maxJoyX);
+            joyRootY = Phaser.Math.Clamp(loc.y, minJoyY, maxJoyY);
+          }
+
+          joyContainer.setPosition(joyRootX, joyRootY);
+          joyBase.setAlpha(Math.min(0.9, opacity * 1.6));
+
+          updateJoystickWithPointer(pointer);
+        }
+      }
+    });
+
+    this.scene.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      if (this.mobileJoystickPointerId === pointer.id) {
+        updateJoystickWithPointer(pointer);
+      }
+    });
+
+    this.scene.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
+      if (this.mobileJoystickPointerId === pointer.id) {
+        releaseJoystick(pointer);
+      }
+    });
+
+    this.scene.input.on("gameout", () => {
+      if (this.mobileJoystickPointerId !== null) {
+        const activePtr = (this.scene.input.manager as any)?.pointers?.find(
+          (p: any) => p.id === this.mobileJoystickPointerId
+        );
+        if (!activePtr || !activePtr.isDown) {
+          releaseJoystick();
+        }
+      }
+    });
     // --- End Virtual Joystick ---
 
     // Right side (Attacks)
@@ -685,6 +783,7 @@ export class BattleInput {
       () => {
         isEditing = !isEditing;
         this.isEditingHUD = isEditing;
+        if (this.enableJoyDragFn) this.enableJoyDragFn(isEditing);
         editBtnObj.setActive(isEditing);
         editBtnObj.setLabel(isEditing ? "💾 SALVAR" : "🛠 HUD");
         if (this.scene.battleUI?.setHudEditMode) {
