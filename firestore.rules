@@ -6,7 +6,11 @@ service cloud.firestore {
     }
     match /leaderboard_public/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      // Scores must come from a trusted backend after validating match results.
+      // A user's editable profile is not proof of wins or Elo.
+      allow create, update: if false;
+      // Keep account deletion working without allowing score replacement.
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
     match /{document=**} {
       allow read, write: if false;
