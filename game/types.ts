@@ -55,6 +55,7 @@ export interface TournamentRound {
 
 export interface GameState {
   coins: number;
+  coinSync?: import('./systems/CoinSync').CoinRevision;
   elo?: number;
   difficulty: number; // 0: Easy, 1: Normal, 2: Hard
   gameMode:

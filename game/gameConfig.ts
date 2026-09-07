@@ -2,18 +2,8 @@ import Phaser from "phaser";
 import BootScene from "./scenes/BootScene";
 import PreloadScene from "./scenes/PreloadScene";
 import MenuScene from "./scenes/MenuScene";
-import ModeSelectScene from "./scenes/ModeSelectScene";
-import CharacterSelectScene from "./scenes/CharacterSelectScene";
-import TournamentScene from "./scenes/TournamentScene";
-import BattleScene from "./scenes/BattleScene";
-import StoreScene from "./scenes/StoreScene";
 import SettingsScene from "./scenes/SettingsScene";
 import PauseScene from "./scenes/PauseScene";
-import MultiplayerLobbyScene from "./scenes/MultiplayerLobbyScene";
-import CharacterCreatorScene from "./scenes/CharacterCreatorScene";
-import LeaderboardScene from "./scenes/LeaderboardScene";
-import StoryHubScene from "./scenes/StoryHubScene";
-import ProfileScene from "./scenes/ProfileScene";
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -28,18 +18,8 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     BootScene,
     PreloadScene,
     MenuScene,
-    ModeSelectScene,
-    CharacterSelectScene,
-    TournamentScene,
-    BattleScene,
-    StoreScene,
     SettingsScene,
     PauseScene,
-    MultiplayerLobbyScene,
-    CharacterCreatorScene,
-    LeaderboardScene,
-    StoryHubScene,
-    ProfileScene,
   ],
 
   scale: {

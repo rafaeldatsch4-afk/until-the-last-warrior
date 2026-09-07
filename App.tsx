@@ -179,6 +179,17 @@ const TextInputModal: React.FC<{
 
 const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sceneLoadError, setSceneLoadError] = useState(false);
+  useEffect(() => {
+    const onError = () => setSceneLoadError(true);
+    const onTransition = () => setSceneLoadError(false);
+    window.addEventListener('scene-load-error', onError);
+    window.addEventListener('scene-transition-start', onTransition);
+    return () => {
+      window.removeEventListener('scene-load-error', onError);
+      window.removeEventListener('scene-transition-start', onTransition);
+    };
+  }, []);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isMenuScene, setIsMenuScene] = useState(true);
   const [textInputPrompt, setTextInputPrompt] = useState<TextInputPromptData | null>(null);
@@ -398,6 +409,10 @@ const App: React.FC = () => {
 
         <div className="relative overflow-hidden bg-[#071026] w-full h-full">
           <GameCanvas />
+      {sceneLoadError && <div role="alert" className="fixed bottom-4 left-4 right-4 z-[400] bg-slate-900 text-white p-3 rounded-lg text-center">
+        Não foi possível carregar esta tela. Verifique a conexão e tente abrir novamente.
+        <button onClick={() => setSceneLoadError(false)} className="ml-3 underline">Fechar</button>
+      </div>}
         </div>
       </main>
 

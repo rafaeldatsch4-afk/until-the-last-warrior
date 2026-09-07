@@ -8,7 +8,7 @@ import {
   deleteUser,
   updatePassword,
 } from 'firebase/auth';
-import { loadFromCloud, mergeCloudSaveIntoLocal, syncCloudSaveImmediate } from '../game/systems/CloudSave';
+import { syncCloudSaveImmediate } from '../game/systems/CloudSave';
 import { ACHIEVEMENTS, Achievement, AchievementSystem, normalizeAchievements } from '../game/systems/Achievements';
 import { doc, setDoc, serverTimestamp, getDoc, deleteDoc, increment, arrayUnion } from 'firebase/firestore';
 
@@ -167,7 +167,7 @@ export const AuthButton: React.FC = () => {
         };
         
         let earnedCoins = win ? 50 : 10;
-        updateData.coins = increment(earnedCoins);
+        // Coins are updated locally, then atomically mirrored by CloudSave.
         
         if (gameMode === "ranked_pvp") {
            const currentElo = stats.elo ?? 1000;
@@ -218,7 +218,7 @@ export const AuthButton: React.FC = () => {
         if (!auth.currentUser) return;
         const userRef = doc(db, 'users', auth.currentUser.uid);
         setStats(prev => ({ ...prev, coins: e.detail.coins }));
-        await setDoc(userRef, { coins: e.detail.coins }, { merge: true });
+        // UI notification only: the profile must never be a second coin writer.
     };
     window.addEventListener('sync-coins', handleSyncCoins);
 
@@ -267,18 +267,9 @@ export const AuthButton: React.FC = () => {
              });
 
              if (window.UTLW && window.UTLW.state) {
-                 window.UTLW.state.coins = data?.coins || 0;
                  window.UTLW.state.elo = data?.elo || 1000;
              }
 
-             // Load complete cloud save from Firestore
-             loadFromCloud(u.uid).then((cloudSave) => {
-               if (cloudSave) {
-                 mergeCloudSaveIntoLocal(cloudSave);
-                 refreshLocalStateView();
-               }
-             });
-             
              await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
           } else {
              setDbUsername(u.email?.split('@')[0] || '');

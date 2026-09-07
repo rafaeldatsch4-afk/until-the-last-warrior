@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { gameConfig } from '../game/gameConfig';
-import { auth, db } from '../firebase/init';
-import { doc, onSnapshot } from 'firebase/firestore';
 
 const GameCanvas: React.FC = () => {
   const gameRef = useRef<Phaser.Game | null>(null);
@@ -10,64 +8,6 @@ const GameCanvas: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   
-  // Middleware de sincronização de moedas
-  useEffect(() => {
-    let unsubscribeProgress: () => void;
-    let unsubscribeProfile: () => void;
-
-    const setupSync = () => {
-      const unsubAuth = auth.onAuthStateChanged((user) => {
-        if (unsubscribeProgress) unsubscribeProgress();
-        if (unsubscribeProfile) unsubscribeProfile();
-
-        if (user) {
-          // Listen to the cloud save progress doc
-          const progressRef = doc(db, 'users', user.uid, 'save', 'progress');
-          unsubscribeProgress = onSnapshot(progressRef, (snap) => {
-            if (snap.exists()) {
-              const data = snap.data();
-              if (data.coins !== undefined && window.UTLW && window.UTLW.state) {
-                if (window.UTLW.state.coins !== data.coins) {
-                  window.UTLW.state.coins = data.coins;
-                  window.dispatchEvent(new CustomEvent('sync-coins', { detail: { coins: data.coins } }));
-                }
-              }
-            }
-          });
-
-          // Listen to the user profile doc just in case coins are updated there directly
-          const userRef = doc(db, 'users', user.uid);
-          unsubscribeProfile = onSnapshot(userRef, (snap) => {
-            if (snap.exists()) {
-              const data = snap.data();
-              if (data.coins !== undefined && window.UTLW && window.UTLW.state) {
-                // If profile has more coins, sync to game (e.g. bought in store)
-                // We'll trust the game state primarily, but if they differ significantly, we can sync.
-                // Actually, just syncing from progressRef is usually enough, but we can do it here too
-                // if we want to ensure both are in sync.
-                if (window.UTLW.state.coins !== data.coins) {
-                  window.UTLW.state.coins = data.coins;
-                  // Also we should save to progress to keep both in sync
-                  if (window.UTLW.save) window.UTLW.save();
-                  window.dispatchEvent(new CustomEvent('sync-coins', { detail: { coins: data.coins } }));
-                }
-              }
-            }
-          });
-        }
-      });
-      return unsubAuth;
-    };
-
-    const unsubAuth = setupSync();
-
-    return () => {
-      if (unsubAuth) unsubAuth();
-      if (unsubscribeProgress) unsubscribeProgress();
-      if (unsubscribeProfile) unsubscribeProfile();
-    };
-  }, []);
-
   useEffect(() => {
     const handleSceneChange = (e: any) => {
       if (e.detail === 'MenuScene') {

@@ -1,9 +1,11 @@
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, getDocFromServer, onSnapshot } from "firebase/firestore";
+import { writeCloudProgress } from "./CloudSaveTransaction";
 import { db, auth } from "../../firebase/init";
-import { GameState } from "../types";
+import { chooseCoins, cloudCoinRevision, trackCoins, validCoins } from "./CoinSync";
 
 export interface GameStateSave {
   coins: number;
+  coinsUpdatedAt?: number;
   stats?: {
     totalWins: number;
     winStreak: number;
@@ -96,19 +98,7 @@ export async function saveToCloud(userId: string, saveData: Partial<GameStateSav
       lastSyncedAt: Date.now(),
     });
 
-    const progressRef = doc(db, "users", userId, "save", "progress");
-    await setDoc(progressRef, payload, { merge: true });
-
-    // Also update core user document for leaderboard / profile stats
-    if (saveData.stats || saveData.coins !== undefined) {
-      const userRef = doc(db, "users", userId);
-      const userUpdate: any = {
-        lastLogin: serverTimestamp(),
-      };
-      if (saveData.stats?.totalWins !== undefined) userUpdate.wins = saveData.stats.totalWins;
-      if (saveData.coins !== undefined) userUpdate.coins = saveData.coins;
-      await setDoc(userRef, sanitizePayload(userUpdate), { merge: true });
-    }
+    await writeCloudProgress(db, userId, payload);
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(
@@ -159,11 +149,16 @@ export function mergeCloudSaveIntoLocal(cloudSave: GameStateSave | null): boolea
   const state = window.UTLW.state;
   let changed = false;
 
-  // 1. Moedas / Gold Coins
-  if (typeof cloudSave.coins === "number" && !isNaN(cloudSave.coins)) {
-    const prevCoins = state.coins || 0;
-    state.coins = Math.max(prevCoins, cloudSave.coins);
-    if (state.coins !== prevCoins) changed = true;
+  // A lower balance can be newer after a purchase. Never choose by amount.
+  const ownerId = auth.currentUser?.uid;
+  const remote = ownerId ? cloudCoinRevision(cloudSave, ownerId) : null;
+  if (remote) {
+    const local = state.coinSync || { balance: state.coins, updatedAt: 0, ownerId: null };
+    const tracked = trackCoins(state.coins, local);
+    const wallet = chooseCoins(tracked, remote);
+    changed = state.coins !== wallet.balance || state.coinSync?.updatedAt !== wallet.updatedAt || state.coinSync?.ownerId !== wallet.ownerId;
+    state.coins = wallet.balance;
+    state.coinSync = wallet;
   }
 
   // 2. Estatísticas de Vitórias e Combate
@@ -269,10 +264,12 @@ export function mergeCloudSaveIntoLocal(cloudSave: GameStateSave | null): boolea
 export function syncCloudSaveImmediate(): Promise<boolean> {
   if (typeof window === "undefined") return Promise.resolve(false);
   const user = auth?.currentUser;
-  if (user && window.UTLW && window.UTLW.state) {
+  if (user && readyUserId === user.uid && window.UTLW && window.UTLW.state) {
+    window.UTLW.save();
     const s = window.UTLW.state;
     return saveToCloud(user.uid, {
       coins: s.coins,
+      coinsUpdatedAt: s.coinSync?.updatedAt || 0,
       stats: s.stats,
       storyState: s.storyState,
       unlockedTitles: s.unlockedTitles,
@@ -286,4 +283,56 @@ export function syncCloudSaveImmediate(): Promise<boolean> {
     });
   }
   return Promise.resolve(false);
+}
+
+// One authority and one subscription for coins. Uploads wait for initial hydration.
+let readyUserId: string | null = null;
+
+export function startCloudSaveSync(): () => void {
+  let unsubscribeProgress: (() => void) | undefined;
+  let generation = 0;
+  const unsubscribeAuth = auth.onAuthStateChanged(user => {
+    const currentGeneration = ++generation;
+    readyUserId = null;
+    unsubscribeProgress?.();
+    if (!user) return;
+    const isCurrent = () => generation === currentGeneration && auth.currentUser?.uid === user.uid;
+    const progressRef = doc(db, 'users', user.uid, 'save', 'progress');
+    unsubscribeProgress = onSnapshot(progressRef, { includeMetadataChanges: true }, async snapshot => {
+      if (!isCurrent() || snapshot.metadata.fromCache || snapshot.metadata.hasPendingWrites) return;
+      try {
+        let save = snapshot.exists() ? snapshot.data() as GameStateSave : null;
+        if (!save) {
+          // Legacy accounts stored coins only on the profile. Never listen to that mirror.
+          const profile = await getDocFromServer(doc(db, 'users', user.uid));
+          if (!isCurrent()) return;
+          // A progress snapshot may have arrived while the legacy lookup was pending.
+          if (readyUserId === user.uid) return;
+          const local = window.UTLW.state.coinSync;
+          const sameOwner = !local?.ownerId || local.ownerId === user.uid;
+          save = { coins: validCoins(profile.data()?.coins) ? profile.data()!.coins : sameOwner ? window.UTLW.state.coins : 1000 };
+        }
+        if (!isCurrent()) return;
+        mergeCloudSaveIntoLocal(save);
+        const firstLoad = readyUserId !== user.uid;
+        readyUserId = user.uid;
+        // Upload a pending offline purchase once after hydration, not on every echo.
+        if (firstLoad) void syncCloudSaveImmediate();
+      } catch (error) {
+        handleFirestoreError(error, OperationType.GET, `users/${user.uid}/save/progress`);
+      }
+    }, error => handleFirestoreError(error, OperationType.GET, `users/${user.uid}/save/progress`));
+  });
+  const retry = () => { void syncCloudSaveImmediate(); };
+  const onHidden = () => { if (document.visibilityState === 'hidden') retry(); };
+  window.addEventListener('online', retry);
+  document.addEventListener('visibilitychange', onHidden);
+  return () => {
+    generation++;
+    readyUserId = null;
+    unsubscribeProgress?.();
+    unsubscribeAuth();
+    window.removeEventListener('online', retry);
+    document.removeEventListener('visibilitychange', onHidden);
+  };
 }
