@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { drawItachiFace } from "./ItachiFace";
 
 export function generateItachiSprite(scene: Phaser.Scene) {
   const generateForm = (form: number) => {
@@ -197,24 +198,6 @@ export function generateItachiSprite(scene: Phaser.Scene) {
           h * SCALE,
         );
       };
-      const headDot = (x: number, y: number, color: number) => {
-        const { ox, oy } =
-          typeof getWalkOffsets === "function"
-            ? getWalkOffsets(x, y)
-            : { ox: 0, oy: 0 };
-        const finalX =
-          (isAttack || isDefend || isCharge ? x + poseOffsetX / 2 : x) +
-          shiftX +
-          ox;
-        const finalYPose = isAttack || isDefend ? y + poseOffsetY / 2 : y;
-        canvas.fillStyle(color, 1);
-        canvas.fillRect(
-          (offsetX + finalX) * SCALE,
-          (finalYPose + breatheOffset + DRAW_OFFSET_Y) * SCALE,
-          SCALE,
-          SCALE,
-        );
-      };
 
       const isTransformed = form > 0;
       const isUI = form === 2;
@@ -386,59 +369,15 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         box(15, itY + 6, 2, 7, I_HAIR);
         box(15, itY + 6, 2, 1, I_HEADBAND); // Hair tie
 
-        // Hair - Top Volume & Texture (Center-parted crown)
-        box(13, itY - 1, 6, 2, I_HAIR);
-        dot(14, itY - 1, I_HAIR_HL);
-        dot(17, itY - 1, I_HAIR_HL);
-        dot(15, itY - 1, 0x050505); // Center part line
-
-        // Signature Long Bangs framing face softly
-        dot(13, itY, I_HAIR);
-        box(12, itY + 1, 1, 7, I_HAIR); // Left tapered long bang
-        dot(12, itY + 4, I_HAIR_HL);
-        dot(13, itY + 3, I_HAIR);
-        dot(18, itY, I_HAIR);
-        box(19, itY + 1, 1, 7, I_HAIR); // Right tapered long bang
-        dot(19, itY + 4, I_HAIR_HL);
-        dot(18, itY + 3, I_HAIR);
-
-        // Konoha Headband (Rogue Shinobi Protector)
-        box(13, itY + 1, 6, 2, I_HEADBAND);
-        box(14, itY + 1, 4, 1, 0xffffff); // Polished metal top specular shine
-        box(14, itY + 2, 4, 1, I_METAL);   // Metal plate base
-        dot(13, itY + 1, 0x334155);        // Metal rivets
-        dot(18, itY + 1, 0x334155);
-        box(14, itY + 2, 4, 1, 0x111111); // Rogue horizontal scratch across plate
-        dot(15, itY + 1, 0xffffff);        // Chipped scratch shine
-
-        // Refined Anime Face (Pale Porcelain Skin)
-        box(13, itY + 3, 6, 3, I_SKIN);
-        box(14, itY + 6, 4, 1, I_SKIN);    // Tapered jawline
-        dot(15, itY + 7, 0xefcaa8);        // Subtle chin point
-        dot(16, itY + 7, 0xefcaa8);
-        dot(13, itY + 4, I_SKIN_SHADOW);   // Left cheek shadow
-        dot(18, itY + 4, I_SKIN_SHADOW);   // Right cheek shadow
-
-        // Eyebrows & Upper Eyelashes
-        dot(14, itY + 3, 0x111111);
-        dot(17, itY + 3, 0x111111);
-
-        // Mangekyo Sharingan (Glowing Crimson Eyes with dark center)
-        dot(13, itY + 4, 0xffffff);        // Sclera white
-        dot(14, itY + 4, 0xef4444);        // Crimson Sharingan
-        dot(17, itY + 4, 0xef4444);
-        dot(18, itY + 4, 0xffffff);
-
-        // Signature Tear Troughs (Itachi's delicate facial creases)
-        dot(14, itY + 5, 0xcca085);
-        dot(13, itY + 6, 0xd4a890);
-        dot(17, itY + 5, 0xcca085);
-        dot(18, itY + 6, 0xd4a890);
-
-        // Calm, Stoic Mouth & Nose
-        dot(15, itY + 5, 0xffeedd);        // Nose highlight
-        dot(15, itY + 6, 0xbe8060);        // Stoic mouth line
-        dot(16, itY + 6, 0xbe8060);
+        // Same facial design at the smaller Susanoo scale, snapped to texture pixels.
+        const snap = (value: number) => Math.round(value * SCALE) / SCALE;
+        drawItachiFace((x, y, w, h, color) => {
+          const left = snap(16 + (x - 16) * 0.65);
+          const top = snap(itY - 1 + (y - 1) * 0.65);
+          box(left, top,
+            Math.max(0.5, snap(16 + (x + w - 16) * 0.65) - left),
+            Math.max(0.5, snap(itY - 1 + (y + h - 1) * 0.65) - top), color);
+        }, isAttack ? "attack" : isDefend ? "defend" : "calm");
 
         // High Flared Akatsuki Collar (Framing the neck with crimson lining)
         box(11, itY + 6, 2, 4, I_CLOAK);
@@ -688,12 +627,7 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         const SKIN_SHADOW = 0xcc9977;
         const FACE_SKIN = 0xffe2d1;        // Pure anime porcelain skin tone
         const FACE_SHADE = 0xdca288;       // Soft warm contour shading
-        const SHARINGAN_RED = 0xee0000;    // Vivid piercing Sharingan red
-        const TEAR_CREASE = 0xd59579;      // Delicate facial crease tone
-        const LIP_COLOR = 0x5a2d20;        // Stoic clean lip line
-        const MOUTH_ATTACK = 0x4a0e0e;     // Open mouth during attack
         const HAIR = 0x111111;
-        const HAIR_HL = 0x2d3436;
         const CLOAK = 0x141414;
         const CLOAK_SHADOW = 0x080808;
         const RED_COLLAR = 0x850000;
@@ -796,89 +730,7 @@ export function generateItachiSprite(scene: Phaser.Scene) {
         // ---------------------------------------------------------------------
         // 6. HEAD & FACE BASE (Rendered cleanly on top of body/neck layers)
         // ---------------------------------------------------------------------
-        // Head Base (Skin porcelain)
-        headBox(12, 6, 8, 7, FACE_SKIN);
-        headBox(12, 7, 1, 6, FACE_SHADE);  // Left cheek edge
-        headBox(19, 7, 1, 6, FACE_SHADE);  // Right cheek edge
-        headBox(13, 12, 6, 1, FACE_SHADE); // Jawline contour
-
-        // ---------------------------------------------------------------------
-        // RENEGADE KONOHA HEADBAND (HITAI-ATE) (y: 5 to 6)
-        // ---------------------------------------------------------------------
-        headBox(11, 5, 10, 2, HEADBAND);      // Dark cloth band
-        headBox(13, 5, 6, 2, METAL);          // Steel forehead plate
-        headBox(14, 5, 4, 1, 0xffffff);       // Top specular metallic glint
-        headBox(14, 6, 4, 1, 0x111111);       // Rogue horizontal slash cut
-        headDot(13, 5, 0x334155);             // Left rivet
-        headDot(18, 5, 0x334155);             // Right rivet
-
-        // ---------------------------------------------------------------------
-        // EYEBROWS (FOCUSED, SEPARATED & CALM) (y: 7)
-        // ---------------------------------------------------------------------
-        // Left Eyebrow (x: 13..14)
-        headBox(13, 7, 2, 1, 0x111111);
-        // Right Eyebrow (x: 17..18)
-        headBox(17, 7, 2, 1, 0x111111);
-        // Center forehead between eyebrows is clean skin (x: 15..16)
-
-        // ---------------------------------------------------------------------
-        // EYES & SHARINGAN (y: 8)
-        // ---------------------------------------------------------------------
-        // Left Eye (x: 13, 14)
-        headDot(13, 8, 0xffffff);          // Sclera white
-        headDot(14, 8, SHARINGAN_RED);     // Sharingan iris
-        // Right Eye (x: 17, 18)
-        headDot(17, 8, SHARINGAN_RED);     // Sharingan iris
-        headDot(18, 8, 0xffffff);          // Sclera white
-        // Center bridge between eyes is clean skin (x: 15..16)
-
-        // ---------------------------------------------------------------------
-        // ITACHI'S SIGNATURE TEAR TROUGHS (DELICATE, NATURAL FACIAL CREASES)
-        // ---------------------------------------------------------------------
-        // Slanted lines descending from inner corners down the cheeks (leaving nose & mouth pure)
-        headDot(14, 9, TEAR_CREASE);
-        headDot(13, 10, TEAR_CREASE);
-        headDot(17, 9, TEAR_CREASE);
-        headDot(18, 10, TEAR_CREASE);
-
-        // ---------------------------------------------------------------------
-        // NOSE & MOUTH (SUBTLE, STOIC & CLEAN)
-        // ---------------------------------------------------------------------
-        // Nose (y: 10) - delicate single shadow point with bridge highlight
-        headDot(15, 9, 0xfff0e4);          // Nose bridge light
-        headDot(15, 10, FACE_SHADE);       // Nose tip shadow
-
-        // Mouth (y: 11) - cleanly separated from nose and tear creases
-        if (isAttack) {
-          headBox(15, 11, 2, 1, MOUTH_ATTACK); // Small focused combat shout
-        } else if (isDefend) {
-          headBox(15, 11, 2, 1, 0xffffff);     // Clenched teeth
-        } else {
-          headBox(15, 11, 2, 1, LIP_COLOR);    // Calm, stoic shinobi mouth
-        }
-
-        // ---------------------------------------------------------------------
-        // HAIR (SLEEK SHINOBI CROWN, CENTER PART & STREAMLINED FRAMING BANGS)
-        // ---------------------------------------------------------------------
-        // Sleek Crown (y: 3..4) - Natural rounded skull curve sitting closely above the headband
-        headBox(13, 3, 6, 1, HAIR);         // Rounded top apex
-        headBox(12, 4, 8, 1, HAIR);         // Smooth skull contour
-        headDot(14, 3, HAIR_HL);            // Soft hair sheen
-        headDot(17, 3, HAIR_HL);
-        headDot(15, 4, 0x050505);           // Center part notch
-        headDot(16, 4, 0x050505);
-
-        // Left Bang (Streamlined strand framing the cheek down to the jaw)
-        headDot(12, 5, HAIR);               // Parting strand starting over headband edge
-        headBox(11, 5, 1, 7, HAIR);         // Sleek vertical strand (y: 5..11)
-        headDot(12, 10, HAIR);              // Delicate taper towards jaw
-        headDot(11, 7, HAIR_HL);            // Strands highlight
-
-        // Right Bang (Streamlined strand framing the cheek down to the jaw)
-        headDot(19, 5, HAIR);               // Parting strand starting over headband edge
-        headBox(20, 5, 1, 7, HAIR);         // Sleek vertical strand (y: 5..11)
-        headDot(19, 10, HAIR);              // Delicate taper towards jaw
-        headDot(20, 7, HAIR_HL);            // Strands highlight
+        drawItachiFace(headBox, isAttack ? "attack" : isDefend ? "defend" : "calm");
       }
     } // End Switch Equivalent
 
