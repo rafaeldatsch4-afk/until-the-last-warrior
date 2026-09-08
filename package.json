@@ -11,7 +11,8 @@
     "start": "node dist/server.cjs",
     "lint": "tsc --noEmit",
     "test": "tsx --test game/utils/*.test.ts game/systems/*.test.ts",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-utlw-rules --config firebase.emulator.json \"node --test tests/firestore.rules.test.mjs\""
+    "test:rules": "firebase emulators:exec --only firestore --project demo-utlw-rules --config firebase.emulator.json \"node --test tests/firestore.rules.test.mjs\"",
+    "test:mobile": "node --import tsx --test tests/mobile-input.test.mjs"
   },
   "dependencies": {
     "express": "^5.2.1",

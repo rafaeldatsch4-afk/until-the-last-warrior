@@ -1,6 +1,7 @@
 import { Responsive } from "../utils/Responsive";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import Phaser from "phaser";
+import { MobileButtonInput, buttonsOverlap, safeButtonLayout } from "../utils/MobileButtonInput";
 
 import type BattleScene from "../scenes/BattleScene";
 
@@ -54,11 +55,30 @@ export class BattleInput {
   releaseJoystickFn: ((p?: Phaser.Input.Pointer) => void) | null = null;
   enableJoyDragFn: ((enable: boolean) => void) | null = null;
 
+  private mobileButtons = new MobileButtonInput();
+  private mobileCleanup: (() => void)[] = [];
+
+  private listenMobile(emitter: Phaser.Events.EventEmitter, event: string, handler: (...args: any[]) => void) {
+    emitter.on(event, handler);
+    this.mobileCleanup.push(() => emitter.off(event, handler));
+  }
+
+  private resetMobile = () => {
+    this.mobileButtons.reset();
+    this.releaseJoystickFn?.();
+    this.mobileP1Defend = this.mobileP1Charge = this.mobileP1Special = false;
+    this.mobileP1SpecialJustUp = false;
+    this.mobileP1Dash = 0;
+    this.mobileP1Attack = this.mobileP1KiBlast = this.mobileP1Transform = false;
+    this.scene.p1AttackBuffer = this.scene.p1KiBlastBuffer = this.scene.p1TransformBuffer = 0;
+  };
+
   constructor(scene: BattleScene) {
     this.scene = scene;
   }
 
   public update() {
+    this.mobileButtons.reconcile(id => !!this.scene.input.manager.pointers.find(p => p.id === id)?.isDown);
     if (this.mobileJoystickPointerId !== null) {
       const activePtr = (this.scene.input.manager as any)?.pointers?.find(
         (p: any) => p.id === this.mobileJoystickPointerId
@@ -260,6 +280,20 @@ export class BattleInput {
     const dpadPos = cfg?.dpadPos ?? { x: visible.left + 120, y: visible.bottom - 100 };
     const btnPos = cfg?.buttonsPos ?? { x: visible.right - 120, y: visible.bottom - 100 };
 
+    const buttonLayouts: { group: Phaser.GameObjects.Container; radius: number; defaultX: number; defaultY: number; saved: unknown }[] = [];
+    const finishPointer = (pointer: Phaser.Input.Pointer) => {
+      this.mobileButtons.release(pointer.id, pointer.event?.type === "touchcancel");
+      this.releaseJoystickFn?.(pointer);
+    };
+    this.listenMobile(this.scene.input, "pointerup", finishPointer);
+    this.listenMobile(this.scene.input, "pointerupoutside", finishPointer);
+    this.listenMobile(this.scene.events, "pause", this.resetMobile);
+    this.listenMobile(this.scene.events, "sleep", this.resetMobile);
+    this.listenMobile(this.scene.game.events, "blur", this.resetMobile);
+    const visibility = () => { if (document.hidden) this.resetMobile(); };
+    document.addEventListener("visibilitychange", visibility);
+    this.mobileCleanup.push(() => document.removeEventListener("visibilitychange", visibility));
+
     const createBtn = (
       defaultX: number,
       defaultY: number,
@@ -269,17 +303,10 @@ export class BattleInput {
       onDown: () => void,
       onUp?: () => void,
     ) => {
-      // Check localStorage for saved position
-      const saved = localStorage.getItem(`hudPos_${text}`);
-      let x = defaultX;
-      let y = defaultY;
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          x = parsed.x;
-          y = parsed.y;
-        } catch (e) {}
-      }
+      let saved: unknown;
+      try { saved = JSON.parse(localStorage.getItem(`hudPos_${text}`) || "null"); } catch {}
+      const x = defaultX;
+      const y = defaultY;
       // Modern Glassy Button Setup
       const btnGroup = this.scene.add
         .container(x, y)
@@ -308,6 +335,7 @@ export class BattleInput {
         this.scene.battleUI?.uiContainer.add(btnGroup);
       }
 
+      buttonLayouts.push({ group: btnGroup, radius, defaultX, defaultY, saved });
       let isPressed = false;
 
       const press = () => {
@@ -320,7 +348,7 @@ export class BattleInput {
         onDown();
       };
 
-      const release = () => {
+      const release = (cancelled: boolean) => {
         if (!isPressed) return;
         isPressed = false;
         outerBtn.setAlpha(0.4);
@@ -328,6 +356,12 @@ export class BattleInput {
         innerBtn.setScale(1);
         txt.setScale(1);
         if (onUp) onUp();
+        // Cancelling SPC must not synthesize its release-to-fire action.
+        if (cancelled && text === "SPC") this.mobileP1SpecialJustUp = false;
+        if (cancelled && text === "ATK") { this.mobileP1Attack = false; this.scene.p1AttackBuffer = 0; }
+        if (cancelled && text === "KI") { this.mobileP1KiBlast = false; this.scene.p1KiBlastBuffer = 0; }
+        if (cancelled && text === "TRN") { this.mobileP1Transform = false; this.scene.p1TransformBuffer = 0; }
+        if (cancelled && text === "DSH") this.mobileP1Dash = 0;
       };
 
       const circleContains = (c: Phaser.Geom.Circle, x: number, y: number) => {
@@ -337,9 +371,12 @@ export class BattleInput {
         return dx * dx + dy * dy <= c.radius * c.radius;
       };
 
-      const hitArea = new Phaser.Geom.Circle(0, 0, radius * 1.5);
+      const hitArea = new Phaser.Geom.Circle(0, 0, radius);
       btnGroup.setInteractive(hitArea, circleContains);
-      this.scene.input.setDraggable(btnGroup);
+      this.scene.input.setDraggable(btnGroup, false);
+      this.mobileButtons.register(text, press, release);
+      let dragStart = { x, y };
+      btnGroup.on('dragstart', () => { dragStart = { x: btnGroup.x, y: btnGroup.y }; });
 
       btnGroup.on('drag', (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
         if (!this.isEditingHUD) return;
@@ -349,21 +386,21 @@ export class BattleInput {
       
       btnGroup.on('dragend', () => {
         if (!this.isEditingHUD) return;
+        const candidate = { x: btnGroup.x, y: btnGroup.y, radius };
+        if (buttonLayouts.some(other => other.group !== btnGroup && buttonsOverlap(candidate, { x: other.group.x, y: other.group.y, radius: other.radius }))) {
+          btnGroup.setPosition(dragStart.x, dragStart.y);
+        }
         localStorage.setItem(`hudPos_${text}`, JSON.stringify({ x: btnGroup.x, y: btnGroup.y }));
       });
 
-      btnGroup.on("pointerdown", () => {
-        if (this.isEditingHUD) return;
-        press();
+      btnGroup.on("pointerdown", (pointer: Phaser.Input.Pointer, _x: number, _y: number, event: Phaser.Types.Input.EventData) => {
+        if (this.isEditingHUD || this.mobileJoystickPointerId === pointer.id) return;
+        this.mobileButtons.press(pointer.id, text);
+        // One touch must not also start the floating joystick or another button.
+        event.stopPropagation();
       });
-
-      btnGroup.on("pointerup", () => {
-        release();
-      });
-
-      btnGroup.on("pointerout", () => {
-        release();
-      });
+      // Release globally by owner, even outside the original button/canvas.
+      // pointerout from another finger must never release a held action.
 
       return btnGroup;
     };
@@ -508,7 +545,7 @@ export class BattleInput {
     };
     this.releaseJoystickFn = releaseJoystick;
 
-    this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
+    this.listenMobile(this.scene.input, "pointerdown", (pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
       if (this.isEditingHUD) return;
 
       // Do not capture if user clicked an action button
@@ -551,19 +588,13 @@ export class BattleInput {
       }
     });
 
-    this.scene.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+    this.listenMobile(this.scene.input, "pointermove", (pointer: Phaser.Input.Pointer) => {
       if (this.mobileJoystickPointerId === pointer.id) {
         updateJoystickWithPointer(pointer);
       }
     });
 
-    this.scene.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
-      if (this.mobileJoystickPointerId === pointer.id) {
-        releaseJoystick(pointer);
-      }
-    });
-
-    this.scene.input.on("gameout", () => {
+    this.listenMobile(this.scene.input, "gameout", () => {
       if (this.mobileJoystickPointerId !== null) {
         const activePtr = (this.scene.input.manager as any)?.pointers?.find(
           (p: any) => p.id === this.mobileJoystickPointerId
@@ -653,6 +684,12 @@ export class BattleInput {
         this.scene.p1TransformBuffer = this.scene.BUFFER_MS;
       });
     }
+
+    const positions = safeButtonLayout(
+      buttonLayouts.map(b => ({ x: b.defaultX, y: b.defaultY, radius: b.radius })),
+      buttonLayouts.map(b => b.saved),
+    );
+    buttonLayouts.forEach((b, i) => b.group.setPosition(positions[i].x, positions[i].y));
 
     // --- Top Mobile Buttons (Pause, HUD Edit, HUD Visibility) ---
     const bounds = ResponsiveUtils.getSafeBounds(this.scene);
@@ -762,6 +799,7 @@ export class BattleInput {
       0x64748b,
       "12px",
       () => {
+        this.resetMobile();
         if (this.scene.gameState.gameMode === "online_pvp") {
           this.scene.scene.launch("PauseScene", { online: true });
         } else {
@@ -781,7 +819,9 @@ export class BattleInput {
       0x38bdf8,
       "12px",
       () => {
+        this.resetMobile();
         isEditing = !isEditing;
+        buttonLayouts.forEach(b => this.scene.input.setDraggable(b.group, isEditing));
         this.isEditingHUD = isEditing;
         if (this.enableJoyDragFn) this.enableJoyDragFn(isEditing);
         editBtnObj.setActive(isEditing);
@@ -832,6 +872,8 @@ export class BattleInput {
   }
 
   public destroy() {
+    if (this.mobileCleanup.length) this.resetMobile();
+    this.mobileCleanup.splice(0).forEach(cleanup => cleanup());
     if (this.mobileControls && this.mobileControls.length > 0) {
       this.mobileControls.forEach((ctrl) => {
         try {
