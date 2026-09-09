@@ -58,3 +58,31 @@ visibilidade, edição e limpeza. Também verificam os mapeamentos completos do
 teclado e seu caminho de consumo. Não substituem uma sessão em aparelho físico.
 
 Nenhum dano, custo de KI, cooldown, duração de buffer ou regra de combate mudou.
+
+## Correção após teste em aparelho
+
+O relato posterior revelou uma lacuna nos testes iniciais: o HUD era testado
+apenas com câmera sem zoom. A conversão do joystick dividia coordenadas de tela
+pela escala do HUD, sem antes inverter a câmera. Agora usa `camera.getWorldPoint`
+e `Container.getLocalPoint`, o mesmo caminho geométrico do hit test do Phaser.
+A escala do analógico também deixou de ser aplicada duas vezes. Somente controles
+mobile reservam toques; elementos interativos do HUD não bloqueiam a área de movimento.
+
+Os testes de quatro direções com zoom 1/0.8/0.6 e scroll, e de toque sobre um
+HUD não-controlador, falham no código antigo e passam na correção. A matemática
+local usa os módulos reais Transform e TransformMatrix do Phaser. Não houve
+validação interativa no navegador remoto: a conexão de teste falhou.
+
+A geração de Itachi agora é idempotente: entrar na seleção não destrói texturas
+referenciadas por animações de caminhada, ataque e transformação. O renderizador
+verifica a preservação dessas referências e os 36 quadros.
+
+O PWA passa a avisar quando uma versão está pronta, com botão Atualizar jogo;
+não recarrega a luta automaticamente nem apaga saves. Abas que ainda executam o
+código antigo precisam ser fechadas e reabertas para carregar esse comportamento.
+Uma captura isolada não permite confirmar qual versão estava no aparelho.
+
+```sh
+node --import tsx --test tests/mobile-input.test.mjs tests/game-updates.test.mjs
+node scripts/preview-itachi.mjs /tmp/itachi-preview
+```

@@ -2,6 +2,10 @@ import Phaser from "phaser";
 import { drawItachiFace } from "./ItachiFace";
 
 export function generateItachiSprite(scene: Phaser.Scene) {
+  // AnimationFrames hold actual Texture/Frame objects. Replacing those textures
+  // on character selection leaves walk/attack/transform animations referencing
+  // destroyed sources (only idle used to be rebuilt there).
+  if (["itachi", "itachi_ssj", "itachi_ui"].every(key => scene.textures.exists(key))) return;
   const generateForm = (form: number) => {
     const key = "itachi";
 
