@@ -16,6 +16,11 @@ const scene = { make:{graphics(){
     generateTexture(name,w,h){sheets.set(name,{width:w,height:h,svg:`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${rects.join('')}</svg>`,frames:[]});},destroy(){} };
 }}, textures:{exists:k=>sheets.has(k),remove:k=>sheets.delete(k),get:k=>({add:(...args)=>sheets.get(k).frames.push(args)})} };
 generateItachiSprite(scene);
+const initialSheets = [...sheets.values()];
+generateItachiSprite(scene);
+if ([...sheets.values()].some((sheet, i) => sheet !== initialSheets[i])) {
+  throw new Error('Repeated character selection replaced textures referenced by animations');
+}
 for(const [name,sheet] of sheets){
   if(sheet.frames.length!==12 || sheet.width!==2304 || sheet.height!==128) throw new Error('Frame contract changed');
   const png=await sharp(Buffer.from(sheet.svg)).png().toBuffer();

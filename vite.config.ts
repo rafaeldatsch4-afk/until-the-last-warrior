@@ -8,7 +8,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
+      injectRegister: false,
       includeAssets: ["icon-192-any.png", "icon-512-any.png"],
       manifest: false, // já temos public/manifest.json próprio, não deixe o plugin gerar outro
       workbox: {

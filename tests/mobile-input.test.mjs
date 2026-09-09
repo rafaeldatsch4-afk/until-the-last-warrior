@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { test } from 'node:test';
 import { build } from 'esbuild';
+import Transform from 'phaser/src/gameobjects/components/Transform.js';
+import TransformMatrix from 'phaser/src/gameobjects/components/TransformMatrix.js';
 import { buttonsOverlap, safeButtonLayout } from '../game/utils/MobileButtonInput.ts';
 
 // Execute the production BattleInput handlers headlessly. Only rendering and the
@@ -29,13 +31,14 @@ const { BattleInput } = await import('data:text/javascript;base64,' + Buffer.fro
 
 class ObjectDouble extends EventEmitter {
   constructor(x = 0, y = 0, text) {
-    super(); Object.assign(this, { x, y, text, list: [], scaleX: 1, scaleY: 1 });
+    super(); Object.assign(this, { x, y, text, list: [], scaleX: 1, scaleY: 1, rotation: 0, scrollFactorX: 0, scrollFactorY: 0 });
     return new Proxy(this, { get: (target,key,receiver) => Reflect.has(target,key) ? Reflect.get(target,key,receiver)
       : typeof key === 'string' && /^(set|fill|line|stroke|clear)/.test(key) ? () => receiver : undefined });
   }
   add(children) { this.list.push(...(Array.isArray(children) ? children : [children])); return this; }
   setInteractive(hitArea, contains) { this.input = { enabled: true, hitArea, contains }; return this; }
   disableInteractive() { if (this.input) this.input.enabled = false; return this; }
+  getLocalPoint(x,y,p,camera) { return Transform.getLocalPoint.call(this,x,y,p,camera); }
   setPosition(x,y) { Object.assign(this,{x,y}); return this; }
   setScale(x,y=x) { this.scaleX=x; this.scaleY=y; return this; }
   destroy() { this.removeAllListeners(); }
@@ -51,7 +54,7 @@ function setup(saved = {}, mobile = true) {
   input.keyboard.addKeys = mapping => Object.fromEntries(Object.entries(mapping).map(([k,code]) => [k,{code,isDown:false}]));
   const scene = {
     input, events: new EventEmitter(), game: { events: new EventEmitter() },
-    sys: { game: { device: { input: { touch: mobile } } } }, cameras: { main: { width:960,height:540 } },
+    sys: { game: { device: { input: { touch: mobile } } } }, cameras: { main: { width:960,height:540,scrollX:0,scrollY:0,getWorldPoint:(x,y)=>({x,y}) } },
     gameState: { settings: {}, gameMode: 'local' }, localPlayerIndex:1, playerData:{transformAvailable:true},
     player:{flipX:false}, enemy:{flipX:true}, BUFFER_MS:200, p1AttackBuffer:0,p1KiBlastBuffer:0,p1TransformBuffer:0,
     add: { container:(x,y)=>new ObjectDouble(x,y), circle:(x,y)=>new ObjectDouble(x,y),
@@ -169,5 +172,35 @@ test('desktop creates no mobile controls and preserves both players keyboard map
     assert.equal(f.battle.checkActionDown(action,player===1),true); key.isDown=false;
     if(!['charge','defend'].includes(action)) { key.justDown=true; assert.equal(f.battle.checkActionJustDown(action,player===1),true); }
   }
+  f.battle.destroy();
+});
+
+// Uses Phaser's actual Transform.getLocalPoint and TransformMatrix, rather than
+// mocking the coordinate conversion that was missing from the original tests.
+test('joystick follows visible directions under battle zoom and camera scrolling', () => {
+  for (const zoom of [1, 0.8, 0.6]) {
+    const f=setup(), camera=f.scene.cameras.main, hud=f.scene.battleUI.uiContainer;
+    const scrollX=170,scrollY=38;
+    const matrix=new TransformMatrix();
+    matrix.applyITRS(480*(1-zoom),270*(1-zoom),0,zoom,zoom);
+    camera.scrollX=scrollX; camera.scrollY=scrollY;
+    camera.getWorldPoint=(x,y)=>{ const p=matrix.applyInverse(x,y); return {x:p.x+scrollX,y:p.y+scrollY}; };
+    hud.setScale(1/zoom); hud.setPosition((960-960/zoom)/2,(540-540/zoom)/2);
+    const p=f.pointer(1,134,427); f.input.emit('pointerdown',p,[]);
+    assert.equal(f.battle.mobileJoystickPointerId,1);
+    assert.ok(Math.abs(f.battle.mobileJoystickVector.x)<0.001);
+    assert.ok(Math.abs(f.battle.mobileJoystickVector.y)<0.001);
+    for(const [dx,dy,action] of [[45,0,'right'],[-45,0,'left'],[0,-45,'up'],[0,45,'down']]) {
+      p.x=134+dx;p.y=427+dy;f.input.emit('pointermove',p);f.battle.update();
+      assert.equal(f.battle.checkActionDown(action,true),true,`${zoom}: ${action}`);
+    }
+    f.up(p,false,true); assert.deepEqual(f.battle.mobileJoystickVector,{x:0,y:0}); f.battle.destroy();
+  }
+});
+test('non-control HUD hit does not swallow joystick; real button still reserves touch', () => {
+  const f=setup(),p=f.pointer(1,134,427);
+  f.input.emit('pointerdown',p,[new ObjectDouble()]); assert.equal(f.battle.mobileJoystickPointerId,1);
+  f.up(p); const q=f.pointer(2,134,427);
+  f.input.emit('pointerdown',q,[f.button('ATK')]); assert.equal(f.battle.mobileJoystickPointerId,null);
   f.battle.destroy();
 });

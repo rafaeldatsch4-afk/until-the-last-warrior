@@ -456,7 +456,7 @@ export class BattleInput {
       .setStrokeStyle(2, 0x0284c7, 0.7);
 
     joyContainer.add([joyBase, joyBaseInner, joyThumb]);
-    joyContainer.setScale(dpadScale);
+    joyContainer;
     joyBase.setAlpha(opacity);
     this.mobileControls.push(joyContainer);
 
@@ -496,14 +496,13 @@ export class BattleInput {
     this.enableJoyDragFn(false);
 
     const getLocalPnt = (pointer: Phaser.Input.Pointer) => {
-      if (this.scene.battleUI?.uiContainer) {
-        const uc = this.scene.battleUI.uiContainer;
-        return {
-          x: (pointer.x - uc.x) / uc.scaleX,
-          y: (pointer.y - uc.y) / uc.scaleY,
-        };
-      }
-      return { x: pointer.x, y: pointer.y };
+      // Match Phaser InputManager.hitTest: screen -> camera world -> HUD local.
+      // pointer.worldX/Y may be from an earlier event while the battle camera zooms.
+      const camera = this.scene.cameras.main;
+      const world = camera.getWorldPoint(pointer.x, pointer.y);
+      const hud = this.scene.battleUI?.uiContainer;
+      if (hud) return hud.getLocalPoint(world.x, world.y, undefined, camera);
+      return { x: world.x - camera.scrollX, y: world.y - camera.scrollY };
     };
 
     const updateJoystickWithPointer = (pointer: Phaser.Input.Pointer) => {
@@ -548,16 +547,16 @@ export class BattleInput {
     this.listenMobile(this.scene.input, "pointerdown", (pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
       if (this.isEditingHUD) return;
 
-      // Do not capture if user clicked an action button
-      if (currentlyOver && currentlyOver.length > 0) {
-        const hitOtherButton = currentlyOver.some((obj: any) => {
-          if (obj === joyContainer || (joyContainer.list && joyContainer.list.includes(obj))) {
-            return false;
-          }
-          return true;
-        });
-        if (hitOtherButton) return;
-      }
+      // Only actual mobile controls reserve touches. An editable health HUD
+      // or other interactive decoration must not disable the movement zone.
+      if (currentlyOver?.some(obj => {
+        let node: Phaser.GameObjects.GameObject | null = obj;
+        while (node) {
+          if (node !== joyContainer && this.mobileControls.includes(node)) return true;
+          node = node.parentContainer;
+        }
+        return false;
+      })) return;
 
       const loc = getLocalPnt(pointer);
 
