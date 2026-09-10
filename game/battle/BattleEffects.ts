@@ -1,3 +1,4 @@
+import { SpecialEffects } from "./vfx/SpecialEffects";
 import Phaser from "phaser";
 import { triggerVibration } from "../utils/haptics";
 import type BattleScene from "../scenes/BattleScene";
@@ -14,6 +15,7 @@ export interface DamageTextOptions {
 
 export class BattleEffects {
   public scene: BattleScene;
+  public readonly specials: SpecialEffects;
 
   // Object Pools
   private flashPool!: Phaser.GameObjects.Group;
@@ -29,6 +31,7 @@ export class BattleEffects {
   constructor(scene: BattleScene) {
     this.scene = scene;
     this.initPools();
+    this.specials = new SpecialEffects(scene);
   }
 
   /**
@@ -1514,6 +1517,7 @@ export class BattleEffects {
   }
 
   public clearAll() {
+    this.specials.clear();
     // Clear active dizzy stars
     this.activeDizzyStars.forEach((_, target) => this.clearDizzyStars(target));
     this.activeDizzyStars.clear();
@@ -1553,6 +1557,7 @@ export class BattleEffects {
    */
   public destroy() {
     this.clearAll();
+    this.specials.destroy();
 
     if (this.flashPool) {
       try { this.flashPool.destroy(true); } catch (e) {}

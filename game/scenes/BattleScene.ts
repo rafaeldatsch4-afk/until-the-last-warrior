@@ -3365,6 +3365,7 @@ export default class BattleScene extends Phaser.Scene {
     onFireCallback: () => void,
   ) {
     attacker.play(animKeySpecial);
+    this.effects.specials.play("cast", attacker, tintColor, attacker.flipX ? -1 : 1);
 
     const isPotato = this.gameState.settings?.lowPerformanceMode;
     // Energy burst particles
