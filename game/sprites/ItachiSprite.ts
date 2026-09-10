@@ -756,18 +756,9 @@ export function generateItachiSprite(scene: Phaser.Scene) {
     }
   };
 
-  if (scene.textures.exists("itachi")) {
-    scene.textures.remove("itachi");
-  }
-  generateForm(0);
-
-  if (scene.textures.exists("itachi_ssj")) {
-    scene.textures.remove("itachi_ssj");
-  }
-  generateForm(1);
-
-  if (scene.textures.exists("itachi_ui")) {
-    scene.textures.remove("itachi_ui");
-  }
-  generateForm(2);
+  // Preserve the preloaded pixel-art atlas and all existing animation references.
+  // Procedural base is retained only as a fallback if the image cannot load.
+  if (!scene.textures.exists("itachi")) generateForm(0);
+  if (!scene.textures.exists("itachi_ssj")) generateForm(1);
+  if (!scene.textures.exists("itachi_ui")) generateForm(2);
 }

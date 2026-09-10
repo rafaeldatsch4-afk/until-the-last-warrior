@@ -36,6 +36,13 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   preload() {
+    if (!this.textures.exists("itachi")) {
+      this.load.spritesheet(
+        "itachi",
+        new URL("../assets/itachi-pixel-v3.png", import.meta.url).href,
+        { frameWidth: 192, frameHeight: 128 },
+      );
+    }
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
