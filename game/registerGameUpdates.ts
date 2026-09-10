@@ -32,6 +32,8 @@ export function registerGameUpdates() {
         lastCheck = Date.now();
         registration.update().catch(() => {}); // Offline play remains available.
       };
+      // Desktop tabs can stay focused for an entire session. Check those too.
+      window.setInterval(check, 60_000);
       window.addEventListener('focus', check);
       document.addEventListener('visibilitychange', check);
       check();
