@@ -1,0 +1,5222 @@
+{
+  "characters": 22,
+  "playableForms": 45,
+  "frameWidth": 192,
+  "frameHeight": 128,
+  "framesPerForm": 12,
+  "entries": [
+    {
+      "key": "cyberninja",
+      "character": "cyberninja",
+      "name": "Cyber Zero",
+      "description": "Original OTLW futuristic warrior; graphite segmented armor, cyan visor/plasma channels, cyan scarf, compact helmet, zero reactor, forearm energy blade",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/cyberninja-source.png",
+      "asset": "game/assets/roster/cyberninja-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 67,
+          "y": 8,
+          "width": 232,
+          "height": 409,
+          "anchor": 162.3190353460972,
+          "atlasX": 81,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 363,
+          "y": 11,
+          "width": 219,
+          "height": 406,
+          "anchor": 449.3119419642857,
+          "atlasX": 274,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 668,
+          "y": 8,
+          "width": 242,
+          "height": 409,
+          "anchor": 764.6760536760537,
+          "atlasX": 465,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 994,
+          "y": 11,
+          "width": 218,
+          "height": 406,
+          "anchor": 1086.5143572942764,
+          "atlasX": 658,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 17,
+          "y": 450,
+          "width": 280,
+          "height": 371,
+          "anchor": 141.25716475095786,
+          "atlasX": 845,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 5,
+          "x": 333,
+          "y": 449,
+          "width": 236,
+          "height": 371,
+          "anchor": 447.1894347759125,
+          "atlasX": 1038,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 6,
+          "x": 642,
+          "y": 448,
+          "width": 292,
+          "height": 375,
+          "anchor": 755.5209611451943,
+          "atlasX": 1230,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 7,
+          "x": 935,
+          "y": 451,
+          "width": 276,
+          "height": 370,
+          "anchor": 1073.2318813368381,
+          "atlasX": 1418,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 8,
+          "x": 22,
+          "y": 886,
+          "width": 337,
+          "height": 347,
+          "anchor": 189.21036383682468,
+          "atlasX": 1606,
+          "atlasY": 74
+        },
+        {
+          "sourceFrame": 9,
+          "x": 343,
+          "y": 869,
+          "width": 326,
+          "height": 348,
+          "anchor": 429.7737740874197,
+          "atlasX": 1810,
+          "atlasY": 74
+        },
+        {
+          "sourceFrame": 10,
+          "x": 624,
+          "y": 875,
+          "width": 270,
+          "height": 358,
+          "anchor": 780.4688581314879,
+          "atlasX": 1992,
+          "atlasY": 72
+        },
+        {
+          "sourceFrame": 11,
+          "x": 916,
+          "y": 883,
+          "width": 297,
+          "height": 350,
+          "anchor": 1081.4405854956754,
+          "atlasX": 2182,
+          "atlasY": 73
+        }
+      ]
+    },
+    {
+      "key": "cyberninja_ssj",
+      "character": "cyberninja",
+      "name": "Cyber Zero",
+      "description": "Overdrive: same original armor identity, charcoal-violet armor, crimson-magenta visor/scarf/plasma channels, intensified angular energy blade",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/cyberninja_ssj-source.png",
+      "asset": "game/assets/roster/cyberninja_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 55,
+          "y": 28,
+          "width": 222,
+          "height": 326,
+          "anchor": 180.19351255276607,
+          "atlasX": 72,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 1,
+          "x": 409,
+          "y": 31,
+          "width": 218,
+          "height": 323,
+          "anchor": 531.829484029484,
+          "atlasX": 264,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 2,
+          "x": 756,
+          "y": 31,
+          "width": 221,
+          "height": 323,
+          "anchor": 888.2389155605761,
+          "atlasX": 455,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1108,
+          "y": 30,
+          "width": 219,
+          "height": 324,
+          "anchor": 1231.318757763975,
+          "atlasX": 648,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 4,
+          "x": 46,
+          "y": 408,
+          "width": 284,
+          "height": 319,
+          "anchor": 178.58898036732108,
+          "atlasX": 838,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 5,
+          "x": 415,
+          "y": 395,
+          "width": 212,
+          "height": 332,
+          "anchor": 528.1665408805031,
+          "atlasX": 1034,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 759,
+          "y": 411,
+          "width": 267,
+          "height": 316,
+          "anchor": 878.8169970631425,
+          "atlasX": 1225,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1125,
+          "y": 395,
+          "width": 191,
+          "height": 332,
+          "anchor": 1230.8781567300182,
+          "atlasX": 1420,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 35,
+          "y": 787,
+          "width": 325,
+          "height": 285,
+          "anchor": 172.75151047692506,
+          "atlasX": 1605,
+          "atlasY": 73
+        },
+        {
+          "sourceFrame": 9,
+          "x": 385,
+          "y": 781,
+          "width": 317,
+          "height": 292,
+          "anchor": 525.0858585858585,
+          "atlasX": 1797,
+          "atlasY": 72
+        },
+        {
+          "sourceFrame": 10,
+          "x": 756,
+          "y": 783,
+          "width": 271,
+          "height": 289,
+          "anchor": 887.552995391705,
+          "atlasX": 1991,
+          "atlasY": 72
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1101,
+          "y": 785,
+          "width": 281,
+          "height": 287,
+          "anchor": 1223.1519771319677,
+          "atlasX": 2184,
+          "atlasY": 73
+        }
+      ]
+    },
+    {
+      "key": "goku",
+      "character": "goku",
+      "name": "Goku",
+      "description": "Black spiky hair, orange gi, navy undershirt/sash/wristbands/boots",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/goku-source.png",
+      "asset": "game/assets/roster/goku-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 88,
+          "y": 8,
+          "width": 199,
+          "height": 350,
+          "anchor": 199.23601502273178,
+          "atlasX": 76,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 446,
+          "y": 8,
+          "width": 197,
+          "height": 350,
+          "anchor": 556.4353660943359,
+          "atlasX": 268,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 807,
+          "y": 8,
+          "width": 197,
+          "height": 350,
+          "anchor": 914.3322791065428,
+          "atlasX": 460,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1169,
+          "y": 8,
+          "width": 197,
+          "height": 350,
+          "anchor": 1275.3733727810652,
+          "atlasX": 653,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 72,
+          "y": 369,
+          "width": 229,
+          "height": 349,
+          "anchor": 206.0199798183653,
+          "atlasX": 839,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 5,
+          "x": 478,
+          "y": 369,
+          "width": 136,
+          "height": 344,
+          "anchor": 557.532241555783,
+          "atlasX": 1041,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 6,
+          "x": 790,
+          "y": 369,
+          "width": 230,
+          "height": 349,
+          "anchor": 920.2062169849654,
+          "atlasX": 1224,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1202,
+          "y": 369,
+          "width": 136,
+          "height": 343,
+          "anchor": 1281.7481662591688,
+          "atlasX": 1425,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 8,
+          "x": 35,
+          "y": 739,
+          "width": 298,
+          "height": 331,
+          "anchor": 182.41767279090115,
+          "atlasX": 1605,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 9,
+          "x": 407,
+          "y": 726,
+          "width": 325,
+          "height": 344,
+          "anchor": 489.8825379208287,
+          "atlasX": 1809,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 10,
+          "x": 765,
+          "y": 745,
+          "width": 265,
+          "height": 319,
+          "anchor": 910.780303030303,
+          "atlasX": 1989,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1120,
+          "y": 759,
+          "width": 290,
+          "height": 305,
+          "anchor": 1278.2416591523895,
+          "atlasX": 2179,
+          "atlasY": 72
+        }
+      ]
+    },
+    {
+      "key": "goku_ssj",
+      "character": "goku",
+      "name": "Goku",
+      "description": "Super Saiyan: golden upright spiky hair, teal eyes, orange gi",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/goku_ssj-source.png",
+      "asset": "game/assets/roster/goku_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 101,
+          "y": 18,
+          "width": 171,
+          "height": 336,
+          "anchor": 184.4156841729189,
+          "atlasX": 80,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 1,
+          "x": 438,
+          "y": 19,
+          "width": 169,
+          "height": 335,
+          "anchor": 517.1525825880635,
+          "atlasX": 273,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 788,
+          "y": 18,
+          "width": 169,
+          "height": 336,
+          "anchor": 863.4201873784691,
+          "atlasX": 466,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1139,
+          "y": 19,
+          "width": 169,
+          "height": 335,
+          "anchor": 1215.4204832311575,
+          "atlasX": 658,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 59,
+          "y": 401,
+          "width": 243,
+          "height": 331,
+          "anchor": 180.89690346083788,
+          "atlasX": 841,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 5,
+          "x": 446,
+          "y": 393,
+          "width": 141,
+          "height": 339,
+          "anchor": 521.6919723937523,
+          "atlasX": 1042,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 767,
+          "y": 400,
+          "width": 238,
+          "height": 332,
+          "anchor": 884.7198118139048,
+          "atlasX": 1226,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1176,
+          "y": 393,
+          "width": 127,
+          "height": 339,
+          "anchor": 1234.4061206120612,
+          "atlasX": 1429,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 38,
+          "y": 771,
+          "width": 281,
+          "height": 318,
+          "anchor": 161.53189300411523,
+          "atlasX": 1609,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 9,
+          "x": 399,
+          "y": 771,
+          "width": 280,
+          "height": 318,
+          "anchor": 451.7990356798457,
+          "atlasX": 1814,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 10,
+          "x": 748,
+          "y": 778,
+          "width": 252,
+          "height": 311,
+          "anchor": 878.8485776805252,
+          "atlasX": 1991,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1093,
+          "y": 790,
+          "width": 266,
+          "height": 299,
+          "anchor": 1224.3068660488627,
+          "atlasX": 2183,
+          "atlasY": 72
+        }
+      ]
+    },
+    {
+      "key": "vegeta",
+      "character": "vegeta",
+      "name": "Vegeta",
+      "description": "Black upswept hair and widow peak, blue bodysuit, white/gold Saiyan armor, white gloves/boots",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/vegeta-source.png",
+      "asset": "game/assets/roster/vegeta-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 89,
+          "y": 2,
+          "width": 183,
+          "height": 415,
+          "anchor": 165.26672535211267,
+          "atlasX": 84,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 362,
+          "y": 2,
+          "width": 185,
+          "height": 415,
+          "anchor": 438.67507942110836,
+          "atlasX": 276,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 671,
+          "y": 3,
+          "width": 185,
+          "height": 414,
+          "anchor": 748.2748568453931,
+          "atlasX": 468,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 974,
+          "y": 2,
+          "width": 185,
+          "height": 415,
+          "anchor": 1051.1999647949306,
+          "atlasX": 660,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 63,
+          "y": 453,
+          "width": 245,
+          "height": 393,
+          "anchor": 177.9581069237511,
+          "atlasX": 846,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 5,
+          "x": 400,
+          "y": 453,
+          "width": 119,
+          "height": 396,
+          "anchor": 462.29736467236467,
+          "atlasX": 1046,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 6,
+          "x": 652,
+          "y": 453,
+          "width": 249,
+          "height": 393,
+          "anchor": 778.4528979005921,
+          "atlasX": 1228,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1011,
+          "y": 453,
+          "width": 110,
+          "height": 396,
+          "anchor": 1066.1586352444601,
+          "atlasX": 1431,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 8,
+          "x": 22,
+          "y": 884,
+          "width": 300,
+          "height": 382,
+          "anchor": 145.15949467035136,
+          "atlasX": 1613,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 9,
+          "x": 332,
+          "y": 872,
+          "width": 323,
+          "height": 389,
+          "anchor": 383.99447731755424,
+          "atlasX": 1816,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 10,
+          "x": 654,
+          "y": 894,
+          "width": 234,
+          "height": 372,
+          "anchor": 769.8524458700882,
+          "atlasX": 1998,
+          "atlasY": 71
+        },
+        {
+          "sourceFrame": 11,
+          "x": 946,
+          "y": 890,
+          "width": 254,
+          "height": 374,
+          "anchor": 1062.8408846897144,
+          "atlasX": 2190,
+          "atlasY": 70
+        }
+      ]
+    },
+    {
+      "key": "vegeta_ssj",
+      "character": "vegeta",
+      "name": "Vegeta",
+      "description": "Super Saiyan: golden upswept hair, teal eyes, same white/gold armor",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/vegeta_ssj-source.png",
+      "asset": "game/assets/roster/vegeta_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 138,
+          "y": 15,
+          "width": 139,
+          "height": 329,
+          "anchor": 199.10146804835924,
+          "atlasX": 84,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 505,
+          "y": 23,
+          "width": 141,
+          "height": 321,
+          "anchor": 566.6099713214207,
+          "atlasX": 276,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 2,
+          "x": 894,
+          "y": 13,
+          "width": 141,
+          "height": 331,
+          "anchor": 954.4033326641237,
+          "atlasX": 468,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1269,
+          "y": 16,
+          "width": 141,
+          "height": 328,
+          "anchor": 1332.0630801687764,
+          "atlasX": 660,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 103,
+          "y": 360,
+          "width": 207,
+          "height": 316,
+          "anchor": 209.25383186251742,
+          "atlasX": 843,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 5,
+          "x": 500,
+          "y": 360,
+          "width": 161,
+          "height": 318,
+          "anchor": 578.3404716073147,
+          "atlasX": 1041,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 6,
+          "x": 870,
+          "y": 359,
+          "width": 205,
+          "height": 319,
+          "anchor": 975.8784958871915,
+          "atlasX": 1228,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1271,
+          "y": 361,
+          "width": 164,
+          "height": 317,
+          "anchor": 1357.707512597343,
+          "atlasX": 1423,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 8,
+          "x": 96,
+          "y": 691,
+          "width": 262,
+          "height": 314,
+          "anchor": 188.8406764574989,
+          "atlasX": 1614,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 9,
+          "x": 454,
+          "y": 689,
+          "width": 276,
+          "height": 316,
+          "anchor": 512.73927108044,
+          "atlasX": 1813,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 10,
+          "x": 860,
+          "y": 699,
+          "width": 212,
+          "height": 306,
+          "anchor": 953.7252013808976,
+          "atlasX": 1998,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1209,
+          "y": 691,
+          "width": 242,
+          "height": 314,
+          "anchor": 1307.9256850905713,
+          "atlasX": 2189,
+          "atlasY": 67
+        }
+      ]
+    },
+    {
+      "key": "gohan",
+      "character": "gohan",
+      "name": "Gohan",
+      "description": "Adult Gohan, short spiky black hair, purple gi with blue sash and wristbands",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/gohan-source.png",
+      "asset": "game/assets/roster/gohan-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 106,
+          "y": 10,
+          "width": 158,
+          "height": 358,
+          "anchor": 186.02733990147783,
+          "atlasX": 82,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 455,
+          "y": 10,
+          "width": 158,
+          "height": 358,
+          "anchor": 534.4151686776656,
+          "atlasX": 274,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 805,
+          "y": 10,
+          "width": 159,
+          "height": 358,
+          "anchor": 884.0408858603066,
+          "atlasX": 466,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1153,
+          "y": 10,
+          "width": 158,
+          "height": 358,
+          "anchor": 1231.9609624355512,
+          "atlasX": 658,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 70,
+          "y": 389,
+          "width": 235,
+          "height": 347,
+          "anchor": 199.35556090515166,
+          "atlasX": 841,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 5,
+          "x": 464,
+          "y": 389,
+          "width": 153,
+          "height": 346,
+          "anchor": 544.3165238678091,
+          "atlasX": 1042,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 6,
+          "x": 771,
+          "y": 391,
+          "width": 234,
+          "height": 345,
+          "anchor": 898.3531893770166,
+          "atlasX": 1225,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1157,
+          "y": 389,
+          "width": 152,
+          "height": 347,
+          "anchor": 1236.508758943992,
+          "atlasX": 1426,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 8,
+          "x": 21,
+          "y": 767,
+          "width": 302,
+          "height": 328,
+          "anchor": 158.54830614805522,
+          "atlasX": 1607,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 9,
+          "x": 405,
+          "y": 758,
+          "width": 280,
+          "height": 332,
+          "anchor": 450.947938263073,
+          "atlasX": 1816,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 10,
+          "x": 749,
+          "y": 761,
+          "width": 232,
+          "height": 333,
+          "anchor": 879.353567888999,
+          "atlasX": 1993,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1073,
+          "y": 786,
+          "width": 307,
+          "height": 308,
+          "anchor": 1228.4866852650266,
+          "atlasX": 2180,
+          "atlasY": 73
+        }
+      ]
+    },
+    {
+      "key": "gohan_ssj",
+      "character": "gohan",
+      "name": "Gohan",
+      "description": "Super Saiyan: golden hair and teal eyes, same purple gi",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/gohan_ssj-source.png",
+      "asset": "game/assets/roster/gohan_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 105,
+          "y": 7,
+          "width": 182,
+          "height": 315,
+          "anchor": 198.8032107716209,
+          "atlasX": 77,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 1,
+          "x": 476,
+          "y": 7,
+          "width": 182,
+          "height": 315,
+          "anchor": 568.5712082262211,
+          "atlasX": 269,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 871,
+          "y": 7,
+          "width": 182,
+          "height": 315,
+          "anchor": 962.9311043566363,
+          "atlasX": 462,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1243,
+          "y": 8,
+          "width": 181,
+          "height": 314,
+          "anchor": 1336.0302878598247,
+          "atlasX": 653,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 85,
+          "y": 347,
+          "width": 244,
+          "height": 303,
+          "anchor": 217.5372518690384,
+          "atlasX": 837,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 5,
+          "x": 509,
+          "y": 344,
+          "width": 118,
+          "height": 310,
+          "anchor": 584.8680072183553,
+          "atlasX": 1041,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 6,
+          "x": 848,
+          "y": 344,
+          "width": 245,
+          "height": 310,
+          "anchor": 987.8855389541088,
+          "atlasX": 1220,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1277,
+          "y": 344,
+          "width": 117,
+          "height": 310,
+          "anchor": 1352.400313152401,
+          "atlasX": 1425,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 8,
+          "x": 50,
+          "y": 687,
+          "width": 300,
+          "height": 305,
+          "anchor": 191.88791267305643,
+          "atlasX": 1604,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 9,
+          "x": 448,
+          "y": 674,
+          "width": 314,
+          "height": 319,
+          "anchor": 528.3052652336817,
+          "atlasX": 1808,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 10,
+          "x": 840,
+          "y": 683,
+          "width": 246,
+          "height": 309,
+          "anchor": 972.2222503801318,
+          "atlasX": 1989,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1216,
+          "y": 687,
+          "width": 244,
+          "height": 308,
+          "anchor": 1352.201387036543,
+          "atlasX": 2181,
+          "atlasY": 66
+        }
+      ]
+    },
+    {
+      "key": "piccolo",
+      "character": "piccolo",
+      "name": "Piccolo",
+      "description": "Green Namekian, pointed ears, antennae, purple gi, blue sash, white shoulder cape and turban",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/piccolo-source.png",
+      "asset": "game/assets/roster/piccolo-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 23,
+          "y": 14,
+          "width": 293,
+          "height": 411,
+          "anchor": 209.62199025748086,
+          "atlasX": 67,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 344,
+          "y": 14,
+          "width": 259,
+          "height": 411,
+          "anchor": 496.4806179775281,
+          "atlasX": 264,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 653,
+          "y": 14,
+          "width": 276,
+          "height": 411,
+          "anchor": 823.4969021065675,
+          "atlasX": 453,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 950,
+          "y": 14,
+          "width": 260,
+          "height": 411,
+          "anchor": 1108.4313048482234,
+          "atlasX": 647,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 11,
+          "y": 460,
+          "width": 339,
+          "height": 377,
+          "anchor": 217.31151667715545,
+          "atlasX": 832,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 5,
+          "x": 350,
+          "y": 460,
+          "width": 243,
+          "height": 377,
+          "anchor": 521.7174327840416,
+          "atlasX": 1029,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 6,
+          "x": 622,
+          "y": 458,
+          "width": 343,
+          "height": 379,
+          "anchor": 829.0304973412574,
+          "atlasX": 1216,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 7,
+          "x": 952,
+          "y": 460,
+          "width": 235,
+          "height": 377,
+          "anchor": 1117.9916399857702,
+          "atlasX": 1414,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 8,
+          "x": 9,
+          "y": 878,
+          "width": 320,
+          "height": 375,
+          "anchor": 166.2721258269879,
+          "atlasX": 1608,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 9,
+          "x": 343,
+          "y": 876,
+          "width": 339,
+          "height": 366,
+          "anchor": 432.22669715089694,
+          "atlasX": 1810,
+          "atlasY": 71
+        },
+        {
+          "sourceFrame": 10,
+          "x": 647,
+          "y": 910,
+          "width": 293,
+          "height": 338,
+          "anchor": 812.1084679832436,
+          "atlasX": 1990,
+          "atlasY": 75
+        },
+        {
+          "sourceFrame": 11,
+          "x": 955,
+          "y": 897,
+          "width": 261,
+          "height": 351,
+          "anchor": 1091.3308487982963,
+          "atlasX": 2187,
+          "atlasY": 73
+        }
+      ]
+    },
+    {
+      "key": "piccolo_ssj",
+      "character": "piccolo",
+      "name": "Piccolo",
+      "description": "Orange Piccolo: bulky orange Namekian, pronounced brow and antennae, purple gi, cape removed",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/piccolo_ssj-source.png",
+      "asset": "game/assets/roster/piccolo_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 133,
+          "y": 15,
+          "width": 194,
+          "height": 315,
+          "anchor": 229.07190860215053,
+          "atlasX": 76,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 496,
+          "y": 15,
+          "width": 193,
+          "height": 315,
+          "anchor": 592.0654017857142,
+          "atlasX": 268,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 854,
+          "y": 15,
+          "width": 193,
+          "height": 315,
+          "anchor": 949.8988214365132,
+          "atlasX": 461,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1225,
+          "y": 15,
+          "width": 192,
+          "height": 315,
+          "anchor": 1321.1967916854949,
+          "atlasX": 652,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 89,
+          "y": 356,
+          "width": 273,
+          "height": 306,
+          "anchor": 239.18299147268957,
+          "atlasX": 833,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 5,
+          "x": 509,
+          "y": 357,
+          "width": 156,
+          "height": 306,
+          "anchor": 592.9657695322707,
+          "atlasX": 1039,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 6,
+          "x": 841,
+          "y": 356,
+          "width": 283,
+          "height": 304,
+          "anchor": 989.3216499761564,
+          "atlasX": 1218,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1243,
+          "y": 359,
+          "width": 191,
+          "height": 306,
+          "anchor": 1343.6440112849448,
+          "atlasX": 1420,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 8,
+          "x": 62,
+          "y": 701,
+          "width": 340,
+          "height": 291,
+          "anchor": 250.27788390889052,
+          "atlasX": 1594,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 9,
+          "x": 462,
+          "y": 683,
+          "width": 321,
+          "height": 312,
+          "anchor": 571.54625,
+          "atlasX": 1802,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 10,
+          "x": 831,
+          "y": 693,
+          "width": 259,
+          "height": 302,
+          "anchor": 980.3376623376623,
+          "atlasX": 1986,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1209,
+          "y": 696,
+          "width": 283,
+          "height": 299,
+          "anchor": 1346.3976887826261,
+          "atlasX": 2180,
+          "atlasY": 67
+        }
+      ]
+    },
+    {
+      "key": "madara",
+      "character": "madara",
+      "name": "Madara Uchiha",
+      "description": "Long wild black hair, red Sharingan, red segmented samurai armor over dark shinobi clothes, war fan",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/madara-source.png",
+      "asset": "game/assets/roster/madara-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 143,
+          "y": 10,
+          "width": 183,
+          "height": 341,
+          "anchor": 247.88898480662982,
+          "atlasX": 76,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 462,
+          "y": 14,
+          "width": 184,
+          "height": 337,
+          "anchor": 566.8060068001511,
+          "atlasX": 268,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 799,
+          "y": 14,
+          "width": 184,
+          "height": 337,
+          "anchor": 903.7856872396819,
+          "atlasX": 460,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1132,
+          "y": 14,
+          "width": 183,
+          "height": 337,
+          "anchor": 1235.9151734654974,
+          "atlasX": 653,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 145,
+          "y": 374,
+          "width": 221,
+          "height": 342,
+          "anchor": 261.905604719764,
+          "atlasX": 842,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 5,
+          "x": 494,
+          "y": 376,
+          "width": 159,
+          "height": 340,
+          "anchor": 597.1631001618414,
+          "atlasX": 1037,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 816,
+          "y": 378,
+          "width": 216,
+          "height": 338,
+          "anchor": 935.5582700561241,
+          "atlasX": 1226,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1156,
+          "y": 376,
+          "width": 160,
+          "height": 340,
+          "anchor": 1255.407305936073,
+          "atlasX": 1421,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 74,
+          "y": 755,
+          "width": 326,
+          "height": 307,
+          "anchor": 227.60960748193284,
+          "atlasX": 1603,
+          "atlasY": 71
+        },
+        {
+          "sourceFrame": 9,
+          "x": 430,
+          "y": 738,
+          "width": 341,
+          "height": 327,
+          "anchor": 532.0868149755833,
+          "atlasX": 1805,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 10,
+          "x": 807,
+          "y": 757,
+          "width": 232,
+          "height": 311,
+          "anchor": 924.0493119266055,
+          "atlasX": 1994,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1160,
+          "y": 755,
+          "width": 217,
+          "height": 312,
+          "anchor": 1262.3051305130514,
+          "atlasX": 2189,
+          "atlasY": 70
+        }
+      ]
+    },
+    {
+      "key": "madara_ssj",
+      "character": "madara",
+      "name": "Madara Uchiha",
+      "description": "Blue armored Susanoo guardian, towering horned tengu armor, two chakra swords, Madara visible in ribcage",
+      "targetHeight": 120,
+      "status": "packed",
+      "source": "docs/art/roster/madara_ssj-source.png",
+      "asset": "game/assets/roster/madara_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 81,
+          "y": 4,
+          "width": 258,
+          "height": 347,
+          "anchor": 204.841596909208,
+          "atlasX": 54,
+          "atlasY": 11
+        },
+        {
+          "sourceFrame": 1,
+          "x": 421,
+          "y": 4,
+          "width": 286,
+          "height": 347,
+          "anchor": 542.4600701207636,
+          "atlasX": 247,
+          "atlasY": 11
+        },
+        {
+          "sourceFrame": 2,
+          "x": 780,
+          "y": 10,
+          "width": 274,
+          "height": 341,
+          "anchor": 898.7280855539972,
+          "atlasX": 440,
+          "atlasY": 13
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1135,
+          "y": 5,
+          "width": 271,
+          "height": 346,
+          "anchor": 1251.5500863557859,
+          "atlasX": 633,
+          "atlasY": 12
+        },
+        {
+          "sourceFrame": 4,
+          "x": 54,
+          "y": 366,
+          "width": 296,
+          "height": 351,
+          "anchor": 209.16553467066814,
+          "atlasX": 812,
+          "atlasY": 10
+        },
+        {
+          "sourceFrame": 5,
+          "x": 410,
+          "y": 363,
+          "width": 317,
+          "height": 353,
+          "anchor": 553.5764910615409,
+          "atlasX": 1008,
+          "atlasY": 9
+        },
+        {
+          "sourceFrame": 6,
+          "x": 762,
+          "y": 364,
+          "width": 314,
+          "height": 352,
+          "anchor": 916.8405142460042,
+          "atlasX": 1196,
+          "atlasY": 10
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1146,
+          "y": 364,
+          "width": 285,
+          "height": 351,
+          "anchor": 1284.5432958682918,
+          "atlasX": 1393,
+          "atlasY": 10
+        },
+        {
+          "sourceFrame": 8,
+          "x": 15,
+          "y": 726,
+          "width": 299,
+          "height": 349,
+          "anchor": 172.70693123628382,
+          "atlasX": 1579,
+          "atlasY": 11
+        },
+        {
+          "sourceFrame": 9,
+          "x": 365,
+          "y": 747,
+          "width": 431,
+          "height": 328,
+          "anchor": 610.7957389595615,
+          "atlasX": 1741,
+          "atlasY": 18
+        },
+        {
+          "sourceFrame": 10,
+          "x": 772,
+          "y": 728,
+          "width": 289,
+          "height": 348,
+          "anchor": 931.3027730616865,
+          "atlasX": 1962,
+          "atlasY": 11
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1129,
+          "y": 719,
+          "width": 300,
+          "height": 357,
+          "anchor": 1271.7402694610778,
+          "atlasX": 2160,
+          "atlasY": 8
+        }
+      ]
+    },
+    {
+      "key": "cell",
+      "character": "cell",
+      "name": "Cell",
+      "description": "Imperfect Cell: green spotted insectoid humanoid, long tail with stinger, black head crest, orange facial accents",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/cell-source.png",
+      "asset": "game/assets/roster/cell-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 79,
+          "y": 4,
+          "width": 216,
+          "height": 348,
+          "anchor": 219.00091435537945,
+          "atlasX": 70,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 1,
+          "x": 424,
+          "y": 4,
+          "width": 217,
+          "height": 349,
+          "anchor": 561.9447281465906,
+          "atlasX": 263,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 775,
+          "y": 3,
+          "width": 217,
+          "height": 349,
+          "anchor": 911.6569767441861,
+          "atlasX": 455,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1141,
+          "y": 3,
+          "width": 217,
+          "height": 349,
+          "anchor": 1276.6271903323263,
+          "atlasX": 647,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 68,
+          "y": 366,
+          "width": 250,
+          "height": 343,
+          "anchor": 217.4078443877551,
+          "atlasX": 837,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 5,
+          "x": 436,
+          "y": 368,
+          "width": 170,
+          "height": 338,
+          "anchor": 570.0983715520107,
+          "atlasX": 1032,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 6,
+          "x": 798,
+          "y": 366,
+          "width": 240,
+          "height": 343,
+          "anchor": 946.4404332129964,
+          "atlasX": 1221,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1159,
+          "y": 368,
+          "width": 187,
+          "height": 342,
+          "anchor": 1292.7591356847793,
+          "atlasX": 1416,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 8,
+          "x": 42,
+          "y": 744,
+          "width": 309,
+          "height": 315,
+          "anchor": 217.68257021931512,
+          "atlasX": 1600,
+          "atlasY": 71
+        },
+        {
+          "sourceFrame": 9,
+          "x": 401,
+          "y": 740,
+          "width": 306,
+          "height": 317,
+          "anchor": 472.7283603096411,
+          "atlasX": 1811,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 10,
+          "x": 778,
+          "y": 759,
+          "width": 252,
+          "height": 300,
+          "anchor": 928.2197885196375,
+          "atlasX": 1989,
+          "atlasY": 73
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1109,
+          "y": 709,
+          "width": 313,
+          "height": 351,
+          "anchor": 1266.0314949608062,
+          "atlasX": 2179,
+          "atlasY": 64
+        }
+      ]
+    },
+    {
+      "key": "cell_ssj",
+      "character": "cell",
+      "name": "Cell",
+      "description": "Perfect Cell: recognizable symmetrical tall crown, pale lavender face, green spotted shoulder armor, black wings, black chest",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/cell_ssj-source.png",
+      "asset": "game/assets/roster/cell_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 98,
+          "y": 9,
+          "width": 166,
+          "height": 324,
+          "anchor": 211.9817843866171,
+          "atlasX": 73,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 482,
+          "y": 14,
+          "width": 166,
+          "height": 319,
+          "anchor": 594.9435700575816,
+          "atlasX": 266,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 866,
+          "y": 9,
+          "width": 167,
+          "height": 324,
+          "anchor": 980.3717179294823,
+          "atlasX": 457,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1251,
+          "y": 13,
+          "width": 166,
+          "height": 320,
+          "anchor": 1364.6192816635162,
+          "atlasX": 650,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 79,
+          "y": 352,
+          "width": 223,
+          "height": 307,
+          "anchor": 211.5906386354621,
+          "atlasX": 838,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 5,
+          "x": 473,
+          "y": 350,
+          "width": 161,
+          "height": 311,
+          "anchor": 596.6342397548832,
+          "atlasX": 1032,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 6,
+          "x": 860,
+          "y": 352,
+          "width": 212,
+          "height": 309,
+          "anchor": 983.8281127642913,
+          "atlasX": 1224,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1240,
+          "y": 354,
+          "width": 222,
+          "height": 307,
+          "anchor": 1377.2298758510212,
+          "atlasX": 1413,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 8,
+          "x": 74,
+          "y": 681,
+          "width": 283,
+          "height": 319,
+          "anchor": 194.4167585446527,
+          "atlasX": 1608,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 9,
+          "x": 462,
+          "y": 688,
+          "width": 287,
+          "height": 315,
+          "anchor": 521.4242307692308,
+          "atlasX": 1812,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 10,
+          "x": 844,
+          "y": 693,
+          "width": 225,
+          "height": 306,
+          "anchor": 994.3049672699268,
+          "atlasX": 1986,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1249,
+          "y": 691,
+          "width": 214,
+          "height": 311,
+          "anchor": 1365.0704493526275,
+          "atlasX": 2185,
+          "atlasY": 67
+        }
+      ]
+    },
+    {
+      "key": "leonardo",
+      "character": "leonardo",
+      "name": "Leonardo",
+      "description": "Teenage Mutant Ninja Turtle Leonardo, green muscular turtle, blue eye bandana, brown shell and harness, twin katana swords",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/leonardo-source.png",
+      "asset": "game/assets/roster/leonardo-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 98,
+          "y": 20,
+          "width": 281,
+          "height": 305,
+          "anchor": 188.8454425363276,
+          "atlasX": 78,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 1,
+          "x": 478,
+          "y": 20,
+          "width": 277,
+          "height": 305,
+          "anchor": 568.9018938747654,
+          "atlasX": 270,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 2,
+          "x": 861,
+          "y": 18,
+          "width": 277,
+          "height": 307,
+          "anchor": 951.5637800354782,
+          "atlasX": 462,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1246,
+          "y": 19,
+          "width": 272,
+          "height": 306,
+          "anchor": 1335.9578163771712,
+          "atlasX": 654,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 4,
+          "x": 81,
+          "y": 365,
+          "width": 321,
+          "height": 293,
+          "anchor": 206.54287654949906,
+          "atlasX": 839,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 5,
+          "x": 498,
+          "y": 363,
+          "width": 261,
+          "height": 295,
+          "anchor": 580.352140077821,
+          "atlasX": 1039,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 6,
+          "x": 834,
+          "y": 363,
+          "width": 311,
+          "height": 295,
+          "anchor": 955.3577181208053,
+          "atlasX": 1224,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1228,
+          "y": 362,
+          "width": 291,
+          "height": 296,
+          "anchor": 1338.4088669950738,
+          "atlasX": 1418,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 8,
+          "x": 5,
+          "y": 710,
+          "width": 489,
+          "height": 271,
+          "anchor": 202.26855658948278,
+          "atlasX": 1592,
+          "atlasY": 74
+        },
+        {
+          "sourceFrame": 9,
+          "x": 460,
+          "y": 659,
+          "width": 351,
+          "height": 319,
+          "anchor": 587.2350903241772,
+          "atlasX": 1798,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 10,
+          "x": 831,
+          "y": 672,
+          "width": 284,
+          "height": 307,
+          "anchor": 976.82272337996,
+          "atlasX": 1987,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1169,
+          "y": 683,
+          "width": 353,
+          "height": 297,
+          "anchor": 1348.627844712182,
+          "atlasX": 2172,
+          "atlasY": 68
+        }
+      ]
+    },
+    {
+      "key": "frieren",
+      "character": "frieren",
+      "name": "Frieren",
+      "description": "Silver-white twin-tail hair, pointed elf ears, green eyes, white/gold short mage coat, black tights, brown boots, red-gem staff",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/frieren-source.png",
+      "asset": "game/assets/roster/frieren-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 108,
+          "y": 7,
+          "width": 169,
+          "height": 333,
+          "anchor": 214.4506600660066,
+          "atlasX": 76,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 482,
+          "y": 7,
+          "width": 172,
+          "height": 333,
+          "anchor": 591.4367968232958,
+          "atlasX": 267,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 864,
+          "y": 8,
+          "width": 171,
+          "height": 332,
+          "anchor": 970.9395789811988,
+          "atlasX": 460,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1243,
+          "y": 7,
+          "width": 168,
+          "height": 333,
+          "anchor": 1347.7402725332458,
+          "atlasX": 652,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 100,
+          "y": 352,
+          "width": 215,
+          "height": 324,
+          "anchor": 240.16669458870834,
+          "atlasX": 837,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 5,
+          "x": 472,
+          "y": 353,
+          "width": 183,
+          "height": 320,
+          "anchor": 592.4560611323376,
+          "atlasX": 1033,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 6,
+          "x": 847,
+          "y": 352,
+          "width": 221,
+          "height": 322,
+          "anchor": 988.5752107925802,
+          "atlasX": 1221,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1243,
+          "y": 353,
+          "width": 181,
+          "height": 319,
+          "anchor": 1362.8620071684588,
+          "atlasX": 1417,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 8,
+          "x": 26,
+          "y": 713,
+          "width": 397,
+          "height": 287,
+          "anchor": 155.7928947368421,
+          "atlasX": 1607,
+          "atlasY": 73
+        },
+        {
+          "sourceFrame": 9,
+          "x": 399,
+          "y": 716,
+          "width": 352,
+          "height": 283,
+          "anchor": 530.4322307039864,
+          "atlasX": 1799,
+          "atlasY": 74
+        },
+        {
+          "sourceFrame": 10,
+          "x": 847,
+          "y": 682,
+          "width": 260,
+          "height": 319,
+          "anchor": 1011.5641740207462,
+          "atlasX": 1984,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1220,
+          "y": 672,
+          "width": 276,
+          "height": 334,
+          "anchor": 1388.2685991540184,
+          "atlasX": 2176,
+          "atlasY": 64
+        }
+      ]
+    },
+    {
+      "key": "frieren_ssj",
+      "character": "frieren",
+      "name": "Frieren",
+      "description": "Mana unleashed: same elf mage appearance, white-gold coat flowing, luminous gold and pale-cyan mana around staff and hands",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/frieren_ssj-source.png",
+      "asset": "game/assets/roster/frieren_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 81,
+          "y": 57,
+          "width": 182,
+          "height": 278,
+          "anchor": 177.88402441591245,
+          "atlasX": 74,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 445,
+          "y": 59,
+          "width": 179,
+          "height": 276,
+          "anchor": 538.4107393307954,
+          "atlasX": 267,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 801,
+          "y": 60,
+          "width": 185,
+          "height": 276,
+          "anchor": 899.4252170481452,
+          "atlasX": 458,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1167,
+          "y": 57,
+          "width": 182,
+          "height": 278,
+          "anchor": 1262.3643595863166,
+          "atlasX": 650,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 78,
+          "y": 423,
+          "width": 195,
+          "height": 276,
+          "anchor": 183.2545641025641,
+          "atlasX": 840,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 5,
+          "x": 427,
+          "y": 418,
+          "width": 197,
+          "height": 280,
+          "anchor": 536.8140406231513,
+          "atlasX": 1031,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 787,
+          "y": 423,
+          "width": 201,
+          "height": 275,
+          "anchor": 903.1278493557978,
+          "atlasX": 1221,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1140,
+          "y": 418,
+          "width": 211,
+          "height": 280,
+          "anchor": 1261.6332276710796,
+          "atlasX": 1412,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 54,
+          "y": 793,
+          "width": 300,
+          "height": 247,
+          "anchor": 189.15190802348337,
+          "atlasX": 1601,
+          "atlasY": 72
+        },
+        {
+          "sourceFrame": 9,
+          "x": 423,
+          "y": 778,
+          "width": 246,
+          "height": 261,
+          "anchor": 504.1810344827586,
+          "atlasX": 1805,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 10,
+          "x": 804,
+          "y": 776,
+          "width": 172,
+          "height": 264,
+          "anchor": 909.0894542470251,
+          "atlasX": 1992,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1148,
+          "y": 781,
+          "width": 207,
+          "height": 258,
+          "anchor": 1249.405615156357,
+          "atlasX": 2185,
+          "atlasY": 69
+        }
+      ]
+    },
+    {
+      "key": "optimus",
+      "character": "optimus",
+      "name": "Optimus Prime",
+      "description": "G1 Optimus Prime humanoid robot: red truck-window chest, blue helmet and lower legs, silver faceplate, smokestacks",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/optimus-source.png",
+      "asset": "game/assets/roster/optimus-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 110,
+          "y": 5,
+          "width": 208,
+          "height": 339,
+          "anchor": 198.22851625362085,
+          "atlasX": 79,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 457,
+          "y": 5,
+          "width": 206,
+          "height": 339,
+          "anchor": 543.6729384816754,
+          "atlasX": 272,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 811,
+          "y": 6,
+          "width": 209,
+          "height": 338,
+          "anchor": 899.2079831932773,
+          "atlasX": 463,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1169,
+          "y": 5,
+          "width": 207,
+          "height": 339,
+          "anchor": 1256.6837379447954,
+          "atlasX": 655,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 68,
+          "y": 368,
+          "width": 301,
+          "height": 334,
+          "anchor": 209.3535934291581,
+          "atlasX": 837,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 5,
+          "x": 464,
+          "y": 366,
+          "width": 198,
+          "height": 337,
+          "anchor": 562.5122246918569,
+          "atlasX": 1037,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 782,
+          "y": 368,
+          "width": 299,
+          "height": 335,
+          "anchor": 916.6072284345048,
+          "atlasX": 1223,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1194,
+          "y": 368,
+          "width": 158,
+          "height": 337,
+          "anchor": 1269.5836990595612,
+          "atlasX": 1426,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 32,
+          "y": 731,
+          "width": 339,
+          "height": 332,
+          "anchor": 211.79797781486207,
+          "atlasX": 1598,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 9,
+          "x": 421,
+          "y": 724,
+          "width": 339,
+          "height": 333,
+          "anchor": 507.70687091017254,
+          "atlasX": 1808,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 10,
+          "x": 782,
+          "y": 737,
+          "width": 302,
+          "height": 326,
+          "anchor": 926.926960939981,
+          "atlasX": 1989,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1144,
+          "y": 738,
+          "width": 298,
+          "height": 325,
+          "anchor": 1280.4119776738573,
+          "atlasX": 2182,
+          "atlasY": 67
+        }
+      ]
+    },
+    {
+      "key": "optimus_ssj",
+      "character": "optimus",
+      "name": "Optimus Prime",
+      "description": "Truck mode: red cab-over semi-truck with blue rear chassis and silver grille, facing right, wheels shown; firing weapons from cab",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/optimus_ssj-source.png",
+      "asset": "game/assets/roster/optimus_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 16,
+          "y": 113,
+          "width": 336,
+          "height": 237,
+          "anchor": 218.6030607364897,
+          "atlasX": 47,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 1,
+          "x": 377,
+          "y": 113,
+          "width": 334,
+          "height": 237,
+          "anchor": 576.2737588652483,
+          "atlasX": 240,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 2,
+          "x": 738,
+          "y": 127,
+          "width": 336,
+          "height": 223,
+          "anchor": 941.8870890900429,
+          "atlasX": 430,
+          "atlasY": 74
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1098,
+          "y": 113,
+          "width": 335,
+          "height": 237,
+          "anchor": 1296.7899906454631,
+          "atlasX": 624,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 4,
+          "x": 16,
+          "y": 453,
+          "width": 337,
+          "height": 230,
+          "anchor": 219.87296094908552,
+          "atlasX": 814,
+          "atlasY": 72
+        },
+        {
+          "sourceFrame": 5,
+          "x": 377,
+          "y": 448,
+          "width": 335,
+          "height": 235,
+          "anchor": 580.3097302504817,
+          "atlasX": 1007,
+          "atlasY": 71
+        },
+        {
+          "sourceFrame": 6,
+          "x": 738,
+          "y": 454,
+          "width": 336,
+          "height": 229,
+          "anchor": 943.660237388724,
+          "atlasX": 1198,
+          "atlasY": 72
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1099,
+          "y": 451,
+          "width": 334,
+          "height": 232,
+          "anchor": 1304.696103896104,
+          "atlasX": 1390,
+          "atlasY": 72
+        },
+        {
+          "sourceFrame": 8,
+          "x": 16,
+          "y": 779,
+          "width": 356,
+          "height": 245,
+          "anchor": 259.63423087176756,
+          "atlasX": 1573,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 9,
+          "x": 377,
+          "y": 790,
+          "width": 362,
+          "height": 231,
+          "anchor": 576.7985805188448,
+          "atlasX": 1775,
+          "atlasY": 72
+        },
+        {
+          "sourceFrame": 10,
+          "x": 750,
+          "y": 789,
+          "width": 329,
+          "height": 232,
+          "anchor": 943.0960099750623,
+          "atlasX": 1969,
+          "atlasY": 72
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1098,
+          "y": 761,
+          "width": 333,
+          "height": 263,
+          "anchor": 1333.885776221444,
+          "atlasX": 2151,
+          "atlasY": 64
+        }
+      ],
+      "previewZoom": 3
+    },
+    {
+      "key": "minipekka",
+      "character": "minipekka",
+      "name": "Mini P.E.K.K.A",
+      "description": "Small stocky charcoal steel armored robot knight, blue horned helmet, glowing cyan eyes, chunky sword",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/minipekka-source.png",
+      "asset": "game/assets/roster/minipekka-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 67,
+          "y": 88,
+          "width": 287,
+          "height": 262,
+          "anchor": 194.9177225340818,
+          "atlasX": 70,
+          "atlasY": 75
+        },
+        {
+          "sourceFrame": 1,
+          "x": 430,
+          "y": 89,
+          "width": 287,
+          "height": 261,
+          "anchor": 554.9750533398983,
+          "atlasX": 263,
+          "atlasY": 75
+        },
+        {
+          "sourceFrame": 2,
+          "x": 792,
+          "y": 90,
+          "width": 287,
+          "height": 260,
+          "anchor": 916.7003813629581,
+          "atlasX": 455,
+          "atlasY": 76
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1151,
+          "y": 88,
+          "width": 287,
+          "height": 262,
+          "anchor": 1278.063829787234,
+          "atlasX": 646,
+          "atlasY": 75
+        },
+        {
+          "sourceFrame": 4,
+          "x": 77,
+          "y": 442,
+          "width": 291,
+          "height": 265,
+          "anchor": 192.65862068965518,
+          "atlasX": 841,
+          "atlasY": 74
+        },
+        {
+          "sourceFrame": 5,
+          "x": 455,
+          "y": 442,
+          "width": 239,
+          "height": 265,
+          "anchor": 553.711620173656,
+          "atlasX": 1036,
+          "atlasY": 74
+        },
+        {
+          "sourceFrame": 6,
+          "x": 799,
+          "y": 442,
+          "width": 295,
+          "height": 265,
+          "anchor": 915.3747927031509,
+          "atlasX": 1225,
+          "atlasY": 74
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1163,
+          "y": 446,
+          "width": 254,
+          "height": 263,
+          "anchor": 1269.7348211355431,
+          "atlasX": 1418,
+          "atlasY": 75
+        },
+        {
+          "sourceFrame": 8,
+          "x": 45,
+          "y": 806,
+          "width": 379,
+          "height": 246,
+          "anchor": 183.2562646174407,
+          "atlasX": 1604,
+          "atlasY": 78
+        },
+        {
+          "sourceFrame": 9,
+          "x": 442,
+          "y": 735,
+          "width": 252,
+          "height": 317,
+          "anchor": 658.177758571017,
+          "atlasX": 1780,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 10,
+          "x": 788,
+          "y": 820,
+          "width": 222,
+          "height": 232,
+          "anchor": 920.8060226828314,
+          "atlasX": 1989,
+          "atlasY": 81
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1117,
+          "y": 825,
+          "width": 283,
+          "height": 227,
+          "anchor": 1280.238363072149,
+          "atlasX": 2175,
+          "atlasY": 82
+        }
+      ]
+    },
+    {
+      "key": "minipekka_ssj",
+      "character": "minipekka",
+      "name": "Mini P.E.K.K.A",
+      "description": "Rage mode: same steel knight, red-magenta eyes and energy accents, sword glowing crimson",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/minipekka_ssj-source.png",
+      "asset": "game/assets/roster/minipekka_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 46,
+          "y": 32,
+          "width": 310,
+          "height": 309,
+          "anchor": 178.50624399615754,
+          "atlasX": 69,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 1,
+          "x": 408,
+          "y": 32,
+          "width": 310,
+          "height": 309,
+          "anchor": 540.9266084707403,
+          "atlasX": 261,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 2,
+          "x": 770,
+          "y": 32,
+          "width": 310,
+          "height": 309,
+          "anchor": 902.589644012945,
+          "atlasX": 453,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1132,
+          "y": 32,
+          "width": 310,
+          "height": 309,
+          "anchor": 1264.2732043292883,
+          "atlasX": 645,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 4,
+          "x": 14,
+          "y": 388,
+          "width": 324,
+          "height": 309,
+          "anchor": 218.19357068786726,
+          "atlasX": 823,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 5,
+          "x": 388,
+          "y": 387,
+          "width": 274,
+          "height": 309,
+          "anchor": 576.8682739343117,
+          "atlasX": 1018,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 6,
+          "x": 713,
+          "y": 388,
+          "width": 346,
+          "height": 309,
+          "anchor": 940.6970426409904,
+          "atlasX": 1202,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1112,
+          "y": 387,
+          "width": 300,
+          "height": 310,
+          "anchor": 1300.8393242271748,
+          "atlasX": 1402,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 8,
+          "x": 13,
+          "y": 759,
+          "width": 413,
+          "height": 292,
+          "anchor": 160.21872630780894,
+          "atlasX": 1602,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 9,
+          "x": 397,
+          "y": 752,
+          "width": 384,
+          "height": 301,
+          "anchor": 488.4968866749689,
+          "atlasX": 1806,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 10,
+          "x": 800,
+          "y": 739,
+          "width": 272,
+          "height": 315,
+          "anchor": 929.4309602229541,
+          "atlasX": 1990,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1147,
+          "y": 735,
+          "width": 271,
+          "height": 319,
+          "anchor": 1288.011314395763,
+          "atlasX": 2180,
+          "atlasY": 64
+        }
+      ]
+    },
+    {
+      "key": "chapolim",
+      "character": "chapolim",
+      "name": "Chapolim",
+      "description": "Chapolin Colorado red hooded superhero, yellow shorts, yellow antennae tips and chest heart with CH, yellow-red boots, red squeaky hammer",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/chapolim-source.png",
+      "asset": "game/assets/roster/chapolim-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 112,
+          "y": 15,
+          "width": 197,
+          "height": 324,
+          "anchor": 238.21408839779005,
+          "atlasX": 72,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 1,
+          "x": 468,
+          "y": 16,
+          "width": 190,
+          "height": 323,
+          "anchor": 585.9614687216682,
+          "atlasX": 265,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 2,
+          "x": 809,
+          "y": 22,
+          "width": 188,
+          "height": 317,
+          "anchor": 919.4830544830545,
+          "atlasX": 459,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1162,
+          "y": 11,
+          "width": 192,
+          "height": 328,
+          "anchor": 1277.8024038461538,
+          "atlasX": 650,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 96,
+          "y": 370,
+          "width": 249,
+          "height": 332,
+          "anchor": 252.41023417172593,
+          "atlasX": 834,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 5,
+          "x": 477,
+          "y": 370,
+          "width": 132,
+          "height": 332,
+          "anchor": 562.6205974141775,
+          "atlasX": 1039,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 795,
+          "y": 373,
+          "width": 251,
+          "height": 329,
+          "anchor": 944.0344827586207,
+          "atlasX": 1219,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1196,
+          "y": 372,
+          "width": 140,
+          "height": 330,
+          "anchor": 1276.857805907173,
+          "atlasX": 1424,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 46,
+          "y": 755,
+          "width": 374,
+          "height": 304,
+          "anchor": 274.57071302298175,
+          "atlasX": 1588,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 9,
+          "x": 446,
+          "y": 748,
+          "width": 294,
+          "height": 311,
+          "anchor": 544.7516025641025,
+          "atlasX": 1805,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 10,
+          "x": 793,
+          "y": 755,
+          "width": 225,
+          "height": 304,
+          "anchor": 940.9617755856966,
+          "atlasX": 1987,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1089,
+          "y": 760,
+          "width": 308,
+          "height": 299,
+          "anchor": 1273.6440677966102,
+          "atlasX": 2172,
+          "atlasY": 70
+        }
+      ]
+    },
+    {
+      "key": "naruto",
+      "character": "naruto",
+      "name": "Naruto",
+      "description": "Naruto Uzumaki Shippuden: blond spiky hair, blue eyes, three whisker marks each cheek, Leaf forehead band, orange/black jumpsuit",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/naruto-source.png",
+      "asset": "game/assets/roster/naruto-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 149,
+          "y": 8,
+          "width": 182,
+          "height": 348,
+          "anchor": 241.5141141141141,
+          "atlasX": 79,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 478,
+          "y": 9,
+          "width": 185,
+          "height": 347,
+          "anchor": 573.5913182636527,
+          "atlasX": 270,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 824,
+          "y": 9,
+          "width": 188,
+          "height": 347,
+          "anchor": 918.667128164557,
+          "atlasX": 463,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1179,
+          "y": 9,
+          "width": 183,
+          "height": 347,
+          "anchor": 1270.9507643438556,
+          "atlasX": 655,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 130,
+          "y": 367,
+          "width": 224,
+          "height": 346,
+          "anchor": 247.88803161460294,
+          "atlasX": 842,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 5,
+          "x": 471,
+          "y": 366,
+          "width": 162,
+          "height": 347,
+          "anchor": 566.8550504089785,
+          "atlasX": 1038,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 804,
+          "y": 366,
+          "width": 225,
+          "height": 347,
+          "anchor": 921.9316650625601,
+          "atlasX": 1226,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1173,
+          "y": 367,
+          "width": 180,
+          "height": 346,
+          "anchor": 1271.414817531634,
+          "atlasX": 1422,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 56,
+          "y": 740,
+          "width": 330,
+          "height": 315,
+          "anchor": 209.5554072096128,
+          "atlasX": 1604,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 9,
+          "x": 430,
+          "y": 732,
+          "width": 317,
+          "height": 321,
+          "anchor": 523.3102943865423,
+          "atlasX": 1807,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 10,
+          "x": 778,
+          "y": 746,
+          "width": 242,
+          "height": 309,
+          "anchor": 904.812184789187,
+          "atlasX": 1993,
+          "atlasY": 71
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1110,
+          "y": 748,
+          "width": 302,
+          "height": 308,
+          "anchor": 1291.420230263158,
+          "atlasX": 2175,
+          "atlasY": 71
+        }
+      ]
+    },
+    {
+      "key": "naruto_ssj",
+      "character": "naruto",
+      "name": "Naruto",
+      "description": "Sage Mode: same Naruto, red sage coat over orange/black suit, black eye markings, yellow-orange toad eyes, large scroll on back",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/naruto_ssj-source.png",
+      "asset": "game/assets/roster/naruto_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 74,
+          "y": 4,
+          "width": 210,
+          "height": 365,
+          "anchor": 190.2458904109589,
+          "atlasX": 76,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 436,
+          "y": 3,
+          "width": 225,
+          "height": 366,
+          "anchor": 560.9364686468647,
+          "atlasX": 266,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 810,
+          "y": 2,
+          "width": 219,
+          "height": 367,
+          "anchor": 932.1684228416043,
+          "atlasX": 459,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1171,
+          "y": 2,
+          "width": 223,
+          "height": 367,
+          "anchor": 1295.8025777103867,
+          "atlasX": 650,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 49,
+          "y": 380,
+          "width": 270,
+          "height": 343,
+          "anchor": 228.27668883444173,
+          "atlasX": 833,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 5,
+          "x": 413,
+          "y": 383,
+          "width": 285,
+          "height": 340,
+          "anchor": 589.1630493273543,
+          "atlasX": 1025,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 6,
+          "x": 792,
+          "y": 382,
+          "width": 221,
+          "height": 341,
+          "anchor": 954.3802768757478,
+          "atlasX": 1220,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1150,
+          "y": 384,
+          "width": 275,
+          "height": 337,
+          "anchor": 1320.3612690262241,
+          "atlasX": 1410,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 8,
+          "x": 9,
+          "y": 737,
+          "width": 327,
+          "height": 334,
+          "anchor": 139.9235352532274,
+          "atlasX": 1609,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 9,
+          "x": 372,
+          "y": 736,
+          "width": 361,
+          "height": 332,
+          "anchor": 503.68121133181376,
+          "atlasX": 1801,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 10,
+          "x": 769,
+          "y": 736,
+          "width": 265,
+          "height": 335,
+          "anchor": 911.1406304121925,
+          "atlasX": 1991,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1136,
+          "y": 745,
+          "width": 294,
+          "height": 322,
+          "anchor": 1316.1090745732256,
+          "atlasX": 2177,
+          "atlasY": 72
+        }
+      ]
+    },
+    {
+      "key": "batman",
+      "character": "batman",
+      "name": "Batman",
+      "description": "Batman gray armored suit, black pointed-ear cowl and cape, black bat chest symbol, yellow utility belt, black gloves/boots",
+      "targetHeight": 64,
+      "status": "generation-blocked",
+      "source": null,
+      "asset": null,
+      "reason": "Image service rejected generation on multiple attempts; existing procedural sprite and animations preserved."
+    },
+    {
+      "key": "batman_ssj",
+      "character": "batman",
+      "name": "Batman",
+      "description": "Armored Batman: heavier gunmetal exosuit, angular steel chest and shoulders, cyan-lit eyes, black cape",
+      "targetHeight": 64,
+      "status": "generation-blocked",
+      "source": null,
+      "asset": null,
+      "reason": "Image service rejected generation on multiple attempts; existing procedural sprite and animations preserved."
+    },
+    {
+      "key": "thukuna",
+      "character": "thukuna",
+      "name": "Thukuna",
+      "description": "Sukuna inspired anime character: pink spiky hair, black curse tattoos on face/hands, dark navy uniform with red hood, dark trousers",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/thukuna-source.png",
+      "asset": "game/assets/roster/thukuna-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 74,
+          "y": 10,
+          "width": 182,
+          "height": 429,
+          "anchor": 177.49838940586972,
+          "atlasX": 81,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 379,
+          "y": 12,
+          "width": 182,
+          "height": 427,
+          "anchor": 484.8268688293371,
+          "atlasX": 272,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 678,
+          "y": 10,
+          "width": 182,
+          "height": 429,
+          "anchor": 781.4590517241379,
+          "atlasX": 465,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 985,
+          "y": 13,
+          "width": 181,
+          "height": 425,
+          "anchor": 1085.7683210894104,
+          "atlasX": 657,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 32,
+          "y": 458,
+          "width": 285,
+          "height": 394,
+          "anchor": 194.56281407035175,
+          "atlasX": 840,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 5,
+          "x": 385,
+          "y": 457,
+          "width": 137,
+          "height": 395,
+          "anchor": 479.07020684168657,
+          "atlasX": 1042,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 6,
+          "x": 618,
+          "y": 455,
+          "width": 285,
+          "height": 397,
+          "anchor": 770.0688721222674,
+          "atlasX": 1225,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 7,
+          "x": 983,
+          "y": 458,
+          "width": 141,
+          "height": 396,
+          "anchor": 1076.3000793335978,
+          "atlasX": 1426,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 8,
+          "x": 7,
+          "y": 893,
+          "width": 322,
+          "height": 359,
+          "anchor": 180.68084529937687,
+          "atlasX": 1606,
+          "atlasY": 74
+        },
+        {
+          "sourceFrame": 9,
+          "x": 356,
+          "y": 874,
+          "width": 310,
+          "height": 381,
+          "anchor": 489.09355067328136,
+          "atlasX": 1804,
+          "atlasY": 71
+        },
+        {
+          "sourceFrame": 10,
+          "x": 647,
+          "y": 896,
+          "width": 257,
+          "height": 358,
+          "anchor": 791.3859255100131,
+          "atlasX": 1994,
+          "atlasY": 75
+        },
+        {
+          "sourceFrame": 11,
+          "x": 935,
+          "y": 894,
+          "width": 284,
+          "height": 361,
+          "anchor": 1077.447867298578,
+          "atlasX": 2187,
+          "atlasY": 74
+        }
+      ]
+    },
+    {
+      "key": "thukuna_ssj",
+      "character": "thukuna",
+      "name": "Thukuna",
+      "description": "True form: same pink-haired tattooed curse warrior, white kimono robe, dark sash, four muscular arms",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/thukuna_ssj-source.png",
+      "asset": "game/assets/roster/thukuna_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 43,
+          "y": 19,
+          "width": 180,
+          "height": 376,
+          "anchor": 138.34587298074794,
+          "atlasX": 80,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 355,
+          "y": 21,
+          "width": 185,
+          "height": 374,
+          "anchor": 451.8409304511278,
+          "atlasX": 272,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 680,
+          "y": 19,
+          "width": 179,
+          "height": 376,
+          "anchor": 771.5443548387096,
+          "atlasX": 464,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 997,
+          "y": 20,
+          "width": 177,
+          "height": 375,
+          "anchor": 1089.5570071258908,
+          "atlasX": 656,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 27,
+          "y": 445,
+          "width": 221,
+          "height": 364,
+          "anchor": 141.32247480665572,
+          "atlasX": 845,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 5,
+          "x": 354,
+          "y": 444,
+          "width": 218,
+          "height": 365,
+          "anchor": 468.30926649804553,
+          "atlasX": 1037,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 6,
+          "x": 663,
+          "y": 445,
+          "width": 224,
+          "height": 364,
+          "anchor": 790.9643097643097,
+          "atlasX": 1226,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 7,
+          "x": 984,
+          "y": 446,
+          "width": 213,
+          "height": 363,
+          "anchor": 1102.5630620244408,
+          "atlasX": 1420,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 8,
+          "x": 14,
+          "y": 870,
+          "width": 285,
+          "height": 360,
+          "anchor": 149.1036202735318,
+          "atlasX": 1609,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 9,
+          "x": 324,
+          "y": 858,
+          "width": 318,
+          "height": 372,
+          "anchor": 406.7193199929166,
+          "atlasX": 1810,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 10,
+          "x": 663,
+          "y": 859,
+          "width": 229,
+          "height": 375,
+          "anchor": 766.4273197034374,
+          "atlasX": 1998,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 11,
+          "x": 956,
+          "y": 877,
+          "width": 254,
+          "height": 348,
+          "anchor": 1087.9431406220187,
+          "atlasX": 2186,
+          "atlasY": 69
+        }
+      ]
+    },
+    {
+      "key": "gojo",
+      "character": "gojo",
+      "name": "Satoru Gojo",
+      "description": "Tall slim white spiky-haired man with black blindfold, high-collared dark navy jacket, matching trousers and black shoes",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/gojo-source.png",
+      "asset": "game/assets/roster/gojo-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 120,
+          "y": 6,
+          "width": 126,
+          "height": 347,
+          "anchor": 189.5699200913242,
+          "atlasX": 83,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 482,
+          "y": 6,
+          "width": 126,
+          "height": 347,
+          "anchor": 551.1377840909091,
+          "atlasX": 275,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 844,
+          "y": 5,
+          "width": 126,
+          "height": 348,
+          "anchor": 911.774,
+          "atlasX": 468,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1207,
+          "y": 6,
+          "width": 126,
+          "height": 347,
+          "anchor": 1276.6051660516605,
+          "atlasX": 659,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 70,
+          "y": 363,
+          "width": 234,
+          "height": 348,
+          "anchor": 191.14886363636364,
+          "atlasX": 842,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 5,
+          "x": 488,
+          "y": 364,
+          "width": 113,
+          "height": 347,
+          "anchor": 552.7694877505568,
+          "atlasX": 1044,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 788,
+          "y": 363,
+          "width": 240,
+          "height": 348,
+          "anchor": 914.9335398479302,
+          "atlasX": 1225,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1211,
+          "y": 363,
+          "width": 127,
+          "height": 349,
+          "anchor": 1277.4995778215593,
+          "atlasX": 1428,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 25,
+          "y": 744,
+          "width": 323,
+          "height": 329,
+          "anchor": 198.8518,
+          "atlasX": 1600,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 9,
+          "x": 411,
+          "y": 740,
+          "width": 328,
+          "height": 333,
+          "anchor": 543.2001427042454,
+          "atlasX": 1800,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 10,
+          "x": 772,
+          "y": 743,
+          "width": 237,
+          "height": 330,
+          "anchor": 909.0015197568389,
+          "atlasX": 1991,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1130,
+          "y": 740,
+          "width": 259,
+          "height": 333,
+          "anchor": 1277.5159425078473,
+          "atlasX": 2181,
+          "atlasY": 67
+        }
+      ]
+    },
+    {
+      "key": "gojo_ssj",
+      "character": "gojo",
+      "name": "Satoru Gojo",
+      "description": "Limitless: same outfit, blindfold removed, bright cyan Six Eyes visible, white hair loose, compact cyan energy around hands",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/gojo_ssj-source.png",
+      "asset": "game/assets/roster/gojo_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 97,
+          "y": 36,
+          "width": 123,
+          "height": 369,
+          "anchor": 161.30314273243124,
+          "atlasX": 85,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 400,
+          "y": 39,
+          "width": 124,
+          "height": 366,
+          "anchor": 463.2179542511869,
+          "atlasX": 277,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 690,
+          "y": 38,
+          "width": 125,
+          "height": 367,
+          "anchor": 753.4957801341701,
+          "atlasX": 469,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 999,
+          "y": 38,
+          "width": 129,
+          "height": 366,
+          "anchor": 1062.5066261134043,
+          "atlasX": 661,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 70,
+          "y": 456,
+          "width": 198,
+          "height": 356,
+          "anchor": 156.90387497323914,
+          "atlasX": 849,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 5,
+          "x": 406,
+          "y": 455,
+          "width": 110,
+          "height": 354,
+          "anchor": 470.8422090729783,
+          "atlasX": 1045,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 6,
+          "x": 664,
+          "y": 457,
+          "width": 216,
+          "height": 352,
+          "anchor": 768.1305314654214,
+          "atlasX": 1230,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 7,
+          "x": 974,
+          "y": 458,
+          "width": 219,
+          "height": 354,
+          "anchor": 1084.4615214506855,
+          "atlasX": 1421,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 8,
+          "x": 41,
+          "y": 859,
+          "width": 260,
+          "height": 353,
+          "anchor": 156.91744114002478,
+          "atlasX": 1612,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 9,
+          "x": 368,
+          "y": 873,
+          "width": 277,
+          "height": 346,
+          "anchor": 437.3180478821363,
+          "atlasX": 1812,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 10,
+          "x": 645,
+          "y": 871,
+          "width": 252,
+          "height": 343,
+          "anchor": 762.837440381558,
+          "atlasX": 1996,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 11,
+          "x": 942,
+          "y": 866,
+          "width": 261,
+          "height": 352,
+          "anchor": 1057.7232142857142,
+          "atlasX": 2188,
+          "atlasY": 67
+        }
+      ]
+    },
+    {
+      "key": "obito",
+      "character": "obito",
+      "name": "Obito Uchiha",
+      "description": "Tobi orange spiral mask with one Sharingan eye, black Akatsuki cloak with red clouds, dark pants and shinobi sandals",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/obito-source.png",
+      "asset": "game/assets/roster/obito-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 102,
+          "y": 18,
+          "width": 148,
+          "height": 338,
+          "anchor": 192.6441332689522,
+          "atlasX": 79,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 463,
+          "y": 17,
+          "width": 149,
+          "height": 339,
+          "anchor": 554.4416280770168,
+          "atlasX": 271,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 825,
+          "y": 17,
+          "width": 149,
+          "height": 339,
+          "anchor": 916.613603120429,
+          "atlasX": 463,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1187,
+          "y": 17,
+          "width": 149,
+          "height": 340,
+          "anchor": 1278.3769696969698,
+          "atlasX": 655,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 71,
+          "y": 378,
+          "width": 231,
+          "height": 336,
+          "anchor": 203.89073806078147,
+          "atlasX": 839,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 5,
+          "x": 456,
+          "y": 380,
+          "width": 173,
+          "height": 333,
+          "anchor": 577.2373588610702,
+          "atlasX": 1033,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 6,
+          "x": 804,
+          "y": 380,
+          "width": 220,
+          "height": 334,
+          "anchor": 932.011675991243,
+          "atlasX": 1224,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1172,
+          "y": 380,
+          "width": 185,
+          "height": 334,
+          "anchor": 1290.1059167275384,
+          "atlasX": 1418,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 8,
+          "x": 30,
+          "y": 738,
+          "width": 323,
+          "height": 332,
+          "anchor": 209.67563218390805,
+          "atlasX": 1598,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 9,
+          "x": 412,
+          "y": 732,
+          "width": 313,
+          "height": 339,
+          "anchor": 500.69741100323625,
+          "atlasX": 1807,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 10,
+          "x": 798,
+          "y": 738,
+          "width": 214,
+          "height": 333,
+          "anchor": 916.04327563249,
+          "atlasX": 1994,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1159,
+          "y": 737,
+          "width": 229,
+          "height": 334,
+          "anchor": 1272.4464327760772,
+          "atlasX": 2187,
+          "atlasY": 65
+        }
+      ]
+    },
+    {
+      "key": "obito_ssj",
+      "character": "obito",
+      "name": "Obito Uchiha",
+      "description": "Ten-Tails jinchuriki: pale white skin/hair, horn-like crest, white robe with black magatama, black truth-seeking staff",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/obito_ssj-source.png",
+      "asset": "game/assets/roster/obito_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 48,
+          "y": 17,
+          "width": 239,
+          "height": 353,
+          "anchor": 194.97098853868195,
+          "atlasX": 70,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 1,
+          "x": 412,
+          "y": 13,
+          "width": 235,
+          "height": 357,
+          "anchor": 564.7665777777778,
+          "atlasX": 261,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 770,
+          "y": 11,
+          "width": 256,
+          "height": 359,
+          "anchor": 918.0863935059915,
+          "atlasX": 454,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1137,
+          "y": 17,
+          "width": 236,
+          "height": 353,
+          "anchor": 1289.2941379906622,
+          "atlasX": 645,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 30,
+          "y": 392,
+          "width": 292,
+          "height": 331,
+          "anchor": 226.80880149812734,
+          "atlasX": 829,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 5,
+          "x": 388,
+          "y": 397,
+          "width": 310,
+          "height": 322,
+          "anchor": 604.3943612948137,
+          "atlasX": 1017,
+          "atlasY": 71
+        },
+        {
+          "sourceFrame": 6,
+          "x": 756,
+          "y": 397,
+          "width": 299,
+          "height": 327,
+          "anchor": 969.3070590296023,
+          "atlasX": 1210,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1118,
+          "y": 393,
+          "width": 282,
+          "height": 332,
+          "anchor": 1316.5448251990308,
+          "atlasX": 1405,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 8,
+          "x": 10,
+          "y": 784,
+          "width": 431,
+          "height": 276,
+          "anchor": 193.16655116655116,
+          "atlasX": 1599,
+          "atlasY": 79
+        },
+        {
+          "sourceFrame": 9,
+          "x": 433,
+          "y": 744,
+          "width": 362,
+          "height": 327,
+          "anchor": 562.363775250382,
+          "atlasX": 1801,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 10,
+          "x": 765,
+          "y": 758,
+          "width": 314,
+          "height": 308,
+          "anchor": 945.2864005912786,
+          "atlasX": 1984,
+          "atlasY": 73
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1141,
+          "y": 748,
+          "width": 264,
+          "height": 325,
+          "anchor": 1290.38135437695,
+          "atlasX": 2181,
+          "atlasY": 70
+        }
+      ]
+    },
+    {
+      "key": "itachi",
+      "character": "itachi",
+      "name": "Itachi Uchiha",
+      "description": "Existing completed Itachi pixel atlas",
+      "targetHeight": 64,
+      "status": "complete",
+      "source": null,
+      "asset": "game/assets/itachi-pixel-v3.png"
+    },
+    {
+      "key": "itachi_ssj",
+      "character": "itachi",
+      "name": "Itachi Uchiha",
+      "description": "Existing completed orange Susanoo atlas",
+      "targetHeight": 64,
+      "status": "complete",
+      "source": null,
+      "asset": "game/assets/itachi-susanoo-v1.png"
+    },
+    {
+      "key": "jotaro",
+      "character": "jotaro",
+      "name": "Jotaro Kujo",
+      "description": "Tall muscular black-haired man with merged black cap, long dark coat with gold chain, purple shirt, dark trousers, colored belt",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/jotaro-source.png",
+      "asset": "game/assets/roster/jotaro-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 151,
+          "y": 5,
+          "width": 168,
+          "height": 351,
+          "anchor": 240.13942093541203,
+          "atlasX": 80,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 478,
+          "y": 5,
+          "width": 169,
+          "height": 351,
+          "anchor": 569.1705960854092,
+          "atlasX": 271,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 808,
+          "y": 5,
+          "width": 170,
+          "height": 351,
+          "anchor": 898.7155229846769,
+          "atlasX": 463,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1148,
+          "y": 5,
+          "width": 169,
+          "height": 351,
+          "anchor": 1236.7207387627948,
+          "atlasX": 656,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 80,
+          "y": 372,
+          "width": 266,
+          "height": 341,
+          "anchor": 216.90312574564544,
+          "atlasX": 839,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 5,
+          "x": 460,
+          "y": 369,
+          "width": 171,
+          "height": 344,
+          "anchor": 582.6959643476108,
+          "atlasX": 1034,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 6,
+          "x": 791,
+          "y": 372,
+          "width": 269,
+          "height": 341,
+          "anchor": 930.4573254221816,
+          "atlasX": 1223,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1164,
+          "y": 372,
+          "width": 190,
+          "height": 340,
+          "anchor": 1279.7420960916106,
+          "atlasX": 1419,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 8,
+          "x": 39,
+          "y": 734,
+          "width": 330,
+          "height": 331,
+          "anchor": 230.53659066232356,
+          "atlasX": 1597,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 9,
+          "x": 404,
+          "y": 730,
+          "width": 360,
+          "height": 338,
+          "anchor": 558.2952449567723,
+          "atlasX": 1796,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 10,
+          "x": 794,
+          "y": 735,
+          "width": 259,
+          "height": 330,
+          "anchor": 912.2785135402254,
+          "atlasX": 1994,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1148,
+          "y": 732,
+          "width": 240,
+          "height": 333,
+          "anchor": 1261.269222711083,
+          "atlasX": 2187,
+          "atlasY": 67
+        }
+      ]
+    },
+    {
+      "key": "jotaro_ssj",
+      "character": "jotaro",
+      "name": "Jotaro Kujo",
+      "description": "Same Jotaro with Star Platinum hovering directly behind him, muscular purple humanoid stand with dark flowing hair, gold headband and gloves",
+      "targetHeight": 96,
+      "status": "packed",
+      "source": "docs/art/roster/jotaro_ssj-source.png",
+      "asset": "game/assets/roster/jotaro_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 66,
+          "y": 2,
+          "width": 204,
+          "height": 352,
+          "anchor": 157.87894496112213,
+          "atlasX": 71,
+          "atlasY": 33
+        },
+        {
+          "sourceFrame": 1,
+          "x": 428,
+          "y": 3,
+          "width": 203,
+          "height": 351,
+          "anchor": 519.4580254212237,
+          "atlasX": 263,
+          "atlasY": 33
+        },
+        {
+          "sourceFrame": 2,
+          "x": 787,
+          "y": 4,
+          "width": 204,
+          "height": 350,
+          "anchor": 880.0809187809638,
+          "atlasX": 455,
+          "atlasY": 33
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1150,
+          "y": 4,
+          "width": 205,
+          "height": 350,
+          "anchor": 1243.34742840006,
+          "atlasX": 647,
+          "atlasY": 33
+        },
+        {
+          "sourceFrame": 4,
+          "x": 55,
+          "y": 363,
+          "width": 255,
+          "height": 344,
+          "anchor": 159.40449273234475,
+          "atlasX": 836,
+          "atlasY": 35
+        },
+        {
+          "sourceFrame": 5,
+          "x": 428,
+          "y": 363,
+          "width": 250,
+          "height": 344,
+          "anchor": 535.310975609756,
+          "atlasX": 1027,
+          "atlasY": 35
+        },
+        {
+          "sourceFrame": 6,
+          "x": 796,
+          "y": 367,
+          "width": 253,
+          "height": 340,
+          "anchor": 901.6082629674306,
+          "atlasX": 1219,
+          "atlasY": 36
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1150,
+          "y": 365,
+          "width": 264,
+          "height": 342,
+          "anchor": 1261.3966446974237,
+          "atlasX": 1410,
+          "atlasY": 35
+        },
+        {
+          "sourceFrame": 8,
+          "x": 30,
+          "y": 723,
+          "width": 314,
+          "height": 354,
+          "anchor": 164.80349540667711,
+          "atlasX": 1595,
+          "atlasY": 32
+        },
+        {
+          "sourceFrame": 9,
+          "x": 398,
+          "y": 727,
+          "width": 332,
+          "height": 349,
+          "anchor": 528.2502222222222,
+          "atlasX": 1789,
+          "atlasY": 33
+        },
+        {
+          "sourceFrame": 10,
+          "x": 797,
+          "y": 727,
+          "width": 219,
+          "height": 349,
+          "anchor": 904.0814712005551,
+          "atlasX": 1987,
+          "atlasY": 33
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1150,
+          "y": 753,
+          "width": 260,
+          "height": 323,
+          "anchor": 1251.6930215293244,
+          "atlasX": 2180,
+          "atlasY": 40
+        }
+      ]
+    },
+    {
+      "key": "spiderman",
+      "character": "spiderman",
+      "name": "Spider-Man",
+      "description": "Classic red-and-blue Spider-Man suit with black web pattern, large white eye lenses, black spider emblem",
+      "targetHeight": 64,
+      "status": "generation-blocked",
+      "source": null,
+      "asset": null,
+      "reason": "Image service rejected generation on multiple attempts; existing procedural sprite and animations preserved."
+    },
+    {
+      "key": "spiderman_ssj",
+      "character": "spiderman",
+      "name": "Spider-Man",
+      "description": "Black symbiote Spider-Man suit, white eye lenses, large white chest spider and white back-of-hand patches",
+      "targetHeight": 64,
+      "status": "generation-blocked",
+      "source": null,
+      "asset": null,
+      "reason": "Image service rejected generation on multiple attempts; existing procedural sprite and animations preserved."
+    },
+    {
+      "key": "saitama",
+      "character": "saitama",
+      "name": "Saitama",
+      "description": "Bald clean-shaven superhero, yellow jumpsuit, white cape with black fasteners, red gloves and boots, black belt",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/saitama-source.png",
+      "asset": "game/assets/roster/saitama-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 101,
+          "y": 13,
+          "width": 209,
+          "height": 340,
+          "anchor": 237.14797507788163,
+          "atlasX": 70,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 431,
+          "y": 13,
+          "width": 210,
+          "height": 340,
+          "anchor": 568.5537700865266,
+          "atlasX": 262,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 777,
+          "y": 13,
+          "width": 207,
+          "height": 340,
+          "anchor": 911.674511002445,
+          "atlasX": 455,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1140,
+          "y": 13,
+          "width": 207,
+          "height": 340,
+          "anchor": 1274.4004269594388,
+          "atlasX": 647,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 54,
+          "y": 375,
+          "width": 299,
+          "height": 332,
+          "anchor": 238.3739934387116,
+          "atlasX": 829,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 5,
+          "x": 436,
+          "y": 372,
+          "width": 180,
+          "height": 331,
+          "anchor": 572.1574014221073,
+          "atlasX": 1030,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 6,
+          "x": 747,
+          "y": 378,
+          "width": 300,
+          "height": 329,
+          "anchor": 930.4560220655839,
+          "atlasX": 1213,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1136,
+          "y": 372,
+          "width": 210,
+          "height": 331,
+          "anchor": 1274.9547657512117,
+          "atlasX": 1414,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 8,
+          "x": 25,
+          "y": 752,
+          "width": 349,
+          "height": 301,
+          "anchor": 214.8428837642674,
+          "atlasX": 1596,
+          "atlasY": 71
+        },
+        {
+          "sourceFrame": 9,
+          "x": 400,
+          "y": 741,
+          "width": 312,
+          "height": 316,
+          "anchor": 558.7561456752655,
+          "atlasX": 1794,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 10,
+          "x": 769,
+          "y": 741,
+          "width": 271,
+          "height": 316,
+          "anchor": 927.6156835848194,
+          "atlasX": 1986,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1097,
+          "y": 741,
+          "width": 319,
+          "height": 311,
+          "anchor": 1267.9733369983508,
+          "atlasX": 2176,
+          "atlasY": 69
+        }
+      ]
+    },
+    {
+      "key": "static",
+      "character": "static",
+      "name": "Super Choque",
+      "description": "Static Shock/Virgil Hawkins: young Black hero with black dreadlocks, white goggles, blue/yellow long jacket, white shirt with lightning symbol, black trousers, yellow gloves",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/static-source.png",
+      "asset": "game/assets/roster/static-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 88,
+          "y": 14,
+          "width": 181,
+          "height": 334,
+          "anchor": 190.6170160295931,
+          "atlasX": 77,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 1,
+          "x": 434,
+          "y": 13,
+          "width": 182,
+          "height": 335,
+          "anchor": 536.1158420551856,
+          "atlasX": 269,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 800,
+          "y": 13,
+          "width": 177,
+          "height": 335,
+          "anchor": 902.8362393967955,
+          "atlasX": 460,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1168,
+          "y": 11,
+          "width": 171,
+          "height": 337,
+          "anchor": 1262.5928825622775,
+          "atlasX": 654,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 88,
+          "y": 376,
+          "width": 241,
+          "height": 326,
+          "anchor": 216.89092188599577,
+          "atlasX": 840,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 5,
+          "x": 449,
+          "y": 374,
+          "width": 181,
+          "height": 327,
+          "anchor": 560.0289207618152,
+          "atlasX": 1035,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 6,
+          "x": 800,
+          "y": 375,
+          "width": 245,
+          "height": 327,
+          "anchor": 926.1922525107605,
+          "atlasX": 1224,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1170,
+          "y": 378,
+          "width": 196,
+          "height": 323,
+          "anchor": 1293.0396883369856,
+          "atlasX": 1417,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 8,
+          "x": 55,
+          "y": 731,
+          "width": 286,
+          "height": 324,
+          "anchor": 199.82646012141512,
+          "atlasX": 1604,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 9,
+          "x": 431,
+          "y": 733,
+          "width": 309,
+          "height": 321,
+          "anchor": 523.9809318222702,
+          "atlasX": 1806,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 10,
+          "x": 791,
+          "y": 731,
+          "width": 248,
+          "height": 325,
+          "anchor": 916.2598699489085,
+          "atlasX": 1992,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1136,
+          "y": 733,
+          "width": 265,
+          "height": 323,
+          "anchor": 1272.5679941719281,
+          "atlasX": 2182,
+          "atlasY": 67
+        }
+      ]
+    },
+    {
+      "key": "static_ssj",
+      "character": "static",
+      "name": "Super Choque",
+      "description": "Powered Static Shock: same hero and coat, intense blue-white electric channels around gloved hands, compact hovering metal disc under feet",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/static_ssj-source.png",
+      "asset": "game/assets/roster/static_ssj-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 110,
+          "y": 14,
+          "width": 192,
+          "height": 316,
+          "anchor": 225.08327100473699,
+          "atlasX": 73,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 489,
+          "y": 17,
+          "width": 189,
+          "height": 313,
+          "anchor": 597.9311668372569,
+          "atlasX": 266,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 856,
+          "y": 17,
+          "width": 191,
+          "height": 313,
+          "anchor": 971.325238956342,
+          "atlasX": 457,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1235,
+          "y": 15,
+          "width": 196,
+          "height": 315,
+          "anchor": 1350.3729771384537,
+          "atlasX": 649,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 84,
+          "y": 361,
+          "width": 242,
+          "height": 296,
+          "anchor": 233.232856066315,
+          "atlasX": 834,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 5,
+          "x": 475,
+          "y": 355,
+          "width": 209,
+          "height": 305,
+          "anchor": 606.71285604311,
+          "atlasX": 1029,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 6,
+          "x": 840,
+          "y": 363,
+          "width": 233,
+          "height": 293,
+          "anchor": 989.8839735099338,
+          "atlasX": 1218,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1237,
+          "y": 359,
+          "width": 209,
+          "height": 297,
+          "anchor": 1377.4871930287827,
+          "atlasX": 1412,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 8,
+          "x": 51,
+          "y": 707,
+          "width": 359,
+          "height": 282,
+          "anchor": 235.0404840155363,
+          "atlasX": 1595,
+          "atlasY": 71
+        },
+        {
+          "sourceFrame": 9,
+          "x": 470,
+          "y": 695,
+          "width": 290,
+          "height": 289,
+          "anchor": 576.3858726282172,
+          "atlasX": 1802,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 10,
+          "x": 851,
+          "y": 704,
+          "width": 231,
+          "height": 284,
+          "anchor": 986.7781162136832,
+          "atlasX": 1989,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1243,
+          "y": 710,
+          "width": 223,
+          "height": 278,
+          "anchor": 1359.9296375266524,
+          "atlasX": 2184,
+          "atlasY": 72
+        }
+      ]
+    },
+    {
+      "key": "goku_ui",
+      "character": "goku",
+      "name": "goku",
+      "description": "Ultra Instinct Goku: silver spiky hair and silver eyes, battle-damaged orange gi pants, blue wristbands, bare muscular torso",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/goku_ui-source.png",
+      "asset": "game/assets/roster/goku_ui-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 100,
+          "y": 5,
+          "width": 167,
+          "height": 329,
+          "anchor": 191.981981981982,
+          "atlasX": 78,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 493,
+          "y": 5,
+          "width": 167,
+          "height": 329,
+          "anchor": 584.0442517233712,
+          "atlasX": 270,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 877,
+          "y": 4,
+          "width": 167,
+          "height": 329,
+          "anchor": 968.3001361161524,
+          "atlasX": 462,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1262,
+          "y": 4,
+          "width": 166,
+          "height": 330,
+          "anchor": 1353.5217587373168,
+          "atlasX": 654,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 80,
+          "y": 347,
+          "width": 227,
+          "height": 325,
+          "anchor": 214.1835070231083,
+          "atlasX": 838,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 5,
+          "x": 513,
+          "y": 344,
+          "width": 120,
+          "height": 328,
+          "anchor": 583.8874127448772,
+          "atlasX": 1042,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 847,
+          "y": 347,
+          "width": 226,
+          "height": 324,
+          "anchor": 974.4542543458372,
+          "atlasX": 1223,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1284,
+          "y": 346,
+          "width": 123,
+          "height": 322,
+          "anchor": 1357.4627272727273,
+          "atlasX": 1426,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 8,
+          "x": 45,
+          "y": 693,
+          "width": 301,
+          "height": 306,
+          "anchor": 195.37697266059124,
+          "atlasX": 1603,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 9,
+          "x": 433,
+          "y": 681,
+          "width": 304,
+          "height": 329,
+          "anchor": 496.10091131362526,
+          "atlasX": 1812,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 10,
+          "x": 826,
+          "y": 694,
+          "width": 251,
+          "height": 302,
+          "anchor": 966.4419842452629,
+          "atlasX": 1989,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1201,
+          "y": 717,
+          "width": 286,
+          "height": 277,
+          "anchor": 1378.9918679741688,
+          "atlasX": 2173,
+          "atlasY": 74
+        }
+      ]
+    },
+    {
+      "key": "vegeta_ui",
+      "character": "vegeta",
+      "name": "vegeta",
+      "description": "Ultra Ego Vegeta: purple upswept hair, prominent brow without eyebrows, intense eyes, torn blue battle suit, white gloves and boots",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/vegeta_ui-source.png",
+      "asset": "game/assets/roster/vegeta_ui-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 108,
+          "y": 6,
+          "width": 183,
+          "height": 318,
+          "anchor": 185.3277727682597,
+          "atlasX": 81,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 1,
+          "x": 489,
+          "y": 6,
+          "width": 175,
+          "height": 318,
+          "anchor": 565.5436318067897,
+          "atlasX": 273,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 2,
+          "x": 873,
+          "y": 6,
+          "width": 182,
+          "height": 318,
+          "anchor": 949.5404235937144,
+          "atlasX": 465,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1258,
+          "y": 7,
+          "width": 175,
+          "height": 318,
+          "anchor": 1334.099411379987,
+          "atlasX": 657,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 4,
+          "x": 72,
+          "y": 340,
+          "width": 246,
+          "height": 329,
+          "anchor": 208.60135578394926,
+          "atlasX": 837,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 5,
+          "x": 520,
+          "y": 340,
+          "width": 115,
+          "height": 329,
+          "anchor": 585.5213043478261,
+          "atlasX": 1043,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 833,
+          "y": 344,
+          "width": 260,
+          "height": 326,
+          "anchor": 975.1246239793726,
+          "atlasX": 1220,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1278,
+          "y": 342,
+          "width": 135,
+          "height": 328,
+          "anchor": 1359.3220597861662,
+          "atlasX": 1424,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 33,
+          "y": 694,
+          "width": 313,
+          "height": 307,
+          "anchor": 159.13699284009547,
+          "atlasX": 1607,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 9,
+          "x": 469,
+          "y": 687,
+          "width": 305,
+          "height": 321,
+          "anchor": 527.3749174917492,
+          "atlasX": 1813,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 10,
+          "x": 833,
+          "y": 693,
+          "width": 246,
+          "height": 310,
+          "anchor": 965.6007434944238,
+          "atlasX": 1990,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1233,
+          "y": 689,
+          "width": 246,
+          "height": 317,
+          "anchor": 1324.908002520479,
+          "atlasX": 2190,
+          "atlasY": 66
+        }
+      ]
+    },
+    {
+      "key": "gohan_ui",
+      "character": "gohan",
+      "name": "gohan",
+      "description": "Beast Gohan: very tall silver-white spiky hair, red eyes, purple gi and blue sash",
+      "targetHeight": 80,
+      "status": "packed",
+      "source": "docs/art/roster/gohan_ui-source.png",
+      "asset": "game/assets/roster/gohan_ui-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 102,
+          "y": 8,
+          "width": 150,
+          "height": 347,
+          "anchor": 163.95296894861085,
+          "atlasX": 82,
+          "atlasY": 50
+        },
+        {
+          "sourceFrame": 1,
+          "x": 464,
+          "y": 8,
+          "width": 149,
+          "height": 347,
+          "anchor": 524.9669913419914,
+          "atlasX": 274,
+          "atlasY": 50
+        },
+        {
+          "sourceFrame": 2,
+          "x": 826,
+          "y": 8,
+          "width": 150,
+          "height": 347,
+          "anchor": 888.3344973350487,
+          "atlasX": 466,
+          "atlasY": 50
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1188,
+          "y": 8,
+          "width": 150,
+          "height": 347,
+          "anchor": 1251.058661778185,
+          "atlasX": 658,
+          "atlasY": 50
+        },
+        {
+          "sourceFrame": 4,
+          "x": 72,
+          "y": 364,
+          "width": 244,
+          "height": 350,
+          "anchor": 177.14269829503337,
+          "atlasX": 841,
+          "atlasY": 50
+        },
+        {
+          "sourceFrame": 5,
+          "x": 472,
+          "y": 362,
+          "width": 134,
+          "height": 350,
+          "anchor": 538.1470104223807,
+          "atlasX": 1041,
+          "atlasY": 50
+        },
+        {
+          "sourceFrame": 6,
+          "x": 795,
+          "y": 361,
+          "width": 248,
+          "height": 353,
+          "anchor": 919.3395095367847,
+          "atlasX": 1220,
+          "atlasY": 49
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1209,
+          "y": 361,
+          "width": 128,
+          "height": 350,
+          "anchor": 1268.977210071678,
+          "atlasX": 1427,
+          "atlasY": 50
+        },
+        {
+          "sourceFrame": 8,
+          "x": 36,
+          "y": 730,
+          "width": 294,
+          "height": 345,
+          "anchor": 162.11430678466076,
+          "atlasX": 1604,
+          "atlasY": 51
+        },
+        {
+          "sourceFrame": 9,
+          "x": 420,
+          "y": 717,
+          "width": 304,
+          "height": 358,
+          "anchor": 475.15694372741353,
+          "atlasX": 1812,
+          "atlasY": 48
+        },
+        {
+          "sourceFrame": 10,
+          "x": 774,
+          "y": 727,
+          "width": 240,
+          "height": 348,
+          "anchor": 890.1529433681073,
+          "atlasX": 1990,
+          "atlasY": 50
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1142,
+          "y": 735,
+          "width": 256,
+          "height": 339,
+          "anchor": 1264.0902241112829,
+          "atlasX": 2181,
+          "atlasY": 52
+        }
+      ]
+    },
+    {
+      "key": "naruto_ui",
+      "character": "naruto",
+      "name": "naruto",
+      "description": "Kurama Link Mode Naruto: glowing golden-yellow chakra coat and hair, black magatama and flame markings, golden chakra cloak tails",
+      "targetHeight": 64,
+      "status": "packed",
+      "source": "docs/art/roster/naruto_ui-source.png",
+      "asset": "game/assets/roster/naruto_ui-v1.png",
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 71,
+          "y": 18,
+          "width": 241,
+          "height": 336,
+          "anchor": 208.96120689655172,
+          "atlasX": 70,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 424,
+          "y": 18,
+          "width": 207,
+          "height": 336,
+          "anchor": 536.6236771300448,
+          "atlasX": 267,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 2,
+          "x": 764,
+          "y": 19,
+          "width": 231,
+          "height": 335,
+          "anchor": 881.436514810324,
+          "atlasX": 458,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1127,
+          "y": 16,
+          "width": 224,
+          "height": 338,
+          "anchor": 1243.856335217825,
+          "atlasX": 650,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 4,
+          "x": 35,
+          "y": 391,
+          "width": 280,
+          "height": 315,
+          "anchor": 210.45744864491627,
+          "atlasX": 831,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 5,
+          "x": 408,
+          "y": 391,
+          "width": 253,
+          "height": 318,
+          "anchor": 550.5107303010891,
+          "atlasX": 1029,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 6,
+          "x": 753,
+          "y": 394,
+          "width": 264,
+          "height": 315,
+          "anchor": 931.5157232704403,
+          "atlasX": 1214,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1103,
+          "y": 395,
+          "width": 252,
+          "height": 311,
+          "anchor": 1246.4871752165222,
+          "atlasX": 1413,
+          "atlasY": 69
+        },
+        {
+          "sourceFrame": 8,
+          "x": 34,
+          "y": 749,
+          "width": 333,
+          "height": 306,
+          "anchor": 196.57442977190877,
+          "atlasX": 1601,
+          "atlasY": 70
+        },
+        {
+          "sourceFrame": 9,
+          "x": 410,
+          "y": 738,
+          "width": 332,
+          "height": 317,
+          "anchor": 519.2530732666776,
+          "atlasX": 1803,
+          "atlasY": 68
+        },
+        {
+          "sourceFrame": 10,
+          "x": 757,
+          "y": 735,
+          "width": 288,
+          "height": 320,
+          "anchor": 904.908467133251,
+          "atlasX": 1988,
+          "atlasY": 67
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1103,
+          "y": 764,
+          "width": 316,
+          "height": 290,
+          "anchor": 1273.6907596371882,
+          "atlasX": 2176,
+          "atlasY": 73
+        }
+      ]
+    }
+  ]
+}

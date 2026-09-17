@@ -553,17 +553,7 @@ export function generateVegetaSprite(scene: Phaser.Scene) {
     }
   };
 
-  if (scene.textures.exists("vegeta")) {
-    scene.textures.remove("vegeta");
-  }
-  if (scene.textures.exists("vegeta_ssj")) {
-    scene.textures.remove("vegeta_ssj");
-  }
-  if (scene.textures.exists("vegeta_ui")) {
-    scene.textures.remove("vegeta_ui");
-  }
-
-  generateForm(0);
-  generateForm(1);
-  generateForm(2);
+  if (!scene.textures.exists("vegeta")) generateForm(0);
+  if (!scene.textures.exists("vegeta_ssj")) generateForm(1);
+  if (!scene.textures.exists("vegeta_ui")) generateForm(2);
 }

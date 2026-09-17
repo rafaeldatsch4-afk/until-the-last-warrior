@@ -1,3 +1,4 @@
+import { preloadRosterAtlases } from "../sprites/RosterAtlases";
 import { preloadItachiAtlases } from "../sprites/ItachiAtlases";
 import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
@@ -38,6 +39,7 @@ export default class PreloadScene extends Phaser.Scene {
 
   preload() {
     preloadItachiAtlases(this);
+    preloadRosterAtlases(this);
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
@@ -158,12 +160,8 @@ export default class PreloadScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
-    // Se as texturas do goku já existirem, finaliza o preload imediatamente.
-    if (this.textures.exists("goku")) {
-      this.finishPreload();
-      return;
-    }
-
+    // A loaded Goku atlas does not imply that every other character loaded.
+    // Each generator fills only missing textures, including offline fallbacks.
     let currentGeneratorIndex = 0;
 
     const generateNext = () => {
@@ -304,6 +302,7 @@ export default class PreloadScene extends Phaser.Scene {
       key === "goku" ||
       key === "vegeta" ||
       key === "naruto" ||
+      key === "gohan" ||
       key === "custom_999"
     ) {
       createAllForTex(`${key}_ui`, `${key}_ui`);

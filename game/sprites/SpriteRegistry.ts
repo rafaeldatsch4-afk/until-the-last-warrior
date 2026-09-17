@@ -35,7 +35,7 @@ export const SPRITE_GENERATORS: SpriteGenerator[] = [
   { name: "Madara Uchiha", fn: generateMadaraSprite },
   { name: "Cell", fn: generateCellSprite },
   { name: "Mini P.E.K.K.A", fn: generateMinipekkaSprite },
-  { name: "Cyberninja", fn: generateCyberninjaSprite },
+  { name: "Cyber Zero", fn: generateCyberninjaSprite },
   { name: "Leonardo", fn: generateLeonardoSprite },
   { name: "Frieren", fn: generateFrierenSprite },
   { name: "Optimus Prime", fn: generateOptimusSprite },
@@ -53,12 +53,6 @@ export const SPRITE_GENERATORS: SpriteGenerator[] = [
 ];
 
 export function generateAllSprites(scene: Phaser.Scene): void {
-  if (scene.textures.exists("goku")) {
-    console.log(
-      "All character sprites are already in cache. Skipping generation.",
-    );
-    return;
-  }
   SPRITE_GENERATORS.forEach((item) => {
     try {
       item.fn(scene);

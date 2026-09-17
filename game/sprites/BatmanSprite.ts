@@ -10,7 +10,7 @@ export function generateBatmanSprite(scene: Phaser.Scene) {
     // Increased frame width to prevent extended limbs/weapons from bleeding into adjacent frames
     const FRAME_WIDTH = 96;
     const FRAME_HEIGHT = 64; // Taller frame to support big hair
-    const DRAW_OFFSET_Y = 32; // Shift body down so feet are at bottom of 64px frame
+    const DRAW_OFFSET_Y = 30; // Keep boots and cape inside the frame when blocking. // Shift body down so feet are at bottom of 64px frame
     const FRAMES = 12;
 
     // Calculate total dimensions
@@ -234,12 +234,21 @@ export function generateBatmanSprite(scene: Phaser.Scene) {
         box(6, 14, 20, 18, capeColor);
         box(5, 16, 22, 14, capeColor);
         // Scalloped edges
-        dot(7, 32, capeColor);
-        dot(11, 32, capeColor);
-        dot(15, 32, capeColor);
-        dot(19, 32, capeColor);
-        dot(23, 32, capeColor);
+        dot(7, 31, capeColor);
+        dot(11, 31, capeColor);
+        dot(15, 31, capeColor);
+        dot(19, 31, capeColor);
+        dot(23, 31, capeColor);
 
+        // Frame 9 is a side kick, rather than a second punching pose.
+        if (f === 9) {
+          box(11, 24, 4, 7, SUIT_GREY);
+          box(10, 28, 6, 4, BLACK);
+          box(17, 23, 7, 4, SUIT_GREY);
+          box(23, 21, 8, 4, SUIT_GREY);
+          box(30, 20, 6, 5, BLACK);
+          box(30, 20, 5, 1, 0x444444);
+        } else {
         // Legs
         box(11, 24, 4, 6, SUIT_GREY);
         box(17, 24, 4, 6, SUIT_GREY);
@@ -256,6 +265,8 @@ export function generateBatmanSprite(scene: Phaser.Scene) {
           box(17, 25, 4, 2, 0x7f8c8d);
           box(11, 26, 4, 1, 0x556666);
           box(17, 26, 4, 1, 0x556666); // Plate shadow
+        }
+
         }
 
         // Torso
@@ -277,7 +288,7 @@ export function generateBatmanSprite(scene: Phaser.Scene) {
         box(19, 22, 2, 2, 0xd4ac0d);
 
         // Arms
-        if (isAttack) {
+        if (f === 8) {
           box(21, 14, 10, 3, SUIT_GREY); // Right arm throwing
           box(21, 14, 10, 1, SUIT_SHADOW);
           box(28, 14, 3, 3, BLACK); // Gauntlet
@@ -287,6 +298,20 @@ export function generateBatmanSprite(scene: Phaser.Scene) {
 
           box(6, 15, 3, 5, SUIT_GREY); // Left arm pulled
           box(6, 20, 3, 3, BLACK); // Left glove
+        } else if (isDefend) {
+          box(8, 15, 4, 5, SUIT_GREY);
+          box(20, 14, 4, 5, SUIT_GREY);
+          box(11, 11, 4, 7, BLACK);
+          box(18, 10, 4, 8, BLACK);
+          box(12, 11, 2, 1, 0x64748b);
+          box(19, 10, 2, 1, 0x64748b);
+        } else if (isCharge) {
+          box(7, 16, 4, 5, SUIT_GREY);
+          box(21, 16, 4, 5, SUIT_GREY);
+          box(8, 20, 5, 4, BLACK);
+          box(19, 20, 5, 4, BLACK);
+          box(9, 20, 3, 1, isArmored ? ARMOR_GLOW : YELLOW);
+          box(20, 20, 3, 1, isArmored ? ARMOR_GLOW : YELLOW);
         } else {
           box(7, 14, 3, 7, SUIT_GREY);
           box(22, 14, 3, 7, SUIT_GREY);

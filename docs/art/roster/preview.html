@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OTLW — revisão das animações</title>
+<style>body{font:16px system-ui;background:#182235;color:#fff;max-width:900px;margin:24px auto;padding:16px}select,button{padding:10px;margin:4px}canvas{width:100%;max-width:768px;background:#24334b;image-rendering:pixelated}p{line-height:1.5}</style>
+<h1>Revisão das sprites OTLW</h1>
+<p>Escolha a forma e a animação. Pause e avance quadro a quadro para conferir os movimentos e o espelhamento.</p>
+<label>Forma <select id="form"></select></label><label>Animação <select id="animation"></select></label>
+<button id="play">Pausar</button><button id="step">Próximo quadro</button><button id="flip">Virar</button>
+<p id="status" role="status"></p><canvas id="canvas" width="768" height="512"></canvas>
+<script type="module">
+const forms=document.querySelector('#form'),animations=document.querySelector('#animation'),status=document.querySelector('#status');
+const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;
+const sequences={idle:[[0,1,2,3],10],walk:[[4,5,6,7],12],attack:[[8,9],16],punch:[[8],12],kick:[[9],12],special:[[8,9],12],defend:[[10],10],transform:[[0,1,2,3],24],charge:[[11],10]};
+let entries=[],sprite=null,index=0,playing=true,flipped=false,last=0,request=0;
+for(const key of Object.keys(sequences))animations.add(new Option(key,key));
+function draw(){if(!sprite)return;const frame=sequences[animations.value][0][index];ctx.clearRect(0,0,768,512);ctx.save();if(flipped){ctx.translate(768,0);ctx.scale(-1,1);}ctx.drawImage(sprite,frame*192,0,192,128,0,0,768,512);ctx.restore();status.textContent=`${forms.value} · ${animations.value} · quadro ${frame}/11`;}
+async function load(){const token=++request;sprite=null;ctx.clearRect(0,0,768,512);status.textContent='Carregando…';const e=entries.find(e=>e.key===forms.value),img=new Image();img.src='../../../'+e.asset;try{await img.decode();if(token!==request)return;sprite=img;index=0;last=0;draw();}catch{if(token===request)status.textContent='Falha ao carregar '+e.asset;}}
+forms.onchange=load;animations.onchange=()=>{index=0;last=0;draw();};
+document.querySelector('#play').onclick=()=>{playing=!playing;document.querySelector('#play').textContent=playing?'Pausar':'Reproduzir';};
+document.querySelector('#step').onclick=()=>{playing=false;document.querySelector('#play').textContent='Reproduzir';index=(index+1)%sequences[animations.value][0].length;draw();};
+document.querySelector('#flip').onclick=()=>{flipped=!flipped;draw();};
+function tick(now){if(playing&&sprite&&now-last>=1000/sequences[animations.value][1]){index=(index+1)%sequences[animations.value][0].length;last=now;draw();}requestAnimationFrame(tick);}requestAnimationFrame(tick);
+try{const response=await fetch('./manifest.json');if(!response.ok)throw new Error();({entries}=await response.json());entries=entries.filter(e=>e.status!=='generation-blocked');for(const e of entries)forms.add(new Option(`${e.name} — ${e.key}`,e.key));await load();}catch{status.textContent='Abra esta página por um servidor HTTP na raiz do repositório.';}
+</script></html>

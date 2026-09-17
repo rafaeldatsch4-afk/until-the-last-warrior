@@ -10,7 +10,7 @@ export function generateSpidermanSprite(scene: Phaser.Scene) {
     // Increased frame width to prevent extended limbs/weapons from bleeding into adjacent frames
     const FRAME_WIDTH = 96;
     const FRAME_HEIGHT = 64; // Taller frame to support big hair
-    const DRAW_OFFSET_Y = 32; // Shift body down so feet are at bottom of 64px frame
+    const DRAW_OFFSET_Y = 28; // Room for the complete boots in all idle/walk poses. // Shift body down so feet are at bottom of 64px frame
     const FRAMES = 12;
 
     // Calculate total dimensions
@@ -284,6 +284,14 @@ export function generateSpidermanSprite(scene: Phaser.Scene) {
           box(28, 26 + armSway, 2, 2, IRON_EYE); // Glow
         }
 
+        if (f === 9) {
+          box(10, 23, 4, 7, BLUE);
+          box(10, 29, 5, 5, RED);
+          box(18, 23, 7, 4, BLUE);
+          box(24, 21, 7, 4, BLUE);
+          box(30, 20, 6, 5, RED);
+          box(30, 20, 5, 1, isTransformed ? IRON_GOLD : WEB_COLOR);
+        } else {
         // === LEGS (Starts at Y=23, same as Goku) ===
         box(10, 23 + bob, 4, 6, BLUE); // Left Thigh
         box(18, 23 + bob, 4, 6, BLUE); // Right Thigh
@@ -306,6 +314,8 @@ export function generateSpidermanSprite(scene: Phaser.Scene) {
           // Classic Web bands
           box(10, 30 + bob, 4, 1, WEB_COLOR);
           box(18, 30 + bob, 4, 1, WEB_COLOR);
+        }
+
         }
 
         // === TORSO (Y=14 to 22) ===
@@ -363,7 +373,7 @@ export function generateSpidermanSprite(scene: Phaser.Scene) {
         }
 
         // === ARMS ===
-        if (isAttack) {
+        if (f === 8) {
           // Web Shooter Pose (Left arm forward, right arm back)
           // Right Arm
           box(8, 14 + bob, 3, 4, RED);
@@ -383,6 +393,13 @@ export function generateSpidermanSprite(scene: Phaser.Scene) {
             box(32, 14 + bob, 4, 1, WEB_COLOR); // hand detail
           }
           box(36, 15 + bob, 2, 1, EYE_GLOW); // web spark
+        } else if (isDefend) {
+          box(9, 15, 4, 5, BLUE);
+          box(19, 14, 4, 5, BLUE);
+          box(12, 11, 4, 7, RED);
+          box(18, 10, 4, 8, RED);
+          box(12, 13, 4, 1, isTransformed ? IRON_GOLD : WEB_COLOR);
+          box(18, 12, 4, 1, isTransformed ? IRON_GOLD : WEB_COLOR);
         } else if (isCharge) {
           // Crouch / Prep Pose
           box(8, 15 + bob, 3, 4, BLUE);
