@@ -1,3 +1,4 @@
+import { getAttackDirection } from "../sprites/CombatPoses";
 import Phaser from "phaser";
 import { Fighter } from "./base/Fighter";
 import { AttackParams, AttackResult } from "./base/FighterTypes";
@@ -135,7 +136,7 @@ export class SpidermanFighter extends Fighter {
     const hand = bs.getHandPosition(isPlayer);
     const webLine = bs.add
       .rectangle(hand.x, hand.y, 0, 4, webColor)
-      .setOrigin(isPlayer ? 0 : 1, 0.5)
+      .setOrigin(getAttackDirection(attacker) > 0 ? 0 : 1, 0.5)
       .setDepth(4);
 
     bs.tweens.add({

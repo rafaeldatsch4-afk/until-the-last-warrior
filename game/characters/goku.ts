@@ -1,3 +1,4 @@
+import { getAttackDirection } from "../sprites/CombatPoses";
 import Phaser from "phaser";
 import { Fighter } from "./base/Fighter";
 import { AttackParams, AttackResult } from "./base/FighterTypes";
@@ -131,6 +132,8 @@ export class GokuFighter extends Fighter {
     // Wait, the original method `specialKamehameha` in `BattleScene` does NOT do the log. Let's add them or assume caller handles it.
     // Actually, caller handles the initial log. I will just do the animation.
 
+    attacker.play(bs.getAnimKey("goku", transformLevel, "special"));
+    const direction = getAttackDirection(attacker);
     const hand = bs.getHandPosition(isPlayer);
     const aura = bs.add
       .circle(hand.x, hand.y, 5, 0x00ffff)
@@ -147,18 +150,18 @@ export class GokuFighter extends Fighter {
         aura.destroy();
         if (!bs.scene.isActive()) return;
 
-        attacker.play(bs.getAnimKey("goku", transformLevel, "punch"));
+        attacker.play(bs.getAnimKey("goku", transformLevel, "special"), true);
         const newHand = bs.getHandPosition(isPlayer);
 
         const beam = bs.add
-          .rectangle(newHand.x, newHand.y + 10, 0, 40, 0x00ffff)
-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+          .rectangle(newHand.x, newHand.y, 0, 40, 0x00ffff)
+          .setOrigin(direction > 0 ? 0 : 1, 0.5)
           .setDepth(16)
           .setBlendMode(Phaser.BlendModes.ADD);
 
         const core = bs.add
-          .rectangle(newHand.x, newHand.y + 10, 0, 20, 0xffffff)
-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+          .rectangle(newHand.x, newHand.y, 0, 20, 0xffffff)
+          .setOrigin(direction > 0 ? 0 : 1, 0.5)
           .setDepth(17);
 
         const dist = Math.abs(target.x - newHand.x) + 200;
@@ -207,8 +210,8 @@ export class GokuFighter extends Fighter {
     const bs = scene as any;
     const dmg = Math.floor(120 * bs.getDamageMultiplier(transformLevel));
 
-    // Raise hands
-    attacker.play(bs.getAnimKey("goku", transformLevel, "charge"));
+    // Preparing a super is a cast, distinct from replenishing Ki.
+    attacker.play(bs.getAnimKey("goku", transformLevel, "special"));
 
     // Create giant spirit bomb
     const bomb = bs.add

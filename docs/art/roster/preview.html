@@ -10,11 +10,12 @@
 <script type="module">
 const forms=document.querySelector('#form'),animations=document.querySelector('#animation'),status=document.querySelector('#status');
 const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;
-const sequences={idle:[[0,1,2,3],10],walk:[[4,5,6,7],12],attack:[[8,9],16],punch:[[8],12],kick:[[9],12],special:[[8,9],12],defend:[[10],10],transform:[[0,1,2,3],24],charge:[[11],10]};
+const sequences={idle:[[0,1,2,3],10],walk:[[4,5,6,7],12],attack:[[8,9],16],punch:[[8],12],kick:[[9],12],special:[[8],12],defend:[[10],10],transform:[[0,1,2,3],24],charge:[[11],10]};
+const combatPoses=await (await fetch('../../../game/sprites/combat-poses.json')).json();
 let entries=[],sprite=null,index=0,playing=true,flipped=false,last=0,request=0;
 for(const key of Object.keys(sequences))animations.add(new Option(key,key));
 function draw(){if(!sprite)return;const frame=sequences[animations.value][0][index];ctx.clearRect(0,0,768,512);ctx.save();if(flipped){ctx.translate(768,0);ctx.scale(-1,1);}ctx.drawImage(sprite,frame*192,0,192,128,0,0,768,512);ctx.restore();status.textContent=`${forms.value} · ${animations.value} · quadro ${frame}/11`;}
-async function load(){const token=++request;sprite=null;ctx.clearRect(0,0,768,512);status.textContent='Carregando…';const e=entries.find(e=>e.key===forms.value),img=new Image();img.src='../../../'+e.asset;try{await img.decode();if(token!==request)return;sprite=img;index=0;last=0;draw();}catch{if(token===request)status.textContent='Falha ao carregar '+e.asset;}}
+async function load(){const token=++request;sprite=null;ctx.clearRect(0,0,768,512);status.textContent='Carregando…';const e=entries.find(e=>e.key===forms.value),img=new Image();img.src='../../../'+e.asset;try{await img.decode();if(token!==request)return;sprite=img;const pose=combatPoses[e.key];sequences.special=[[pose?.special??8],12];sequences.charge=[pose?.charge===0?[0,1,2,3]:[pose?.charge??11],10];index=0;last=0;draw();}catch{if(token===request)status.textContent='Falha ao carregar '+e.asset;}}
 forms.onchange=load;animations.onchange=()=>{index=0;last=0;draw();};
 document.querySelector('#play').onclick=()=>{playing=!playing;document.querySelector('#play').textContent=playing?'Pausar':'Reproduzir';};
 document.querySelector('#step').onclick=()=>{playing=false;document.querySelector('#play').textContent='Reproduzir';index=(index+1)%sequences[animations.value][0].length;draw();};

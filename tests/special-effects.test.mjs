@@ -18,7 +18,7 @@ for(const method of ['performSpecial','performSuper'])for(const player of [true,
     timer.to(hit);assert.deepEqual(hits,[[hit,!player,Math.floor(base*[1,1.25,1.5][level])]]);
     timer.to(end);assert.deepEqual(done,[[end,player]]);
     timer.to(10000);assert.equal(hits.length,1);assert.equal(done.length,1);
-    assert.equal(poses[0],`itachi_${level}_charge`);assert.ok(poses.includes(`itachi_${level}_attack`));
+    assert.equal(poses[0],`itachi_${level}_special`);assert.ok(poses.includes(`itachi_${level}_attack`));
     assert.equal(visuals[0][3],player?1:-1);
   });
 }

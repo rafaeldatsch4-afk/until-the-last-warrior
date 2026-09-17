@@ -1,3 +1,4 @@
+import { getCombatPose } from "../sprites/CombatPoses";
 import { preloadArenaArt } from "../battle/ArenaAtlases";
 import { preloadRosterAtlases } from "../sprites/RosterAtlases";
 import { preloadItachiAtlases } from "../sprites/ItachiAtlases";
@@ -291,10 +292,13 @@ export default class PreloadScene extends Phaser.Scene {
       createAnim(`${baseKey}_attack`, texKey, 8, 9, 16, 0);
       createAnim(`${baseKey}_punch`, texKey, 8, 8, 12, 0);
       createAnim(`${baseKey}_kick`, texKey, 9, 9, 12, 0);
-      createAnim(`${baseKey}_special`, texKey, 8, 9, 12, -1);
+      const pose = this.textures.exists(texKey) ? getCombatPose(this.textures.get(texKey)) : undefined;
+      const specialFrame = pose?.special ?? 8;
+      createAnim(`${baseKey}_special`, texKey, specialFrame, specialFrame, 12, -1);
       createAnim(`${baseKey}_defend`, texKey, 10, 10, 10, -1);
       createAnim(`${baseKey}_transform`, texKey, 0, 3, 24, -1);
-      createAnim(`${baseKey}_charge`, texKey, 11, 11, 10, -1);
+      const chargeFrame = pose?.charge ?? 11;
+      createAnim(`${baseKey}_charge`, texKey, chargeFrame, chargeFrame === 0 ? 3 : chargeFrame, 10, -1);
     };
 
     createAllForTex(key, key);

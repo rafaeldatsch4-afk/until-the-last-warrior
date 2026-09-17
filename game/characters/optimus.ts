@@ -1,3 +1,4 @@
+import { getAttackDirection } from "../sprites/CombatPoses";
 import Phaser from "phaser";
 import { Fighter } from "./base/Fighter";
 import { AttackParams, AttackResult } from "./base/FighterTypes";
@@ -115,7 +116,6 @@ export class OptimusFighter extends Fighter {
     bs.log("MISSILE STRIKE!");
     const isS = false;
     const count = isS ? 12 : 6; // More missiles
-    const hand = bs.getHandPosition(isPlayer);
     const baseDmg = isS ? 8 : 12;
     const dmg = Math.floor(baseDmg * bs.getDamageMultiplier(transLevel));
 
@@ -123,12 +123,13 @@ export class OptimusFighter extends Fighter {
       bs.time.delayedCall(delay, () => {
         if (!bs.scene.isActive()) return;
 
+        const hand = bs.getHandPosition(isPlayer);
         // Missile Graphic
         const m = bs.add
-          .rectangle(hand.x, hand.y - 30, 20, 8, 0xffffff)
+          .rectangle(hand.x, hand.y, 20, 8, 0xffffff)
           .setDepth(5);
         const mGlow = bs.add
-          .rectangle(hand.x, hand.y - 30, 30, 12, 0xffaa00)
+          .rectangle(hand.x, hand.y, 30, 12, 0xffaa00)
           .setDepth(4)
           .setAlpha(0.6)
           .setBlendMode(Phaser.BlendModes.ADD);
@@ -154,7 +155,7 @@ export class OptimusFighter extends Fighter {
         const midY = hand.y - Phaser.Math.Between(200, 400);
 
         const curve = new Phaser.Curves.QuadraticBezier(
-          new Phaser.Math.Vector2(hand.x, hand.y - 30),
+          new Phaser.Math.Vector2(hand.x, hand.y),
           new Phaser.Math.Vector2(midX, midY),
           new Phaser.Math.Vector2(targetX, targetY),
         );
@@ -312,9 +313,9 @@ export class OptimusFighter extends Fighter {
           .rectangle(hand.x, hand.y, 0, 90, 0xffffff)
           .setOrigin(0, 0.5)
           .setDepth(6);
-        beamOuter.scaleX = isPlayer ? 1 : -1;
-        beam.scaleX = isPlayer ? 1 : -1;
-        beamCore.scaleX = isPlayer ? 1 : -1;
+        beamOuter.scaleX = getAttackDirection(attacker);
+        beam.scaleX = getAttackDirection(attacker);
+        beamCore.scaleX = getAttackDirection(attacker);
         const distance = Math.abs(target.x - attacker.x) + 200;
 
         // Beam Head

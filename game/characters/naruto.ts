@@ -383,7 +383,7 @@ export class NarutoFighter extends Fighter {
       );
     }
 
-    shuriken.setPosition(hand.x, hand.y - 30);
+    shuriken.setPosition(hand.x, hand.y);
 
     // Wind particles
     const wind = bs.add

@@ -13,12 +13,12 @@ Cada forma conserva os 12 quadros de 192 × 128 pixels, origem e escala usadas p
 | Ataque | 8–9 | 16 |
 | Soco | 8 | 12 |
 | Chute | 9 | 12 |
-| Especial | 8–9 | 12 |
+| Especial | 11 (conjuração) ou 8 (mão/arma estendida), conforme a forma | 12 |
 | Defesa | 10 | 10 |
 | Transformação | 0–3 | 24 |
-| Carga | 11 | 10 |
+| Carga | 0–3 (postura com aura) ou 11, quando o desenho é realmente de carga | 10 |
 
-As animações compartilham os quadros acima conforme o contrato existente do Phaser. Não há novos estados de combate. Gohan Beast agora registra as animações `_ui`, correspondentes à segunda transformação já permitida pelo jogo.
+O mapeamento de especial e carga e os pontos de emissão foram revisados por forma em `game/sprites/combat-poses.json`. O especial sustenta a pose escolhida, sem alternar soco e chute. Não há novos estados de combate. Gohan Beast agora registra as animações `_ui`, correspondentes à segunda transformação já permitida pelo jogo.
 
 ## Revisão reproduzível
 
@@ -41,3 +41,13 @@ A revisão visual das folhas e os testes determinísticos não substituem uma pa
 - A instalação do navegador automatizado falhou por certificado do provedor de download. Não foi possível validar uma partida em navegador ou aparelho físico nesta sessão.
 
 Teste adicional: `node --import tsx --test tests/procedural-poses.test.mjs`.
+
+## Correção de poses e emissão de ataques
+
+A revisão das 41 formas ilustradas e das quatro formas procedurais separou a pose de conjuração da recuperação de Ki. O Kamehameha conserva a pose de conjuração durante a emissão. Os feixes usam a direção real do personagem, inclusive após trocar de lado.
+
+Os pontos de emissão são medidos nos quadros reais e convertidos para o mundo com origem, escala, rotação e espelhamento. As formas procedurais e personagens personalizados conservam um ponto baseado no desenho procedural, com ajustes próprios para Batman e Homem-Aranha. O efeito de conjuração não deforma mais o personagem depois de capturar a posição das mãos. Mísseis de Optimus e Rasenshuriken não recebem mais deslocamento vertical extra; a bomba/feixe de Obito usa o ponto de emissão.
+
+`node scripts/preview-combat-sockets.mjs <diretório>` gera pranchas de inspeção com marcas sobre as mãos, armas ou focos de energia. Requer `@napi-rs/canvas` ou o runtime fornecido. O visualizador HTML lê o mesmo JSON do jogo.
+
+Validação: 65 testes automatizados, TypeScript e compilação de produção passaram. Incluem espelhamento, origem/escala/rotação, proximidade dos pontos à arte real, separação das poses e execução do Kamehameha dos dois lados. A análise foi feita com renderização e testes locais; não houve partida em navegador nem teste em aparelho físico.

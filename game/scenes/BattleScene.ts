@@ -1,3 +1,4 @@
+import { getAttackSocket, getAttackDirection } from "../sprites/CombatPoses";
 import { transitionTo } from "../utils/sceneTransition";
 import { BattleCamera } from "../battle/BattleCamera";
 import { BattleReward } from "../battle/BattleReward";
@@ -3364,11 +3365,10 @@ export default class BattleScene extends Phaser.Scene {
     onFireCallback: () => void,
   ) {
     attacker.play(animKeySpecial);
-    this.effects.specials.play("cast", attacker, tintColor, attacker.flipX ? -1 : 1);
-
+    const hand = this.getHandPosition(isPlayer);
+    this.effects.specials.play("cast", attacker, tintColor, getAttackDirection(attacker));
     const isPotato = this.gameState.settings?.lowPerformanceMode;
-    // Energy burst particles
-    const emitter = this.add.particles(attacker.x, attacker.y, "energy_particle", {
+    const emitter = this.add.particles(hand.x, hand.y, "energy_particle", {
       speed: { min: 200, max: 600 },
       angle: { min: 0, max: 360 },
       scale: { start: 1.2, end: 0 },
@@ -3379,86 +3379,27 @@ export default class BattleScene extends Phaser.Scene {
       quantity: isPotato ? 5 : 12,
       gravityY: -200,
       frequency: isPotato ? 40 : 20,
-    });
-    emitter.setDepth(attacker.depth + 1);
+    }).setDepth(attacker.depth + 1);
 
-    // FIXED: Removed x movement (targets: attacker, x: ...)
-    // We only scale to show effort/charging. This prevents the beam from detaching or spawning behind.
-
-    const rotDir = isPlayer ? -0.15 : 0.15;
-
-    // 1. Squash/Stretch (Charge)
-    this.tweens.add({
-      targets: attacker,
-      scaleX: 3.5, // Stretch wide
-      scaleY: 2.5, // Squash down
-      rotation: rotDir,
-      tint: tintColor,
-      duration: 50,
-      ease: "Quad.easeOut",
-      onComplete: () => {
-        if (!this.scene.isActive()) {
-          emitter.destroy();
-          return;
-        }
-        attacker.setTint(0xffffff);
-
-        // Flash screen slightly to indicate power
-        if (this.battleCamera)
-          this.battleCamera.flash(100, 255, 255, 255, false);
-
-        // Snap forward
-        this.tweens.add({
-          targets: attacker,
-          rotation: -rotDir,
-          scaleX: 2.8,
-          scaleY: 3.2,
-          duration: 50,
-          ease: "Power2",
-        });
-
-        // FIRE IMMEDIATELY
-        try {
-          onFireCallback();
-        } catch (e) {
-          console.error("Error evaluating special attack!", e);
-          this.onSpecialComplete(isPlayer);
-        }
-
-        // 2. HOLD (Stay in pose)
-        this.time.delayedCall(500, () => {
-          if (!this.scene.isActive()) {
-            emitter.destroy();
-            return;
-          }
-
-          // 3. Recovery (Return to Normal)
-          this.tweens.add({
-            targets: attacker,
-            scaleX: 3,
-            scaleY: 3,
-            rotation: 0,
-            duration: 200,
-            ease: "Quad.easeOut",
-            onComplete: () => {
-              if (!this.scene.isActive()) {
-                emitter.destroy();
-                return;
-              }
-              attacker.clearTint();
-              if (emitter) {
-                try {
-                  if (emitter.stop) emitter.stop();
-                } catch (e) {}
-                this.time.delayedCall(1000, () => {
-                  try { emitter.destroy(); } catch (e) {}
-                });
-              }
-              // Let onSpecialComplete handle returning to idle
-            },
-          });
-        });
-      },
+    // Keep the real pose, scale and rotation stable throughout the cast.
+    // The old squash tween moved the hands after beam origins had been captured.
+    this.time.delayedCall(50, () => {
+      if (!this.scene.isActive() || !attacker.active) {
+        emitter.destroy();
+        return;
+      }
+      this.battleCamera?.flash(100, 255, 255, 255, false);
+      try {
+        onFireCallback();
+      } catch (e) {
+        console.error("Error evaluating special attack!", e);
+        this.onSpecialComplete(isPlayer);
+      }
+      this.time.delayedCall(500, () => {
+        if (!emitter.active) return;
+        emitter.stop();
+        this.time.delayedCall(1000, () => emitter.destroy());
+      });
     });
   }
 
@@ -3481,6 +3422,7 @@ export default class BattleScene extends Phaser.Scene {
     const data = isPlayer ? this.playerData : this.enemyData;
     const sprite = isPlayer ? this.player : this.enemy;
 
+    sprite.setFlipX(sprite.x > (isPlayer ? this.enemy : this.player).x);
     this.setActionState(isPlayer, true);
     if (isSuper) {
       if (isPlayer) this.p1SuperActive = true;
@@ -4195,11 +4137,7 @@ export default class BattleScene extends Phaser.Scene {
   // Helper to get EXACT hand position based on sprite flipping
   getHandPosition(isPlayer: boolean): { x: number; y: number } {
     const sprite = isPlayer ? this.player : this.enemy;
-    const target = isPlayer ? this.enemy : this.player;
-    // Default for all characters
-    const xOffset = sprite.x < target.x ? 45 : -45;
-    const yOffset = 120; // Lowered from 84 so it aligns with hands visually rather than mouth
-    return { x: sprite.x + xOffset, y: sprite.y + yOffset };
+    return getAttackSocket(sprite);
   }
 
   // REMASTERED SPECIAL ATTACKS (VISUALLY UPGRADED FOR ALL)

@@ -1,3 +1,4 @@
+import { getAttackDirection } from "../sprites/CombatPoses";
 import Phaser from "phaser";
 import { Fighter } from "./base/Fighter";
 import { AttackParams, AttackResult } from "./base/FighterTypes";
@@ -196,11 +197,11 @@ export class GohanFighter extends Fighter {
           .setDepth(5)
           .setAlpha(0.9)
           .setBlendMode(Phaser.BlendModes.ADD);
-        beam.scaleX = isPlayer ? 0.1 : -0.1;
+        beam.scaleX = getAttackDirection(attacker) * 0.1;
         beam.scaleY = 0.5;
 
         const distance = Math.abs(target.x - hand.x) + 200;
-        const targetScaleX = (isPlayer ? distance : -distance) / 128; // 128 is the width of massive_beam
+        const targetScaleX = (getAttackDirection(attacker) * distance) / 128; // 128 is the width of massive_beam
 
         // Muzzle Flash
         const muzzle = bs.add.circle(hand.x, hand.y, 80, 0x00ffff).setDepth(6);

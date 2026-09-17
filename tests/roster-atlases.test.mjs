@@ -63,17 +63,22 @@ test('actual Phaser registration covers nine animation names for every playable 
  const start=source.indexOf('  createAnimsFor(key: string) {');
  assert.ok(start>=0);
  const method=source.slice(start,source.indexOf('  /**',start));
- const {code}=await transform(`export default class Probe {${method}}`,{loader:'ts',format:'esm'});
+ const poseBundle=await build({entryPoints:['game/sprites/CombatPoses.ts'],bundle:true,write:false,format:'esm'});
+ const poses=poseBundle.outputFiles[0].text;
+ const {code}=await transform(`${poses}\nexport default class Probe {${method}}`,{loader:'ts',format:'esm'});
  const {default:Probe}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
  const probe=new Probe(),registered=new Map();
- probe.textures={exists:()=>true,get:()=>({has:f=>Number(f)>=0&&Number(f)<12})};
+ probe.textures={exists:()=>true,get:key=>({key,source:[{isCanvas:false}],has:f=>Number(f)>=0&&Number(f)<12})};
  probe.anims={exists:()=>false,create:config=>registered.set(config.key,config)};
  for(const c of INITIAL_CHARACTERS)probe.createAnimsFor(c.key);
  const manifest=JSON.parse(await readFile('docs/art/roster/manifest.json','utf8'));
- const mapping={idle:[0,1,2,3],walk:[4,5,6,7],attack:[8,9],punch:[8],kick:[9],special:[8,9],defend:[10],transform:[0,1,2,3],charge:[11]};
+ const {COMBAT_POSES}=await import('data:text/javascript;base64,'+Buffer.from(poses).toString('base64'));
+ const mapping={idle:[0,1,2,3],walk:[4,5,6,7],attack:[8,9],punch:[8],kick:[9],special:[8],defend:[10],transform:[0,1,2,3],charge:[11]};
  for(const e of manifest.entries)for(const [name,frames]of Object.entries(mapping)){
   const config=registered.get(`${e.key}_${name}`);assert.ok(config,`${e.key}_${name} missing`);
-  assert.deepEqual(config.frames.map(f=>Number(f.frame)),frames);
+  const pose=COMBAT_POSES[e.key];
+  const expected=name==='special'?[pose?.special??8]:name==='charge'?(pose?.charge===0?[0,1,2,3]:[pose?.charge??11]):frames;
+  assert.deepEqual(config.frames.map(f=>Number(f.frame)),expected,`${e.key}_${name}`);
   assert.ok(config.frames.every(f=>f.key===e.key));
  }
 });

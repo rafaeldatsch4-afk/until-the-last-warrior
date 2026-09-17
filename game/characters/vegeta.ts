@@ -1,3 +1,4 @@
+import { getAttackDirection } from "../sprites/CombatPoses";
 import Phaser from "phaser";
 import { Fighter } from "./base/Fighter";
 import { AttackParams, AttackResult } from "./base/FighterTypes";
@@ -247,9 +248,9 @@ export class VegetaFighter extends Fighter {
           .setOrigin(0, 0.5)
           .setDepth(6)
           .setAlpha(1);
-        beamOuter.scaleX = isPlayer ? 1 : -1;
-        beam.scaleX = isPlayer ? 1 : -1;
-        beamCore.scaleX = isPlayer ? 1 : -1;
+        beamOuter.scaleX = getAttackDirection(attacker);
+        beam.scaleX = getAttackDirection(attacker);
+        beamCore.scaleX = getAttackDirection(attacker);
 
         const distance = Math.abs(target.x - hand.x) + 200;
 
@@ -270,7 +271,7 @@ export class VegetaFighter extends Fighter {
           ease: "Power2",
           onUpdate: () => {
             if (!bs.scene.isActive()) return;
-            const tipX = isPlayer ? hand.x + beam.width : hand.x - beam.width;
+            const tipX = hand.x + getAttackDirection(attacker) * beam.width;
             beamHeadGlow.setPosition(tipX, hand.y);
             beamHead.setPosition(tipX, hand.y);
           },

@@ -1,3 +1,4 @@
+import { getAttackDirection } from "../sprites/CombatPoses";
 import Phaser from "phaser";
 import { Fighter } from "./base/Fighter";
 import { AttackParams, AttackResult } from "./base/FighterTypes";
@@ -71,7 +72,7 @@ export class FrierenFighter extends Fighter {
             4,
             0xffffff,
           )
-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+          .setOrigin(getAttackDirection(attacker) > 0 ? 0 : 1, 0.5)
           .setDepth(5);
         bs.tweens.add({
           targets: beam,
@@ -179,7 +180,7 @@ export class FrierenFighter extends Fighter {
           .setAlpha(0.4)
           .setBlendMode(Phaser.BlendModes.ADD)
           .setDepth(9);
-        beamOuter.scaleX = isPlayer ? 1 : -1;
+        beamOuter.scaleX = getAttackDirection(attacker);
 
         // Black void beam
         const massiveBeam = bs.add
@@ -187,14 +188,14 @@ export class FrierenFighter extends Fighter {
           .setOrigin(originX, 0.5) // FIX: Set Origin
           .setAlpha(0.9)
           .setDepth(10);
-        massiveBeam.scaleX = isPlayer ? 1 : -1;
+        massiveBeam.scaleX = getAttackDirection(attacker);
 
         // White hot core
         const core = bs.add
           .rectangle(hand.x, hand.y, distance, 60, 0xffffff)
           .setOrigin(originX, 0.5) // FIX: Set Origin
           .setDepth(11);
-        core.scaleX = isPlayer ? 1 : -1;
+        core.scaleX = getAttackDirection(attacker);
 
         bs.createImpactEffect(target.x, hand.y, 0x000000, "beam");
         bs.createImpactEffect(target.x, target.y + 120, 0xffffff, "beam");

@@ -1,3 +1,4 @@
+import { getAttackDirection } from "../sprites/CombatPoses";
 import { SpecialEffects } from "./vfx/SpecialEffects";
 import Phaser from "phaser";
 import { triggerVibration } from "../utils/haptics";
@@ -693,9 +694,9 @@ export class BattleEffects {
         const beamCore = this.borrowRect(hand.x, hand.y, 0, 12 * size, 0xffffff, 1);
         beamCore.setOrigin(originX, 0.5).setDepth(6);
 
-        beamOuter.scaleX = isP ? 1 : -1;
-        beamMain.scaleX = isP ? 1 : -1;
-        beamCore.scaleX = isP ? 1 : -1;
+        beamOuter.scaleX = getAttackDirection(attacker);
+        beamMain.scaleX = getAttackDirection(attacker);
+        beamCore.scaleX = getAttackDirection(attacker);
 
         // Beam Head Circles from Pool
         const beamHeadGlow = this.borrowCircle(hand.x, hand.y, 30 * size, col, 0.8);
@@ -709,7 +710,7 @@ export class BattleEffects {
         try {
           particles = this.scene.add.particles(0, 0, "particle", {
             speed: { min: 50, max: 200 },
-            angle: { min: isP ? 160 : -20, max: isP ? 200 : 20 },
+            angle: { min: getAttackDirection(attacker) > 0 ? 160 : -20, max: getAttackDirection(attacker) > 0 ? 200 : 20 },
             scale: { start: 0.8 * size, end: 0 },
             blendMode: "ADD",
             lifespan: 300,
@@ -734,9 +735,7 @@ export class BattleEffects {
             beamMain.setPosition(hand.x, hand.y + jitterY);
             beamCore.setPosition(hand.x, hand.y + jitterY / 2);
 
-            const tipX = isP
-              ? hand.x + beamMain.width
-              : hand.x - beamMain.width;
+            const tipX = hand.x + getAttackDirection(attacker) * beamMain.width;
             beamHeadGlow.setPosition(tipX, hand.y + jitterY);
             beamHead.setPosition(tipX, hand.y + jitterY);
 

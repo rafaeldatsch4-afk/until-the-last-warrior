@@ -1,3 +1,4 @@
+import { getAttackDirection } from "../sprites/CombatPoses";
 import Phaser from "phaser";
 import { Fighter } from "./base/Fighter";
 import { AttackParams, AttackResult } from "./base/FighterTypes";
@@ -82,7 +83,7 @@ export class CellFighter extends Fighter {
             2,
             0xffff00,
           )
-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+          .setOrigin(getAttackDirection(attacker) > 0 ? 0 : 1, 0.5)
           .setDepth(5);
         bs.tweens.add({
           targets: beam,

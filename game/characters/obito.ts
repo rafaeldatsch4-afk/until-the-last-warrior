@@ -1,3 +1,4 @@
+import { getAttackDirection } from "../sprites/CombatPoses";
 import Phaser from "phaser";
 import { Fighter } from "./base/Fighter";
 import { AttackParams, AttackResult } from "./base/FighterTypes";
@@ -264,17 +265,18 @@ export class ObitoFighter extends Fighter {
     bs.log("TEN-TAILS BEAST BOMB!");
     if (bs.soundManager) bs.soundManager.playBeamFire();
 
+    const hand = bs.getHandPosition(isPlayer);
     // Charge massive dark red/black sphere
     const bombGlow = bs.add
-      .circle(attacker.x, attacker.y - 120, 15, 0xcc0000)
+      .circle(hand.x, hand.y, 15, 0xcc0000)
       .setDepth(14)
       .setAlpha(0.6)
       .setBlendMode(Phaser.BlendModes.ADD);
     const bomb = bs.add
-      .circle(attacker.x, attacker.y - 120, 5, 0x111111)
+      .circle(hand.x, hand.y, 5, 0x111111)
       .setDepth(15);
     const aura = bs.add
-      .circle(attacker.x, attacker.y - 120, 8, 0xcc0000)
+      .circle(hand.x, hand.y, 8, 0xcc0000)
       .setDepth(14)
       .setAlpha(0.6)
       .setBlendMode(Phaser.BlendModes.ADD);
@@ -284,8 +286,8 @@ export class ObitoFighter extends Fighter {
     // Gathering particles
     const gatherParticles = bs.add
       .particles(0, 0, "particle", {
-        x: attacker.x,
-        y: attacker.y - 120,
+        x: hand.x,
+        y: hand.y,
         speed: { min: -350, max: 350 },
         scale: { start: 2, end: 0 },
         blendMode: "ADD",
@@ -308,14 +310,14 @@ export class ObitoFighter extends Fighter {
 
         // Fire as a massive beam
         const beamOuter = bs.add
-          .rectangle(attacker.x, attacker.y - 120, 0, 250, 0xcc0000)
-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+          .rectangle(hand.x, hand.y, 0, 250, 0xcc0000)
+          .setOrigin(getAttackDirection(attacker) > 0 ? 0 : 1, 0.5)
           .setDepth(10)
           .setBlendMode(Phaser.BlendModes.ADD);
 
         const beamCore = bs.add
-          .rectangle(attacker.x, attacker.y - 120, 0, 180, 0x111111) // Black core
-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+          .rectangle(hand.x, hand.y, 0, 180, 0x111111) // Black core
+          .setOrigin(getAttackDirection(attacker) > 0 ? 0 : 1, 0.5)
           .setDepth(11);
 
         const dist = Math.abs(target.x - attacker.x) + 300;

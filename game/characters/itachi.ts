@@ -145,7 +145,7 @@ export class ItachiFighter extends Fighter {
     const bs = scene as any;
     const dmg = Math.floor(40 * bs.getDamageMultiplier(transformLevel));
     bs.log("AMATERASU!");
-    attacker.play(bs.getAnimKey("itachi", transformLevel, "charge"));
+    attacker.play(bs.getAnimKey("itachi", transformLevel, "special"));
     if (bs.soundManager) bs.soundManager.playBeamFire();
     bs.effects.specials.play("amaterasu", target, 0x8b2454, attacker.flipX ? -1 : 1);
     // Visual preparation/release only; original damage and completion times remain.
@@ -170,7 +170,7 @@ export class ItachiFighter extends Fighter {
     const bs = scene as any;
     const dmg = Math.floor(100 * bs.getDamageMultiplier(transformLevel));
     bs.log("TSUKUYOMI!");
-    attacker.play(bs.getAnimKey("itachi", transformLevel, "charge"));
+    attacker.play(bs.getAnimKey("itachi", transformLevel, "special"));
     if (bs.soundManager) bs.soundManager.playBeamFire();
     bs.effects.specials.play("tsukuyomi", target, 0xc32448, attacker.flipX ? -1 : 1);
     // The previous nested tween chain hit at 250 + 400 + 900 + 650 = 2200ms.

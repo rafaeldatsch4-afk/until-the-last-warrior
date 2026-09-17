@@ -1,3 +1,4 @@
+import { getAttackDirection } from "../sprites/CombatPoses";
 import Phaser from "phaser";
 import { Fighter } from "./base/Fighter";
 import { AttackParams, AttackResult } from "./base/FighterTypes";
@@ -29,7 +30,7 @@ export class PiccoloFighter extends Fighter {
       const hand = bs.getHandPosition(isPlayer);
       const arm = bs.add
         .rectangle(hand.x, hand.y, 0, 8, 0x228b22)
-        .setOrigin(isPlayer ? 0 : 1, 0.5)
+        .setOrigin(getAttackDirection(attacker) > 0 ? 0 : 1, 0.5)
         .setDepth(4);
 
       bs.tweens.add({
@@ -77,7 +78,7 @@ export class PiccoloFighter extends Fighter {
             2,
             0xff0000,
           )
-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+          .setOrigin(getAttackDirection(attacker) > 0 ? 0 : 1, 0.5)
           .setDepth(5);
         const beam2 = bs.add
           .rectangle(
@@ -87,7 +88,7 @@ export class PiccoloFighter extends Fighter {
             2,
             0xff0000,
           )
-          .setOrigin(isPlayer ? 0 : 1, 0.5)
+          .setOrigin(getAttackDirection(attacker) > 0 ? 0 : 1, 0.5)
           .setDepth(5);
 
         bs.tweens.add({
@@ -191,8 +192,8 @@ export class PiccoloFighter extends Fighter {
           .setOrigin(originX, 0.5)
           .setDepth(5)
           .setBlendMode(Phaser.BlendModes.ADD);
-        coreGlow.scaleX = isPlayer ? 1 : -1;
-        core.scaleX = isPlayer ? 1 : -1;
+        coreGlow.scaleX = getAttackDirection(attacker);
+        core.scaleX = getAttackDirection(attacker);
 
         // Two separate graphics for the double helix
         const spiral1 = bs.add
@@ -242,7 +243,7 @@ export class PiccoloFighter extends Fighter {
 
             for (let i = 0; i < currentW; i += 5) {
               const angle = i * freq + speed;
-              const sx = isPlayer ? hand.x + i : hand.x - i;
+              const sx = hand.x + getAttackDirection(attacker) * i;
 
               // Spiral 1 (Sine)
               const sy1 = hand.y + Math.sin(angle) * amp;
