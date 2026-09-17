@@ -1,3 +1,4 @@
+import { preloadArenaArt } from "../battle/ArenaAtlases";
 import { preloadRosterAtlases } from "../sprites/RosterAtlases";
 import { preloadItachiAtlases } from "../sprites/ItachiAtlases";
 import { transitionTo } from "../utils/sceneTransition";
@@ -38,6 +39,7 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   preload() {
+    preloadArenaArt(this);
     preloadItachiAtlases(this);
     preloadRosterAtlases(this);
     const width = this.cameras.main.width;
@@ -146,11 +148,11 @@ export default class PreloadScene extends Phaser.Scene {
     graphicsStar.generateTexture("dizzy_star", 16, 16);
     graphicsStar.destroy();
 
-    // Generate all 8 high-definition detailed battle arena backgrounds
-    ArenaTextureBuilder.buildAllArenaTextures(this);
+    // Illustrated arena files finish loading before Canvas fallbacks run in create().
   }
 
   create() {
+    ArenaTextureBuilder.buildAllArenaTextures(this);
     this.cameras.main.fadeIn(300, 0, 0, 0);
     this.createAudioAssets();
     this.createFXAssets();

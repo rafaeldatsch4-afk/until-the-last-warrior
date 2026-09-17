@@ -6,6 +6,8 @@ export class BattleEnvironment {
   private bgImage: Phaser.GameObjects.Image;
   private weatherParticles?: Phaser.GameObjects.Particles.ParticleEmitter;
   private timeEvent?: Phaser.Time.TimerEvent;
+  private debrisEvent?: Phaser.Time.TimerEvent;
+  private arenaId: string;
   private currentTint: { r: number; g: number; b: number } = {
     r: 255,
     g: 255,
@@ -24,6 +26,7 @@ export class BattleEnvironment {
   ) {
     this.scene = scene;
     this.bgImage = bgImage;
+    this.arenaId = arenaId;
 
     this.initWeather(arenaId);
     this.initTimeCycle();
@@ -60,7 +63,7 @@ export class BattleEnvironment {
     switch (arenaId) {
       case "arena_ice":
         // Diamond dust blizzard & sparkling ice crystals
-        color = 0xdcfce7;
+        color = 0xe4f2ff;
         speedY = { min: 60, max: 180 };
         speedX = { min: -180, max: -60 };
         quantity = 4;
@@ -126,10 +129,11 @@ export class BattleEnvironment {
     }
 
     if (quantity > 0) {
+      const reduced = !!this.scene.gameState.settings?.lowPerformanceMode;
       this.weatherParticles = this.scene.add.particles(0, 0, texture, {
         x: { min: -200, max: 2200 },
         y:
-          arenaId === "arena_lava"
+          (arenaId === "arena_lava" || arenaId === "arena_dark")
             ? { min: 460, max: 560 }
             : { min: -100, max: -30 },
         lifespan: arenaId === "arena_city" ? 1200 : { min: 3000, max: 6000 },
@@ -138,7 +142,8 @@ export class BattleEnvironment {
         scale: scale,
         alpha: alpha,
         tint: color,
-        quantity: quantity,
+        quantity: reduced ? 1 : Math.min(quantity, 3),
+        frequency: reduced ? 180 : 100,
         blendMode: "ADD",
       });
       this.weatherParticles.setDepth(-9); // Just in front of the background
@@ -158,17 +163,16 @@ export class BattleEnvironment {
         // Pick a random time-of-day tint
         const tints = [
           { r: 255, g: 255, b: 255 }, // Noon/Normal
-          { r: 255, g: 204, b: 170 }, // Sunset / warm
-          { r: 119, g: 136, b: 170 }, // Night / cool
-          { r: 153, g: 119, b: 136 }, // Dusk
-          { r: 221, g: 170, b: 170 }, // Dawn
+          { r: 248, g: 252, b: 255 }, // Subtle passing cloud
+          { r: 255, g: 251, b: 244 }, // Gentle warm light
         ];
         this.targetTint = Phaser.Utils.Array.GetRandom(tints);
       },
     });
 
-    // Also periodic falling rocks or shooting stars
-    this.scene.time.addEvent({
+    // Debris belongs only to the unstable volcanic/void settings.
+    if (this.arenaId !== "arena_lava" && this.arenaId !== "arena_dark") return;
+    this.debrisEvent = this.scene.time.addEvent({
       delay: 15000,
       loop: true,
       callback: () => {
@@ -241,6 +245,7 @@ export class BattleEnvironment {
     if (this.timeEvent) {
       this.timeEvent.destroy();
     }
+    this.debrisEvent?.destroy();
     if (this.weatherParticles) {
       this.weatherParticles.destroy();
     }

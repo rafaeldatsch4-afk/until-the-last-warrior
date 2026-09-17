@@ -332,10 +332,9 @@ export default class BattleScene extends Phaser.Scene {
     if (bgImage.postFX && !this.gameState.settings?.lowPerformanceMode) {
       const bgMatrix = bgImage.postFX.addColorMatrix();
       // Gentle contrast and saturation tuning
-      bgMatrix.contrast(1.05);
-      bgMatrix.brightness(0.95);
-      // Subtle background depth-of-field blur
-      bgImage.postFX.addBlur(0.2, 0.2, 0.2, 1);
+      bgMatrix.contrast(0.03);
+      bgMatrix.brightness(0.97);
+      // Keep the illustrated architecture and ink edges crisp.
     }
 
     this.battleEnvironment = new BattleEnvironment(this, bgImage, selectedArena);
