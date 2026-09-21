@@ -14,6 +14,7 @@ import {
   partOptions,
   skinColors,
 } from "../creator/CreatorPartOptions";
+import { registerFighterAnimations } from "../sprites/FighterAnimations";
 import { generateCustomSprite } from "../sprites/CustomSprite";
 import { AURA_PRESETS, AuraManager } from "../systems/AuraManager";
 
@@ -89,6 +90,13 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
   create() {
     this.isShuttingDown = false;
+    this.state = new CreatorState();
+    this.currentBaseObjIndex = this.currentColorIndex = 0;
+    this.customSp1Id = this.customSp2Id = "goku";
+    this.customSp1Name = "Kamehameha";
+    this.customSp2Name = "Spirit Bomb";
+    this.previewIsTransformed = false;
+    this.builderData = { base: INITIAL_CHARACTERS[0], auraColor: auraColors[0], name: "Guerreiro Z" };
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
     // Registro explícito do ciclo de vida para limpeza total de recursos
@@ -249,36 +257,21 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     if (gameState && gameState.characters) {
       const existing = gameState.characters.find((c: CharacterData) => c.id === 999);
       if (existing) {
+        const baseIndex = INITIAL_CHARACTERS.findIndex(c => c.key === existing.baseKey);
+        if (baseIndex >= 0) {
+          this.currentBaseObjIndex = baseIndex;
+          this.builderData.base = INITIAL_CHARACTERS[baseIndex];
+        }
         if (existing.name) this.builderData.name = existing.name;
-        if (existing.specialColor) this.builderData.auraColor = existing.specialColor;
+        if (existing.specialColor !== undefined) this.builderData.auraColor = existing.specialColor;
         if (existing.customData) {
-          const cd = existing.customData as any;
+          const cd = existing.customData;
+          this.state.loadCustomData(cd);
           if (cd.aura_id) {
             this.state.aura_preset_id = cd.aura_id;
             const p = AURA_PRESETS.find((pr) => pr.id === cd.aura_id);
             if (p && p.color !== -1) this.builderData.auraColor = p.color;
           }
-          if (cd.part_head) {
-            const idx = partOptions.head.indexOf(cd.part_head);
-            if (idx !== -1) this.state.style_idx.head = idx;
-          }
-          if (cd.part_torso) {
-            const idx = partOptions.torso.indexOf(cd.part_torso);
-            if (idx !== -1) this.state.style_idx.torso = idx;
-          }
-          if (cd.part_legs) {
-            const idx = partOptions.legs.indexOf(cd.part_legs);
-            if (idx !== -1) this.state.style_idx.legs = idx;
-          }
-          if (cd.part_feet) {
-            const idx = partOptions.feet.indexOf(cd.part_feet);
-            if (idx !== -1) this.state.style_idx.feet = idx;
-          }
-          if (cd.part_accessory) {
-            const idx = partOptions.accessory.indexOf(cd.part_accessory);
-            if (idx !== -1) this.state.style_idx.accessory = idx;
-          }
-
           if (cd.sp1_id) {
             this.customSp1Id = cd.sp1_id;
             const sp = this.AVAILABLE_SPECIALS.find((s) => s.id === cd.sp1_id);
@@ -718,8 +711,17 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     }
   }
 
+  private syncSelectedPowers() {
+    if (!this.ui) return;
+    this.customSp1Id = this.ui.customSp1Id;
+    this.customSp1Name = this.ui.customSp1Name;
+    this.customSp2Id = this.ui.customSp2Id;
+    this.customSp2Name = this.ui.customSp2Name;
+  }
+
   private updatePreview() {
     if (this.isShuttingDown || !this.preview) return;
+    this.syncSelectedPowers();
 
     this.preview.updatePreview(
       this.state,
@@ -733,6 +735,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
   private saveAndEquipCharacter() {
     if (this.isShuttingDown) return;
+    this.syncSelectedPowers();
 
     const preset =
       AURA_PRESETS.find((p) => p.id === this.state.aura_preset_id) || AURA_PRESETS[1];
@@ -741,29 +744,9 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     AuraManager.setPreference(this.state.aura_preset_id, this.state.aura_mode);
 
     const customData = {
-      gi1: 0,
-      gi2: 0,
-      skin: skinColors[this.state.p_idx.skin],
-      hair: hairColors[this.state.p_idx.hair],
-      color_torso_1: giColors[this.state.p_idx.torso_1],
-      color_torso_2: giColors[this.state.p_idx.torso_2],
-      color_legs_1: giColors[this.state.p_idx.legs_1],
-      color_legs_2: giColors[this.state.p_idx.legs_2],
-      color_feet_1: giColors[this.state.p_idx.feet_1],
-      color_feet_2: giColors[this.state.p_idx.feet_2],
-      color_head_1: giColors[this.state.p_idx.head_1],
-      color_head_2: giColors[this.state.p_idx.head_2],
-      color_acc_1: giColors[this.state.p_idx.acc_1],
-      aura_id: this.state.aura_preset_id,
+      ...this.state.toCustomData(this.customSp1Id, this.customSp2Id),
       aura_color: auraColor,
       aura_ring_color: preset.ringColor,
-      sp1_id: this.customSp1Id || this.builderData.base.key,
-      sp2_id: this.customSp2Id || this.builderData.base.key,
-      part_head: this.state.getEquippedHead(),
-      part_torso: partOptions.torso[this.state.style_idx.torso],
-      part_legs: partOptions.legs[this.state.style_idx.legs],
-      part_feet: partOptions.feet[this.state.style_idx.feet],
-      part_accessory: this.state.getEquippedAccessory(),
     };
 
     const customChar: CharacterData = {
@@ -782,35 +765,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     generateCustomSprite(this, customChar);
 
-    const createAllForTex = (baseKey: string, texKey: string) => {
-      const createAnim = (
-        animKey: string,
-        start: number,
-        end: number,
-        frameRate: number,
-        repeat: number = -1
-      ) => {
-        if (this.anims.exists(animKey)) this.anims.remove(animKey);
-        const frames = [];
-        for (let i = start; i <= end; i++) {
-          frames.push({ key: texKey, frame: i.toString() });
-        }
-        if (frames.length > 0) {
-          this.anims.create({ key: animKey, frames, frameRate, repeat });
-        }
-      };
-      createAnim(`${baseKey}_idle`, 0, 3, 10, -1);
-      createAnim(`${baseKey}_walk`, 4, 7, 12, -1);
-      createAnim(`${baseKey}_attack`, 8, 9, 16, 0);
-      createAnim(`${baseKey}_special`, 8, 9, 12, -1);
-      createAnim(`${baseKey}_defend`, 10, 10, 10, -1);
-      createAnim(`${baseKey}_transform`, 0, 3, 24, -1);
-      createAnim(`${baseKey}_charge`, 11, 11, 10, -1);
-    };
-
-    createAllForTex("custom_999", "custom_999");
-    createAllForTex("custom_999_ssj", "custom_999_ssj");
-    createAllForTex("custom_999_ui", "custom_999_ui");
+    registerFighterAnimations(this, "custom_999");
 
     const gameState = this.registry.get("gameState");
     if (gameState) {

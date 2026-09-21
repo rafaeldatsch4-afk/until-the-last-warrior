@@ -2,13 +2,7 @@ import Phaser from "phaser";
 import { generateCustomSprite } from "../sprites/CustomSprite";
 import { CharacterData } from "../types";
 import { CreatorState } from "./CreatorState";
-import {
-  partOptions,
-  auraColors,
-  skinColors,
-  hairColors,
-  giColors,
-} from "./CreatorPartOptions";
+import { auraColors } from "./CreatorPartOptions";
 import { INITIAL_CHARACTERS } from "../data";
 import { AURA_PRESETS } from "../systems/AuraManager";
 
@@ -165,28 +159,10 @@ export class CreatorPreview {
       auraColor: auraColors[currentColorIndex] ?? 0x3498db,
     };
 
-    const customData = {
-      gi1: 0,
-      gi2: 0,
-      skin: skinColors[state.p_idx.skin] ?? skinColors[0],
-      hair: hairColors[state.p_idx.hair] ?? hairColors[0],
-      color_torso_1: giColors[state.p_idx.torso_1] ?? giColors[0],
-      color_torso_2: giColors[state.p_idx.torso_2] ?? giColors[1],
-      color_legs_1: giColors[state.p_idx.legs_1] ?? giColors[0],
-      color_legs_2: giColors[state.p_idx.legs_2] ?? giColors[1],
-      color_feet_1: giColors[state.p_idx.feet_1] ?? giColors[0],
-      color_feet_2: giColors[state.p_idx.feet_2] ?? giColors[1],
-      color_head_1: giColors[state.p_idx.head_1] ?? giColors[0],
-      color_head_2: giColors[state.p_idx.head_2] ?? giColors[1],
-      color_acc_1: giColors[state.p_idx.acc_1] ?? giColors[0],
-      sp1_id: customSp1Id || builderData.base.key,
-      sp2_id: customSp2Id || builderData.base.key,
-      part_head: state.getEquippedHead(),
-      part_torso: partOptions.torso[state.style_idx.torso] || "goku",
-      part_legs: partOptions.legs[state.style_idx.legs] || "goku",
-      part_feet: partOptions.feet[state.style_idx.feet] || "goku",
-      part_accessory: state.getEquippedAccessory(),
-    };
+    const customData = state.toCustomData(
+      customSp1Id || builderData.base.key,
+      customSp2Id || builderData.base.key,
+    );
 
     const preset = AURA_PRESETS.find((p) => p.id === state.aura_preset_id);
     let effectiveAuraColor = 0xffd700;

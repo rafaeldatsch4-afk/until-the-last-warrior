@@ -4210,7 +4210,8 @@ export default class BattleScene extends Phaser.Scene {
       return true;
     }
     if (key === "custom_999") {
-      if (data.customData?.accessory === "sword" || data.customData?.sword) return true;
+      const accessory = data.customData?.part_accessory ?? data.customData?.accessory;
+      if (accessory === "sword" || (accessory === undefined && data.customData?.sword)) return true;
       if (data.baseKey === "leonardo" || data.baseKey === "cyberninja" || data.baseKey === "minipekka") return true;
     }
     return false;

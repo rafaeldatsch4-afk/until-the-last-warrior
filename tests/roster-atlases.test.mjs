@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {build,transform} from 'esbuild';
+import {build} from 'esbuild';
 const results=await build({entryPoints:['game/sprites/SpriteRegistry.ts','game/sprites/RosterAtlases.ts','game/data.ts'],outdir:'/tmp/roster-tests',bundle:true,write:false,format:'esm',define:{'import.meta.glob':'globalThis.__rosterGlob'},plugins:[{name:'headless-phaser',setup(b){b.onResolve({filter:/^phaser$/},()=>({path:'phaser',namespace:'stub'}));b.onLoad({filter:/.*/,namespace:'stub'},()=>({contents:'export default {Textures:{FilterMode:{NEAREST:0}}};'}));}}]});
 globalThis.__rosterGlob=()=>Object.fromEntries(['goku','vegeta','cyberninja','gohan_ui'].map(key=>[`../assets/roster/${key}-v1.png`,`/assets/${key}-hashed.png`]));
 const modules=await Promise.all(results.outputFiles.map(f=>import('data:text/javascript;base64,'+Buffer.from(f.text+'\n//# sourceURL='+f.path).toString('base64'))));
@@ -59,14 +59,11 @@ test('41 illustrated forms ship isolated frames; four blocked forms retain teste
 });
 
 test('actual Phaser registration covers nine animation names for every playable form',async()=>{
- const source=await readFile('game/scenes/PreloadScene.ts','utf8');
- const start=source.indexOf('  createAnimsFor(key: string) {');
- assert.ok(start>=0);
- const method=source.slice(start,source.indexOf('  /**',start));
  const poseBundle=await build({entryPoints:['game/sprites/CombatPoses.ts'],bundle:true,write:false,format:'esm'});
  const poses=poseBundle.outputFiles[0].text;
- const {code}=await transform(`${poses}\nexport default class Probe {${method}}`,{loader:'ts',format:'esm'});
- const {default:Probe}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+ const registration=await build({entryPoints:['game/sprites/FighterAnimations.ts'],bundle:true,write:false,format:'esm'});
+ const {registerFighterAnimations}=await import('data:text/javascript;base64,'+Buffer.from(registration.outputFiles[0].text).toString('base64'));
+ class Probe { createAnimsFor(key) { registerFighterAnimations(this,key); } }
  const probe=new Probe(),registered=new Map();
  probe.textures={exists:()=>true,get:key=>({key,source:[{isCanvas:false}],has:f=>Number(f)>=0&&Number(f)<12})};
  probe.anims={exists:()=>false,create:config=>registered.set(config.key,config)};

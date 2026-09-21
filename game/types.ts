@@ -26,6 +26,10 @@ export interface CharacterData {
     skin: number;
     sp1_id?: string;
     sp2_id?: string;
+    aura_id?: string;
+    aura_mode?: "p1" | "all";
+    aura_color?: number;
+    aura_ring_color?: number;
     part_head?: string;
     part_torso?: string;
     part_legs?: string;
