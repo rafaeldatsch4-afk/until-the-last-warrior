@@ -1,12 +1,14 @@
 import { ColorPalette } from "../utils/ColorPalette";
 import Phaser from "phaser";
 import { CharacterData } from "../types";
+import { composeCustomArt, hasCustomArt } from "./CustomArt";
 
 export function generateCustomSprite(
   scene: Phaser.Scene,
   charData: CharacterData,
 ) {
   const key = charData.key;
+  const layeredArt = hasCustomArt(scene);
   const colors: CharacterData["customData"] = charData.customData || {
     gi1: ColorPalette.gi[0],
     gi2: ColorPalette.gi[1],
@@ -47,6 +49,7 @@ export function generateCustomSprite(
     const canvas = scene.make.graphics({ x: 0, y: 0 });
 
     for (let f = 0; f < FRAMES; f++) {
+      let drawingHead = false;
       const offsetX = f * FRAME_WIDTH;
       const isWalk = f >= 4 && f <= 7;
       const isAttack = f === 8 || f === 9;
@@ -120,6 +123,7 @@ export function generateCustomSprite(
       };
 
       const dot = (x: number, y: number, color: number) => {
+        if (layeredArt) return;
         const finalY = y < 24 ? y + breatheOffset : y;
         const { ox, oy } =
           isDrawingLegs && typeof getWalkOffsets === "function"
@@ -151,6 +155,7 @@ export function generateCustomSprite(
         color: number,
         alpha: number,
       ) => {
+        if (layeredArt) return;
         const finalY = y < 24 ? y + breatheOffset : y;
         const { ox, oy } =
           isDrawingLegs && typeof getWalkOffsets === "function"
@@ -181,6 +186,7 @@ export function generateCustomSprite(
         h: number,
         color: number,
       ) => {
+        if (layeredArt) return;
         const finalY = y < 24 ? y + breatheOffset : y;
         const { ox, oy } =
           isDrawingLegs && typeof getWalkOffsets === "function"
@@ -211,6 +217,7 @@ export function generateCustomSprite(
         h: number,
         color: number,
       ) => {
+        if (layeredArt && !drawingHead) return;
         const { ox, oy } =
           isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
@@ -236,6 +243,7 @@ export function generateCustomSprite(
       };
 
       const headDot = (x: number, y: number, color: number) => {
+        if (layeredArt && !drawingHead) return;
         const { ox, oy } =
           isDrawingLegs && typeof getWalkOffsets === "function"
             ? getWalkOffsets(x, y)
@@ -1263,6 +1271,7 @@ export function generateCustomSprite(
       // 4. HEAD & FACE
       // ==========================================
       const hasStrawHat = pAcc === "straw_hat";
+      drawingHead = true;
       const hasHeadband = pAcc === "headband";
 
       if (pHead === "spiderman") {
@@ -1725,6 +1734,7 @@ export function generateCustomSprite(
       // ==========================================
       // 5. FRONT ACCESSORIES
       // ==========================================
+      drawingHead = false;
       if (pAcc === "straw_hat") {
         // Masterwork Straw Hat (Ultra-detailed anime straw hat with woven texture)
         isDrawingHat = true;
@@ -1911,6 +1921,7 @@ export function generateCustomSprite(
 
     canvas.generateTexture(textureName, sheetWidth, sheetHeight);
     canvas.destroy();
+    if (layeredArt) composeCustomArt(scene, textureName, colors);
 
     if (scene.textures.exists(textureName)) {
       const tex = scene.textures.get(textureName);
@@ -1934,5 +1945,5 @@ export function generateCustomSprite(
   generateForm(1);
   generateForm(2);
 
-  return { torsoBounds: bounds };
+  return { torsoBounds: layeredArt ? { minX: 43, minY: 35, w: 11, h: 12 } : bounds };
 }

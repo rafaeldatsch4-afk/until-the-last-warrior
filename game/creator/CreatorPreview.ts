@@ -283,9 +283,9 @@ export class CreatorPreview {
     this.stagePedestal.fillEllipse(this.posX, this.posY + pedestalOffsetY + 2, 58 * scale, 14 * scale);
     this.stagePedestal.fillStyle(0x1e293b, 0.9);
     this.stagePedestal.fillEllipse(this.posX, this.posY + pedestalOffsetY, 50 * scale, 11 * scale);
-    this.stagePedestal.lineStyle(1.5, 0x38bdf8, 0.6);
+    this.stagePedestal.lineStyle(1, 0x64748b, 0.25);
     this.stagePedestal.strokeEllipse(this.posX, this.posY + pedestalOffsetY, 50 * scale, 11 * scale);
-    this.stagePedestal.lineStyle(1, effectiveRingColor, 0.8);
+    this.stagePedestal.lineStyle(1, effectiveRingColor, 0.12);
     this.stagePedestal.strokeEllipse(this.posX, this.posY + pedestalOffsetY, 38 * scale, 8 * scale);
 
     // 1. Outer Flame Aura (Glow)
@@ -293,7 +293,7 @@ export class CreatorPreview {
     const auraH = Math.round(76 * scale);
     this.previewAura = this.scene.add
       .ellipse(this.posX, this.posY - Math.round(2 * scale), auraW, auraH, effectiveAuraColor)
-      .setAlpha(isTransformed ? 0.65 : 0.38)
+      .setAlpha(isTransformed ? 0.08 : 0)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(6);
 
@@ -302,14 +302,14 @@ export class CreatorPreview {
     const coreH = Math.round(56 * scale);
     this.previewAuraCore = this.scene.add
       .ellipse(this.posX, this.posY - Math.round(2 * scale), coreW, coreH, effectiveRingColor)
-      .setAlpha(isTransformed ? 0.55 : 0.25)
+      .setAlpha(isTransformed ? 0.04 : 0)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(7);
 
     // 3. Ground Ki Shockwave Ring
     this.previewAuraRing = this.scene.add
       .circle(this.posX, this.posY + pedestalOffsetY, 20 * scale, 0x000000, 0)
-      .setStrokeStyle(2 * scale, effectiveRingColor, 0.8)
+      .setStrokeStyle(0, effectiveRingColor, 0)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(8);
 
@@ -318,7 +318,7 @@ export class CreatorPreview {
       targets: this.previewAura,
       scaleX: 1.15,
       scaleY: 1.08,
-      alpha: isTransformed ? 0.8 : 0.5,
+      alpha: isTransformed ? 0.12 : 0,
       yoyo: true,
       repeat: -1,
       duration: isTransformed ? 320 : 580,
@@ -329,7 +329,7 @@ export class CreatorPreview {
       targets: [this.previewAuraRing, this.previewAuraCore],
       scaleX: 1.18,
       scaleY: 1.1,
-      alpha: 0.9,
+      alpha: isTransformed ? 0.06 : 0,
       yoyo: true,
       repeat: -1,
       duration: isTransformed ? 350 : 620,

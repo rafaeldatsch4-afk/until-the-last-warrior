@@ -7,9 +7,11 @@ type Point = readonly [number, number];
 interface CombatPose { special: number; charge: number; hand: Point; cast: Point }
 export const COMBAT_POSES = poses as unknown as Record<string, CombatPose>;
 
-interface TextureLike { key: string; source?: { isCanvas?: boolean; isRenderTexture?: boolean }[] }
+interface TextureLike { key: string; customWardrobeArt?: boolean; customRosterKey?: string; source?: { isCanvas?: boolean; isRenderTexture?: boolean }[] }
 /** Generated Canvas/WebGL fallbacks have different artwork; never apply PNG sockets to them. */
 export function getCombatPose(texture: TextureLike): CombatPose | undefined {
+  if (texture.customRosterKey) return COMBAT_POSES[texture.customRosterKey];
+  if (texture.customWardrobeArt) return { special: 8, charge: 11, hand: [133, 77], cast: [114, 55] };
   const source = texture.source?.[0];
   return source && !source.isCanvas && !source.isRenderTexture ? COMBAT_POSES[texture.key] : undefined;
 }

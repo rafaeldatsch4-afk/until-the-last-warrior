@@ -70,7 +70,18 @@ export class CreatorUI {
       0xf1c40f: "Dourado",
       0x8e44ad: "Roxo Escuro",
     };
-    return map[hex] || `#${hex.toString(16).toUpperCase()}`;
+    return map[hex] || `#${hex.toString(16).padStart(6, "0").toUpperCase()}`;
+  }
+
+  private fitText(text: Phaser.GameObjects.Text, maxWidth: number) {
+    text.setScale(1);
+    if (text.width > maxWidth) text.setScale(maxWidth / text.width, 1);
+  }
+
+  public refresh() {
+    if (!this.panelContainer || !this.stateRef) return;
+    const { width, height } = this.panelContainer.getData("panelSize");
+    this.refreshTabs(width, height);
   }
 
   public initStudioPanel(
@@ -94,6 +105,7 @@ export class CreatorUI {
     }
 
     this.panelContainer = this.scene.add.container(panelX, panelY);
+    this.panelContainer.setData("panelSize", { width: panelW, height: panelH });
 
     // 1. Studio Card Glass Background
     const bg = this.scene.add.graphics();
@@ -103,7 +115,7 @@ export class CreatorUI {
     bg.strokeRoundedRect(0, 0, panelW, panelH, 12);
 
     // Corner accents
-    bg.lineStyle(2, 0x38bdf8, 0.7);
+    bg.lineStyle(2, 0xf5b85b, 0.7);
     const bLen = 14;
     // Top-Left
     bg.moveTo(0, bLen).lineTo(0, 0).lineTo(bLen, 0);
@@ -118,10 +130,10 @@ export class CreatorUI {
     this.panelContainer.add(bg);
 
     // 2. Tab Switcher Header
-    const tabH = 34;
+    const tabH = 40;
     const tabY = 7;
     const tabs: { key: CreatorTab; label: string; icon: string }[] = [
-      { key: "style", label: "ESTILO", icon: "👕" },
+      { key: "style", label: "PEÇAS", icon: "👕" },
       { key: "colors", label: "CORES", icon: "🎨" },
       { key: "aura", label: "AURA", icon: "⚡" },
       { key: "skills", label: "GOLPES", icon: "🔥" },
@@ -137,7 +149,7 @@ export class CreatorUI {
         tabY + tabH / 2,
         tabWidth - 4,
         tabH,
-        `${tab.icon} ${tab.label}`,
+        tab.label,
         tab.key === this.currentTab,
         () => {
           if (this.currentTab === tab.key) return;
@@ -171,7 +183,7 @@ export class CreatorUI {
       .text(0, 0, label, {
         fontSize: "12px",
         fontStyle: "bold",
-        color: isActive ? "#38bdf8" : "#94a3b8",
+        color: isActive ? "#f5b85b" : "#aeb9ca",
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
         letterSpacing: 0.5,
         resolution: 2,
@@ -193,7 +205,7 @@ export class CreatorUI {
     hit.on("pointerout", () => {
       if (this.isDestroyed) return;
       this.drawTabBg(bg, w, h, isActive, false);
-      txt.setColor(isActive ? "#38bdf8" : "#94a3b8");
+      txt.setColor(isActive ? "#f5b85b" : "#aeb9ca");
     });
 
     hit.on("pointerdown", () => {
@@ -214,9 +226,9 @@ export class CreatorUI {
   ) {
     graphics.clear();
     if (isActive) {
-      graphics.fillStyle(0x0f2942, 0.95);
+      graphics.fillStyle(0x3a2b1c, 0.95);
       graphics.fillRoundedRect(-w / 2, -h / 2, w, h, 6);
-      graphics.lineStyle(1.5, 0x38bdf8, 1);
+      graphics.lineStyle(1.5, 0xf5b85b, 1);
       graphics.strokeRoundedRect(-w / 2, -h / 2, w, h, 6);
     } else {
       graphics.fillStyle(isHover ? 0x1e293b : 0x0f172a, 0.8);
@@ -241,7 +253,7 @@ export class CreatorUI {
 
   private renderCurrentTabContent(panelW: number, panelH: number) {
     if (!this.stateRef || !this.panelContainer) return;
-    const contentContainer = this.scene.add.container(0, 46);
+    const contentContainer = this.scene.add.container(0, 52);
     this.panelContainer.add(contentContainer);
 
     if (this.currentTab === "style") {
@@ -415,7 +427,7 @@ export class CreatorUI {
 
     const availH = panelH - 58;
     const gapY = 8;
-    const cardH = Math.min(68, Math.max(54, Math.floor((availH - 4 * gapY - 6) / 5)));
+    const cardH = Math.min(68, Math.max(40, Math.floor((availH - 4 * gapY - 6) / 5)));
     const startY = 4;
 
     rows.forEach((row, idx) => {
@@ -430,8 +442,8 @@ export class CreatorUI {
 
       // Label
       const txtLabel = this.scene.add
-        .text(26, rowY + cardH / 2, `${row.icon} ${row.label}`, {
-          fontSize: "12.5px",
+        .text(26, rowY + 12, row.label, {
+          fontSize: "10px",
           fontStyle: "bold",
           color: "#cbd5e1",
           fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
@@ -440,10 +452,10 @@ export class CreatorUI {
         .setOrigin(0, 0.5);
 
       // Selector Pill on the right
-      const pillW = Math.min(270, panelW - 180);
-      const pillX = panelW - 20 - pillW / 2;
-      const pillY = rowY + cardH / 2;
-      const pillH = Math.max(38, cardH - 18);
+      const pillW = panelW - 48;
+      const pillX = panelW / 2;
+      const pillH = Math.min(38, cardH - 23);
+      const pillY = rowY + cardH - pillH / 2 - 2;
 
       const pillBg = this.scene.add.graphics();
       pillBg.fillStyle(0x1e293b, 0.95);
@@ -455,7 +467,7 @@ export class CreatorUI {
         .text(pillX, pillY, row.getVal(), {
           fontSize: "12px",
           fontStyle: "bold",
-          color: "#f8fafc",
+          color: "#fff3df",
           fontFamily: "system-ui, sans-serif",
           resolution: 2,
         })
@@ -464,12 +476,13 @@ export class CreatorUI {
       if (row.id === "head") {
         headValTxtRef = valTxt;
       }
+      this.fitText(valTxt, pillW - 88);
 
       // Left Arrow with larger hit area
       const arrowL = this.scene.add
         .text(pillX - pillW / 2 + 16, pillY, "◀", {
           fontSize: "13px",
-          color: "#38bdf8",
+          color: "#f5b85b",
         })
         .setOrigin(0.5)
         .setPadding(10, 8)
@@ -479,16 +492,17 @@ export class CreatorUI {
         if (this.isDestroyed) return;
         row.onPrev();
         valTxt.setText(row.getVal());
+        this.fitText(valTxt, pillW - 88);
         this.onUpdate();
       });
       arrowL.on("pointerover", () => arrowL.setColor("#facc15").setScale(1.2));
-      arrowL.on("pointerout", () => arrowL.setColor("#38bdf8").setScale(1));
+      arrowL.on("pointerout", () => arrowL.setColor("#f5b85b").setScale(1));
 
       // Right Arrow with larger hit area
       const arrowR = this.scene.add
         .text(pillX + pillW / 2 - 16, pillY, "▶", {
           fontSize: "13px",
-          color: "#38bdf8",
+          color: "#f5b85b",
         })
         .setOrigin(0.5)
         .setPadding(10, 8)
@@ -498,10 +512,11 @@ export class CreatorUI {
         if (this.isDestroyed) return;
         row.onNext();
         valTxt.setText(row.getVal());
+        this.fitText(valTxt, pillW - 88);
         this.onUpdate();
       });
       arrowR.on("pointerover", () => arrowR.setColor("#facc15").setScale(1.2));
-      arrowR.on("pointerout", () => arrowR.setColor("#38bdf8").setScale(1));
+      arrowR.on("pointerout", () => arrowR.setColor("#f5b85b").setScale(1));
 
       container.add([rowBox, txtLabel, pillBg, valTxt, arrowL, arrowR]);
     });
@@ -569,7 +584,7 @@ export class CreatorUI {
     const availH = panelH - 58;
     const colGap = 10;
     const gapY = 8;
-    const cardH = Math.min(88, Math.max(72, Math.floor((availH - 6 - 3 * gapY) / 4)));
+    const cardH = Math.min(88, Math.max(50, Math.floor((availH - 6 - 3 * gapY) / 4)));
     const startY = 4;
     const colW = Math.floor((panelW - 28 - colGap) / 2);
 
@@ -590,7 +605,7 @@ export class CreatorUI {
         .text(cardX + 10, cardY + 12, item.label, {
           fontSize: "11px",
           fontStyle: "bold",
-          color: "#94a3b8",
+          color: "#aeb9ca",
           fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
           resolution: 2,
         })
@@ -626,17 +641,19 @@ export class CreatorUI {
         .text(pillCenterX, pillCenterY, this.getColorName(item.getHex()), {
           fontSize: "11px",
           fontStyle: "bold",
-          color: "#f8fafc",
+          color: "#fff3df",
           fontFamily: "system-ui, sans-serif",
           resolution: 2,
         })
         .setOrigin(0.5);
 
+      this.fitText(colorTxt, pillW - 54);
+
       // Left Arrow
       const arrowL = this.scene.add
         .text(pillCenterX - pillW / 2 + 10, pillCenterY, "◀", {
           fontSize: "11px",
-          color: "#38bdf8",
+          color: "#f5b85b",
         })
         .setOrigin(0.5)
         .setPadding(8, 6)
@@ -647,6 +664,7 @@ export class CreatorUI {
         item.onPrev();
         drawSwatch();
         colorTxt.setText(this.getColorName(item.getHex()));
+        this.fitText(colorTxt, pillW - 54);
         this.onUpdate();
       });
 
@@ -654,7 +672,7 @@ export class CreatorUI {
       const arrowR = this.scene.add
         .text(pillCenterX + pillW / 2 - 10, pillCenterY, "▶", {
           fontSize: "11px",
-          color: "#38bdf8",
+          color: "#f5b85b",
         })
         .setOrigin(0.5)
         .setPadding(8, 6)
@@ -665,6 +683,7 @@ export class CreatorUI {
         item.onNext();
         drawSwatch();
         colorTxt.setText(this.getColorName(item.getHex()));
+        this.fitText(colorTxt, pillW - 54);
         this.onUpdate();
       });
 
@@ -706,7 +725,7 @@ export class CreatorUI {
       .text(56, bannerY + 14, `⚡ AURA: ${currentPreset.name.toUpperCase()}`, {
         fontSize: "13px",
         fontStyle: "900",
-        color: `#${auraHex.toString(16).padStart(6, "0")}`,
+        color: "#fff3df",
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
         letterSpacing: 0.5,
         resolution: 2,
@@ -716,19 +735,21 @@ export class CreatorUI {
     const bannerDesc = this.scene.add
       .text(56, bannerY + 31, currentPreset.description || "Aura de energia lendária.", {
         fontSize: "10.5px",
-        color: "#94a3b8",
+        color: "#aeb9ca",
         fontFamily: "system-ui, sans-serif",
         resolution: 2,
       })
       .setOrigin(0, 0.5);
 
     // 2. Presets Grid Header
+    this.fitText(bannerTitle, cardW - 56);
+    this.fitText(bannerDesc, cardW - 56);
     const gridTitleY = bannerY + bannerH + 8;
     const gridTitle = this.scene.add
       .text(16, gridTitleY, "ESCOLHA UMA AURA LENDÁRIA", {
         fontSize: "10px",
         fontStyle: "bold",
-        color: "#94a3b8",
+        color: "#aeb9ca",
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
         letterSpacing: 1,
         resolution: 2,
@@ -767,7 +788,7 @@ export class CreatorUI {
         pBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 5);
         pBg.lineStyle(
           isSelected ? 1.5 : 1,
-          isSelected ? 0x38bdf8 : hover ? 0x475569 : 0x1e293b,
+          isSelected ? 0xf5b85b : hover ? 0x475569 : 0x1e293b,
           1
         );
         pBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 5);
@@ -784,19 +805,20 @@ export class CreatorUI {
         .text(-btnW / 2 + 24, 0, preset.name, {
           fontSize: "11px",
           fontStyle: isSelected ? "bold" : "normal",
-          color: isSelected ? "#38bdf8" : "#cbd5e1",
+          color: isSelected ? "#f5b85b" : "#cbd5e1",
           fontFamily: "system-ui, sans-serif",
           resolution: 2,
         })
         .setOrigin(0, 0.5);
 
       let checkTxt: Phaser.GameObjects.Text | null = null;
+      this.fitText(nameTxt, btnW - 42);
       if (isSelected) {
         checkTxt = this.scene.add
           .text(btnW / 2 - 10, 0, "✓", {
             fontSize: "12px",
             fontStyle: "bold",
-            color: "#38bdf8",
+            color: "#f5b85b",
           })
           .setOrigin(0.5);
       }
@@ -929,10 +951,10 @@ export class CreatorUI {
     sp1Card.strokeRoundedRect(14, sp1CardY, cardW, cardH, 6);
 
     const sp1Tag = this.scene.add
-      .text(26, sp1CardY + 22, "⚡ GOLPE ESPECIAL 1", {
+      .text(26, sp1CardY + 22, "GOLPE ESPECIAL", {
         fontSize: "12px",
         fontStyle: "900",
-        color: "#38bdf8",
+        color: "#f5b85b",
         letterSpacing: 1,
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
         resolution: 2,
@@ -949,19 +971,20 @@ export class CreatorUI {
       })
       .setOrigin(0, 0.5);
 
+    this.fitText(sp1NameTxt, cardW - 24);
     const sp1Desc = this.scene.add
-      .text(26, sp1CardY + 84, "Ataque rápido de energia concentrada com dano moderado.", {
+      .text(26, sp1CardY + 84, "Escolha o golpe especial do seu guerreiro.", {
         fontSize: "12px",
-        color: "#94a3b8",
+        color: "#aeb9ca",
         fontFamily: "system-ui, sans-serif",
-        wordWrap: { width: cardW - 140 },
+        wordWrap: { width: cardW - 32 },
         resolution: 2,
       })
       .setOrigin(0, 0.5);
 
     const sp1Btn = this.createCompactButton(
       panelW - 74,
-      sp1CardY + cardH / 2,
+      sp1CardY + cardH - 27,
       96,
       38,
       "ALTERAR",
@@ -971,6 +994,7 @@ export class CreatorUI {
           this.customSp1Id = id;
           this.customSp1Name = name;
           sp1NameTxt.setText(name);
+          this.fitText(sp1NameTxt, cardW - 24);
           this.onUpdate();
         });
       }
@@ -985,7 +1009,7 @@ export class CreatorUI {
     sp2Card.strokeRoundedRect(14, sp2CardY, cardW, cardH, 6);
 
     const sp2Tag = this.scene.add
-      .text(26, sp2CardY + 22, "🔥 SUPER GOLPE SUPREMO (ULTIMATE)", {
+      .text(26, sp2CardY + 22, "SUPER GOLPE", {
         fontSize: "12px",
         fontStyle: "900",
         color: "#facc15",
@@ -1005,19 +1029,20 @@ export class CreatorUI {
       })
       .setOrigin(0, 0.5);
 
+    this.fitText(sp2NameTxt, cardW - 24);
     const sp2Desc = this.scene.add
-      .text(26, sp2CardY + 84, "Ataque devastador em área consumindo barra cheia de Ki.", {
+      .text(26, sp2CardY + 84, "Escolha a técnica suprema do seu guerreiro.", {
         fontSize: "12px",
-        color: "#94a3b8",
+        color: "#aeb9ca",
         fontFamily: "system-ui, sans-serif",
-        wordWrap: { width: cardW - 140 },
+        wordWrap: { width: cardW - 32 },
         resolution: 2,
       })
       .setOrigin(0, 0.5);
 
     const sp2Btn = this.createCompactButton(
       panelW - 74,
-      sp2CardY + cardH / 2,
+      sp2CardY + cardH - 27,
       96,
       38,
       "ALTERAR",
@@ -1027,6 +1052,7 @@ export class CreatorUI {
           this.customSp2Id = id;
           this.customSp2Name = name;
           sp2NameTxt.setText(name);
+          this.fitText(sp2NameTxt, cardW - 24);
           this.onUpdate();
         });
       }
@@ -1140,7 +1166,7 @@ export class CreatorUI {
         {
           fontSize: "15px",
           fontStyle: "900",
-          color: isSuper ? "#facc15" : "#38bdf8",
+          color: isSuper ? "#facc15" : "#f5b85b",
           fontFamily: "system-ui, sans-serif",
           letterSpacing: 1,
           resolution: 2,
@@ -1153,13 +1179,13 @@ export class CreatorUI {
       .text(panelX + panelW / 2 - 20, panelY - panelH / 2 + 20, "✕", {
         fontSize: "16px",
         fontStyle: "bold",
-        color: "#94a3b8",
+        color: "#aeb9ca",
       })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
     closeBtn.on("pointerover", () => closeBtn.setColor("#ef4444"));
-    closeBtn.on("pointerout", () => closeBtn.setColor("#94a3b8"));
+    closeBtn.on("pointerout", () => closeBtn.setColor("#aeb9ca"));
     closeBtn.on("pointerdown", () => {
       if (this.activeModalContainer === modalContainer) {
         this.activeModalContainer = undefined;
@@ -1205,7 +1231,7 @@ export class CreatorUI {
           .text(0, 0, item.name, {
             fontSize: "12px",
             fontStyle: "bold",
-            color: "#f8fafc",
+            color: "#fff3df",
             fontFamily: "system-ui, sans-serif",
             resolution: 2,
           })
@@ -1219,7 +1245,7 @@ export class CreatorUI {
           bBg.clear();
           bBg.fillStyle(isSuper ? 0x2e2008 : 0x0c2742, 1);
           bBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-          bBg.lineStyle(1.5, isSuper ? 0xfacc15 : 0x38bdf8, 1);
+          bBg.lineStyle(1.5, isSuper ? 0xfacc15 : 0xf5b85b, 1);
           bBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
           bTxt.setColor(isSuper ? "#fef08a" : "#7dd3fc");
         });
@@ -1230,7 +1256,7 @@ export class CreatorUI {
           bBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
           bBg.lineStyle(1, 0x1e293b, 0.9);
           bBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-          bTxt.setColor("#f8fafc");
+          bTxt.setColor("#fff3df");
         });
 
         hit.on("pointerdown", () => {
@@ -1252,7 +1278,7 @@ export class CreatorUI {
     const pageTxt = this.scene.add
       .text(panelX, panelY + panelH / 2 - 24, `Página ${currentPage + 1} de ${totalPages}`, {
         fontSize: "11px",
-        color: "#94a3b8",
+        color: "#aeb9ca",
         fontStyle: "bold",
         fontFamily: "system-ui, sans-serif",
         resolution: 2,

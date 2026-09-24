@@ -128,7 +128,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
         speedX: { min: -6, max: 6 },
         scale: { start: 0.4, end: 0 },
         alpha: { start: 0.3, end: 0 },
-        tint: [0x38bdf8, 0xfacc15, 0x818cf8],
+        tint: [0xf5b85b, 0xfacc15, 0x818cf8],
         quantity: 1,
         frequency: 300,
         blendMode: "ADD",
@@ -145,10 +145,10 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     this.headerContainer = this.add.container(width / 2, headerY);
     const headerTitle = this.add
-      .text(0, -5, "CRIAR PERSONAGEM", {
-        fontSize: "20px",
+      .text(0, -5, "OFICINA DO GUERREIRO", {
+        fontSize: "19px",
         fontStyle: "900",
-        color: "#facc15",
+        color: "#f5b85b",
         stroke: "#000000",
         strokeThickness: 3.5,
         letterSpacing: 2,
@@ -159,10 +159,10 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const headerSub = this.add
-      .text(0, 13, "ESTÚDIO DE CUSTOMIZAÇÃO DE GUERREIROS", {
+      .text(0, 13, "ESCOLHA AS PEÇAS. DÊ A SUA IDENTIDADE.", {
         fontSize: "9.5px",
         fontStyle: "bold",
-        color: "#94a3b8",
+        color: "#aeb9ca",
         letterSpacing: 1.5,
         fontFamily: "system-ui, sans-serif",
         resolution: 2,
@@ -340,7 +340,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       nameCardBg.clear();
       nameCardBg.fillStyle(isHover ? 0x1e293b : 0x0f172a, 0.95);
       nameCardBg.fillRoundedRect(12, nameCardY, nameCardW, nameCardH, 6);
-      nameCardBg.lineStyle(1.5, isHover ? 0x38bdf8 : 0x334155, 0.9);
+      nameCardBg.lineStyle(1.5, isHover ? 0xf5b85b : 0x334155, 0.9);
       nameCardBg.strokeRoundedRect(12, nameCardY, nameCardW, nameCardH, 6);
     };
     drawNameBg(false);
@@ -349,7 +349,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       .text(nameCardCenterX - 8, nameCardY + nameCardH / 2, `⚔️ ${this.builderData.name}`, {
         fontSize: "14px",
         fontStyle: "bold",
-        color: "#facc15",
+        color: "#f5b85b",
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
         resolution: 2,
       })
@@ -358,7 +358,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.editIconTxt = this.add
       .text(nameCardCenterX + this.nameDisplayTxt.width / 2 + 10, nameCardY + nameCardH / 2, "✎", {
         fontSize: "13px",
-        color: "#38bdf8",
+        color: "#f5b85b",
       })
       .setOrigin(0.5);
 
@@ -369,12 +369,12 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     nameHit.on("pointerover", () => {
       if (this.isShuttingDown) return;
       drawNameBg(true);
-      if (this.editIconTxt) this.editIconTxt.setColor("#facc15");
+      if (this.editIconTxt) this.editIconTxt.setColor("#f5b85b");
     });
     nameHit.on("pointerout", () => {
       if (this.isShuttingDown) return;
       drawNameBg(false);
-      if (this.editIconTxt) this.editIconTxt.setColor("#38bdf8");
+      if (this.editIconTxt) this.editIconTxt.setColor("#f5b85b");
     });
     nameHit.on("pointerdown", () => {
       if (this.isShuttingDown) return;
@@ -410,10 +410,12 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       btnRowY,
       halfBtnW,
       34,
-      "⚡ SSJ MODE",
+      this.previewIsTransformed ? "✓ FORMA SSJ" : "FORMA NORMAL",
       0xd97706,
       () => {
         this.previewIsTransformed = !this.previewIsTransformed;
+        const label = transBtn.getAt(1) as Phaser.GameObjects.Text;
+        label.setText(this.previewIsTransformed ? "✓ FORMA SSJ" : "FORMA NORMAL");
         this.updatePreview();
       }
     );
@@ -424,8 +426,8 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       btnRowY,
       halfBtnW,
       34,
-      "🎲 ALEATÓRIO",
-      0x7c3aed,
+      "ALEATORIZAR",
+      0x64748b,
       () => {
         this.randomizeCharacter();
       }
@@ -525,22 +527,22 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       bg.clear();
       bg.fillStyle(0x000000, 0.4);
       bg.fillRoundedRect(-w / 2 + 2, -h / 2 + 2, w, h, 8);
-      bg.fillStyle(isHover ? 0x16a34a : 0x15803d, 1);
+      bg.fillStyle(isHover ? 0xffcf87 : 0xf5b85b, 1);
       bg.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-      bg.lineStyle(2, isHover ? 0x86efac : 0x22c55e, 1);
+      bg.lineStyle(2, isHover ? 0xffe0ac : 0xffcb7c, 1);
       bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
     };
     drawBg(false);
 
     const txt = this.add
-      .text(0, 0, `💾  ${label}`, {
+      .text(0, 0, label, {
         fontSize: "14px",
         fontStyle: "900",
-        color: "#ffffff",
+        color: "#20170e",
         fontFamily: "system-ui, -apple-system, sans-serif",
         letterSpacing: 1,
-        stroke: "#064e3b",
-        strokeThickness: 3,
+        stroke: "#f5b85b",
+        strokeThickness: 0,
         resolution: 2,
       })
       .setOrigin(0.5);
@@ -587,7 +589,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       bg.fillRoundedRect(-btnW / 2 + 2, -btnH / 2 + 2, btnW, btnH, 6);
       bg.fillStyle(isHover ? 0x334155 : 0x1e293b, 0.95);
       bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-      bg.lineStyle(1.5, isHover ? 0x38bdf8 : 0x475569, 0.9);
+      bg.lineStyle(1.5, isHover ? 0xf5b85b : 0x475569, 0.9);
       bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
     };
     drawBg(false);
@@ -621,7 +623,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     hit.on("pointerover", () => {
       if (this.isShuttingDown) return;
       drawBg(true);
-      txt.setColor("#38bdf8");
+      txt.setColor("#f5b85b");
       this.tweens.add({ targets: container, scale: 1.05, duration: 100 });
     });
     hit.on("pointerout", () => {
@@ -688,27 +690,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     // Refresh UI & Preview
     this.updatePreview();
 
-    const bounds = ResponsiveUtils.getSafeBounds(this);
-    const contentTopY = bounds.top + 46;
-    const contentH = Math.min(474, bounds.bottom - contentTopY - 12);
-    const availableW = bounds.width - 24;
-    const leftColW = Math.min(540, Math.floor(availableW * 0.58));
-    const rightColW = Math.min(370, Math.floor(availableW * 0.40));
-    const gap = 14;
-    const totalW = leftColW + rightColW + gap;
-    const startX = Math.max(bounds.left + 8, Math.floor(bounds.centerX - totalW / 2));
-
-    if (this.ui) {
-      this.ui.initStudioPanel(
-        startX,
-        contentTopY,
-        leftColW,
-        contentH,
-        this.state,
-        this.AVAILABLE_SPECIALS,
-        this.AVAILABLE_SUPERS
-      );
-    }
+    this.ui?.refresh();
   }
 
   private syncSelectedPowers() {
@@ -806,7 +788,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     toastBg.strokeRoundedRect(-180, -26, 360, 52, 10);
 
     const toastTxt = this.add
-      .text(0, 0, "✓ GUERREIRO EQUIPADO COMO PLAYER 1!", {
+      .text(0, 0, "✓ GUERREIRO SALVO E EQUIPADO!", {
         fontSize: "13px",
         fontStyle: "bold",
         color: "#ffffff",

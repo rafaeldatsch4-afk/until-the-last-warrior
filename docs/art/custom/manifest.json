@@ -1,0 +1,439 @@
+{
+  "version": 1,
+  "generator": "built-in image_gen",
+  "entries": [
+    {
+      "key": "torso-goku",
+      "asset": "game/assets/custom/torso-goku.png",
+      "source": "docs/art/custom/torso-source.png",
+      "sourceBox": [
+        0,
+        0,
+        397,
+        397
+      ]
+    },
+    {
+      "key": "torso-spiderman",
+      "asset": "game/assets/custom/torso-spiderman.png",
+      "source": "docs/art/custom/torso-source.png",
+      "sourceBox": [
+        397,
+        0,
+        396,
+        397
+      ]
+    },
+    {
+      "key": "torso-jotaro",
+      "asset": "game/assets/custom/torso-jotaro.png",
+      "source": "docs/art/custom/torso-source.png",
+      "sourceBox": [
+        793,
+        0,
+        397,
+        397
+      ]
+    },
+    {
+      "key": "torso-vegeta",
+      "asset": "game/assets/custom/torso-vegeta.png",
+      "source": "docs/art/custom/torso-source.png",
+      "sourceBox": [
+        1190,
+        0,
+        396,
+        397
+      ]
+    },
+    {
+      "key": "torso-saitama",
+      "asset": "game/assets/custom/torso-saitama.png",
+      "source": "docs/art/custom/torso-source.png",
+      "sourceBox": [
+        1586,
+        0,
+        397,
+        397
+      ]
+    },
+    {
+      "key": "torso-chapolim",
+      "asset": "game/assets/custom/torso-chapolim.png",
+      "source": "docs/art/custom/torso-source.png",
+      "sourceBox": [
+        0,
+        397,
+        397,
+        396
+      ]
+    },
+    {
+      "key": "torso-muscle",
+      "asset": "game/assets/custom/torso-muscle.png",
+      "source": "docs/art/custom/torso-source.png",
+      "sourceBox": [
+        397,
+        397,
+        396,
+        396
+      ]
+    },
+    {
+      "key": "torso-naruto",
+      "asset": "game/assets/custom/torso-naruto.png",
+      "source": "docs/art/custom/torso-source.png",
+      "sourceBox": [
+        793,
+        397,
+        397,
+        396
+      ]
+    },
+    {
+      "key": "torso-sasuke",
+      "asset": "game/assets/custom/torso-sasuke.png",
+      "source": "docs/art/custom/torso-source.png",
+      "sourceBox": [
+        1190,
+        397,
+        396,
+        396
+      ]
+    },
+    {
+      "key": "torso-luffy",
+      "asset": "game/assets/custom/torso-luffy.png",
+      "source": "docs/art/custom/torso-source.png",
+      "sourceBox": [
+        1586,
+        397,
+        397,
+        396
+      ]
+    },
+    {
+      "key": "legs-goku",
+      "asset": "game/assets/custom/legs-goku.png",
+      "source": "docs/art/custom/legs-source.png",
+      "sourceBox": [
+        0,
+        0,
+        410,
+        426
+      ]
+    },
+    {
+      "key": "legs-spiderman",
+      "asset": "game/assets/custom/legs-spiderman.png",
+      "source": "docs/art/custom/legs-source.png",
+      "sourceBox": [
+        410,
+        0,
+        410,
+        426
+      ]
+    },
+    {
+      "key": "legs-jotaro",
+      "asset": "game/assets/custom/legs-jotaro.png",
+      "source": "docs/art/custom/legs-source.png",
+      "sourceBox": [
+        820,
+        0,
+        410,
+        426
+      ]
+    },
+    {
+      "key": "legs-saitama",
+      "asset": "game/assets/custom/legs-saitama.png",
+      "source": "docs/art/custom/legs-source.png",
+      "sourceBox": [
+        0,
+        426,
+        410,
+        426
+      ]
+    },
+    {
+      "key": "legs-vegeta",
+      "asset": "game/assets/custom/legs-vegeta.png",
+      "source": "docs/art/custom/legs-source.png",
+      "sourceBox": [
+        410,
+        426,
+        410,
+        426
+      ]
+    },
+    {
+      "key": "legs-chapolim",
+      "asset": "game/assets/custom/legs-chapolim.png",
+      "source": "docs/art/custom/legs-source.png",
+      "sourceBox": [
+        820,
+        426,
+        410,
+        426
+      ]
+    },
+    {
+      "key": "legs-naruto",
+      "asset": "game/assets/custom/legs-naruto.png",
+      "source": "docs/art/custom/legs-source.png",
+      "sourceBox": [
+        0,
+        852,
+        410,
+        426
+      ]
+    },
+    {
+      "key": "legs-sasuke",
+      "asset": "game/assets/custom/legs-sasuke.png",
+      "source": "docs/art/custom/legs-source.png",
+      "sourceBox": [
+        410,
+        852,
+        410,
+        426
+      ]
+    },
+    {
+      "key": "legs-luffy",
+      "asset": "game/assets/custom/legs-luffy.png",
+      "source": "docs/art/custom/legs-source.png",
+      "sourceBox": [
+        820,
+        852,
+        410,
+        426
+      ]
+    },
+    {
+      "key": "feet-goku",
+      "asset": "game/assets/custom/feet-goku.png",
+      "source": "docs/art/custom/feet-source.png",
+      "sourceBox": [
+        0,
+        0,
+        512,
+        341
+      ]
+    },
+    {
+      "key": "feet-spiderman",
+      "asset": "game/assets/custom/feet-spiderman.png",
+      "source": "docs/art/custom/feet-source.png",
+      "sourceBox": [
+        512,
+        0,
+        512,
+        341
+      ]
+    },
+    {
+      "key": "feet-chapolim",
+      "asset": "game/assets/custom/feet-chapolim.png",
+      "source": "docs/art/custom/feet-source.png",
+      "sourceBox": [
+        1024,
+        0,
+        512,
+        341
+      ]
+    },
+    {
+      "key": "feet-saitama",
+      "asset": "game/assets/custom/feet-saitama.png",
+      "source": "docs/art/custom/feet-source.png",
+      "sourceBox": [
+        0,
+        341,
+        512,
+        342
+      ]
+    },
+    {
+      "key": "feet-vegeta",
+      "asset": "game/assets/custom/feet-vegeta.png",
+      "source": "docs/art/custom/feet-source.png",
+      "sourceBox": [
+        512,
+        341,
+        512,
+        342
+      ]
+    },
+    {
+      "key": "feet-jotaro",
+      "asset": "game/assets/custom/feet-jotaro.png",
+      "source": "docs/art/custom/feet-source.png",
+      "sourceBox": [
+        1024,
+        341,
+        512,
+        342
+      ]
+    },
+    {
+      "key": "feet-naruto",
+      "asset": "game/assets/custom/feet-naruto.png",
+      "source": "docs/art/custom/feet-source.png",
+      "sourceBox": [
+        0,
+        683,
+        512,
+        341
+      ]
+    },
+    {
+      "key": "feet-sasuke",
+      "asset": "game/assets/custom/feet-sasuke.png",
+      "source": "docs/art/custom/feet-source.png",
+      "sourceBox": [
+        512,
+        683,
+        512,
+        341
+      ]
+    },
+    {
+      "key": "feet-luffy",
+      "asset": "game/assets/custom/feet-luffy.png",
+      "source": "docs/art/custom/feet-source.png",
+      "sourceBox": [
+        1024,
+        683,
+        512,
+        341
+      ]
+    },
+    {
+      "key": "accessory-straw_hat",
+      "asset": "game/assets/custom/accessory-straw_hat.png",
+      "source": "docs/art/custom/accessory-source.png",
+      "sourceBox": [
+        20,
+        130,
+        460,
+        295
+      ]
+    },
+    {
+      "key": "accessory-sword",
+      "asset": "game/assets/custom/accessory-sword.png",
+      "source": "docs/art/custom/accessory-source.png",
+      "sourceBox": [
+        498,
+        230,
+        600,
+        132
+      ]
+    },
+    {
+      "key": "accessory-headband",
+      "asset": "game/assets/custom/accessory-headband.png",
+      "source": "docs/art/custom/accessory-source.png",
+      "sourceBox": [
+        1100,
+        172,
+        430,
+        244
+      ]
+    },
+    {
+      "key": "accessory-cape",
+      "asset": "game/assets/custom/accessory-cape.png",
+      "source": "docs/art/custom/accessory-source.png",
+      "sourceBox": [
+        25,
+        465,
+        550,
+        499
+      ]
+    },
+    {
+      "key": "accessory-scouter",
+      "asset": "game/assets/custom/accessory-scouter.png",
+      "source": "docs/art/custom/accessory-source.png",
+      "sourceBox": [
+        620,
+        602,
+        370,
+        240
+      ]
+    },
+    {
+      "key": "accessory-scarf",
+      "asset": "game/assets/custom/accessory-scarf.png",
+      "source": "docs/art/custom/accessory-source.png",
+      "sourceBox": [
+        1038,
+        560,
+        480,
+        395
+      ]
+    },
+    {
+      "key": "base-head",
+      "asset": "game/assets/custom/base-head.png",
+      "source": "docs/art/custom/base-source.png",
+      "sourceBox": [
+        455,
+        205,
+        170,
+        206
+      ]
+    },
+    {
+      "key": "head-goku",
+      "asset": "game/assets/custom/head-goku.png",
+      "source": "game/assets/roster/goku-v1.png",
+      "sourceBox": [
+        84,
+        64,
+        24,
+        18
+      ],
+      "reusedRosterArt": true
+    },
+    {
+      "key": "head-vegeta",
+      "asset": "game/assets/custom/head-vegeta.png",
+      "source": "game/assets/roster/vegeta-v1.png",
+      "sourceBox": [
+        88,
+        64,
+        18,
+        21
+      ],
+      "reusedRosterArt": true
+    },
+    {
+      "key": "head-jotaro",
+      "asset": "game/assets/custom/head-jotaro.png",
+      "source": "game/assets/roster/jotaro-v1.png",
+      "sourceBox": [
+        88,
+        64,
+        18,
+        18
+      ],
+      "reusedRosterArt": true
+    },
+    {
+      "key": "head-chapolim",
+      "asset": "game/assets/custom/head-chapolim.png",
+      "source": "game/assets/roster/chapolim-v1.png",
+      "sourceBox": [
+        91,
+        66,
+        18,
+        21
+      ],
+      "reusedRosterArt": true
+    }
+  ]
+}

@@ -50,6 +50,21 @@ test('missing PNGs and custom/procedural forms do not inherit illustrated socket
  s.texture.key='custom_999';assert.equal(getCombatPose(s.texture),undefined);
 });
 
+test('layered custom fighters use their own hand sockets and preserve mirrored effects',()=>{
+ const s=sprite('custom_999',8);s.texture.source[0].isCanvas=true;s.texture.customWardrobeArt=true;
+ assert.equal(getCombatPose(s.texture).special,8);
+ assert.equal(getCombatPose(s.texture).charge,11);
+ assert.deepEqual(getAttackSocket(s),{x:611,y:309});
+ s.flipX=true;assert.deepEqual(getAttackSocket(s),{x:389,y:309});
+ s.frame.name='11';assert.deepEqual(getAttackSocket(s),{x:446,y:243});
+});
+
+test('matching custom outfits retain the reviewed roster animation sockets',()=>{
+ const s=sprite('custom_999',11);s.texture.source[0].isCanvas=true;s.texture.customRosterKey='goku';
+ assert.deepEqual(getCombatPose(s.texture),COMBAT_POSES.goku);
+ assert.deepEqual(getAttackSocket(s),getAttackSocket(sprite('goku',11)));
+});
+
 test('online animation IDs preserve existing protocol and distinguish Ki, punches and kicks',()=>{
  const old=['idle','walk','attack','special','defend','transform','jump','hit','ko'];
  old.forEach((name,id)=>assert.equal(animKeyToId('goku_'+name),id));

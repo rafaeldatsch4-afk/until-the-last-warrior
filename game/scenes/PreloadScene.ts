@@ -1,6 +1,7 @@
 import { registerFighterAnimations } from "../sprites/FighterAnimations";
 import { preloadArenaArt } from "../battle/ArenaAtlases";
 import { preloadRosterAtlases } from "../sprites/RosterAtlases";
+import { preloadCustomArt } from "../sprites/CustomArt";
 import { preloadItachiAtlases } from "../sprites/ItachiAtlases";
 import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
@@ -43,6 +44,7 @@ export default class PreloadScene extends Phaser.Scene {
     preloadArenaArt(this);
     preloadItachiAtlases(this);
     preloadRosterAtlases(this);
+    preloadCustomArt(this);
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
