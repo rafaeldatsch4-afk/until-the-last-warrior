@@ -11,7 +11,7 @@ interface TextureLike { key: string; customWardrobeArt?: boolean; customRosterKe
 /** Generated Canvas/WebGL fallbacks have different artwork; never apply PNG sockets to them. */
 export function getCombatPose(texture: TextureLike): CombatPose | undefined {
   if (texture.customRosterKey) return COMBAT_POSES[texture.customRosterKey];
-  if (texture.customWardrobeArt) return { special: 8, charge: 11, hand: [149, 64], cast: [120, 85] };
+  if (texture.customWardrobeArt) return { special: 8, charge: 11, hand: [133, 77], cast: [114, 55] };
   const source = texture.source?.[0];
   return source && !source.isCanvas && !source.isRenderTexture ? COMBAT_POSES[texture.key] : undefined;
 }
