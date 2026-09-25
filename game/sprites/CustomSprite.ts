@@ -15,18 +15,7 @@ export function generateCustomSprite(
     skin: ColorPalette.skin[0],
   };
 
-  // Generated wardrobe PNGs were authored as independent illustrations.
-  // Mixing them creates incompatible anatomy/pivots (oversized heads, broken
-  // necks, detached footwear and misaligned accessories). Only a complete,
-  // matching outfit may use reviewed roster artwork. Every mixed/custom outfit
-  // stays on the coherent procedural rig, where every part shares the same grid.
-  const outfitId = colors.part_torso || "goku";
-  const isCompleteMatchingOutfit =
-    (colors.part_head || "goku") === outfitId &&
-    (colors.part_legs || "goku") === outfitId &&
-    (colors.part_feet || "goku") === outfitId &&
-    (!colors.part_accessory || colors.part_accessory === "none");
-  const layeredArt = hasCustomArt(scene) && isCompleteMatchingOutfit;
+  const layeredArt = hasCustomArt(scene);
 
   const generateForm = (form: number) => {
     const pAcc = colors.part_accessory || "none";
