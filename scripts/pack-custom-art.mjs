@@ -24,7 +24,7 @@ async function pack(input, box, key) {
   if(x1<0)throw new Error(`Empty generated layer: ${key}`);
   const asset=`${out}/${key}.png`;
   await sharp(data,{raw:info}).extract({left:x0,top:y0,width:x1-x0+1,height:y1-y0+1})
-    .resize({width:128,height:128,fit:'inside',kernel:'nearest'}).png().toFile(asset);
+    .resize({width:256,height:256,fit:'inside',kernel:'lanczos3'}).png().toFile(asset);
   manifest.entries.push({key,asset,source:input,sourceBox:box});
 }
 for(const [group,config] of Object.entries(groups)){
@@ -58,6 +58,16 @@ for (const [id,box] of Object.entries({goku:[84,64,24,18],vegeta:[88,64,18,21],j
   const asset=`${out}/head-${id}.png`;
   await sharp(data,{raw:info}).png().toFile(asset);
   manifest.entries.push({key:`head-${id}`,asset,source,sourceBox:box,reusedRosterArt:true});
+}
+// Six accessory-free portraits use equal cells so face/neck anchors remain stable.
+for (const [i,id] of ['goku','vegeta','naruto','sasuke','luffy','saitama'].entries()) {
+  const source=root+'/portraits-source.png';
+  const box={left:i%3*512,top:i<3?0:548,width:512,height:i<3?548:476};
+  const {data,info}=await sharp(source).extract(box).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  for(let p=3;p<data.length;p+=4)data[p]=data[p]<80?0:Math.min(255,Math.round(data[p]*255/253));
+  const asset=out+'/portrait-'+id+'.png';
+  await sharp(data,{raw:info}).resize({width:256}).png().toFile(asset);
+  manifest.entries.push({key:'portrait-'+id,asset,source,sourceBox:[box.left,box.top,box.width,box.height]});
 }
 await writeFile(`${root}/manifest.json`,JSON.stringify(manifest,null,2)+'\n');
 console.log(`Packed ${manifest.entries.length} existing wardrobe layers.`);

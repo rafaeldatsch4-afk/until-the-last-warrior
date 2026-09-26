@@ -2,6 +2,7 @@ import { ColorPalette } from "../utils/ColorPalette";
 import Phaser from "phaser";
 import { CharacterData } from "../types";
 import { composeCustomArt, hasCustomArt } from "./CustomArt";
+import { customFrameRegion } from "./CustomArtLayout";
 
 export function generateCustomSprite(
   scene: Phaser.Scene,
@@ -1926,11 +1927,16 @@ export function generateCustomSprite(
 
     if (scene.textures.exists(textureName)) {
       const tex = scene.textures.get(textureName);
-      tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
-      const fw = FRAME_WIDTH * SCALE;
-      const fh = FRAME_HEIGHT * SCALE;
-      for (let i = 0; i < FRAMES; i++) {
-        tex.add(i.toString(), 0, i * fw, 0, fw, fh);
+      const resolution = (tex as Phaser.Textures.Texture & {customArtResolution?:number}).customArtResolution;
+      tex.setFilter(resolution ? Phaser.Textures.FilterMode.LINEAR : Phaser.Textures.FilterMode.NEAREST);
+      const fw = FRAME_WIDTH * SCALE, fh = FRAME_HEIGHT * SCALE;
+      for (let i=0;i<FRAMES;i++) {
+        if(resolution) {
+          const r=customFrameRegion(i,resolution);
+          const frame=tex.add(i.toString(),0,r.x,r.y,r.width,r.height);
+          // UVs sample the full-resolution cell while the world frame remains 192x128.
+          frame.setUVs(r.width,r.height,r.u0,r.v0,r.u1,r.v1);
+        } else tex.add(i.toString(),0,i*fw,0,fw,fh);
       }
     }
 

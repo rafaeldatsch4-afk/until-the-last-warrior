@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
 import type Phaser from 'phaser';
 import type { CharacterData } from '../types';
-import { stabilizeIdlePortrait } from './CustomIdlePortrait';
+import { buildCustomPortrait } from './CustomPortrait';
+import { CUSTOM_FRAME } from './CustomArtLayout';
 
 const urls = import.meta.glob<string>('../assets/custom/*.png', { eager: true, query: '?url', import: 'default' });
 const prefix = 'wardrobe:';
@@ -18,40 +19,6 @@ export function hasCustomArt(scene: Phaser.Scene) {
 type Palette = { primary?: number; secondary?: number; skin?: number };
 const caches = new WeakMap<object, Map<string, HTMLCanvasElement>>();
 const rgb = (color: number) => [color >>> 16 & 255, color >>> 8 & 255, color & 255];
-
-/** Complete matching outfits already have coherent, reviewed combat artwork.
- * Keep that anatomy intact instead of reassembling five independently drawn sources. */
-function composeMatchingOutfit(scene: Phaser.Scene, texture: string, data: NonNullable<CharacterData['customData']>) {
-  const id=data.part_torso||'goku';
-  if((data.part_head||'goku')!==id || (data.part_legs||'goku')!==id || (data.part_feet||'goku')!==id || (data.part_accessory&&data.part_accessory!=='none'))return false;
-  const suffix=texture.endsWith('_ui')?'_ui':texture.endsWith('_ssj')?'_ssj':'';
-  const sourceKey=scene.textures.exists(id+suffix)?id+suffix:id;
-  if(!scene.textures.exists(sourceKey))return false;
-  const original=scene.textures.get(sourceKey);
-  if(original.source[0].isCanvas || original.source[0].isRenderTexture)return false;
-  const source=original.getSourceImage() as HTMLImageElement;
-  const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;
-  const ctx=canvas.getContext('2d')!;ctx.drawImage(source,0,0);
-  const image=ctx.getImageData(0,0,canvas.width,canvas.height);
-  for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
-    const i=(y*canvas.width+x)*4;if(!image.data[i+3])continue;
-    const r=image.data[i],g=image.data[i+1],b=image.data[i+2];
-    const primary=y>114?(data.color_feet_1??data.gi2):y>92?(data.color_legs_1??data.gi1):(data.color_torso_1??data.gi1);
-    const secondary=y>114?(data.color_feet_2??data.gi1):y>92?(data.color_legs_2??data.gi2):(data.color_torso_2??data.gi2);
-    let target:number|undefined, shade=1;
-    if(y<76 && Math.max(r,g,b)<70 && Math.max(r,g,b)>18){target=suffix==='_ui'?0xe0e0e0:suffix?0xffea00:data.hair;shade=.55+Math.max(r,g,b)/120;}
-    else if(r>g*1.1&&g>b*1.1&&b>60){target=data.skin;shade=r/245;}
-    else if(b>r*1.3&&b>g*1.15){target=secondary;shade=b/170;}
-    else if((r>g*1.4&&g>b*1.3)||(r>145&&g>110&&b<70)){target=primary;shade=Math.max(r,g)/245;}
-    else if(y>78&&Math.min(r,g,b)>80&&Math.max(r,g,b)-Math.min(r,g,b)<45){target=primary;shade=(r+g+b)/690;}
-    if(target!==undefined){const channels=rgb(target);for(let k=0;k<3;k++)image.data[i+k]=Math.min(255,channels[k]*Math.min(shade,1)+Math.max(0,shade-1)*100);}
-  }
-  stabilizeIdlePortrait(image.data,canvas.width);
-  ctx.putImageData(image,0,0);scene.textures.remove(texture);
-  const result=scene.textures.addCanvas(texture,canvas);
-  if(result)(result as Phaser.Textures.Texture & {customRosterKey?:string}).customRosterKey=sourceKey;
-  return true;
-}
 
 // Generated footwear pairs are not evenly spaced. Split in the transparent gap,
 // then trim each boot independently: a midpoint slice steals pixels from its neighbour.
@@ -97,7 +64,12 @@ function tint(scene: Phaser.Scene, name: string, palette: Palette): HTMLCanvasEl
     } else if (r > g * 1.06 && g > b * 1.06 && r > 110 && g > 65 && b > 45) {
       color = palette.skin; light = r / 245;
     } else if (Math.max(r,g,b) - Math.min(r,g,b) < 65 && Math.max(r,g,b) > 65) {
-      color = palette.primary; light = (r + g + b) / (3 * 230);
+      const portrait = name.startsWith('portrait-');
+      const py=Math.floor(i/4/canvas.width),px=i/4%canvas.width;
+      const lowerRow=['portrait-sasuke','portrait-luffy','portrait-saitama'].includes(name);
+      const hairRegion=name!=='portrait-saitama' && (py < canvas.height*(lowerRow ? .50 : .58) || px < canvas.width*.35);
+      color = !portrait || hairRegion ? palette.primary : undefined;
+      light = (r + g + b) / (3 * 230);
     }
     if (color === undefined) continue;
     const channels = rgb(color);
@@ -112,10 +84,12 @@ function tint(scene: Phaser.Scene, name: string, palette: Palette): HTMLCanvasEl
 
 /** Compose the same 12-frame / 192×128 contract used by the combat animation registry. */
 export function composeCustomArt(scene: Phaser.Scene, texture: string, data: NonNullable<CharacterData['customData']>) {
-  if(composeMatchingOutfit(scene,texture,data))return;
-  const headSource = scene.textures.get(texture).getSourceImage() as HTMLCanvasElement;
-  const canvas = document.createElement('canvas'); canvas.width = 192 * 12; canvas.height = 128;
-  const ctx = canvas.getContext('2d')!; ctx.imageSmoothingEnabled = false;
+  const resolution = scene.sys.game.renderer.type === 2 ? 3 : 1;
+  const canvas = document.createElement('canvas');
+  canvas.width = CUSTOM_FRAME.width * CUSTOM_FRAME.columns * resolution;
+  canvas.height = CUSTOM_FRAME.height * 3 * resolution;
+  const ctx = canvas.getContext('2d')!;
+  ctx.scale(resolution,resolution);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   const torso = tint(scene, 'torso-' + (data.part_torso || 'goku'), { primary: data.color_torso_1 ?? data.gi1, secondary: data.color_torso_2 ?? data.gi2, skin: data.skin });
   const legs = tint(scene, 'legs-' + (data.part_legs || 'goku'), { primary: data.color_legs_1 ?? data.gi1, secondary: data.color_legs_2 ?? data.gi2, skin: data.skin });
   const feet = tint(scene, 'feet-' + (data.part_feet || 'goku'), { primary: data.color_feet_1 ?? data.gi2, secondary: data.color_feet_2 ?? data.gi1, skin: data.skin });
@@ -124,50 +98,20 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   const accessory = accessoryId === 'none' ? null : tint(scene, 'accessory-' + accessoryId,
     accessoryId === 'cape' || accessoryId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } :
     accessoryId === 'headband' ? { secondary: data.color_acc_1 ?? data.gi2 } : {});
-  // Reuse detailed portraits, crop transparent margins, and anchor the neck once.
-  const headId=data.part_head||'goku';
-  const hair=texture.endsWith('_ui')?0xe0e0e0:texture.endsWith('_ssj')?0xffea00:data.hair;
-  const headCanvas = document.createElement('canvas');
-  headCanvas.width = 192; headCanvas.height = 128;
-  const hc = headCanvas.getContext('2d')!;
-  hc.imageSmoothingEnabled=false;
-  if(scene.textures.exists(prefix+'head-'+headId)) {
-    const portrait=tint(scene,'head-'+headId,{primary:['goku','vegeta'].includes(headId)?hair:data.color_head_1??data.gi1,secondary:data.color_head_2??data.gi2,skin:data.skin});
-    hc.drawImage(portrait,0,0);
-  } else if(headId==='saitama') {
-    hc.drawImage(tint(scene,'base-head',{skin:data.skin,primary:data.skin}),0,0);
-   } else if((headId==='naruto'||headId==='sasuke') && scene.textures.exists(headId==='sasuke'?'itachi':'naruto')) {
-    const sourceKey=headId==='sasuke'?'itachi':'naruto';
-    const crop=headId==='sasuke'?[88,63,22,20]:[82,63,27,19];
-    hc.drawImage(scene.textures.get(sourceKey).getSourceImage() as HTMLImageElement,...crop as [number,number,number,number],0,0,crop[2],crop[3]);
-    const portrait=hc.getImageData(0,0,192,128);
-    for(let i=0;i<portrait.data.length;i+=4){
-      const r=portrait.data[i],g=portrait.data[i+1],b=portrait.data[i+2];
-      const target=(headId==='sasuke'&&Math.max(r,g,b)<90&&Math.max(r,g,b)>20)||(r>150&&g>120&&b<90)?hair:r>g*1.08&&g>b*1.1&&b>65?data.skin:undefined;
-      if(target!==undefined){const c=rgb(target);for(let k=0;k<3;k++)portrait.data[i+k]=c[k]*r/255;}
-    }
-    hc.putImageData(portrait,0,0);
-  } else if(headId==='spiderman') {
-    // Rounded mask silhouette, retaining the existing eye and fabric artwork.
-    hc.save();hc.beginPath();hc.ellipse(96,70,17,20,0,0,Math.PI*2);hc.clip();
-    hc.drawImage(headSource,0,0);hc.restore();
-  } else {
-    // Keep existing hairstyles but give them the generated anatomical face.
-    const face=tint(scene,'base-head',{skin:data.skin,primary:data.skin});
-    hc.drawImage(face,87,65,22,27);
-    hc.drawImage(headSource,0,0,192,70,34,22,125,46);
+  // Generated garments have different neck positions. Measure their attachment
+  // instead of centering a head on the outer shoulder/arm bounds.
+  const torsoPixels=torso.getContext('2d')!.getImageData(0,0,torso.width,torso.height).data;
+  let neckSum=0,neckWeight=0;
+  for(let y=Math.floor(torso.height*.035);y<torso.height*.065;y++) {
+    let left=torso.width,right=-1;
+    for(let x=0;x<torso.width;x++)if(torsoPixels[(y*torso.width+x)*4+3]>180){left=Math.min(left,x);right=Math.max(right,x);}
+    if(right>=left){neckSum+=(left+right)/2;neckWeight++;}
   }
-  const pixels = hc.getImageData(0, 0, 192, 128).data;
-  let left=192, top=128, right=0, bottom=0;
-  for(let y=0;y<128;y++)for(let x=0;x<192;x++)if(pixels[(y*192+x)*4+3]>32){
-    left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);
-  }
-  const headWidth = Math.max(1,right-left+1), headHeight = Math.max(1,bottom-top+1);
-  const headScale = Math.min(21/headWidth, (headId==='saitama'?18:24)/headHeight);
-  const portraitW = Math.round(headWidth*headScale), portraitH = Math.round(headHeight*headScale);
+  const neckX=79+(neckWeight?neckSum/neckWeight:torso.width/2)/torso.width*36;
+  const portrait = buildCustomPortrait(data,texture,(name,palette)=>tint(scene,name,palette),resolution,neckX);
   const draw = (img: HTMLCanvasElement, x: number, y: number, w: number, h: number) => ctx.drawImage(img, Math.round(x), Math.round(y), w, h);
   for (let f = 0; f < 12; f++) {
-    ctx.save(); ctx.translate(f * 192, 0);
+    ctx.save(); ctx.translate(f % 4 * 192, Math.floor(f / 4) * 128);
     const walk = f >= 4 && f <= 7;
     const phase = walk ? [0,1,0,-1][f-4] : 0;
     const punch = f === 8, kick = f === 9, defend = f === 10, charge = f === 11;
@@ -208,13 +152,8 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.restore();
     }
     }
-    // The portrait includes its neck, overlapping the torso socket.
-    ctx.drawImage(headCanvas,left,top,headWidth,headHeight,
-      Math.round(97+lean-portraitW/2),72+headBob-portraitH,portraitW,portraitH);
+    draw(portrait,lean,headBob,192,128);
     if (accessory) {
-      if (accessoryId === 'straw_hat') draw(accessory, 83 + lean, 48 + headBob, 29, 16);
-      if (accessoryId === 'headband') draw(accessory, 85 + lean, 59 + headBob, 22, 8);
-      if (accessoryId === 'scouter') draw(accessory, 99 + lean, 61 + headBob, 10, 6);
       if (accessoryId === 'sword') {
         // Follow the same right-arm pivot and rotation as the hand.
         const armAngle=charge?-2.7:defend?2.5:punch?-1.55:0;
@@ -229,5 +168,5 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   }
   scene.textures.remove(texture);
   const result = scene.textures.addCanvas(texture, canvas);
-  if (result) (result as Phaser.Textures.Texture & { customWardrobeArt?: boolean }).customWardrobeArt = true;
+  if (result) Object.assign(result,{customWardrobeArt:true,customArtResolution:resolution});
 }

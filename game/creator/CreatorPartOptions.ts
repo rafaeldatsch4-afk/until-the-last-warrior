@@ -19,14 +19,8 @@ export const partOptions = {
   accessory: ["none", "straw_hat", "sword", "headband", "cape", "scouter", "scarf"],
 };
 
-/**
- * Retorna as opções de cabeça disponíveis. Quando o Chapéu de Palha (straw_hat)
- * está equipado, o capuz do Chapolim é omitido para evitar sobreposição conflitante.
- */
-export function getAvailableHeadOptions(accessoryId?: string): string[] {
-  if (accessoryId === "straw_hat") {
-    return partOptions.head.filter((h) => h !== "chapolim");
-  }
+/** Hats hide the visible hair; the saved head choice stays available and unchanged. */
+export function getAvailableHeadOptions(_accessoryId?: string): string[] {
   return partOptions.head;
 }
 

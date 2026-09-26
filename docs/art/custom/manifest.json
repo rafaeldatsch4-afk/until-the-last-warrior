@@ -434,6 +434,72 @@
         21
       ],
       "reusedRosterArt": true
+    },
+    {
+      "key": "portrait-goku",
+      "asset": "game/assets/custom/portrait-goku.png",
+      "source": "docs/art/custom/portraits-source.png",
+      "sourceBox": [
+        0,
+        0,
+        512,
+        548
+      ]
+    },
+    {
+      "key": "portrait-vegeta",
+      "asset": "game/assets/custom/portrait-vegeta.png",
+      "source": "docs/art/custom/portraits-source.png",
+      "sourceBox": [
+        512,
+        0,
+        512,
+        548
+      ]
+    },
+    {
+      "key": "portrait-naruto",
+      "asset": "game/assets/custom/portrait-naruto.png",
+      "source": "docs/art/custom/portraits-source.png",
+      "sourceBox": [
+        1024,
+        0,
+        512,
+        548
+      ]
+    },
+    {
+      "key": "portrait-sasuke",
+      "asset": "game/assets/custom/portrait-sasuke.png",
+      "source": "docs/art/custom/portraits-source.png",
+      "sourceBox": [
+        0,
+        548,
+        512,
+        476
+      ]
+    },
+    {
+      "key": "portrait-luffy",
+      "asset": "game/assets/custom/portrait-luffy.png",
+      "source": "docs/art/custom/portraits-source.png",
+      "sourceBox": [
+        512,
+        548,
+        512,
+        476
+      ]
+    },
+    {
+      "key": "portrait-saitama",
+      "asset": "game/assets/custom/portrait-saitama.png",
+      "source": "docs/art/custom/portraits-source.png",
+      "sourceBox": [
+        1024,
+        548,
+        512,
+        476
+      ]
     }
   ]
 }

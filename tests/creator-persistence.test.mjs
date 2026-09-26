@@ -28,7 +28,7 @@ test('legacy gi colors migrate using the same fallbacks as the sprite renderer',
 });
 
 test('every compatible head keeps its ID with a straw hat and when changing accessories', () => {
-  for (const head of partOptions.head.filter(h => h !== 'chapolim')) {
+  for (const head of partOptions.head) {
     const state = new CreatorState();
     state.loadCustomData({gi1:0,gi2:0,skin:0,hair:0,part_head:head,part_accessory:'straw_hat'});
     assert.equal(state.getEquippedHead(), head);
