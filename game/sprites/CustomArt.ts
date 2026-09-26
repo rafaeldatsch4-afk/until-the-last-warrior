@@ -34,7 +34,11 @@ function footwearParts(image: HTMLCanvasElement) {
     for(let y=0;y<image.height;y++)for(let x=start;x<end;x++)if(pixels[(y*image.width+x)*4+3]>32){
       x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);
     }
-    return {x:x0,y:y0,w:Math.max(1,x1-x0+1),h:Math.max(1,y1-y0+1)};
+    const w=Math.max(1,x1-x0+1),h=Math.max(1,y1-y0+1);
+    // The toe makes the silhouette asymmetric; attach at the boot shaft instead.
+    let shaftSum=0,shaftCount=0;
+    for(let y=y0;y<y0+h*.2;y++)for(let x=x0;x<=x1;x++)if(pixels[(y*image.width+x)*4+3]>128){shaftSum+=x-x0;shaftCount++;}
+    return {x:x0,y:y0,w,h,ankle:shaftCount?shaftSum/shaftCount:w/2};
   });
 }
 
@@ -91,9 +95,31 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   const ctx = canvas.getContext('2d')!;
   ctx.scale(resolution,resolution);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   const torso = tint(scene, 'torso-' + (data.part_torso || 'goku'), { primary: data.color_torso_1 ?? data.gi1, secondary: data.color_torso_2 ?? data.gi2, skin: data.skin });
-  const legs = tint(scene, 'legs-' + (data.part_legs || 'goku'), { primary: data.color_legs_1 ?? data.gi1, secondary: data.color_legs_2 ?? data.gi2, skin: data.skin });
+  const legSource = tint(scene, 'legs-' + (data.part_legs || 'goku'), { primary: data.color_legs_1 ?? data.gi1, secondary: data.color_legs_2 ?? data.gi2, skin: data.skin });
+  // Some atlas cells contain a few pixels of the next row. Those must not extend
+  // the trousers' bounds or masquerade as an ankle attachment.
+  const sourcePixels=legSource.getContext('2d')!.getImageData(0,0,legSource.width,legSource.height).data;
+  let runStart=0,runMass=0,bestMass=0,legTop=0,legBottom=legSource.height;
+  for(let y=0;y<=legSource.height;y++){
+    let mass=0;
+    if(y<legSource.height)for(let x=0;x<legSource.width;x++)if(sourcePixels[(y*legSource.width+x)*4+3]>128)mass++;
+    if(mass>legSource.width*.04){if(!runMass)runStart=y;runMass+=mass;}
+    else {if(runMass>bestMass){bestMass=runMass;legTop=runStart;legBottom=y;}runMass=0;}
+  }
+  const legs=document.createElement('canvas');legs.width=legSource.width;legs.height=legBottom-legTop;
+  legs.getContext('2d')!.drawImage(legSource,0,legTop,legs.width,legs.height,0,0,legs.width,legs.height);
   const feet = tint(scene, 'feet-' + (data.part_feet || 'goku'), { primary: data.color_feet_1 ?? data.gi2, secondary: data.color_feet_2 ?? data.gi1, skin: data.skin });
   const boots = footwearParts(feet);
+  const bootH=(data.part_feet==='luffy'||data.part_feet==='jotaro')?7:11;
+  const bootTop=37-bootH;
+  const legPixels=legs.getContext('2d')!.getImageData(0,0,legs.width,legs.height).data;
+  const ankles=[0,1].map(side=>{
+    let sum=0,count=0;
+    for(let y=Math.floor(legs.height*bootTop/34);y<Math.min(legs.height,Math.ceil(legs.height*(bootTop+2)/34));y++)for(let x=Math.floor(side*legs.width/2);x<Math.floor((side+1)*legs.width/2);x++){
+      if(legPixels[(y*legs.width+x)*4+3]>128){sum+=x-side*legs.width/2;count++;}
+    }
+    return count?sum/count/(legs.width/2):.5;
+  });
   const accessoryId = data.part_accessory || 'none';
   const accessory = accessoryId === 'none' ? null : tint(scene, 'accessory-' + accessoryId,
     accessoryId === 'cape' || accessoryId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } :
@@ -127,12 +153,14 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.translate(pivotX, 89);
       ctx.rotate(side === 1 && kick ? -1.2 : phase * (side ? -0.14 : 0.14));
       const sx = side * legs.width / 2;
-      ctx.drawImage(legs, sx, 0, legs.width / 2, legs.height, 81 + side*16 - pivotX, 0, 16, 34);
+      // Keep the full trouser width, but tuck its hem inside the boot shaft.
+      const legW=17,legX=80+side*17;
+      const legH=Math.min(34,bootTop+2);
+      ctx.drawImage(legs, sx, 0, legs.width / 2, legs.height*legH/34, legX - pivotX, 0, legW, legH);
       const boot=boots[side];
-      const bootH=(data.part_feet==='luffy'||data.part_feet==='jotaro')?7:14;
-      const bootW=Math.round(boot.w/boot.h*bootH);
-      const ankleX=side?110:85;
-      ctx.drawImage(feet,boot.x,boot.y,boot.w,boot.h,ankleX-pivotX-(side?4:bootW/2),37-bootH,bootW,bootH);
+      const bootW=Math.min(side?10:8,boot.w/boot.h*bootH);
+      const ankleX=legX+ankles[side]*legW;
+      ctx.drawImage(feet,boot.x,boot.y,boot.w,boot.h,ankleX-pivotX-boot.ankle/boot.w*bootW,37-bootH,bootW,bootH);
       ctx.restore();
     }
     // One continuous neck behind both layers, including their antialiased edges.

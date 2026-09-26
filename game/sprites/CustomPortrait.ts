@@ -14,6 +14,9 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   ctx.scale(resolution, resolution);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
+  // Seat the jaw on the body's neck instead of stacking two complete necks.
+  // Apply the same transform to the face, hair and every head accessory.
+  ctx.translate(-.75,2);
   const accessory = data.part_accessory || 'none';
   const id = displayedHead(data.part_head || 'goku', accessory);
   const hair = form.endsWith('_ui') ? 0xdce3ed : form.endsWith('_ssj') ? 0xffdc35 : data.hair;
@@ -34,9 +37,9 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
 
   // Feather only the last neck pixels into the torso; never fade the jaw or eyes.
   ctx.save();ctx.globalCompositeOperation='destination-out';
-  const neckFade=ctx.createLinearGradient(0,69,0,71);
+  const neckFade=ctx.createLinearGradient(0,67,0,69);
   neckFade.addColorStop(0,'rgba(0,0,0,0)');neckFade.addColorStop(1,'rgba(0,0,0,1)');
-  ctx.fillStyle=neckFade;ctx.fillRect(78,69,40,5);ctx.restore();
+  ctx.fillStyle=neckFade;ctx.fillRect(78,67,40,7);ctx.restore();
   ctx.translate(neckX-HEAD_ANCHORS.neck[0],0);
 
   // Existing mask/cap styles retain their identity, now on a rounded face grid.
