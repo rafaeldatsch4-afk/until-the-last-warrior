@@ -115,7 +115,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     const walk = f >= 4 && f <= 7;
     const phase = walk ? [0,1,0,-1][f-4] : 0;
     const punch = f === 8, kick = f === 9, defend = f === 10, charge = f === 11;
-    const bob = walk ? Math.abs(phase) : f === 1 || f === 3 ? 1 : 0;
+    const bob = walk ? Math.abs(phase) : 0;
     const headBob = f < 4 ? 0 : bob;
     const lean = punch ? 3 : kick ? -2 : defend ? -2 : 0;
     if (accessory && accessoryId === 'cape') draw(accessory, 74 - phase, 70 + bob, 43 + Math.abs(phase)*2, 53);
@@ -135,6 +135,11 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.drawImage(feet,boot.x,boot.y,boot.w,boot.h,ankleX-pivotX-(side?4:bootW/2),37-bootH,bootW,bootH);
       ctx.restore();
     }
+    // One continuous neck behind both layers, including their antialiased edges.
+    // Idle uses the same pose for head and torso; moving just the torso opens the seam.
+    const neckColor=rgb(data.skin).map(c=>Math.round(c*.88));
+    ctx.fillStyle='rgb('+neckColor.join(',')+')';
+    ctx.fillRect(neckX-2.5+lean,64+bob,5,10);
     // Independently articulated arms preserve actual punch, guard and charge silhouettes.
     const tw = torso.width, th = torso.height;
     if(!punch && !kick && !defend && !charge) {
