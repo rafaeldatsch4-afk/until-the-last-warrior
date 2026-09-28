@@ -22,18 +22,19 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   const hair = form.endsWith('_ui') ? 0xdce3ed : form.endsWith('_ssj') ? 0xffdc35 : data.hair;
   const primary = data.color_head_1 ?? data.gi1;
   const secondary = data.color_head_2 ?? data.gi2;
-  const portraitId = id === 'jotaro' ? 'luffy' : ['chapolim', 'spiderman'].includes(id) ? 'saitama' : id;
-  const portrait = layer('portrait-' + portraitId, { primary: hair, skin: data.skin });
+  const portraitId = id==='spiderman' ? 'saitama' : id;
+  const garmentHead=['jotaro','chapolim'].includes(id);
+  const portrait = layer('portrait-' + portraitId, { primary: garmentHead?primary:hair, secondary, skin: data.skin });
   // Landmarks are in the original 512px cells, not each hairstyle's bounding box.
   // A taller hairstyle therefore never shrinks its face.
   const upperRow = ['goku','vegeta','naruto'].includes(portraitId);
   const neckAnchors: Record<string,number> = {goku:274,vegeta:272,naruto:274,sasuke:259,luffy:258,saitama:248};
-  const sourceNeckX = neckAnchors[portraitId] ?? 274;
-  const sourceNeckY = upperRow ? 532 : 442;
+  const sourceNeckX = portraitId==='jotaro'?256:portraitId==='chapolim'?240:neckAnchors[portraitId] ?? 274;
+  const sourceNeckY = portraitId==='jotaro'?452:portraitId==='chapolim'?482:upperRow ? 532 : 442;
   const scale = 0.050;
   const x = neckX - sourceNeckX * scale;
   const y = HEAD_ANCHORS.neck[1] - sourceNeckY * scale;
-  ctx.drawImage(portrait, x, y, 512 * scale, (upperRow ? 548 : 476) * scale);
+  ctx.drawImage(portrait, x, y, 512 * scale, (garmentHead?512:upperRow ? 548 : 476) * scale);
 
   // Feather only the last neck pixels into the torso; never fade the jaw or eyes.
   ctx.save();ctx.globalCompositeOperation='destination-out';
@@ -55,25 +56,6 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
     ctx.fillStyle='#f5f7fa';ctx.lineWidth=.7;
     ctx.beginPath();ctx.moveTo(92,54);ctx.lineTo(99,57);ctx.quadraticCurveTo(98,62,94,59);ctx.closePath();ctx.fill();ctx.stroke();
     ctx.beginPath();ctx.moveTo(102,57);ctx.lineTo(109,53);ctx.lineTo(107,59);ctx.quadraticCurveTo(104,62,102,57);ctx.fill();ctx.stroke();
-  } else if (id === 'chapolim') {
-    ctx.save();ctx.translate(0,4);
-    ctx.strokeStyle=css(primary);ctx.lineWidth=3;
-    ctx.beginPath();ctx.ellipse(100,56,10,11,-.13,Math.PI*.8,Math.PI*1.97);ctx.stroke();
-    ctx.lineWidth=.9;
-    for(const side of [-1,1]){
-      ctx.beginPath();ctx.moveTo(99+side*6,47);ctx.quadraticCurveTo(99+side*10,40,99+side*8,37);ctx.stroke();
-      ctx.fillStyle=css(secondary);ctx.beginPath();ctx.arc(99+side*8,37,1.6,0,Math.PI*2);ctx.fill();
-    }
-    ctx.restore();
-  } else if (id === 'jotaro') {
-    ctx.save();ctx.translate(0,4);
-    const capShade=ctx.createLinearGradient(0,43,0,55);
-    capShade.addColorStop(0,css(primary));capShade.addColorStop(1,css(Math.floor((primary & 0xfefefe)/2)));
-    ctx.fillStyle=capShade;ctx.strokeStyle='#18222d';ctx.lineWidth=.6;
-    ctx.beginPath();ctx.moveTo(88,52);ctx.lineTo(90,44);ctx.quadraticCurveTo(100,41,109,47);ctx.lineTo(109,53);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.fillStyle=css(secondary);ctx.fillRect(89,50,19,1.5);
-    ctx.fillStyle=css(primary);ctx.beginPath();ctx.moveTo(97,52);ctx.lineTo(113,51);ctx.quadraticCurveTo(110,55,99,54);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.restore();
   }
 
   if (accessory === 'straw_hat') {

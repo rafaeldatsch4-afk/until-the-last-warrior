@@ -1,0 +1,76 @@
+{
+  "entries": [
+    {
+      "key": "goku_ki",
+      "asset": "game/assets/poses/goku_ki.png",
+      "source": "docs/art/roster/goku-power-poses-source.png",
+      "box": {
+        "left": 209,
+        "top": 17,
+        "width": 232,
+        "height": 477
+      },
+      "resolution": 3
+    },
+    {
+      "key": "goku_genki",
+      "asset": "game/assets/poses/goku_genki.png",
+      "source": "docs/art/roster/goku-power-poses-source.png",
+      "box": {
+        "left": 614,
+        "top": 7,
+        "width": 217,
+        "height": 488
+      },
+      "resolution": 3
+    },
+    {
+      "key": "goku_ssj_ki",
+      "asset": "game/assets/poses/goku_ssj_ki.png",
+      "source": "docs/art/roster/goku-power-poses-source.png",
+      "box": {
+        "left": 209,
+        "top": 512,
+        "width": 232,
+        "height": 492
+      },
+      "resolution": 3
+    },
+    {
+      "key": "goku_ssj_genki",
+      "asset": "game/assets/poses/goku_ssj_genki.png",
+      "source": "docs/art/roster/goku-power-poses-source.png",
+      "box": {
+        "left": 614,
+        "top": 514,
+        "width": 217,
+        "height": 490
+      },
+      "resolution": 3
+    },
+    {
+      "key": "goku_ui_ki",
+      "asset": "game/assets/poses/goku_ui_ki.png",
+      "source": "docs/art/roster/goku-power-poses-source.png",
+      "box": {
+        "left": 209,
+        "top": 1024,
+        "width": 232,
+        "height": 492
+      },
+      "resolution": 3
+    },
+    {
+      "key": "goku_ui_genki",
+      "asset": "game/assets/poses/goku_ui_genki.png",
+      "source": "docs/art/roster/goku-power-poses-source.png",
+      "box": {
+        "left": 613,
+        "top": 1025,
+        "width": 218,
+        "height": 492
+      },
+      "resolution": 3
+    }
+  ]
+}

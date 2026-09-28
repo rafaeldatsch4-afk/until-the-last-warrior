@@ -210,8 +210,8 @@ export class GokuFighter extends Fighter {
     const bs = scene as any;
     const dmg = Math.floor(120 * bs.getDamageMultiplier(transformLevel));
 
-    // Preparing a super is a cast, distinct from replenishing Ki.
-    attacker.play(bs.getAnimKey("goku", transformLevel, "special"));
+    // Spirit Bomb gathers energy overhead; Ki recovery keeps both fists down.
+    attacker.play(bs.getAnimKey("goku", transformLevel, "genki"));
 
     // Create giant spirit bomb
     const bomb = bs.add

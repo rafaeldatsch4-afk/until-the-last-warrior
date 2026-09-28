@@ -300,7 +300,7 @@ export default class StoreScene extends Phaser.Scene {
     );
 
     // Clean up event listeners when scene is shut down
-    this.events.on("shutdown", () => {
+    this.events.once("shutdown", () => {
       this.input.off("wheel", wheelHandler);
     });
 

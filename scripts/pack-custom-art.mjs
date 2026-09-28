@@ -71,3 +71,5 @@ for (const [i,id] of ['goku','vegeta','naruto','sasuke','luffy','saitama'].entri
 }
 await writeFile(`${root}/manifest.json`,JSON.stringify(manifest,null,2)+'\n');
 console.log(`Packed ${manifest.entries.length} existing wardrobe layers.`);
+// Repacking the original sheet must not erase reviewed replacement illustrations.
+await (await import('./pack-custom-hd.mjs')).packCustomHD();

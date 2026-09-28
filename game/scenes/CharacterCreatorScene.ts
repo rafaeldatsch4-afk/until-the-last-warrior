@@ -255,7 +255,8 @@ export default class CharacterCreatorScene extends Phaser.Scene {
 
     const gameState = this.registry.get("gameState");
     if (gameState && gameState.characters) {
-      const existing = gameState.characters.find((c: CharacterData) => c.id === 999);
+      const existing = (gameState.gameMode === 'story' ? gameState.storyState?.customCharacter : undefined)
+        ?? gameState.characters.find((c: CharacterData) => c.id === 999);
       if (existing) {
         const baseIndex = INITIAL_CHARACTERS.findIndex(c => c.key === existing.baseKey);
         if (baseIndex >= 0) {
@@ -754,31 +755,23 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       gameState.characters = (gameState.characters || []).filter((c: CharacterData) => c.id !== 999);
       gameState.characters.push(customChar);
       gameState.p1CharacterId = 999;
-      this.registry.set("gameState", gameState);
-      // @ts-ignore
-      if (window.UTLW) window.UTLW.save();
-      syncCloudSaveImmediate();
-    }
-
-    if (gameState?.gameMode === "story") {
-      if (!gameState.storyState) {
-        gameState.storyState = {
-          level: 0,
-          exp: 0,
-          statPoints: 0,
+      if (gameState.gameMode === "story") {
+        gameState.storyState ??= {
+          level: 0, exp: 0, statPoints: 0,
           stats: { attack: 10, defense: 10, ki: 10, speed: 10, health: 100 },
           stage: 1,
         };
+        gameState.storyState.customCharacter = customChar;
       }
-      gameState.storyState.customCharacter = customChar;
+      // Persist the complete appearance and story snapshot in one write.
       this.registry.set("gameState", gameState);
-      // @ts-ignore
       if (window.UTLW) window.UTLW.save();
       syncCloudSaveImmediate();
+    }
+    if (gameState?.gameMode === "story") {
       transitionTo(this, "StoryHubScene");
       return;
     }
-
     // Success Toast Notification
     const toast = this.add.container(this.cameras.main.width / 2, this.cameras.main.height / 2).setDepth(2000);
     const toastBg = this.add.graphics();

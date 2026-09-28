@@ -1,4 +1,5 @@
 import { registerFighterAnimations } from "../sprites/FighterAnimations";
+import { preloadPowerPoses, registerPowerPoses } from '../sprites/PowerPoses';
 import { preloadArenaArt } from "../battle/ArenaAtlases";
 import { preloadRosterAtlases } from "../sprites/RosterAtlases";
 import { preloadCustomArt } from "../sprites/CustomArt";
@@ -41,6 +42,7 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   preload() {
+    preloadPowerPoses(this);
     preloadArenaArt(this);
     preloadItachiAtlases(this);
     preloadRosterAtlases(this);
@@ -212,6 +214,7 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   finishPreload() {
+    registerPowerPoses(this);
     const currentState = window.UTLW?.state;
     const chars = currentState?.characters ?? INITIAL_CHARACTERS;
 

@@ -3,7 +3,7 @@ import { transitionTo } from "../utils/sceneTransition";
 import { syncCloudSaveImmediate } from "../systems/CloudSave";
 import { GameState, CharacterData } from "../types";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
-import { generateCustomSprite } from "../sprites/CustomSprite";
+import { ensureCustomAppearance } from "../sprites/CustomAppearance";
 import { INITIAL_CHARACTERS } from "../data";
 import { StoryStatsMath } from "../systems/StoryStatsMath";
 
@@ -14,53 +14,20 @@ export default class StoryHubScene extends Phaser.Scene {
     super("StoryHubScene");
   }
 
-  private ensureCustomAnimsExist(key: string) {
-    const createAnim = (
-      animKey: string,
-      texture: string,
-      start: number,
-      end: number,
-      frameRate: number,
-      repeat: number = -1,
-    ) => {
-      if (!this.textures.exists(texture)) return;
-      if (this.anims.exists(animKey)) return;
-
-      const tex = this.textures.get(texture);
-      const frames: Phaser.Types.Animations.AnimationFrame[] = [];
-      for (let i = start; i <= end; i++) {
-        if (!tex.has(i.toString())) {
-          frames.push({ key: texture, frame: "0" });
-        } else {
-          frames.push({ key: texture, frame: i.toString() });
-        }
-      }
-      this.anims.create({
-        key: animKey,
-        frames: frames,
-        frameRate: frameRate,
-        repeat: repeat,
-      });
-    };
-
-    const createAllForTex = (baseKey: string, texKey: string) => {
-      createAnim(`${baseKey}_idle`, texKey, 0, 3, 10);
-      createAnim(`${baseKey}_walk`, texKey, 4, 7, 12);
-      createAnim(`${baseKey}_attack`, texKey, 8, 9, 16, 0);
-      createAnim(`${baseKey}_punch`, texKey, 8, 8, 12, 0);
-      createAnim(`${baseKey}_kick`, texKey, 9, 9, 12, 0);
-      createAnim(`${baseKey}_special`, texKey, 8, 9, 12, -1);
-      createAnim(`${baseKey}_defend`, texKey, 10, 10, 10, -1);
-      createAnim(`${baseKey}_transform`, texKey, 0, 3, 24, -1);
-      createAnim(`${baseKey}_charge`, texKey, 11, 11, 10, -1);
-    };
-
-    createAllForTex(key, key);
-    createAllForTex(`${key}_ssj`, `${key}_ssj`);
-    createAllForTex(`${key}_ui`, `${key}_ui`);
-  }
-
   create() {
+    // Rebuild against the new visible area after rotation or a window resize.
+    let resizeTimer: Phaser.Time.TimerEvent | undefined;
+    const onResize = () => {
+      resizeTimer?.remove();
+      resizeTimer = this.time.delayedCall(120, () => this.scene.restart());
+    };
+    this.scale.on(Phaser.Scale.Events.RESIZE, onResize);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off(Phaser.Scale.Events.RESIZE, onResize);
+      resizeTimer?.remove();
+    });
+    this.events.off('update-stat-buttons');
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>this.events.off('update-stat-buttons'));
     this.cameras.main.fadeIn(300, 0, 0, 0);
     this.gameState = this.registry.get("gameState");
 
@@ -155,15 +122,7 @@ export default class StoryHubScene extends Phaser.Scene {
     const charCenterX = leftPanelX + leftPanelW / 2;
 
     if (char) {
-       // Ensure textures and animations exist for custom character
-       if (!this.textures.exists("custom_999")) {
-         try {
-           generateCustomSprite(this, char);
-         } catch (e) {
-           console.error("Error generating custom sprite in StoryHub:", e);
-         }
-       }
-       this.ensureCustomAnimsExist("custom_999");
+       ensureCustomAppearance(this, char);
 
        // Character Name Badge
        this.add.text(charCenterX, panelY + 18, char.name.toUpperCase(), { 
@@ -650,7 +609,7 @@ export default class StoryHubScene extends Phaser.Scene {
   }
 
   startNextBattle() {
-     if (!this.gameState?.storyState) return;
+     if (!this.gameState?.storyState?.customCharacter) return;
      const storyState = this.gameState.storyState;
      
      // 1. Ensure gameMode is set to story
@@ -664,14 +623,7 @@ export default class StoryHubScene extends Phaser.Scene {
         this.gameState.characters = this.gameState.characters.filter(c => c.id !== 999);
         this.gameState.characters.push(storyState.customCharacter);
         
-        if (!this.textures.exists("custom_999")) {
-           try {
-             generateCustomSprite(this, storyState.customCharacter);
-           } catch (e) {
-             console.error("Error generating custom sprite for battle:", e);
-           }
-        }
-        this.ensureCustomAnimsExist("custom_999");
+        ensureCustomAppearance(this, storyState.customCharacter);
      }
      
      this.gameState.p1CharacterId = 999;
@@ -742,4 +694,3 @@ export default class StoryHubScene extends Phaser.Scene {
     return container;
   }
 }
-

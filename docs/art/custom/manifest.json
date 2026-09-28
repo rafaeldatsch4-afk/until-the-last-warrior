@@ -25,17 +25,6 @@
       ]
     },
     {
-      "key": "torso-jotaro",
-      "asset": "game/assets/custom/torso-jotaro.png",
-      "source": "docs/art/custom/torso-source.png",
-      "sourceBox": [
-        793,
-        0,
-        397,
-        397
-      ]
-    },
-    {
       "key": "torso-vegeta",
       "asset": "game/assets/custom/torso-vegeta.png",
       "source": "docs/art/custom/torso-source.png",
@@ -500,6 +489,24 @@
         512,
         476
       ]
+    },
+    {
+      "key": "portrait-jotaro",
+      "source": "docs/art/custom/portrait-jotaro-source.png",
+      "asset": "game/assets/custom/portrait-jotaro.png",
+      "highResolution": true
+    },
+    {
+      "key": "portrait-chapolim",
+      "source": "docs/art/custom/portrait-chapolim-source.png",
+      "asset": "game/assets/custom/portrait-chapolim.png",
+      "highResolution": true
+    },
+    {
+      "key": "torso-jotaro",
+      "source": "docs/art/custom/torso-jotaro-hd-source.png",
+      "asset": "game/assets/custom/torso-jotaro.png",
+      "highResolution": true
     }
   ]
 }

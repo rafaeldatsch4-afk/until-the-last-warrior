@@ -84,7 +84,7 @@ test('save uses UI-selected powers and registers punch, kick and casting for all
   scene.state.loadCustomData({gi1:0,gi2:0,skin:0,hair:0,part_head:'vegeta',part_accessory:'straw_hat',color_torso_1:0x123456});
   scene.ui = {customSp1Id:'spiderman',customSp1Name:'Web Shooter',customSp2Id:'naruto',customSp2Name:'Rasenshuriken'};
   const registered = new Map();
-  scene.textures = {exists:()=>true,get:key=>({key,source:[{isCanvas:true}],has:()=>true})};
+  scene.textures = {exists:key=>!key.endsWith('_ki')&&!key.endsWith('_genki'),get:key=>({key,customWardrobeArt:true,source:[{isCanvas:true}],has:()=>true})};
   scene.anims = {exists:()=>false,create:config=>registered.set(config.key,config)};
   globalThis.window = {UTLW:{save(){}}};
   scene.saveAndEquipCharacter();
@@ -107,4 +107,23 @@ test('save uses UI-selected powers and registers punch, kick and casting for all
   assert.equal(scene.state.getEquippedHead(),'vegeta');
   assert.equal(scene.state.getColor('torso_1'),0x123456);
   assert.equal(scene.customSp1Id,'spiderman');
+});
+
+test('editing story loads its saved hero and preserves progression in one complete save',()=>{
+  const scene=new CreatorScene();
+  const look={gi1:0xff4400,gi2:0,skin:0xf1c394,hair:0,part_head:'jotaro',sp1_id:'goku',sp2_id:'goku'};
+  const hero={id:999,key:'custom_999',baseKey:'goku',name:'Hero da historia',customData:look};
+  const story={level:12,exp:77,stage:9,statPoints:4,stats:{attack:15,defense:12,ki:14,speed:13,health:105},customCharacter:hero};
+  const gameState={gameMode:'story',characters:[{...hero,name:'Outro modo',customData:{...look,part_head:'vegeta'}}],storyState:structuredClone(story)};
+  scene.registry={get:()=>gameState,set(){}};
+  let saved=[];globalThis.window={UTLW:{save(){saved.push(structuredClone(gameState));}}};
+  scene.loadInitialCustomData();assert.equal(scene.state.getEquippedHead(),'jotaro');assert.equal(scene.builderData.name,hero.name);
+  scene.ui={customSp1Id:'goku',customSp1Name:'Kamehameha',customSp2Id:'goku',customSp2Name:'Genki Dama'};
+  scene.textures={exists:key=>!key.endsWith('_ki')&&!key.endsWith('_genki'),get:key=>({key,customWardrobeArt:true,has:()=>true})};
+  scene.anims={exists:()=>false,create(){}};
+  scene.state.nextPart('head',partOptions.head);scene.saveAndEquipCharacter();
+  assert.equal(saved.length,1);
+  assert.deepEqual({...gameState.storyState,customCharacter:undefined},{...story,customCharacter:undefined});
+  assert.deepEqual(saved[0].storyState.customCharacter,gameState.characters[0]);
+  assert.equal(saved[0].storyState.customCharacter.customData.part_head,'naruto');
 });

@@ -48,8 +48,16 @@ export function registerFighterAnimations(scene: AnimationScene, key: string) {
     createAnim(`${baseKey}_special`, texKey, specialFrame, specialFrame, 12, -1);
     createAnim(`${baseKey}_defend`, texKey, 10, 10, 10, -1);
     createAnim(`${baseKey}_transform`, texKey, 0, 3, 24, -1);
-    const chargeFrame = pose?.charge ?? 11;
-    createAnim(`${baseKey}_charge`, texKey, chargeFrame, chargeFrame === 0 ? 3 : chargeFrame, 10, -1);
+    const tex=scene.textures.exists(texKey)?scene.textures.get(texKey):undefined;
+    const modular=!!(tex as typeof tex & {customWardrobeArt?:boolean})?.customWardrobeArt;
+    const kiTexture=scene.textures.exists(texKey+'_ki')?texKey+'_ki':texKey;
+    const chargeFrame=kiTexture!==texKey?0:modular?11:0;
+    createAnim(`${baseKey}_charge`,kiTexture,chargeFrame,kiTexture===texKey&&!modular?3:chargeFrame,10,-1);
+    if(key==='goku'||key==='custom_999') {
+      const genkiTexture=scene.textures.exists(texKey+'_genki')?texKey+'_genki':texKey;
+      const genkiFrame=genkiTexture!==texKey?0:tex?.has('12')?12:11;
+      createAnim(`${baseKey}_genki`,genkiTexture,genkiFrame,genkiFrame,10,-1);
+    }
   };
 
   createAllForTex(key, key);

@@ -5,6 +5,7 @@ import { BattleReward } from "../battle/BattleReward";
 import { BattleEffects } from "../battle/BattleEffects";
 import { CombatMath } from "../utils/CombatMath";
 import { StoryStatsMath } from "../systems/StoryStatsMath";
+import { ensureCustomAppearance } from '../sprites/CustomAppearance';
 import { Responsive } from "../utils/Responsive";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import { BattleInput } from "../battle/BattleInput";
@@ -299,6 +300,10 @@ export default class BattleScene extends Phaser.Scene {
       this.enemyData =
         available[Phaser.Math.Between(0, available.length - 1)] || chars[1];
     }
+
+    // Rebuild local/cloud custom saves before creating either fighter sprite.
+    ensureCustomAppearance(this,this.playerData);
+    if(this.enemyData.key!==this.playerData.key)ensureCustomAppearance(this,this.enemyData);
 
     // Set arena to back depth
     const arenas = [
@@ -2909,7 +2914,8 @@ export default class BattleScene extends Phaser.Scene {
       data.key === "goku" ||
       data.key === "vegeta" ||
       data.key === "naruto" ||
-      data.key === "gohan"
+      data.key === "gohan" ||
+      (data.key === 'custom_999' && ['goku','vegeta','naruto','gohan'].includes(data.baseKey || 'goku'))
     )
       maxLevel = 2; // Goku, Vegeta, Naruto, Gohan have 2 transformations
 
@@ -3129,7 +3135,8 @@ export default class BattleScene extends Phaser.Scene {
               isUI ||
               isUE ||
               isKuramaMode ||
-              (data.key === "gohan" && nextLevel === 2)
+              (data.key === "gohan" && nextLevel === 2) ||
+              (data.key === 'custom_999' && nextLevel === 2)
             )
               texKey = `${data.key}_ui`;
 
@@ -3448,7 +3455,8 @@ export default class BattleScene extends Phaser.Scene {
     const transLevel = isPlayer
       ? this.playerTransformLevel
       : this.enemyTransformLevel;
-    const animKeySpecial = this.getAnimKey(data.key, transLevel, "special");
+    const superBase=data.key==='custom_999'?(data.customData?.sp2_id||data.baseKey):data.key;
+    const animKeySpecial = this.getAnimKey(data.key, transLevel, isSuper&&superBase==='goku'?'genki':'special');
     const animKeyIdle = this.getAnimKey(data.key, transLevel, "idle");
     this.animateCastSequence(
       sprite,

@@ -11,12 +11,12 @@ test('HD atlas frames keep combat dimensions and sample disjoint complete cells'
       const r=customFrameRegion(i,resolution);
       assert.equal(r.width,192); assert.equal(r.height,128);
       assert.equal(r.u1-r.u0,.25);
-      assert.ok(Math.abs(r.v1-r.v0-1/3)<1e-10);
+      assert.ok(Math.abs(r.v1-r.v0-1/CUSTOM_FRAME.rows)<1e-10);
       assert.equal(r.x,r.u0*768*resolution);
-      assert.equal(r.y,r.v0*384*resolution);
+      assert.equal(r.y,r.v0*128*CUSTOM_FRAME.rows*resolution);
       cells.add(r.x+','+r.y);
     }
-    assert.equal(cells.size,12);
+    assert.equal(cells.size,13);
   }
 });
 

@@ -21,9 +21,9 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   height: 540,
   parent: "game-container",
   backgroundColor: "#071026",
-  pixelArt: true,
-  antialias: false,
-  roundPixels: true,
+  pixelArt: false,
+  antialias: true,
+  roundPixels: false,
   scene: [
     BootScene,
     PreloadScene,
@@ -53,15 +53,15 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: 960,
     height: 540,
-    // Renderiza em 2x (1920x1080 físico) para nitidez em telas HD, mantendo a
-    // resolução lógica em 960x540 (todos os cálculos de posição continuam iguais).
-    zoom: 2,
+    // Zoom changes CSS size, not the drawing-buffer resolution in Phaser 3.
+    // ENVELOP handles display scaling; keep the established logical input grid.
+    zoom: 1,
   },
   render: {
-    pixelArt: true,
-    antialias: false,
-    antialiasGL: false,
-    roundPixels: true,
+    pixelArt: false,
+    antialias: true,
+    antialiasGL: true,
+    roundPixels: false,
     powerPreference: "high-performance",
     batchSize: 4096,
   },

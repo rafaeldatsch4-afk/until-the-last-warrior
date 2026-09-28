@@ -2,7 +2,7 @@ import { ColorPalette } from "../utils/ColorPalette";
 import Phaser from "phaser";
 import { CharacterData } from "../types";
 import { composeCustomArt, hasCustomArt } from "./CustomArt";
-import { customFrameRegion } from "./CustomArtLayout";
+import { CUSTOM_FRAME, customFrameRegion } from "./CustomArtLayout";
 
 export function generateCustomSprite(
   scene: Phaser.Scene,
@@ -17,6 +17,22 @@ export function generateCustomSprite(
   };
 
   const layeredArt = hasCustomArt(scene);
+  if (layeredArt) {
+    for (const suffix of ['', '_ssj', '_ui']) {
+      const textureName=key+suffix;
+      composeCustomArt(scene,textureName,colors);
+      const tex=scene.textures.get(textureName);
+      Object.assign(tex,{customAppearanceSignature:JSON.stringify(charData.customData)});
+      const resolution=(tex as Phaser.Textures.Texture & {customArtResolution:number}).customArtResolution;
+      tex.setFilter(Phaser.Textures.FilterMode.LINEAR);
+      for(let i=0;i<CUSTOM_FRAME.count;i++) {
+        const r=customFrameRegion(i,resolution);
+        const frame=tex.add(String(i),0,r.x,r.y,r.width,r.height);
+        frame.setUVs(r.width,r.height,r.u0,r.v0,r.u1,r.v1);
+      }
+    }
+    return {torsoBounds:{minX:43,minY:35,w:11,h:12}};
+  }
 
   const generateForm = (form: number) => {
     const pAcc = colors.part_accessory || "none";
@@ -1927,6 +1943,7 @@ export function generateCustomSprite(
 
     if (scene.textures.exists(textureName)) {
       const tex = scene.textures.get(textureName);
+      Object.assign(tex,{customAppearanceSignature:JSON.stringify(charData.customData)});
       const resolution = (tex as Phaser.Textures.Texture & {customArtResolution?:number}).customArtResolution;
       tex.setFilter(resolution ? Phaser.Textures.FilterMode.LINEAR : Phaser.Textures.FilterMode.NEAREST);
       const fw = FRAME_WIDTH * SCALE, fh = FRAME_HEIGHT * SCALE;

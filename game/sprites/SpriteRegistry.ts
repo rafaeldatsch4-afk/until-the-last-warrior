@@ -61,13 +61,14 @@ export function generateAllSprites(scene: Phaser.Scene): void {
     }
   });
 
-  // Ensure all pixel art character textures use NEAREST filtering so they remain crisp pixel-art
+  // Procedural pixel art keeps its grid; illustrations retain smooth sampling.
   scene.textures.getTextureKeys().forEach((key) => {
     if (key !== "__DEFAULT" && key !== "__MISSING" && !key.startsWith("btn_") && !key.startsWith("ui_")) {
       try {
         const tex = scene.textures.get(key);
         if (tex) {
-          tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
+          const illustrated=(tex as Phaser.Textures.Texture & {customWardrobeArt?:boolean}).customWardrobeArt || !tex.source?.[0]?.isCanvas;
+          tex.setFilter(illustrated?Phaser.Textures.FilterMode.LINEAR:Phaser.Textures.FilterMode.NEAREST);
         }
       } catch (e) {}
     }

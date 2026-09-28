@@ -54,9 +54,9 @@ test('layered custom fighters use their own hand sockets and preserve mirrored e
  const s=sprite('custom_999',8);s.texture.source[0].isCanvas=true;s.texture.customWardrobeArt=true;
  assert.equal(getCombatPose(s.texture).special,8);
  assert.equal(getCombatPose(s.texture).charge,11);
- assert.deepEqual(getAttackSocket(s),{x:611,y:309});
- s.flipX=true;assert.deepEqual(getAttackSocket(s),{x:389,y:309});
- s.frame.name='11';assert.deepEqual(getAttackSocket(s),{x:446,y:243});
+ assert.deepEqual(getAttackSocket(s),{x:611,y:297});
+ s.flipX=true;assert.deepEqual(getAttackSocket(s),{x:389,y:297});
+ s.frame.name='11';assert.deepEqual(getAttackSocket(s),{x:446,y:375});
 });
 
 test('matching custom outfits retain the reviewed roster animation sockets',()=>{
@@ -68,7 +68,7 @@ test('matching custom outfits retain the reviewed roster animation sockets',()=>
 test('online animation IDs preserve existing protocol and distinguish Ki, punches and kicks',()=>{
  const old=['idle','walk','attack','special','defend','transform','jump','hit','ko'];
  old.forEach((name,id)=>assert.equal(animKeyToId('goku_'+name),id));
- for(const name of ['charge','punch','kick'])assert.equal(animIdToSuffix(animKeyToId('goku_ssj_'+name)),name);
+ for(const name of ['charge','punch','kick','genki'])assert.equal(animIdToSuffix(animKeyToId('goku_ssj_'+name)),name);
 });
 
 test('Kamehameha keeps the casting pose and spawns core/glow at the hands after crossing sides',()=>{
@@ -87,4 +87,16 @@ test('Kamehameha keeps the casting pose and spawns core/glow at the hands after 
   }
   tweens.shift().onComplete();tweens.shift().onComplete();assert.equal(damage,40);assert.equal(complete,1);
  }
+});
+
+test('Genki Dama holds the overhead pose while gathering, then throws and returns to idle',()=>{
+ const mod=modules.find(m=>Object.keys(m).some(k=>/Goku/.test(k)));
+ const Goku=Object.values(mod).find(v=>typeof v==='function'&&v.prototype?.performSuper);
+ const played=[],tweens=[];let complete=0;
+ const attacker={x:300,y:270,play(key){played.push(key);return this;}};
+ const shape=()=>({setDepth(){return this;},setAlpha(){return this;},setBlendMode(){return this;},destroy(){}});
+ const scene={getAnimKey:(k,l,a)=>k+'_'+a,getDamageMultiplier:()=>1,scene:{isActive:()=>true},add:{circle:shape},time:{addEvent:()=>({remove(){}})},tweens:{add:t=>tweens.push(t)},cameras:{main:{shake(){}}},createImpactEffect(){},takeDamage(){},onSpecialComplete(){complete++;}};
+ new Goku().performSuper({scene,attacker,defender:{x:900,y:270},isPlayer:true,transformLevel:0});
+ assert.deepEqual(played,['goku_genki']);tweens.shift().onComplete();assert.equal(played.at(-1),'goku_punch');
+ tweens.shift().onComplete();tweens.shift().onComplete();assert.equal(played.at(-1),'goku_idle');assert.equal(complete,1);
 });
