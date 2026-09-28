@@ -3,6 +3,7 @@ import type Phaser from 'phaser';
 import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
 import { CUSTOM_FRAME } from './CustomArtLayout';
+import { genkiTorsoRect } from './GenkiTorsoLayout';
 
 const urls = import.meta.glob<string>('../assets/custom/*.png', { eager: true, query: '?url', import: 'default' });
 const prefix = 'wardrobe:';
@@ -103,6 +104,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   const ctx = canvas.getContext('2d')!;
   ctx.scale(resolution,resolution);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   const torso = tint(scene, 'torso-' + (data.part_torso || 'goku'), { primary: data.color_torso_1 ?? data.gi1, secondary: data.color_torso_2 ?? data.gi2, skin: data.skin });
+  const raisedTorso = tint(scene, 'torso-genki-' + (data.part_torso || 'goku'), { primary: data.color_torso_1 ?? data.gi1, secondary: data.color_torso_2 ?? data.gi2, skin: data.skin });
   const legSource = tint(scene, 'legs-' + (data.part_legs || 'goku'), { primary: data.color_legs_1 ?? data.gi1, secondary: data.color_legs_2 ?? data.gi2, skin: data.skin });
   // Some atlas cells contain a few pixels of the next row. Those must not extend
   // the trousers' bounds or masquerade as an ankle attachment.
@@ -179,7 +181,13 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     ctx.fillRect(neckX-2.5+lean,64+bob,5,10);
     // Independently articulated arms preserve actual punch, guard and charge silhouettes.
     const tw = torso.width, th = torso.height;
-    if(!punch && !defend && !charge && !genki) {
+    if(genki) {
+      // A continuous drawing keeps the shoulders, chest, sleeves and hands
+      // joined. Rotating cropped arms left old shoulder caps and open seams.
+      const rect=genkiTorsoRect(data.part_torso || 'goku',neckX);
+      draw(raisedTorso,rect.x+lean,rect.y+bob,rect.width,rect.height);
+      draw(portrait,lean,headBob,192,128);
+    } else if(!punch && !defend && !charge) {
       // Keep shoulders, arms and belt joined in relaxed poses; preserve source proportions.
       draw(torso,79+lean,66+bob,36,36);
       draw(portrait,lean,headBob,192,128);
@@ -190,16 +198,16 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     draw(portrait,lean,headBob,192,128);
     for (let side=0;side<2;side++) {
       const x = side ? 106 : 87;
-      ctx.save(); ctx.translate(x + lean, (genki?72:76) + bob);
-      ctx.rotate(genki ? (side ? -2.95 : 2.95) : charge ? (side ? -.18 : .18) : defend ? (side ? 2.25 : -2.25) : punch && side ? -1.55 : phase*(side ? 0.1 : -0.1));
+      ctx.save(); ctx.translate(x + lean, 76 + bob);
+      ctx.rotate(charge ? (side ? -.18 : .18) : defend ? (side ? 2.25 : -2.25) : punch && side ? -1.55 : phase*(side ? 0.1 : -0.1));
       // Discard the inner coat hem caught by the rectangular arm crop.
       ctx.beginPath();
-      const armLeft=side?0:-9,armHeight=genki?34:27;
+      const armLeft=side?0:-9,armHeight=27;
       const armPoint=(x:number,y:number)=>[armLeft+(side?x:9-x),y] as const;
       ctx.moveTo(...armPoint(0,-1));
       for(const point of [[9,-1],[9,armHeight],[0,armHeight],[0,armHeight-3],[2.5,armHeight-7],[2.5,12],[0,6]])ctx.lineTo(...armPoint(point[0],point[1]));
       ctx.closePath();ctx.clip();
-      ctx.drawImage(torso, side ? tw*.75 : 0, th*.25, tw*.25, th*.75, side ? 0 : -9, -1, 9, genki?34:27);
+      ctx.drawImage(torso, side ? tw*.75 : 0, th*.25, tw*.25, th*.75, side ? 0 : -9, -1, 9, 27);
       ctx.restore();
     }
     }
