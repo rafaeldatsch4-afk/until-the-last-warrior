@@ -3180,10 +3180,145 @@
       "name": "Batman",
       "description": "Batman gray armored suit, black pointed-ear cowl and cape, black bat chest symbol, yellow utility belt, black gloves/boots",
       "targetHeight": 64,
-      "status": "generation-blocked",
-      "source": null,
-      "asset": null,
-      "reason": "Image service rejected generation on multiple attempts; existing procedural sprite and animations preserved."
+      "status": "packed",
+      "source": "docs/art/roster/batman-source.png",
+      "asset": "game/assets/roster/batman-v1.png",
+      "anchors": [
+        180.8569370886016,
+        620.8569370886016,
+        1060.8569370886016,
+        1500.8569370886016,
+        173.7486744616893,
+        613.7486744616892,
+        1053.7486744616892,
+        1493.7486744616892,
+        163.22719789059403,
+        659.6433402239946,
+        1057.2962853613924,
+        1490.2184266069064
+      ],
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 135,
+          "y": 85,
+          "width": 110,
+          "height": 264,
+          "anchor": 180.8569370886016,
+          "atlasX": 85,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 575,
+          "y": 87,
+          "width": 112,
+          "height": 262,
+          "anchor": 620.8569370886016,
+          "atlasX": 277,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 1013,
+          "y": 89,
+          "width": 117,
+          "height": 260,
+          "anchor": 1060.8569370886016,
+          "atlasX": 468,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1455,
+          "y": 87,
+          "width": 112,
+          "height": 262,
+          "anchor": 1500.8569370886016,
+          "atlasX": 661,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 113,
+          "y": 448,
+          "width": 143,
+          "height": 261,
+          "anchor": 173.7486744616893,
+          "atlasX": 849,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 5,
+          "x": 563,
+          "y": 446,
+          "width": 105,
+          "height": 263,
+          "anchor": 613.7486744616892,
+          "atlasX": 1044,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 993,
+          "y": 448,
+          "width": 139,
+          "height": 261,
+          "anchor": 1053.7486744616892,
+          "atlasX": 1233,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1443,
+          "y": 446,
+          "width": 104,
+          "height": 263,
+          "anchor": 1493.7486744616892,
+          "atlasX": 1428,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 96,
+          "y": 812,
+          "width": 176,
+          "height": 257,
+          "anchor": 163.22719789059403,
+          "atlasX": 1616,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 9,
+          "x": 566,
+          "y": 804,
+          "width": 211,
+          "height": 265,
+          "anchor": 659.6433402239946,
+          "atlasX": 1801,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 10,
+          "x": 1001,
+          "y": 813,
+          "width": 121,
+          "height": 256,
+          "anchor": 1057.2962853613924,
+          "atlasX": 2002,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1416,
+          "y": 812,
+          "width": 188,
+          "height": 257,
+          "anchor": 1490.2184266069064,
+          "atlasX": 2190,
+          "atlasY": 66
+        }
+      ]
     },
     {
       "key": "batman_ssj",
@@ -3191,10 +3326,145 @@
       "name": "Batman",
       "description": "Armored Batman: heavier gunmetal exosuit, angular steel chest and shoulders, cyan-lit eyes, black cape",
       "targetHeight": 64,
-      "status": "generation-blocked",
-      "source": null,
-      "asset": null,
-      "reason": "Image service rejected generation on multiple attempts; existing procedural sprite and animations preserved."
+      "status": "packed",
+      "source": "docs/art/roster/batman_ssj-source.png",
+      "asset": "game/assets/roster/batman_ssj-v1.png",
+      "anchors": [
+        180.8569370886016,
+        620.8569370886016,
+        1060.8569370886016,
+        1500.8569370886016,
+        173.7486744616893,
+        613.7486744616892,
+        1053.7486744616892,
+        1493.7486744616892,
+        163.22719789059403,
+        659.6433402239946,
+        1057.2962853613924,
+        1490.2184266069064
+      ],
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 135,
+          "y": 85,
+          "width": 110,
+          "height": 264,
+          "anchor": 180.8569370886016,
+          "atlasX": 85,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 575,
+          "y": 87,
+          "width": 112,
+          "height": 262,
+          "anchor": 620.8569370886016,
+          "atlasX": 277,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 1013,
+          "y": 89,
+          "width": 117,
+          "height": 260,
+          "anchor": 1060.8569370886016,
+          "atlasX": 468,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1455,
+          "y": 87,
+          "width": 112,
+          "height": 262,
+          "anchor": 1500.8569370886016,
+          "atlasX": 661,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 113,
+          "y": 448,
+          "width": 143,
+          "height": 261,
+          "anchor": 173.7486744616893,
+          "atlasX": 849,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 5,
+          "x": 563,
+          "y": 446,
+          "width": 105,
+          "height": 263,
+          "anchor": 613.7486744616892,
+          "atlasX": 1044,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 6,
+          "x": 993,
+          "y": 448,
+          "width": 139,
+          "height": 261,
+          "anchor": 1053.7486744616892,
+          "atlasX": 1233,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1443,
+          "y": 446,
+          "width": 104,
+          "height": 263,
+          "anchor": 1493.7486744616892,
+          "atlasX": 1428,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 8,
+          "x": 96,
+          "y": 812,
+          "width": 176,
+          "height": 257,
+          "anchor": 163.22719789059403,
+          "atlasX": 1616,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 9,
+          "x": 566,
+          "y": 804,
+          "width": 211,
+          "height": 265,
+          "anchor": 659.6433402239946,
+          "atlasX": 1801,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 10,
+          "x": 1001,
+          "y": 813,
+          "width": 121,
+          "height": 256,
+          "anchor": 1057.2962853613924,
+          "atlasX": 2002,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1416,
+          "y": 812,
+          "width": 188,
+          "height": 257,
+          "anchor": 1490.2184266069064,
+          "atlasX": 2190,
+          "atlasY": 66
+        }
+      ]
     },
     {
       "key": "thukuna",
@@ -4278,10 +4548,145 @@
       "name": "Spider-Man",
       "description": "Classic red-and-blue Spider-Man suit with black web pattern, large white eye lenses, black spider emblem",
       "targetHeight": 64,
-      "status": "generation-blocked",
-      "source": null,
-      "asset": null,
-      "reason": "Image service rejected generation on multiple attempts; existing procedural sprite and animations preserved."
+      "status": "packed",
+      "source": "docs/art/roster/spiderman-source.png",
+      "asset": "game/assets/roster/spiderman-v1.png",
+      "anchors": [
+        180.8569370886016,
+        620.8569370886016,
+        1060.8569370886016,
+        1500.8569370886016,
+        173.7486744616893,
+        613.7486744616892,
+        1053.7486744616892,
+        1493.7486744616892,
+        163.22719789059403,
+        659.6433402239946,
+        1057.2962853613924,
+        1490.2184266069064
+      ],
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 135,
+          "y": 96,
+          "width": 110,
+          "height": 253,
+          "anchor": 180.8569370886016,
+          "atlasX": 84,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 575,
+          "y": 98,
+          "width": 112,
+          "height": 251,
+          "anchor": 620.8569370886016,
+          "atlasX": 276,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 1015,
+          "y": 100,
+          "width": 115,
+          "height": 249,
+          "anchor": 1060.8569370886016,
+          "atlasX": 468,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1455,
+          "y": 98,
+          "width": 112,
+          "height": 251,
+          "anchor": 1500.8569370886016,
+          "atlasX": 660,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 124,
+          "y": 460,
+          "width": 132,
+          "height": 249,
+          "anchor": 173.7486744616893,
+          "atlasX": 851,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 5,
+          "x": 585,
+          "y": 458,
+          "width": 83,
+          "height": 251,
+          "anchor": 613.7486744616892,
+          "atlasX": 1049,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 6,
+          "x": 1017,
+          "y": 460,
+          "width": 115,
+          "height": 249,
+          "anchor": 1053.7486744616892,
+          "atlasX": 1239,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1465,
+          "y": 458,
+          "width": 82,
+          "height": 251,
+          "anchor": 1493.7486744616892,
+          "atlasX": 1433,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 8,
+          "x": 105,
+          "y": 825,
+          "width": 167,
+          "height": 244,
+          "anchor": 163.22719789059403,
+          "atlasX": 1617,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 9,
+          "x": 596,
+          "y": 817,
+          "width": 181,
+          "height": 252,
+          "anchor": 659.6433402239946,
+          "atlasX": 1808,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 10,
+          "x": 1001,
+          "y": 824,
+          "width": 121,
+          "height": 245,
+          "anchor": 1057.2962853613924,
+          "atlasX": 2002,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1428,
+          "y": 824,
+          "width": 179,
+          "height": 245,
+          "anchor": 1490.2184266069064,
+          "atlasX": 2192,
+          "atlasY": 66
+        }
+      ]
     },
     {
       "key": "spiderman_ssj",
@@ -4289,10 +4694,145 @@
       "name": "Spider-Man",
       "description": "Black symbiote Spider-Man suit, white eye lenses, large white chest spider and white back-of-hand patches",
       "targetHeight": 64,
-      "status": "generation-blocked",
-      "source": null,
-      "asset": null,
-      "reason": "Image service rejected generation on multiple attempts; existing procedural sprite and animations preserved."
+      "status": "packed",
+      "source": "docs/art/roster/spiderman_ssj-source.png",
+      "asset": "game/assets/roster/spiderman_ssj-v1.png",
+      "anchors": [
+        180.8569370886016,
+        620.8569370886016,
+        1060.8569370886016,
+        1500.8569370886016,
+        173.7486744616893,
+        613.7486744616892,
+        1053.7486744616892,
+        1493.7486744616892,
+        163.22719789059403,
+        659.6433402239946,
+        1057.2962853613924,
+        1490.2184266069064
+      ],
+      "frames": [
+        {
+          "sourceFrame": 0,
+          "x": 135,
+          "y": 96,
+          "width": 110,
+          "height": 253,
+          "anchor": 180.8569370886016,
+          "atlasX": 84,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 1,
+          "x": 575,
+          "y": 98,
+          "width": 112,
+          "height": 251,
+          "anchor": 620.8569370886016,
+          "atlasX": 276,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 2,
+          "x": 1015,
+          "y": 100,
+          "width": 115,
+          "height": 249,
+          "anchor": 1060.8569370886016,
+          "atlasX": 468,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 3,
+          "x": 1455,
+          "y": 98,
+          "width": 112,
+          "height": 251,
+          "anchor": 1500.8569370886016,
+          "atlasX": 660,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 4,
+          "x": 124,
+          "y": 460,
+          "width": 132,
+          "height": 249,
+          "anchor": 173.7486744616893,
+          "atlasX": 851,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 5,
+          "x": 585,
+          "y": 458,
+          "width": 83,
+          "height": 251,
+          "anchor": 613.7486744616892,
+          "atlasX": 1049,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 6,
+          "x": 1017,
+          "y": 460,
+          "width": 115,
+          "height": 249,
+          "anchor": 1053.7486744616892,
+          "atlasX": 1239,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 7,
+          "x": 1465,
+          "y": 458,
+          "width": 82,
+          "height": 251,
+          "anchor": 1493.7486744616892,
+          "atlasX": 1433,
+          "atlasY": 65
+        },
+        {
+          "sourceFrame": 8,
+          "x": 105,
+          "y": 825,
+          "width": 167,
+          "height": 244,
+          "anchor": 163.22719789059403,
+          "atlasX": 1617,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 9,
+          "x": 596,
+          "y": 817,
+          "width": 181,
+          "height": 252,
+          "anchor": 659.6433402239946,
+          "atlasX": 1808,
+          "atlasY": 64
+        },
+        {
+          "sourceFrame": 10,
+          "x": 1001,
+          "y": 824,
+          "width": 121,
+          "height": 245,
+          "anchor": 1057.2962853613924,
+          "atlasX": 2002,
+          "atlasY": 66
+        },
+        {
+          "sourceFrame": 11,
+          "x": 1428,
+          "y": 824,
+          "width": 179,
+          "height": 245,
+          "anchor": 1490.2184266069064,
+          "atlasX": 2192,
+          "atlasY": 66
+        }
+      ]
     },
     {
       "key": "saitama",
