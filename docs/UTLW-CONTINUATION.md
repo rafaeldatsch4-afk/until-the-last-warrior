@@ -44,5 +44,18 @@ O fluxo foi executado em Chrome com mouse/teclado a 1280 × 720 e com toque e us
 - Modo online desativado por enquanto: o servidor Socket.IO dependia do Railway, cujo período de teste acabou. Saves continuam no Firebase.
 - Cyber Zero e Overdrive já possuem atlas e registro de animações. A existência de nove registros não significa que haja arte exclusiva para dash, dano ou cada frame da transformação: o contrato atual ainda usa 12 quadros por forma.
 - Expansão visual do catálogo, múltiplos equipamentos simultâneos, itens de Vinícius 13 e novas poses completas continuam como etapas futuras; esta entrega corrige a base funcional do editor existente.
-- Bundle grande, sincronização de moedas e backend autoritativo para ranking permanecem trabalhos separados. Nenhuma mecânica de dano/custo, regra Firebase ou saldo de usuário foi alterada.
+- Sincronização de moedas e backend autoritativo para ranking permanecem trabalhos separados. Nenhuma mecânica de dano/custo, regra Firebase ou saldo de usuário foi alterada.
 - O conector Vercel conectado retornou 403 para o escopo `sla5`; logs privados e observabilidade dependem de uma conexão autorizada nesse escopo. A implantação pode ser verificada pelo status do commit no GitHub e pelo site público.
+
+## Ajustes de 29/09/2026
+
+- As 7 descrições provisórias ("Um poderoso lutador pronto para a batalha.") de Frieren, Optimus, Mini P.E.K.K.A, Chapolim, Batman, Gojo e Super Choque foram escritas. `metadata.json` descreve o jogo como luta 2D, não estratégia por turnos.
+- `BattleScene.ts`: os 44 blocos copiados de despacho (ataque, especial e super para cada um dos 22 lutadores) viraram uma chamada única via `FighterRegistry` (`fighterFor`). Antes da troca, um script confirmou que todos os blocos eram idênticos. O arquivo caiu de 5.650 para 4.755 linhas. Uma chave sem lutador registrado continua caindo no ataque/feixe genérico.
+- Build: Phaser, Firebase, React e Socket.IO saem em arquivos próprios. O código do jogo caiu de 3 MB para cerca de 710 KB, e uma atualização do jogo não força baixar o motor de novo.
+- Validação: lint, 83 testes, build e uma partida no Chromium com os 22 lutadores (soco, Ki, especial e super) sem erros de página. Com a CPU desligada, o dano de Chapolim, Batman e Cyber Zero foi idêntico ao da versão anterior.
+
+### Dependem de decisão do dono do jogo
+
+- Economia: o PvP local dá 100 moedas por luta para o jogador (comentário "shared stash"), e perder contra a CPU dá 25. 18 dos 22 personagens começam desbloqueados, então a loja vende só 4.
+- Moedas na nuvem: `AuthModal` substitui as moedas locais pelas de `users/{uid}` e depois `mergeCloudSaveIntoLocal` usa `Math.max` com o save de progresso. Gastar num aparelho pode "voltar" o saldo em outro. A correção (comparar data do último save) deve ser testada com o Firebase conectado.
+- Online: nenhum menu leva mais ao modo online. O código e o servidor foram mantidos para quando houver hospedagem.

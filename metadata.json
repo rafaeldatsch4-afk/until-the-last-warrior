@@ -1,6 +1,8 @@
 {
   "name": "Remix: Until the Last Warrior",
-  "description": "A Dragon Ball Z inspired turn-based strategy game using Phaser 3 inside React.",
+  "description": "An anime crossover 2D fighting fan game (Phaser 3 inside React) with story, arcade, tournament and local versus modes.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

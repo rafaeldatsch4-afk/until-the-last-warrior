@@ -116,7 +116,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 7,
     key: "frieren",
-    description: "Um poderoso lutador pronto para a batalha.",
+    description: "Maga elfa milenar e calma. Domina a magia ofensiva Zoltraak e estuda feitiços há séculos.",
     name: "Frieren",
     price: 700,
     unlocked: false,
@@ -132,7 +132,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 8,
     key: "optimus",
-    description: "Um poderoso lutador pronto para a batalha.",
+    description: "Líder dos Autobots. Um robô guerreiro honrado que se transforma em caminhão.",
     name: "Optimus Prime",
     price: 800,
     unlocked: true,
@@ -148,7 +148,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 9,
     key: "minipekka",
-    description: "Um poderoso lutador pronto para a batalha.",
+    description: "Pequeno cavaleiro blindado de lâmina pesada. Lento, resistente e obcecado por panquecas.",
     name: "Mini P.E.K.K.A",
     price: 900,
     unlocked: false,
@@ -180,7 +180,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 11,
     key: "chapolim",
-    description: "Um poderoso lutador pronto para a batalha.",
+    description: "O herói mais atrapalhado de todos. Se defende com a Marreta Biônica e as Pílulas de Nanicolina.",
     name: "Chapolim",
     price: 1200,
     unlocked: true,
@@ -212,7 +212,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 13,
     key: "batman",
-    description: "Um poderoso lutador pronto para a batalha.",
+    description: "O Cavaleiro das Trevas de Gotham. Detetive treinado ao limite, sem poderes, só com táticas e equipamentos.",
     name: "Batman",
     price: 1800,
     unlocked: true,
@@ -244,7 +244,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 15,
     key: "gojo",
-    description: "Um poderoso lutador pronto para a batalha.",
+    description: "O feiticeiro mais forte do Jujutsu. Sua técnica Ilimitado mantém qualquer ataque à distância.",
     name: "Satoru Gojo",
     price: 2500,
     unlocked: true,
@@ -340,7 +340,7 @@ export const INITIAL_CHARACTERS: CharacterData[] = [
   {
     id: 22,
     key: "static",
-    description: "Um poderoso lutador pronto para a batalha.",
+    description: "Jovem herói que controla a eletricidade. Voa sobre um disco metálico e dispara rajadas elétricas.",
     name: "Super Choque",
     price: 2000,
     unlocked: true,
