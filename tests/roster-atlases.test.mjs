@@ -32,14 +32,16 @@ test('desktop and mobile load exactly the same new atlas keys and URLs',()=>{
 // Inspect real shipped PNGs, rather than accepting an empty or incomplete glob.
 import {readFile,readdir} from 'node:fs/promises';
 import sharp from 'sharp';
-test('41 illustrated forms ship isolated frames; four blocked forms retain tested procedural fallback',async()=>{
+test('all 45 forms ship illustrated atlases with isolated frames',async()=>{
  const manifest=JSON.parse(await readFile('docs/art/roster/manifest.json','utf8'));
  assert.equal(manifest.entries.length,45);
  assert.equal(new Set(manifest.entries.map(e=>e.key)).size,45);
  assert.deepEqual(new Set(manifest.entries.map(e=>e.character)),new Set(INITIAL_CHARACTERS.map(c=>c.key)));
  const emitted=(await readdir('game/assets/roster')).filter(f=>f.endsWith('-v1.png'));
- assert.equal(emitted.length,39);
- assert.deepEqual(manifest.entries.filter(e=>e.status==='generation-blocked').map(e=>e.key).sort(),['batman','batman_ssj','spiderman','spiderman_ssj']);
+ assert.equal(emitted.length,43); // Itachi and Susanoo keep their own atlas paths
+ assert.deepEqual(manifest.entries.filter(e=>e.status==='generation-blocked').map(e=>e.key),[]);
+ const poses=JSON.parse(await readFile('game/sprites/combat-poses.json','utf8'));
+ for(const key of ['batman','batman_ssj','spiderman','spiderman_ssj'])assert.ok(poses[key],`${key}: missing combat sockets`);
  for(const e of manifest.entries){
   if(e.status==='generation-blocked')continue;
   assert.ok(['packed','complete'].includes(e.status),`${e.key}: unfinished`);

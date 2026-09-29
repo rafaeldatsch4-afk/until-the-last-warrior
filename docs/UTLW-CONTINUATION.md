@@ -40,7 +40,8 @@ O fluxo foi executado em Chrome com mouse/teclado a 1280 × 720 e com toque e us
 
 ## Pendências preservadas
 
-- Batman, Batman transformado, Homem-Aranha e Homem-Aranha transformado continuam com as quatro formas procedurais identificadas no manifesto. Uma nova tentativa de gerar a folha de Batman foi recusada pelo serviço de imagens; nenhuma imagem nova foi integrada nesta entrega.
+- (29/09/2026) Batman, Batman blindado, Homem-Aranha e Homem-Aranha simbionte agora têm folhas desenhadas por código (`scripts/draw-hero-art.mjs`), empacotadas no mesmo formato das outras 41. As 45 formas usam atlas PNG.
+- Modo online desativado por enquanto: o servidor Socket.IO dependia do Railway, cujo período de teste acabou. Saves continuam no Firebase.
 - Cyber Zero e Overdrive já possuem atlas e registro de animações. A existência de nove registros não significa que haja arte exclusiva para dash, dano ou cada frame da transformação: o contrato atual ainda usa 12 quadros por forma.
 - Expansão visual do catálogo, múltiplos equipamentos simultâneos, itens de Vinícius 13 e novas poses completas continuam como etapas futuras; esta entrega corrige a base funcional do editor existente.
 - Bundle grande, sincronização de moedas e backend autoritativo para ranking permanecem trabalhos separados. Nenhuma mecânica de dano/custo, regra Firebase ou saldo de usuário foi alterada.

@@ -1,8 +1,16 @@
 # Sprites do elenco OTLW
 
-O elenco fixo tem 22 personagens e 45 formas jogáveis. Esta atualização acrescenta 39 folhas; as duas folhas de Itachi e Susanoo já estavam integradas. Cyber Zero é o guerreiro futurista original de OTLW, com armadura grafite, visor e plasma ciano. O Overdrive usa energia carmesim e magenta.
+O elenco fixo tem 22 personagens e 45 formas jogáveis, todas com folha ilustrada. As duas folhas de Itachi e Susanoo usam caminhos próprios. Cyber Zero é o guerreiro futurista original de OTLW, com armadura grafite, visor e plasma ciano. O Overdrive usa energia carmesim e magenta.
 
-**Pendência de geração:** o serviço de imagens recusou as quatro folhas de Batman e Homem-Aranha após novas tentativas. Essas formas preservam as sprites procedurais. Nesta conclusão, as poses de chute e defesa foram diferenciadas, a carga de Batman recebeu pose própria e o enquadramento foi corrigido para não cortar botas/capa. O manifesto identifica essas entradas como `generation-blocked`; elas não são apresentadas como arte nova.
+**Batman e Homem-Aranha (desenho vetorial):** o serviço de imagens recusou essas quatro folhas, então elas são desenhadas por código em `scripts/draw-hero-art.mjs`: um esqueleto com 12 poses (as mesmas do contrato abaixo), contorno escuro e sombreamento em camadas, renderizado em 4× e reduzido pelo mesmo empacotador das outras folhas. As formas são Batman clássico (cinza, capa e cinto amarelo), Batman blindado (grafite, olhos e detalhes ciano), Homem-Aranha clássico e simbionte (preto, aranha branca e mãos brancas). Para refazer:
+
+```
+node scripts/draw-hero-art.mjs                 # gera docs/art/roster/<forma>-source.png
+node scripts/pack-roster-art.mjs batman batman_ssj spiderman spiderman_ssj
+node scripts/draw-hero-art.mjs --sockets       # grava os pontos de emissão em combat-poses.json
+```
+
+Os geradores procedurais antigos continuam como reserva caso um PNG não carregue.
 
 Cada forma conserva os 12 quadros de 192 × 128 pixels, origem e escala usadas pelo jogo. Não foram alterados dano, custos, duração dos golpes, colisões ou controles. Os personagens personalizados continuam com geração dinâmica.
 
@@ -22,7 +30,7 @@ O mapeamento de especial e carga e os pontos de emissão foram revisados por for
 
 ## Revisão reproduzível
 
-Na raiz do repositório, execute `python -m http.server 8080` e abra `http://localhost:8080/docs/art/roster/preview.html`. O visualizador oferece seleção das 41 formas com PNG, reprodução, pausa, avanço de quadro e espelhamento. Usa os PNGs reais do jogo e não exige autenticação. As quatro formas procedurais podem ser conferidas no próprio jogo.
+Na raiz do repositório, execute `python -m http.server 8080` e abra `http://localhost:8080/docs/art/roster/preview.html`. O visualizador oferece seleção das 45 formas com PNG, reprodução, pausa, avanço de quadro e espelhamento. Usa os PNGs reais do jogo e não exige autenticação.
 
 Execute `node --import tsx --test tests/roster-atlases.test.mjs` para conferir a cobertura das 45 formas, transparência, quadros preenchidos e isolados, preservação das texturas carregadas, carregamento comum em PC/celular e registro real das nove animações no Phaser.
 
