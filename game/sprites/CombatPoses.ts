@@ -4,7 +4,7 @@ import poses from "./combat-poses.json";
  * 8 = extended hand/weapon, 11 = casting or aura pose, depending on the sheet.
  */
 type Point = readonly [number, number];
-interface CombatPose { special: number; charge: number; hand: Point; cast: Point }
+interface CombatPose { special: number; charge: number; hand: Point; cast: Point; animations?: Partial<Record<"transform" | "charge" | "defend" | "dash", readonly [number, number]>> }
 export const COMBAT_POSES = poses as unknown as Record<string, CombatPose>;
 
 interface TextureLike { key: string; customWardrobeArt?: boolean; customRosterKey?: string; source?: { isCanvas?: boolean; isRenderTexture?: boolean }[] }

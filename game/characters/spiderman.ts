@@ -132,7 +132,8 @@ export class SpidermanFighter extends Fighter {
 
     const webColor = isIron ? 0xcc2222 : 0xdddddd;
 
-    // Throw Web Line
+    // Select the firing pose before sampling its wrist socket.
+    attacker.play(bs.getAnimKey("spiderman", transLevel, "special"));
     const hand = bs.getHandPosition(isPlayer);
     const webLine = bs.add
       .rectangle(hand.x, hand.y, 0, 4, webColor)
@@ -141,7 +142,7 @@ export class SpidermanFighter extends Fighter {
 
     bs.tweens.add({
       targets: webLine,
-      width: Math.abs(target.x - attacker.x),
+      width: Math.abs(target.x - hand.x),
       duration: 150,
       onComplete: () => {
         if (!bs.scene.isActive()) return;
@@ -149,9 +150,9 @@ export class SpidermanFighter extends Fighter {
         bs.createImpactEffect(target.x, target.y + 120, webColor);
 
         bs.tweens.add({
-          targets: [target, webLine],
+          targets: target,
           x: attacker.x + (attacker.x < target.x ? 50 : -50),
-          width: 50,
+          onUpdate: () => webLine.setSize(Math.abs(target.x - hand.x), 4),
           duration: 200,
           ease: "Back.easeIn",
           onComplete: () => {

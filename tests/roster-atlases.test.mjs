@@ -32,23 +32,23 @@ test('desktop and mobile load exactly the same new atlas keys and URLs',()=>{
 // Inspect real shipped PNGs, rather than accepting an empty or incomplete glob.
 import {readFile,readdir} from 'node:fs/promises';
 import sharp from 'sharp';
-test('41 illustrated forms ship isolated frames; four blocked forms retain tested procedural fallback',async()=>{
+test('all 45 illustrated forms ship isolated frames including 28-frame guardians',async()=>{
  const manifest=JSON.parse(await readFile('docs/art/roster/manifest.json','utf8'));
  assert.equal(manifest.entries.length,45);
  assert.equal(new Set(manifest.entries.map(e=>e.key)).size,45);
  assert.deepEqual(new Set(manifest.entries.map(e=>e.character)),new Set(INITIAL_CHARACTERS.map(c=>c.key)));
  const emitted=(await readdir('game/assets/roster')).filter(f=>f.endsWith('-v1.png'));
- assert.equal(emitted.length,39);
- assert.deepEqual(manifest.entries.filter(e=>e.status==='generation-blocked').map(e=>e.key).sort(),['batman','batman_ssj','spiderman','spiderman_ssj']);
+ assert.equal(emitted.length,43);
+ assert.deepEqual(manifest.entries.filter(e=>e.status==='generation-blocked').map(e=>e.key).sort(),[]);
  for(const e of manifest.entries){
   if(e.status==='generation-blocked')continue;
   assert.ok(['packed','complete'].includes(e.status),`${e.key}: unfinished`);
   const {data,info}=await sharp(e.asset).ensureAlpha().raw().toBuffer({resolveWithObject:true});
-  assert.equal(info.width,192*12,e.key);assert.equal(info.height,128,e.key);
-  for(let f=0;f<12;f++){
+  assert.equal(info.width,192*12,e.key);assert.equal(info.height,e.frameCount===28?384:128,e.key);
+  for(let f=0;f<(e.frameCount??12);f++){
    let opaque=0,clear=0;
    for(let y=0;y<128;y++)for(let x=0;x<192;x++){
-    const a=data[(y*info.width+f*192+x)*4+3];
+    const a=data[((Math.floor(f/12)*128+y)*info.width+(f%12)*192+x)*4+3];
     if(a>32)opaque++;if(a===0)clear++;
     if(x===0||x===191)assert.equal(a,0,`${e.key}: frame ${f} touches neighbor`);
    }
@@ -65,16 +65,17 @@ test('actual Phaser registration covers nine animation names for every playable 
  const {registerFighterAnimations}=await import('data:text/javascript;base64,'+Buffer.from(registration.outputFiles[0].text).toString('base64'));
  class Probe { createAnimsFor(key) { registerFighterAnimations(this,key); } }
  const probe=new Probe(),registered=new Map();
- probe.textures={exists:key=>!key.endsWith('_ki')&&!key.endsWith('_genki'),get:key=>({key,source:[{isCanvas:false}],has:f=>Number(f)>=0&&Number(f)<12})};
+ probe.textures={exists:key=>!key.endsWith('_ki')&&!key.endsWith('_genki'),get:key=>({key,source:[{isCanvas:false}],has:f=>Number(f)>=0&&Number(f)<(['batman','batman_ssj','spiderman','spiderman_ssj'].includes(key)?28:12)})};
  probe.anims={exists:()=>false,create:config=>registered.set(config.key,config)};
  for(const c of INITIAL_CHARACTERS)probe.createAnimsFor(c.key);
  const manifest=JSON.parse(await readFile('docs/art/roster/manifest.json','utf8'));
  const {COMBAT_POSES}=await import('data:text/javascript;base64,'+Buffer.from(poses).toString('base64'));
- const mapping={idle:[0,1,2,3],walk:[4,5,6,7],attack:[8,9],punch:[8],kick:[9],special:[8],defend:[10],transform:[0,1,2,3],charge:[11]};
+ const mapping={idle:[0,1,2,3],walk:[4,5,6,7],attack:[8,9],punch:[8],kick:[9],special:[8],defend:[10],transform:[0,1,2,3],charge:[11],dash:[4,5,6,7]};
  for(const e of manifest.entries)for(const [name,frames]of Object.entries(mapping)){
   const config=registered.get(`${e.key}_${name}`);assert.ok(config,`${e.key}_${name} missing`);
   const pose=COMBAT_POSES[e.key];
-  const expected=name==='special'?[pose?.special??8]:name==='charge'?[0,1,2,3]:frames;
+  const range=pose?.animations?.[name];
+  const expected=range?Array.from({length:range[1]-range[0]+1},(_,i)=>range[0]+i):name==='special'?[pose?.special??8]:name==='charge'?[0,1,2,3]:frames;
   assert.deepEqual(config.frames.map(f=>Number(f.frame)),expected,`${e.key}_${name}`);
   assert.ok(config.frames.every(f=>f.key===e.key));
  }

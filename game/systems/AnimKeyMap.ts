@@ -1,5 +1,5 @@
 const ANIM_KEYS = [
-  "idle", "walk", "attack", "special", "defend", "transform", "jump", "hit", "ko", "charge", "punch", "kick", "genki"
+  "idle", "walk", "attack", "special", "defend", "transform", "jump", "hit", "ko", "charge", "punch", "kick", "genki", "dash"
 ];
 
 export function animKeyToId(key: string): number {

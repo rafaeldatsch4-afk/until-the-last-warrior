@@ -40,5 +40,9 @@
   "saitama": {"hand":[123,82],"cast":[99,95],"special":8,"charge":11},
   "static": {"hand":[119,81],"cast":[98,93],"special":11,"charge":0},
   "static_ssj": {"hand":[116,85],"cast":[96,98],"special":11,"charge":0},
-  "itachi_ui": {"hand":[78,32],"cast":[129,85],"special":8,"charge":11}
+  "itachi_ui": {"hand":[78,32],"cast":[129,85],"special":8,"charge":11},
+  "batman": {"hand":[137,82],"cast":[121,89],"special":11,"charge":16,"animations":{"transform":[12,15],"charge":[16,19],"defend":[20,23],"dash":[24,27]}},
+  "batman_ssj": {"hand":[135,82],"cast":[112,83],"special":11,"charge":16,"animations":{"transform":[12,15],"charge":[16,19],"defend":[20,23],"dash":[24,27]}},
+  "spiderman": {"hand":[124,81],"cast":[102,80],"special":11,"charge":16,"animations":{"transform":[12,15],"charge":[16,19],"defend":[20,23],"dash":[24,27]}},
+  "spiderman_ssj": {"hand":[121,83],"cast":[103,88],"special":11,"charge":16,"animations":{"transform":[12,15],"charge":[16,19],"defend":[20,23],"dash":[24,27]}}
 }

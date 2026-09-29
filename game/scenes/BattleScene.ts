@@ -1525,7 +1525,7 @@ export default class BattleScene extends Phaser.Scene {
       this.getAnimKey(
         isPlayer ? this.playerData.key : this.enemyData.key,
         isPlayer ? this.playerTransformLevel : this.enemyTransformLevel,
-        "walk",
+        "dash",
       ),
       true,
     );

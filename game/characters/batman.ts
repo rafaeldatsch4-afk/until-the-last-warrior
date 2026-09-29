@@ -26,17 +26,19 @@ export class BatmanFighter extends Fighter {
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
-      // Batman Melee: Slide kick
+      // Sentinela: tonfa strike
       attacker.play(bs.getAnimKey("batman", transLevel, "punch"));
       bs.tweens.add({
         targets: attacker,
         x: target.x + (attacker.x < target.x ? -40 : 40),
         y: target.y + 20,
-        rotation: isPlayer ? 0.5 : -0.5,
+        rotation: 0,
         duration: 150,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
+          if (bs.soundManager) bs.soundManager.playSwordSlash(true);
+          const weapon = bs.getHandPosition(isPlayer);
+          bs.effects?.createSwordSweepSlash(weapon.x, weapon.y, !attacker.flipX, 0xffa500, 1.0);
           bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
           bs.takeDamage(
             !isPlayer,
@@ -140,7 +142,7 @@ export class BatmanFighter extends Fighter {
     bs.log("BATARANG!");
     if (bs.soundManager) bs.soundManager.playPunchImpact(true);
 
-    const hand = bs.getHandPosition(isPlayer);
+    attacker.play(bs.getAnimKey("batman", transLevel, "special"));
 
     // Throw 5 batarangs
     for (let i = 0; i < 5; i++) {
@@ -148,6 +150,7 @@ export class BatmanFighter extends Fighter {
       bs.time.delayedCall(i * 100, () => {
         if (!bs.scene.isActive()) return;
 
+        const hand = bs.getHandPosition(isPlayer);
         let hasTexture = bs.textures.exists("batarang");
 
         const batarangGlow = hasTexture
