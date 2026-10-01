@@ -35,6 +35,7 @@ export class MultiplayerManager {
 
   public isConnected: boolean = false;
   public isReconnecting: boolean = false;
+  private hasNotifiedConnectionError: boolean = false;
   public roomCode: string = "";
   public localPlayerIndex: 1 | 2 = 1; // 1 = Host/P1, 2 = Guest/P2
   public opponentName: string = "Inimigo";
@@ -95,9 +96,11 @@ export class MultiplayerManager {
     this.socket = io(url, {
       autoConnect: true,
       reconnection: true,
-      reconnectionAttempts: 10,
+      // Fail fast while searching for a match; raised to 10 once a match starts (see matchStart)
+      reconnectionAttempts: 4,
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+      reconnectionDelayMax: 3000,
+      timeout: 8000,
       withCredentials: true,
       transports: ["websocket", "polling"],
     });
@@ -114,18 +117,34 @@ export class MultiplayerManager {
       if (this.onConnectionStatusCallback) {
         this.onConnectionStatusCallback("reconnecting");
       }
-      if (this.onErrorCallback) {
-        this.onErrorCallback("Erro de Conexão com o Servidor PvP. Tentando reconectar...");
-      }
     });
 
-    this.socket.on("connect_timeout", () => {
-      console.warn("Socket connection timeout");
+    // All reconnection attempts failed: stop for good and tell the UI once
+    this.socket.io.on("reconnect_failed", () => {
+      const wasInMatch = !!this.roomCode;
+      this.isReconnecting = false;
+      this.isConnected = false;
+      if (this.pingInterval) {
+        clearInterval(this.pingInterval);
+        this.pingInterval = null;
+      }
+      this.socket?.disconnect();
+      if (this.onConnectionStatusCallback) {
+        this.onConnectionStatusCallback("disconnected");
+      }
+      if (!wasInMatch && this.onErrorCallback && !this.hasNotifiedConnectionError) {
+        this.hasNotifiedConnectionError = true;
+        this.onErrorCallback("Servidor PvP indisponível no momento. Tente novamente mais tarde.");
+      }
+      // Drop the dead socket so the next join/create starts a fresh connection
+      this.socket?.removeAllListeners();
+      this.socket = null;
     });
 
     this.socket.on("connect", () => {
       this.isConnected = true;
       this.isReconnecting = false;
+      this.hasNotifiedConnectionError = false;
       console.log("Connected to Multiplayer Server successfully.");
 
       if (this.onConnectionStatusCallback) {
@@ -176,6 +195,8 @@ export class MultiplayerManager {
       this.opponentName = data.opponentName;
       this.opponentCharacterId = data.opponentCharacterId;
       this.resetInterpolation();
+      // Be more patient with reconnections once a match is running
+      this.socket?.io.reconnectionAttempts(10);
 
       if (this.onMatchStartCallback) {
         this.onMatchStartCallback(data);
@@ -210,6 +231,10 @@ export class MultiplayerManager {
     this.socket.on("disconnect", (reason: string) => {
       this.isConnected = false;
       console.log("Disconnected from Multiplayer Server. Reason:", reason);
+      // The server kicked us: socket.io will not retry by itself
+      if (reason === "io server disconnect") {
+        this.socket?.connect();
+      }
       if (this.onConnectionStatusCallback) {
         this.onConnectionStatusCallback(reason === "io client disconnect" ? "disconnected" : "reconnecting");
       }
@@ -398,6 +423,7 @@ export class MultiplayerManager {
 
     this.isConnected = false;
     this.isReconnecting = false;
+    this.hasNotifiedConnectionError = false;
     this.roomCode = "";
     this.resetInterpolation();
   }

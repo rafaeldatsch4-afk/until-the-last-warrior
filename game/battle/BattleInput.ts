@@ -1,3 +1,4 @@
+import { isOnlineMode } from "../types";
 import { Responsive } from "../utils/Responsive";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import Phaser from "phaser";
@@ -249,7 +250,7 @@ export class BattleInput {
     // Pause handler
     this.scene.input.keyboard.on("keydown-ESC", () => {
       if (!this.scene.isBattleOver) {
-        if (this.scene.gameState.gameMode === "online_pvp") {
+        if (isOnlineMode(this.scene.gameState.gameMode)) {
           this.scene.scene.launch("PauseScene", { online: true });
         } else {
           this.scene.scene.pause();
@@ -799,7 +800,7 @@ export class BattleInput {
       "12px",
       () => {
         this.resetMobile();
-        if (this.scene.gameState.gameMode === "online_pvp") {
+        if (isOnlineMode(this.scene.gameState.gameMode)) {
           this.scene.scene.launch("PauseScene", { online: true });
         } else {
           this.scene.scene.pause();

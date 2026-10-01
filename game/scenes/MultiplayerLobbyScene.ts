@@ -15,6 +15,7 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
   // Interactive room code typing state
   private typedCode: string = "";
   private typingTextObj?: Phaser.GameObjects.Text;
+  private errorBox?: Phaser.GameObjects.Container;
 
   constructor() {
     super("MultiplayerLobbyScene");
@@ -25,6 +26,15 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     this.gameState = this.registry.get("gameState") as GameState;
     this.currentMode = "menu";
     this.typedCode = "";
+    this.errorBox = undefined;
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      const mm = MultiplayerManager.getInstance();
+      mm.onWaitingCallback = undefined;
+      mm.onMatchStartCallback = undefined;
+      mm.onErrorCallback = undefined;
+      this.input.keyboard?.off("keydown");
+    });
 
     // Stop and play menus BGM
     if (this.cache.audio.exists("bgm_battle")) {
@@ -546,8 +556,13 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
     };
 
     mm.onErrorCallback = (err) => {
+      if (!this.scene.isActive()) return;
       // In-game error instead of window.alert() which is blocked in iframes
-      const errBox = this.add.container(480, 270).setDepth(100);
+      this.errorBox?.destroy();
+      const errBox = this.add
+        .container(this.cameras.main.width / 2, this.cameras.main.height / 2)
+        .setDepth(100);
+      this.errorBox = errBox;
       const errBg = this.add
         .rectangle(0, 0, 400, 150, 0x000000, 0.9)
         .setStrokeStyle(2, 0xe74c3c);
@@ -582,6 +597,7 @@ export default class MultiplayerLobbyScene extends Phaser.Scene {
 
       btnOk.on("pointerdown", () => {
         errBox.destroy();
+        this.errorBox = undefined;
         if (this.currentMode !== "typing") {
           this.drawMainMenu();
         }

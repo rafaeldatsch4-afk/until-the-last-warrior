@@ -15,7 +15,7 @@ import { BattleEnvironment } from "../battle/BattleEnvironment";
 import { BattleSoundManager } from "../battle/BattleSoundManager";
 import { triggerVibration } from "../utils/haptics";
 import Phaser from "phaser";
-import { CharacterData, GameState } from "../types";
+import { CharacterData, GameState, isOnlineMode } from "../types";
 import { getFighter } from "../characters/FighterRegistry";
 import { DailyChallenges } from "../systems/DailyChallenges";
 import { auth } from "../../firebase/init";
@@ -291,7 +291,7 @@ export default class BattleScene extends Phaser.Scene {
     if (
       this.gameState.gameMode === "local_pvp" ||
       this.gameState.gameMode === "tournament" ||
-      this.gameState.gameMode === "online_pvp" || this.gameState.gameMode === "story"
+      isOnlineMode(this.gameState.gameMode) || this.gameState.gameMode === "story"
     ) {
       this.enemyData =
         chars.find((c) => c.id === this.gameState.p2CharacterId) || chars[1];
@@ -422,7 +422,7 @@ export default class BattleScene extends Phaser.Scene {
     this.netSyncTimer = 0;
     this.hasInitialRemotePosition = false;
 
-    if (this.gameState.gameMode === "online_pvp") {
+    if (isOnlineMode(this.gameState.gameMode)) {
       const mm_ext = MultiplayerManager.getInstance();
       mm_ext.onMatchPausedCallback = () => {
         this.isMatchPaused = true;
@@ -541,6 +541,16 @@ export default class BattleScene extends Phaser.Scene {
         }
       };
 
+      mm.onConnectionStatusCallback = (status) => {
+        if (this.isBattleOver || status !== "disconnected") return;
+        if (this.battleUI) this.battleUI.showLog("CONEXÃO PERDIDA!");
+        this.isBattleOver = true;
+        this.time.delayedCall(3000, () => {
+          mm.disconnect();
+          transitionTo(this, "MenuScene");
+        });
+      };
+
       mm.onOpponentLeftCallback = () => {
         if (this.isBattleOver) return;
         if (this.battleUI) this.battleUI.showLog("OPONENTE SAIU! VITORIA!");
@@ -559,7 +569,7 @@ export default class BattleScene extends Phaser.Scene {
       if (
         this.gameState.gameMode !== "local_pvp" &&
         this.gameState.gameMode !== "training" &&
-        this.gameState.gameMode !== "online_pvp"
+        !isOnlineMode(this.gameState.gameMode)
       ) {
         if (this.battleAI) this.battleAI.startAILoop();
       }
@@ -583,7 +593,7 @@ export default class BattleScene extends Phaser.Scene {
 
   update(time: number, delta: number) {
 
-    if (this.gameState.gameMode === "online_pvp" && this.battleUI) {
+    if (isOnlineMode(this.gameState.gameMode) && this.battleUI) {
       this.pingUpdateTimer += delta;
       if (this.pingUpdateTimer > 1000) {
         this.pingUpdateTimer = 0;
@@ -678,7 +688,7 @@ export default class BattleScene extends Phaser.Scene {
     }
 
     // Network state stream sync
-    if (this.gameState.gameMode === "online_pvp") {
+    if (isOnlineMode(this.gameState.gameMode)) {
       // Interpolate remote player with Snapshot Linear Interpolation (Lerp)
       const target = this.localPlayerIndex === 1 ? this.enemy : this.player;
       if (target && target.active) {
@@ -734,7 +744,7 @@ export default class BattleScene extends Phaser.Scene {
     if (this.player && this.player.active && this.enemy && this.enemy.active) {
       // --- PLAYER 1 (LEFT FIGHTER) MOVEMENT CONTROL ---
       const isP1Local =
-        this.gameState.gameMode !== "online_pvp" || this.localPlayerIndex === 1;
+        !isOnlineMode(this.gameState.gameMode) || this.localPlayerIndex === 1;
 
       if (
         isP1Local &&
@@ -848,12 +858,12 @@ export default class BattleScene extends Phaser.Scene {
       const isP2Local =
         this.gameState.gameMode === "local_pvp" ||
         this.gameState.gameMode === "training" ||
-        (this.gameState.gameMode === "online_pvp" &&
+        (isOnlineMode(this.gameState.gameMode) &&
           this.localPlayerIndex === 2);
       const isAIScene =
         this.gameState.gameMode !== "local_pvp" &&
         this.gameState.gameMode !== "training" &&
-        this.gameState.gameMode !== "online_pvp";
+        !isOnlineMode(this.gameState.gameMode);
 
       if (
         isP2Local &&
@@ -862,7 +872,7 @@ export default class BattleScene extends Phaser.Scene {
         !this.isP2Jumping
       ) {
         // Check double-tap dash
-        const useP1Controls = this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2;
+        const useP1Controls = isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2;
         if (this.battleInput && this.battleInput.mobileP1Dash !== 0 && useP1Controls) {
             this.performDash(false, this.battleInput.mobileP1Dash);
             this.battleInput.mobileP1Dash = 0;
@@ -884,12 +894,12 @@ export default class BattleScene extends Phaser.Scene {
         let moveR = false;
 
         if (this.battleInput) {
-          const useP1Controls = this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2;
+          const useP1Controls = isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2;
           moveL = this.battleInput.checkActionDown("left", useP1Controls);
           moveR = this.battleInput.checkActionDown("right", useP1Controls);
         }
 
-        if (this.enemyDefending || (this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
+        if (this.enemyDefending || (this.battleInput && this.battleInput.checkActionDown("charge", isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2))) {
           this.enemy.setFlipX(this.enemy.x > this.player.x);
         } else if (moveL) {
           this.enemy.x -= moveSpeed;
@@ -903,7 +913,7 @@ export default class BattleScene extends Phaser.Scene {
           this.enemy.setFlipX(this.enemy.x > this.player.x);
         }
 
-        if (isMoving && !this.enemyDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
+        if (isMoving && !this.enemyDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2))) {
           const walkAnim = this.getAnimKey(
             this.enemyData.key,
             this.enemyTransformLevel,
@@ -926,7 +936,7 @@ export default class BattleScene extends Phaser.Scene {
               walkDirection,
             );
           }
-        } else if (!this.p2ActionActive && !this.enemyDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
+        } else if (!this.p2ActionActive && !this.enemyDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2))) {
           const idleAnim = this.getAnimKey(
             this.enemyData.key,
             this.enemyTransformLevel,
@@ -945,7 +955,7 @@ export default class BattleScene extends Phaser.Scene {
 
         let isJumpPressed = false;
         if (this.battleInput) {
-            const useP1Controls = this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2;
+            const useP1Controls = isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2;
             isJumpPressed = this.battleInput.checkActionDown("up", useP1Controls);
         }
 
@@ -985,7 +995,7 @@ export default class BattleScene extends Phaser.Scene {
         let moveSpeed = 6;
         let isMoving = false;
 
-        if (this.enemyDefending || (this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
+        if (this.enemyDefending || (this.battleInput && this.battleInput.checkActionDown("charge", isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2))) {
           this.enemy.setFlipX(this.enemy.x > this.player.x);
         } else if (moveL) {
           this.enemy.x -= moveSpeed;
@@ -999,7 +1009,7 @@ export default class BattleScene extends Phaser.Scene {
           this.enemy.setFlipX(this.enemy.x > this.player.x);
         }
 
-        if (isMoving && !this.enemyDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2))) {
+        if (isMoving && !this.enemyDefending && !(this.battleInput && this.battleInput.checkActionDown("charge", isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2))) {
           const walkAnim = this.getAnimKey(
             this.enemyData.key,
             this.enemyTransformLevel,
@@ -1246,7 +1256,7 @@ export default class BattleScene extends Phaser.Scene {
     // Keep training mode infinite HP but let them charge Ki normally
     // --- PLAYER 1 CONTROLS ---
     const isP1Local =
-      this.gameState.gameMode !== "online_pvp" || this.localPlayerIndex === 1;
+      !isOnlineMode(this.gameState.gameMode) || this.localPlayerIndex === 1;
     if (isP1Local) {
       if (this.p1ActionActive) {
         this.stopContinuousCharge(true);
@@ -1349,7 +1359,7 @@ export default class BattleScene extends Phaser.Scene {
     // --- PLAYER 2 CONTROLS (Local PvP or Online Guest) ---
     const isP2Local =
       this.gameState.gameMode === "local_pvp" ||
-      (this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2);
+      (isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2);
     if (isP2Local) {
       if (this.p2ActionActive) {
         this.stopContinuousCharge(false);
@@ -1358,13 +1368,13 @@ export default class BattleScene extends Phaser.Scene {
         this.clearChargeIndicator(false);
       } else {
         
-        const useP1Controls = this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2;
+        const useP1Controls = isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2;
 
         let isCharging = false;
         let isDefending = false;
         if (this.battleInput) {
             isDefending = this.battleInput.checkActionDown("defend", useP1Controls);
-            isCharging = this.battleInput.checkActionDown("charge", this.gameState.gameMode === "online_pvp" && this.localPlayerIndex === 2);
+            isCharging = this.battleInput.checkActionDown("charge", isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2);
         }
 
         if (this.gameState.gameMode === "training") {
@@ -1455,7 +1465,7 @@ export default class BattleScene extends Phaser.Scene {
       }
 
       // Sync remote player charge visual effects in online PvP
-      if (this.gameState.gameMode === "online_pvp") {
+      if (isOnlineMode(this.gameState.gameMode)) {
         if (this.localPlayerIndex === 1) {
           // P2 is remote
           if (this.enemyDefending) this.performContinuousCharge(false, 0);
@@ -1617,7 +1627,7 @@ export default class BattleScene extends Phaser.Scene {
 
         // Zero-latency instant continuation of buffered actions
         const isP1Local =
-          this.gameState.gameMode !== "online_pvp" ||
+          !isOnlineMode(this.gameState.gameMode) ||
           this.localPlayerIndex === 1;
         if (
           isP1Local &&
@@ -1666,7 +1676,7 @@ export default class BattleScene extends Phaser.Scene {
         // Zero-latency instant continuation of buffered actions for P2 / Opponent
         const isP2Local =
           this.gameState.gameMode === "local_pvp" ||
-          (this.gameState.gameMode === "online_pvp" &&
+          (isOnlineMode(this.gameState.gameMode) &&
             this.localPlayerIndex === 2);
         if (
           isP2Local &&
@@ -1675,24 +1685,24 @@ export default class BattleScene extends Phaser.Scene {
           !this.isP2Jumping
         ) {
           const isP1Attack =
-            this.gameState.gameMode === "online_pvp" &&
+            isOnlineMode(this.gameState.gameMode) &&
             this.localPlayerIndex === 2
               ? this.p1AttackBuffer > 0 || this.mobileP1Attack
               : this.p2AttackBuffer > 0 || this.p2BufferedAttack;
           const isP1KiBlast =
-            this.gameState.gameMode === "online_pvp" &&
+            isOnlineMode(this.gameState.gameMode) &&
             this.localPlayerIndex === 2
               ? this.p1KiBlastBuffer > 0 || this.mobileP1KiBlast
               : this.p2KiBlastBuffer > 0 || this.p2BufferedKiBlast;
           const isP1Transform =
-            this.gameState.gameMode === "online_pvp" &&
+            isOnlineMode(this.gameState.gameMode) &&
             this.localPlayerIndex === 2
               ? this.p1TransformBuffer > 0 || this.mobileP1Transform
               : this.p2TransformBuffer > 0 || this.p2BufferedTransform;
 
           if (isP1Transform) {
             if (
-              this.gameState.gameMode === "online_pvp" &&
+              isOnlineMode(this.gameState.gameMode) &&
               this.localPlayerIndex === 2
             ) {
               this.p1TransformBuffer = 0;
@@ -1704,7 +1714,7 @@ export default class BattleScene extends Phaser.Scene {
             this.performTransform(false);
           } else if (isP1Attack) {
             if (
-              this.gameState.gameMode === "online_pvp" &&
+              isOnlineMode(this.gameState.gameMode) &&
               this.localPlayerIndex === 2
             ) {
               this.p1AttackBuffer = 0;
@@ -1716,7 +1726,7 @@ export default class BattleScene extends Phaser.Scene {
             this.performAttack(false, "melee");
           } else if (isP1KiBlast) {
             if (
-              this.gameState.gameMode === "online_pvp" &&
+              isOnlineMode(this.gameState.gameMode) &&
               this.localPlayerIndex === 2
             ) {
               this.p1KiBlastBuffer = 0;
@@ -4619,7 +4629,7 @@ export default class BattleScene extends Phaser.Scene {
 
     if (this.time.now < (isP ? this.p1InvulnerableUntil : this.p2InvulnerableUntil)) return; // Wake-up I-frames
 
-    if (this.gameState.gameMode === "online_pvp" && !fromNetwork) {
+    if (isOnlineMode(this.gameState.gameMode) && !fromNetwork) {
        const attackerIsLocal = isP !== (this.localPlayerIndex === 1);
        if (attackerIsLocal) {
            this.emitNetworkAction({ type: "hit", isPlayer: isP, damage: baseDmg });
@@ -5107,7 +5117,7 @@ export default class BattleScene extends Phaser.Scene {
         }
 
         const comboCount = isP ? this.p2HitCombo : this.p1HitCombo;
-        if (comboCount > 1 && (this.gameState.gameMode === "online_pvp" || this.gameState.gameMode === "local_pvp")) {
+        if (comboCount > 1 && (isOnlineMode(this.gameState.gameMode) || this.gameState.gameMode === "local_pvp")) {
             // PvP specific gratifying visual effects for combos (managed via effects system)
             const flashColor = comboCount % 5 === 0 ? 0xffaa00 : 0xffffff;
             this.createScreenFlash(flashColor, 120, 0.35);
@@ -5468,7 +5478,7 @@ export default class BattleScene extends Phaser.Scene {
 
   emitNetworkAction(actionData: any) {
     if (
-      this.gameState.gameMode === "online_pvp" &&
+      isOnlineMode(this.gameState.gameMode) &&
       !this.isIncomingNetworkAction
     ) {
       MultiplayerManager.getInstance().emitAction(actionData);
@@ -5608,7 +5618,7 @@ export default class BattleScene extends Phaser.Scene {
     mm.onRemoteStateCallback = undefined;
     mm.onRemoteActionCallback = undefined;
     mm.onOpponentLeftCallback = undefined;
-    if (this.gameState?.gameMode === "online_pvp") {
+    if (isOnlineMode(this.gameState?.gameMode)) {
       try {
         mm.disconnect();
       } catch (e) {}

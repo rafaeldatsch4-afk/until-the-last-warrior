@@ -150,3 +150,8 @@ declare global {
     };
   }
 }
+
+/** Online matches (casual and ranked) share the same networked battle flow. */
+export function isOnlineMode(mode: GameState["gameMode"] | string | undefined): boolean {
+  return mode === "online_pvp" || mode === "ranked_pvp";
+}
