@@ -191,6 +191,25 @@ export const AuthButton: React.FC = () => {
 
         await setDoc(userRef, updateData, { merge: true });
 
+        // Public ranking: one validated step per match (see firestore.rules)
+        try {
+          const lbRef = doc(db, 'leaderboard_public', u.uid);
+          const lbSnap = await getDoc(lbRef);
+          const prev = lbSnap.exists() ? lbSnap.data() : null;
+          const profile = (await getDoc(userRef)).data();
+          await setDoc(lbRef, {
+            username: String(profile?.username || u.displayName || u.email?.split('@')[0] || 'Jogador').slice(0, 24),
+            avatar: String(profile?.avatar || '🥷').slice(0, 8),
+            wins: (prev?.wins ?? 0) + (win ? 1 : 0),
+            matches: (prev?.matches ?? 0) + 1,
+            elo: prev?.elo ?? 1000,
+            updatedAt: serverTimestamp(),
+          });
+        } catch (lbErr) {
+          // Ranking is best-effort: never block saving the player's own stats
+          console.warn('Ranking não atualizado:', lbErr);
+        }
+
         // Private progress is client-owned; never publish it as a verified score.
 
         setStats(prev => ({

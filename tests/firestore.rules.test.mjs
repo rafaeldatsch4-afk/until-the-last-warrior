@@ -5,7 +5,7 @@ import {
 } from '@firebase/rules-unit-testing';
 import {
   collection, deleteDoc, doc, getDoc, getDocs, increment,
-  limit, orderBy, query, setDoc, updateDoc, writeBatch,
+  limit, orderBy, query, serverTimestamp, setDoc, updateDoc, writeBatch,
 } from 'firebase/firestore';
 
 // initializeTestEnvironment requires the emulator; these tests never use production.
@@ -34,31 +34,44 @@ test('public ranking remains readable, including the game query', async () => {
   await assertSucceeds(getDocs(query(collection(db, 'leaderboard_public'), orderBy('wins', 'desc'), limit(30))));
 });
 
-test('even the owner cannot change scores, increment wins or replace their entry', async () => {
+const step = (extra = {}) => ({ username: 'Alice', avatar: '🥷', wins: 4, elo: 1075, matches: 5, updatedAt: serverTimestamp(), ...extra });
+
+test('owner can publish one match step, but not jump scores or replace the entry', async () => {
   const ref = doc(env.authenticatedContext('alice').firestore(), 'leaderboard_public/alice');
-  await assertFails(updateDoc(ref, { elo: 999999, wins: 999999 }));
+  await assertFails(setDoc(ref, step({ wins: 999999, matches: 999999 })));
+  await assertFails(setDoc(ref, step({ wins: 6, matches: 5 })));
+  await assertFails(setDoc(ref, step({ elo: 999999 })));
+  await assertFails(setDoc(ref, step({ matches: 7 })));
+  await assertFails(setDoc(ref, step({ extra: 1 })));
   await assertFails(updateDoc(ref, { wins: increment(1) }));
-  await assertFails(setDoc(ref, score));
-  await assertFails(setDoc(ref, { username: 'New name' }, { merge: true }));
+  await assertSucceeds(setDoc(ref, step()));
 });
 
-test('new users cannot create entries, even with zero wins and baseline Elo', async () => {
+test('legacy entries without updatedAt can take one step; rapid repeats are refused', async () => {
+  const ref = doc(env.authenticatedContext('alice').firestore(), 'leaderboard_public/alice');
+  await assertSucceeds(setDoc(ref, step()));
+  await assertFails(setDoc(ref, step({ wins: 5, matches: 6 })));
+});
+
+test('new users can only create a first-match entry with baseline Elo', async () => {
   const ref = doc(env.authenticatedContext('bob').firestore(), 'leaderboard_public/bob');
-  await assertFails(setDoc(ref, { ...score, wins: 0, elo: 1000, matches: 0 }));
+  await assertFails(setDoc(ref, { username: 'Bob', avatar: '🥷', wins: 50, elo: 1000, matches: 1, updatedAt: serverTimestamp() }));
+  await assertFails(setDoc(ref, { username: 'Bob', avatar: '🥷', wins: 0, elo: 2000, matches: 1, updatedAt: serverTimestamp() }));
+  await assertSucceeds(setDoc(ref, { username: 'Bob', avatar: '🥷', wins: 1, elo: 1000, matches: 1, updatedAt: serverTimestamp() }));
 });
 
 test('other users and guests cannot alter or delete a ranking entry', async () => {
   for (const context of [env.authenticatedContext('bob'), env.unauthenticatedContext()]) {
     const ref = doc(context.firestore(), 'leaderboard_public/alice');
+    await assertFails(setDoc(ref, step()));
     await assertFails(updateDoc(ref, { wins: 9 }));
     await assertFails(deleteDoc(ref));
   }
 });
 
-test('owner can remove their entry for account deletion but cannot recreate it', async () => {
+test('owner can remove their entry for account deletion', async () => {
   const ref = doc(env.authenticatedContext('alice').firestore(), 'leaderboard_public/alice');
   await assertSucceeds(deleteDoc(ref));
-  await assertFails(setDoc(ref, { ...score, wins: 999999 }));
 });
 
 test('editing private stats does not authorize publishing them, including in a batch', async () => {

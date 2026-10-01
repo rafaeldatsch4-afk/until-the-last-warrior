@@ -6,10 +6,34 @@ service cloud.firestore {
     }
     match /leaderboard_public/{userId} {
       allow read: if true;
-      // Scores must come from a trusted backend after validating match results.
-      // A user's editable profile is not proof of wins or Elo.
-      allow create, update: if false;
-      // Keep account deletion working without allowing score replacement.
+
+      // Only the owner can write their own entry, one match at a time.
+      // Rules cannot verify that a match was really won (the game runs in the browser),
+      // so the limits below only bound how fast an entry can grow.
+      function validProfile(d) {
+        return d.keys().hasOnly(['username', 'avatar', 'wins', 'elo', 'matches', 'updatedAt'])
+          && d.username is string && d.username.size() > 0 && d.username.size() <= 24
+          && d.avatar is string && d.avatar.size() <= 8
+          && d.wins is int && d.matches is int && d.elo is int
+          && d.updatedAt == request.time;
+      }
+
+      allow create: if request.auth != null && request.auth.uid == userId
+        && validProfile(request.resource.data)
+        && request.resource.data.matches == 1
+        && request.resource.data.wins >= 0 && request.resource.data.wins <= 1
+        && request.resource.data.elo == 1000;
+
+      allow update: if request.auth != null && request.auth.uid == userId
+        && validProfile(request.resource.data)
+        && request.resource.data.elo == resource.data.elo
+        && request.resource.data.matches == resource.data.matches + 1
+        && request.resource.data.wins >= resource.data.wins
+        && request.resource.data.wins <= resource.data.wins + 1
+        && request.resource.data.wins <= request.resource.data.matches
+        && request.time >= resource.data.get('updatedAt', timestamp.value(0)) + duration.value(20, 's');
+
+      // Keep account deletion working.
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
     match /{document=**} {

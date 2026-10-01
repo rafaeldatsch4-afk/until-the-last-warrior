@@ -495,7 +495,7 @@ export default class LeaderboardScene extends Phaser.Scene {
         resolution: 2,
       }).setOrigin(0.5);
 
-      const emptyDesc = this.add.text(0, 46, "Novas pontuações estão temporariamente pausadas.", {
+      const emptyDesc = this.add.text(0, 46, "Vença partidas contra a CPU, no arcade, torneio ou história para entrar no ranking.", {
         fontSize: "12px",
         color: "#94a3b8",
         fontFamily: "system-ui, sans-serif",
@@ -711,7 +711,7 @@ export default class LeaderboardScene extends Phaser.Scene {
       helperBg.strokeRoundedRect(-tableW / 2 + 10, 0, tableW - 20, 32, 6);
 
       const helperTxt = this.add
-        .text(0, 16, "Ranking anterior • Novas pontuações temporariamente pausadas", {
+        .text(0, 16, "Ranking atualizado ao fim de cada partida contra a CPU", {
           fontSize: "11px",
           color: "#64748b",
           fontFamily: "system-ui, sans-serif",
