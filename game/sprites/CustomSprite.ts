@@ -4,7 +4,41 @@ import { CharacterData } from "../types";
 import { composeCustomArt, hasCustomArt } from "./CustomArt";
 import { CUSTOM_FRAME, customFrameRegion } from "./CustomArtLayout";
 
+function collectSpritesUsingTexture(scene: Phaser.Scene, textureKey: string): Phaser.GameObjects.Sprite[] {
+  const found: Phaser.GameObjects.Sprite[] = [];
+  const scenes = scene.sys?.game?.scene?.scenes ?? [scene];
+  const visit = (list: Phaser.GameObjects.GameObject[]) => {
+    for (const child of list) {
+      const sp = child as Phaser.GameObjects.Sprite;
+      if (sp.anims && sp.texture?.key === textureKey) found.push(sp);
+      const nested = (child as Phaser.GameObjects.Container).list;
+      if (Array.isArray(nested)) visit(nested);
+    }
+  };
+  for (const sc of scenes) visit(sc.children?.list ?? []);
+  return found;
+}
+
 export function generateCustomSprite(
+  scene: Phaser.Scene,
+  charData: CharacterData,
+) {
+  // Sprites still showing the old textures would keep destroyed frames. Stop their
+  // animations first (otherwise anims.remove() touches a null frame and crashes),
+  // then point them at the regenerated texture.
+  const stale = ['', '_ssj', '_ui'].flatMap((suffix) => {
+    const textureName = charData.key + suffix;
+    return collectSpritesUsingTexture(scene, textureName).map((sprite) => ({ sprite, textureName }));
+  });
+  stale.forEach(({ sprite }) => sprite.anims?.stop());
+  const result = buildCustomSprite(scene, charData);
+  stale.forEach(({ sprite, textureName }) => {
+    if (sprite.active && scene.textures.exists(textureName)) sprite.setTexture(textureName, 0);
+  });
+  return result;
+}
+
+function buildCustomSprite(
   scene: Phaser.Scene,
   charData: CharacterData,
 ) {
