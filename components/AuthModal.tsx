@@ -193,7 +193,8 @@ export const AuthButton: React.FC = () => {
 
         // Public ranking: one validated step per match against the CPU (see firestore.rules)
         const rankedVsCpu = ['single', 'arcade', 'tournament', 'story'].includes(gameMode);
-        if (rankedVsCpu) try {
+        // The rules allow one step every 20 s: retry once after that window instead of losing the match.
+        const publishRanking = async () => {
           const lbRef = doc(db, 'leaderboard_public', u.uid);
           const lbSnap = await getDoc(lbRef);
           const prev = lbSnap.exists() ? lbSnap.data() : null;
@@ -206,9 +207,11 @@ export const AuthButton: React.FC = () => {
             elo: prev?.elo ?? 1000,
             updatedAt: serverTimestamp(),
           });
-        } catch (lbErr) {
+        };
+        if (rankedVsCpu) {
           // Ranking is best-effort: never block saving the player's own stats
-          console.warn('Ranking não atualizado:', lbErr);
+          publishRanking().catch(() => new Promise((r) => setTimeout(r, 21000)).then(publishRanking))
+            .catch((lbErr) => console.warn('Ranking não atualizado:', lbErr));
         }
 
         // Private progress is client-owned; never publish it as a verified score.

@@ -30,10 +30,17 @@ export function generateCustomSprite(
     const textureName = charData.key + suffix;
     return collectSpritesUsingTexture(scene, textureName).map((sprite) => ({ sprite, textureName }));
   });
+  const playing = stale.map(({ sprite }) => (sprite.anims?.isPlaying ? sprite.anims.currentAnim?.key : undefined));
   stale.forEach(({ sprite }) => sprite.anims?.stop());
   const result = buildCustomSprite(scene, charData);
-  stale.forEach(({ sprite, textureName }) => {
-    if (sprite.active && scene.textures.exists(textureName)) sprite.setTexture(textureName, 0);
+  stale.forEach(({ sprite, textureName }, i) => {
+    if (!sprite.active || !scene.textures.exists(textureName)) return;
+    sprite.setTexture(textureName, 0);
+    // Resume once the caller has re-registered the animations for the new texture.
+    const animKey = playing[i];
+    if (animKey) sprite.scene?.time?.delayedCall(0, () => {
+      if (sprite.active && sprite.scene?.anims.exists(animKey)) sprite.play(animKey, true);
+    });
   });
   return result;
 }

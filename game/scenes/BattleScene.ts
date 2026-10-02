@@ -5618,6 +5618,7 @@ export default class BattleScene extends Phaser.Scene {
     mm.onRemoteStateCallback = undefined;
     mm.onRemoteActionCallback = undefined;
     mm.onOpponentLeftCallback = undefined;
+    mm.onConnectionStatusCallback = undefined;
     if (isOnlineMode(this.gameState?.gameMode)) {
       try {
         mm.disconnect();
