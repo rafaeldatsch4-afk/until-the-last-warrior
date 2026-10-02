@@ -1,26 +1,40 @@
-# Ranking público
+# Ranking público do UTLW
 
-`leaderboard_public/{uid}` é público para leitura. Só o dono escreve na própria entrada,
-e apenas um passo por partida: `matches` sobe exatamente 1, `wins` sobe 0 ou 1,
-`elo` não muda, há no mínimo 20 s entre atualizações e o `updatedAt` é o horário do servidor.
-Uma entrada nova só pode nascer com 1 partida, até 1 vitória e Elo 1000. O dono pode apagar a entrada.
+O ranking global voltou a aceitar novas pontuações, mas não usa mais escrita
+irrestrita do cliente.
 
-O cliente publica ao fim de cada partida contra a CPU (`components/AuthModal.tsx`, evento
-`battle-ended`). Falhas de ranking nunca bloqueiam o salvamento do progresso do jogador.
+## Como funciona
 
-## Limite importante
+- A coleção pública continua sendo `leaderboard_public`.
+- Cada usuário autenticado só pode alterar o próprio documento.
+- Contas novas começam com 0 vitórias, 0 partidas e Elo 1000.
+- Cada atualização de resultado pode acrescentar exatamente 1 partida, no máximo
+  1 vitória e alterar o Elo em no máximo 25 pontos.
+- Nome e avatar podem ser atualizados sem alterar a pontuação.
+- O ranking continua público para leitura em tempo real.
 
-O combate roda no navegador, então as regras não conseguem provar que a vitória foi real.
-Elas só limitam a velocidade de crescimento (no máximo 3 vitórias por minuto). Um cliente
-adulterado ainda pode inflar o próprio placar aos poucos. Para ranking à prova de fraude é
-preciso um backend que valide o resultado e publique com o Admin SDK.
+O cliente atualiza o documento público ao fim de uma batalha e cria uma entrada
+base durante cadastro/login quando ainda não existe.
+
+## Limite de segurança
+
+Essas regras impedem saltos diretos de pontuação e alterações em contas de outros
+jogadores, mas ainda não tornam o resultado totalmente autoritativo. Um cliente
+modificado pode tentar repetir atualizações válidas. A proteção definitiva exige
+que o servidor valide a partida e publique o resultado usando credenciais de
+servidor.
+
+Até essa validação existir, não use o ranking como fonte de recompensa financeira,
+premiação real ou qualquer mecanismo que dependa de integridade competitiva forte.
 
 ## Verificação
 
-`npm run test:rules` (emulador do Firestore, requer Java 17+).
+`npm run test:rules` inicia um emulador Firestore isolado e valida leitura pública,
+criação do baseline, avanço de uma partida, rejeição de saltos grandes, isolamento
+entre usuários, exclusão da própria entrada e isolamento do save privado.
 
 ## Publicação
 
-Alterar o GitHub não publica as regras. Publique `firestore.rules` no banco de `firebase.json`
-(`firebase deploy --only firestore:rules`) e o frontend atualizado. Sem as regras novas, o ranking
-continua recusando escritas (o jogo ignora o erro e segue normal).
+Alterar o repositório não publica automaticamente as regras do Firestore. Para a
+correção funcionar em produção, publique `firestore.rules` no banco configurado
+em `firebase.json`, além de publicar o frontend atualizado.

@@ -373,7 +373,7 @@ export default class LeaderboardScene extends Phaser.Scene {
     });
 
     this.loadingText = this.add
-      .text(width / 2, listStartY + 80, "Carregando pontuações anteriores...", {
+      .text(width / 2, listStartY + 80, "Sincronizando Ranking em Tempo Real...", {
         fontSize: "13px",
         fontFamily: "system-ui, sans-serif",
         color: "#94a3b8",
@@ -495,7 +495,7 @@ export default class LeaderboardScene extends Phaser.Scene {
         resolution: 2,
       }).setOrigin(0.5);
 
-      const emptyDesc = this.add.text(0, 46, "Vença partidas contra a CPU, no arcade, torneio ou história para entrar no ranking.", {
+      const emptyDesc = this.add.text(0, 46, "Vença partidas para entrar no Ranking Global!", {
         fontSize: "12px",
         color: "#94a3b8",
         fontFamily: "system-ui, sans-serif",
@@ -711,7 +711,7 @@ export default class LeaderboardScene extends Phaser.Scene {
       helperBg.strokeRoundedRect(-tableW / 2 + 10, 0, tableW - 20, 32, 6);
 
       const helperTxt = this.add
-        .text(0, 16, "Ranking atualizado ao fim de cada partida contra a CPU", {
+        .text(0, 16, "⚔️ Vença batalhas para subir no ranking global!", {
           fontSize: "11px",
           color: "#64748b",
           fontFamily: "system-ui, sans-serif",

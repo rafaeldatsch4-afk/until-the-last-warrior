@@ -1,41 +1,93 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    function signedInAs(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
+
+    function validLeaderboard(data) {
+      return data.keys().hasOnly([
+          'username', 'avatar', 'wins', 'elo', 'matches', 'updatedAt'
+        ])
+        && data.username is string
+        && data.username.size() >= 1
+        && data.username.size() <= 40
+        && data.avatar is string
+        && data.avatar.size() <= 16
+        && data.wins is int
+        && data.matches is int
+        && data.elo is int
+        && data.wins >= 0
+        && data.matches >= 0
+        && data.wins <= data.matches
+        && data.elo >= 0
+        && data.elo <= 5000
+        && (
+          !data.keys().hasAny(['updatedAt'])
+          || data.updatedAt is timestamp
+        );
+    }
+
+    function baselineOrFirstMatch(data) {
+      return (
+          data.matches == 0
+          && data.wins == 0
+          && data.elo == 1000
+        )
+        || (
+          data.matches == 1
+          && data.wins >= 0
+          && data.wins <= 1
+          && data.elo >= 975
+          && data.elo <= 1025
+        );
+    }
+
+    function statsUnchanged() {
+      return request.resource.data.wins == resource.data.wins
+        && request.resource.data.matches == resource.data.matches
+        && request.resource.data.elo == resource.data.elo;
+    }
+
+    function singleMatchAdvance() {
+      return request.resource.data.matches == resource.data.matches + 1
+        && request.resource.data.wins >= resource.data.wins
+        && request.resource.data.wins <= resource.data.wins + 1
+        && request.resource.data.elo >= resource.data.elo - 25
+        && request.resource.data.elo <= resource.data.elo + 25;
+    }
+
+    match /users/{userId}/{document=**} {
+      allow read, write: if signedInAs(userId);
+    }
+
     match /leaderboard_public/{userId} {
       allow read: if true;
 
-      // Only the owner can write their own entry, one match at a time.
-      // Rules cannot verify that a match was really won (the game runs in the browser),
-      // so the limits below only bound how fast an entry can grow.
-      function validProfile(d) {
-        return d.keys().hasOnly(['username', 'avatar', 'wins', 'elo', 'matches', 'updatedAt'])
-          && d.username is string && d.username.size() > 0 && d.username.size() <= 24
-          && d.avatar is string && d.avatar.size() <= 8
-          && d.wins is int && d.matches is int && d.elo is int
-          && d.updatedAt == request.time;
-      }
+      // New accounts start from the baseline. If a battle finishes before the
+      // login bootstrap completes, the first match may be created atomically.
+      allow create: if signedInAs(userId)
+        && validLeaderboard(request.resource.data)
+        && baselineOrFirstMatch(request.resource.data)
+        && request.resource.data.keys().hasAny(['updatedAt'])
+        && request.resource.data.updatedAt == request.time;
 
-      allow create: if request.auth != null && request.auth.uid == userId
-        && validProfile(request.resource.data)
-        && request.resource.data.matches == 1
-        && request.resource.data.wins >= 0 && request.resource.data.wins <= 1
-        && request.resource.data.elo == 1000;
+      // Profile metadata may change without changing score. Match results are
+      // limited to exactly one additional match, at most one win and ±25 Elo.
+      allow update: if signedInAs(userId)
+        && validLeaderboard(request.resource.data)
+        && (
+          statsUnchanged()
+          || (
+            singleMatchAdvance()
+            && request.resource.data.keys().hasAny(['updatedAt'])
+            && request.resource.data.updatedAt == request.time
+          )
+        );
 
-      allow update: if request.auth != null && request.auth.uid == userId
-        && validProfile(request.resource.data)
-        && request.resource.data.elo == resource.data.elo
-        && request.resource.data.matches == resource.data.matches + 1
-        && request.resource.data.wins >= resource.data.wins
-        && request.resource.data.wins <= resource.data.wins + 1
-        && request.resource.data.wins <= request.resource.data.matches
-        && request.time >= resource.data.get('updatedAt', timestamp.value(0)) + duration.value(20, 's');
-
-      // Keep account deletion working.
-      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow delete: if signedInAs(userId);
     }
+
     match /{document=**} {
       allow read, write: if false;
     }
