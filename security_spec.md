@@ -1,11 +1,12 @@
 # Security Specification
 
 ## Public leaderboard trust boundary
-- Clients cannot create or update `leaderboard_public` entries, including their own.
-- Public reads and owner-only deletion remain allowed.
-- Private profile stats and saves are untrusted and must not be copied into the ranking.
-- New scores are paused until a trusted backend validates match outcomes.
-- See `docs/RANKING_SECURITY.md` for rollout, limitations and emulator tests.
+- Public reads remain enabled.
+- Authenticated players may create or update only their own `leaderboard_public` entry.
+- New entries start from the ranking baseline; result updates may advance only one match at a time, add at most one win, and change Elo by at most 25 points.
+- Large score jumps and writes to another player's entry are rejected by Firestore rules.
+- Client-side validation reduces casual tampering but is not fully authoritative; a trusted backend is still required for strong competitive integrity.
+- See `docs/RANKING_SECURITY.md` for behavior, limitations and emulator tests.
 
 ## Data Invariants
 - A user's profile can only be created, read, or modified by the user themselves.
