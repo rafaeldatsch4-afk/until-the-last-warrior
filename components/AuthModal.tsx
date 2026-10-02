@@ -191,8 +191,9 @@ export const AuthButton: React.FC = () => {
 
         await setDoc(userRef, updateData, { merge: true });
 
-        // Public ranking: one validated step per match (see firestore.rules)
-        try {
+        // Public ranking: one validated step per match against the CPU (see firestore.rules)
+        const rankedVsCpu = ['single', 'arcade', 'tournament', 'story'].includes(gameMode);
+        if (rankedVsCpu) try {
           const lbRef = doc(db, 'leaderboard_public', u.uid);
           const lbSnap = await getDoc(lbRef);
           const prev = lbSnap.exists() ? lbSnap.data() : null;
