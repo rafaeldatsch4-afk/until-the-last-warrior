@@ -192,31 +192,35 @@ export const AuthButton: React.FC = () => {
         await setDoc(userRef, updateData, { merge: true });
 
         // Update the public ranking with exactly one bounded match result.
-        // The public document advances independently from the editable private profile.
-        const updatedProfile = await getDoc(userRef);
-        const profileData = updatedProfile.exists() ? updatedProfile.data() : {};
-        const leaderboardRef = doc(db, 'leaderboard_public', u.uid);
+        // Ranking failures must never block private progress or the local UI.
+        try {
+          const updatedProfile = await getDoc(userRef);
+          const profileData = updatedProfile.exists() ? updatedProfile.data() : {};
+          const leaderboardRef = doc(db, 'leaderboard_public', u.uid);
 
-        await runTransaction(db, async (transaction) => {
-          const leaderboardSnap = await transaction.get(leaderboardRef);
-          const current = leaderboardSnap.exists()
-            ? leaderboardSnap.data()
-            : { wins: 0, matches: 0, elo: 1000 };
+          await runTransaction(db, async (transaction) => {
+            const leaderboardSnap = await transaction.get(leaderboardRef);
+            const current = leaderboardSnap.exists()
+              ? leaderboardSnap.data()
+              : { wins: 0, matches: 0, elo: 1000 };
 
-          const currentWins = Number.isFinite(current.wins) ? current.wins : 0;
-          const currentMatches = Number.isFinite(current.matches) ? current.matches : 0;
-          const currentElo = Number.isFinite(current.elo) ? current.elo : 1000;
-          const eloDelta = gameMode === "ranked_pvp" ? (win ? 25 : -25) : 0;
+            const currentWins = Number.isFinite(current.wins) ? current.wins : 0;
+            const currentMatches = Number.isFinite(current.matches) ? current.matches : 0;
+            const currentElo = Number.isFinite(current.elo) ? current.elo : 1000;
+            const eloDelta = gameMode === "ranked_pvp" ? (win ? 25 : -25) : 0;
 
-          transaction.set(leaderboardRef, {
-            username: profileData.username || u.displayName || u.email?.split('@')[0] || 'Jogador',
-            avatar: profileData.avatar || '🥷',
-            wins: currentWins + (win ? 1 : 0),
-            matches: currentMatches + 1,
-            elo: Math.max(0, currentElo + eloDelta),
-            updatedAt: serverTimestamp(),
-          }, { merge: true });
-        });
+            transaction.set(leaderboardRef, {
+              username: profileData.username || u.displayName || u.email?.split('@')[0] || 'Jogador',
+              avatar: profileData.avatar || '🥷',
+              wins: currentWins + (win ? 1 : 0),
+              matches: currentMatches + 1,
+              elo: Math.max(0, currentElo + eloDelta),
+              updatedAt: serverTimestamp(),
+            }, { merge: true });
+          });
+        } catch (leaderboardError) {
+          console.warn("Falha ao atualizar ranking público:", leaderboardError);
+        }
 
         setStats(prev => ({
            matches: prev.matches + 1,
@@ -267,22 +271,26 @@ export const AuthButton: React.FC = () => {
                  await setDoc(userRef, { matches }, { merge: true });
              }
 
-             const leaderboardRef = doc(db, 'leaderboard_public', u.uid);
-             const leaderboardSnap = await getDoc(leaderboardRef);
-             if (leaderboardSnap.exists()) {
-               await setDoc(leaderboardRef, {
-                 username: dbUname,
-                 avatar: dbAvatar,
-               }, { merge: true });
-             } else {
-               await setDoc(leaderboardRef, {
-                 username: dbUname,
-                 avatar: dbAvatar,
-                 wins: 0,
-                 elo: 1000,
-                 matches: 0,
-                 updatedAt: serverTimestamp(),
-               });
+             try {
+               const leaderboardRef = doc(db, 'leaderboard_public', u.uid);
+               const leaderboardSnap = await getDoc(leaderboardRef);
+               if (leaderboardSnap.exists()) {
+                 await setDoc(leaderboardRef, {
+                   username: dbUname,
+                   avatar: dbAvatar,
+                 }, { merge: true });
+               } else {
+                 await setDoc(leaderboardRef, {
+                   username: dbUname,
+                   avatar: dbAvatar,
+                   wins: 0,
+                   elo: 1000,
+                   matches: 0,
+                   updatedAt: serverTimestamp(),
+                 });
+               }
+             } catch (leaderboardError) {
+               console.warn("Falha ao sincronizar perfil no ranking:", leaderboardError);
              }
              
              const rawCloudAchs = data?.achievements || [];
@@ -396,14 +404,18 @@ export const AuthButton: React.FC = () => {
             elo: 1000,
             coins: 1000,
           });
-          await setDoc(doc(db, 'leaderboard_public', cred.user.uid), {
-            username: username,
-            avatar: selectedAvatar,
-            wins: 0,
-            elo: 1000,
-            matches: 0,
-            updatedAt: serverTimestamp(),
-          });
+          try {
+            await setDoc(doc(db, 'leaderboard_public', cred.user.uid), {
+              username: username,
+              avatar: selectedAvatar,
+              wins: 0,
+              elo: 1000,
+              matches: 0,
+              updatedAt: serverTimestamp(),
+            });
+          } catch (leaderboardError) {
+            console.warn("Falha ao criar entrada inicial do ranking:", leaderboardError);
+          }
           // Upload current local progress as initial cloud save
           if (window.UTLW && window.UTLW.state) {
             syncCloudSaveImmediate();
