@@ -138,6 +138,8 @@ export default class BattleScene extends Phaser.Scene {
   public enemyDefending: boolean = false;
   public p1DefendStartTime: number = 0;
   public p2DefendStartTime: number = 0;
+  private p1WasDefending = false;
+  private p2WasDefending = false;
   public p1InvulnerableUntil: number = 0;
   public p2InvulnerableUntil: number = 0;
   public p1DashingUntil: number = 0;
@@ -281,6 +283,10 @@ export default class BattleScene extends Phaser.Scene {
     this.p2LastBlockTime = 0;
     this.p1StunnedUntil = 0;
     this.p2StunnedUntil = 0;
+    this.p1DefendStartTime = 0;
+    this.p2DefendStartTime = 0;
+    this.p1WasDefending = false;
+    this.p2WasDefending = false;
     if (this.p1StunTween) { this.p1StunTween.stop(); this.p1StunTween = undefined; }
     if (this.p2StunTween) { this.p2StunTween.stop(); this.p2StunTween = undefined; }
 
@@ -629,6 +635,17 @@ export default class BattleScene extends Phaser.Scene {
     this.lastPlayerHp = this.playerHp;
     this.lastEnemyHp = this.enemyHp;
 
+    // Movement is tuned for 60 fps; scale it by the real frame time so fighters move at
+    // the same speed on slow machines and high-refresh screens (capped to avoid jumps).
+    const frameScale = Math.min(delta, 50) / (1000 / 60);
+
+    // Record when each fighter starts defending, whatever set the flag (keyboard, CPU,
+    // network). Without this P2's start time stayed 0 and any block was an instant guard break.
+    if (this.playerDefending && !this.p1WasDefending) this.p1DefendStartTime = this.time.now;
+    if (this.enemyDefending && !this.p2WasDefending) this.p2DefendStartTime = this.time.now;
+    this.p1WasDefending = this.playerDefending;
+    this.p2WasDefending = this.enemyDefending;
+
     // --- POSTURE & GUARD RECOVERY / EXTENDED DEFENSE SYSTEM ---
     // Player 1 Posture Tracking
     if (this.playerDefending) {
@@ -767,11 +784,11 @@ export default class BattleScene extends Phaser.Scene {
           this.lastP1RightTime = time;
         }
 
-        let moveSpeed = 6;
+        let moveSpeed = 6 * frameScale;
         if (this.gameState.gameMode === "story") {
           const speedStat = this.gameState.storyState?.stats.speed || 0;
           const speedBonus = StoryStatsMath.getSpeedBonus(speedStat);
-          moveSpeed += speedBonus;
+          moveSpeed += speedBonus * frameScale;
         }
         let isMoving = false;
 
@@ -888,7 +905,7 @@ export default class BattleScene extends Phaser.Scene {
           this.lastP2RightTime = time;
         }
 
-        let moveSpeed = 6;
+        let moveSpeed = 6 * frameScale;
         let isMoving = false;
         let moveL = false;
         let moveR = false;
@@ -992,7 +1009,7 @@ export default class BattleScene extends Phaser.Scene {
         if (moveR && this.enemy.x > this.player.x && distToPlayer > 600)
           moveR = false;
 
-        let moveSpeed = 6;
+        let moveSpeed = 6 * frameScale;
         let isMoving = false;
 
         if (this.enemyDefending || (this.battleInput && this.battleInput.checkActionDown("charge", isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2))) {
@@ -1390,6 +1407,7 @@ export default class BattleScene extends Phaser.Scene {
         }
 
         if (isDefending) {
+          if (!this.enemyDefending) this.p2DefendStartTime = this.time.now;
           this.enemyDefending = true;
           if (!isCharging) {
               const transLevel = this.enemyTransformLevel;
@@ -1401,11 +1419,17 @@ export default class BattleScene extends Phaser.Scene {
           this.p2SpecialHoldTime = 0;
           this.clearChargeIndicator(false);
           
+          // Anti-ghosting: attacks pressed while blocking must not fire when the block is released
           if (useP1Controls) {
             this.mobileP1Attack = false;
             this.mobileP1KiBlast = false;
             this.p1AttackBuffer = 0;
             this.p1KiBlastBuffer = 0;
+          } else {
+            this.p2BufferedAttack = false;
+            this.p2BufferedKiBlast = false;
+            this.p2AttackBuffer = 0;
+            this.p2KiBlastBuffer = 0;
           }
         } else {
           this.enemyDefending = false;
