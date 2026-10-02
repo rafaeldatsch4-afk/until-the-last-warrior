@@ -1,3 +1,4 @@
+import { isOnlineMode } from "../types";
 import { Responsive } from "../utils/Responsive";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import Phaser from "phaser";
@@ -249,7 +250,7 @@ export class BattleInput {
     // Pause handler
     this.scene.input.keyboard.on("keydown-ESC", () => {
       if (!this.scene.isBattleOver) {
-        if (this.scene.gameState.gameMode === "online_pvp") {
+        if (isOnlineMode(this.scene.gameState.gameMode)) {
           this.scene.scene.launch("PauseScene", { online: true });
         } else {
           this.scene.scene.pause();
@@ -694,8 +695,8 @@ export class BattleInput {
     const bounds = ResponsiveUtils.getSafeBounds(this.scene);
     const topBtnY = Math.max(26, bounds.top + 16);
     const topCenterX = bounds.centerX;
-    const btnSpacing = 82; // Ample spacing to ensure zero touch overlapping
-    const btnW = 68;
+    const btnSpacing = 92; // Hit zones are btnW + 8 wide, leaving a gap between buttons
+    const btnW = 80; // Fits the widest label ("💾 SALVAR")
     const btnH = 40;
     const btnRadius = 10;
 
@@ -737,10 +738,12 @@ export class BattleInput {
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
       }).setOrigin(0.5);
 
-      // Dedicated interactive hit zone covering full button + generous touch padding (76x52px)
+      // Dedicated hit zone with touch padding, narrower than the spacing so neighbours never overlap
       const hitZone = this.scene.add
-        .zone(0, 0, btnW + 12, btnH + 16)
+        .zone(0, 0, btnW + 8, btnH + 16)
         .setOrigin(0.5)
+        // Phaser's hit test reads the child's own scroll factor, not the container's
+        .setScrollFactor(0)
         .setInteractive({ useHandCursor: true });
 
       container.add([bg, txt, hitZone]);
@@ -799,7 +802,7 @@ export class BattleInput {
       "12px",
       () => {
         this.resetMobile();
-        if (this.scene.gameState.gameMode === "online_pvp") {
+        if (isOnlineMode(this.scene.gameState.gameMode)) {
           this.scene.scene.launch("PauseScene", { online: true });
         } else {
           this.scene.scene.pause();
@@ -852,7 +855,8 @@ export class BattleInput {
       }
     );
 
-    this.editHudTextObj = this.scene.add.text(topCenterX, topBtnY + 46, "MODO DE EDIÇÃO DO HUD\nArraste os botões para reposicionar\nToque em HUD para salvar", {
+    // Below the health/Ki/posture bars so the hint never covers them
+    this.editHudTextObj = this.scene.add.text(topCenterX, bounds.centerY - 70, "MODO DE EDIÇÃO DO HUD\nArraste os botões para reposicionar\nToque em HUD para salvar", {
         fontSize: "15px",
         color: "#fffc00",
         fontStyle: "bold",
@@ -862,12 +866,13 @@ export class BattleInput {
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
     }).setOrigin(0.5).setScrollFactor(0).setDepth(105).setVisible(false);
 
-    this.mobileControls.push(
-      pauseBtnObj.container,
-      editBtnObj.container,
-      toggleBtnObj.container,
-      this.editHudTextObj
-    );
+    // Same layer as the other touch controls: uiContainer cancels the battle camera zoom.
+    // Outside it these buttons shrank toward the centre when the camera zoomed out,
+    // overlapping each other with touch areas that no longer matched the drawing.
+    const topControls = [pauseBtnObj.container, editBtnObj.container, toggleBtnObj.container, this.editHudTextObj];
+    this.scene.battleUI?.uiContainer?.add(topControls);
+
+    this.mobileControls.push(...topControls);
   }
 
   public destroy() {

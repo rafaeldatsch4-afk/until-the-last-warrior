@@ -79,7 +79,7 @@ async function startServer() {
     let fallbackRoom = null;
 
     for (const room of rooms.values()) {
-      if (!room.isPrivate && room.isRanked === isRanked && room.players.length === 1) {
+      if (!room.isPrivate && !!room.isRanked === isRanked && room.players.length === 1) {
         if (isRanked && room.rating) {
             const ratingDiff = Math.abs(room.rating - rating);
             const waitingTimeRanked = now - room.createdAt;
@@ -166,6 +166,8 @@ async function startServer() {
           id: roomId,
           players: [{ id: socket.id, name: pName, characterId: charId, ping: data.ping || 0 }],
           isPrivate: false,
+          isRanked: !!data.isRanked,
+          rating: data.rating || 1000,
           createdAt: Date.now(),
           playerSessions: new Map([[socket.id, data.sessionId || "guest"]])
         };
@@ -229,7 +231,7 @@ async function startServer() {
 
       const existingRoom = rooms.get(roomId);
 
-      if (!existingRoom) {
+      if (!existingRoom || !existingRoom.isPrivate) {
         socket.emit("roomError", "Sala não encontrada.");
         return;
       }
@@ -286,7 +288,8 @@ async function startServer() {
 
     // Leave matchmaking / lobby
     socket.on("leaveLobby", () => {
-      handleDisconnect(socket.id);
+      if (isRateLimited(socket.id, "leaveLobby", 5, 1000)) return;
+      handleDisconnect(socket.id, true);
     });
 
     // Disconnect handling
@@ -330,50 +333,62 @@ async function startServer() {
           
           socket.to(roomId).emit("matchResumed");
           console.log(`Player reconnected to room ${roomId} with new socket ${socket.id}`);
+          return;
         }
       }
+      // Room expired or session unknown: let the client leave the match cleanly.
+      socket.emit("opponentLeft");
     });
     
-    function handleDisconnect(sId: string) {
+    function closeRoom(roomId: string, room: Room) {
+      room.disconnectTimers?.forEach((t) => clearTimeout(t));
+      room.disconnectTimers?.clear();
+      for (const p of room.players) {
+        socketToRoom.delete(p.id);
+      }
+      rooms.delete(roomId);
+      io.in(roomId).socketsLeave(roomId);
+    }
+
+    // `explicitLeave`: the player chose to leave (cancel search / quit), so no grace period.
+    function handleDisconnect(sId: string, explicitLeave = false) {
       cleanupRateLimit(sId);
       const roomId = socketToRoom.get(sId);
-      if (roomId) {
-        const room = rooms.get(roomId);
-        if (room) {
-          // Find the player's sessionId
-          const sessionId = room.playerSessions ? room.playerSessions.get(sId) : null;
-          
-          if (sessionId) {
-            console.log(`Player disconnected, starting 10s grace period for ${sId} in room ${roomId}`);
-            socket.to(roomId).emit("matchPaused"); // Notify opponent
-            
-            if (!room.disconnectTimers) room.disconnectTimers = new Map();
-            
-            const timer = setTimeout(() => {
-              // Timer expired, player didn't return
-              console.log(`Grace period expired for ${sId} in room ${roomId}`);
-              // Use io.to(roomId) instead of socket.to (socket is disconnected)
-              io.to(roomId).emit("opponentLeft");
-              for (const p of room.players) {
-                socketToRoom.delete(p.id);
-              }
-              rooms.delete(roomId);
-            }, 10000);
-            
-            room.disconnectTimers.set(sessionId, timer);
-          } else {
-            // Old fallback (if no session id)
-            socket.to(roomId).emit("opponentLeft");
-            for (const p of room.players) {
-              socketToRoom.delete(p.id);
-            }
-            rooms.delete(roomId);
-            console.log(`Room closed due to disconnect: ${roomId}`);
-          }
-        } else {
-          socketToRoom.delete(sId);
-        }
+      if (!roomId) return;
+
+      const room = rooms.get(roomId);
+      if (!room) {
+        socketToRoom.delete(sId);
+        return;
       }
+
+      // Still waiting for an opponent (public queue or private lobby): drop the room right away,
+      // otherwise a ghost room would be matched with the next player.
+      if (room.players.length < 2) {
+        closeRoom(roomId, room);
+        console.log(`Waiting room closed: ${roomId}`);
+        return;
+      }
+
+      const sessionId = room.playerSessions ? room.playerSessions.get(sId) : null;
+
+      if (explicitLeave || !sessionId) {
+        socket.to(roomId).emit("opponentLeft");
+        closeRoom(roomId, room);
+        console.log(`Room closed, player left: ${roomId}`);
+        return;
+      }
+
+      console.log(`Player disconnected, starting 10s grace period for ${sId} in room ${roomId}`);
+      socket.to(roomId).emit("matchPaused");
+
+      if (!room.disconnectTimers) room.disconnectTimers = new Map();
+      const timer = setTimeout(() => {
+        console.log(`Grace period expired for ${sId} in room ${roomId}`);
+        io.to(roomId).emit("opponentLeft");
+        closeRoom(roomId, room);
+      }, 10000);
+      room.disconnectTimers.set(sessionId, timer);
     }
 
   });

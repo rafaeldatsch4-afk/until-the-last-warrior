@@ -1,6 +1,6 @@
 import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
-import { GameState } from "../types";
+import { GameState, isOnlineMode } from "../types";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
 import { generateItachiSprite } from "../sprites/ItachiSprite";
 
@@ -562,10 +562,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
       }
     }
 
-    if (
-      this.state.gameMode === "online_pvp" ||
-      this.state.gameMode === "ranked_pvp"
-    ) {
+    if (isOnlineMode(this.state.gameMode)) {
       transitionTo(this, "MultiplayerLobbyScene");
       return;
     }

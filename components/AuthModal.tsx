@@ -193,7 +193,8 @@ export const AuthButton: React.FC = () => {
 
         // Update the public ranking with exactly one bounded match result.
         // Ranking failures must never block private progress or the local UI.
-        try {
+        // Local PvP (two people on one device) also ends with battle-ended: keep it off the ranking.
+        if (gameMode !== 'local_pvp') try {
           const updatedProfile = await getDoc(userRef);
           const profileData = updatedProfile.exists() ? updatedProfile.data() : {};
           const leaderboardRef = doc(db, 'leaderboard_public', u.uid);

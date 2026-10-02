@@ -1,3 +1,4 @@
+import { isOnlineMode } from "../types";
 import { Responsive } from "../utils/Responsive";
 import { StoryStatsMath } from "../systems/StoryStatsMath";
 export class BattleUI {
@@ -423,7 +424,7 @@ export class BattleUI {
     this.uiContainer.add(this.logText);
 
     
-    if (gameMode === "online_pvp") {
+    if (isOnlineMode(gameMode)) {
       this.pingText = bs.add.text(480, 50, "Ping: -- ms", {
         fontSize: "14px",
         color: "#ffffff",
