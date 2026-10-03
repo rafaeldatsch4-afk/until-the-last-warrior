@@ -4,6 +4,7 @@ import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
 import { CUSTOM_FRAME } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
+import { GI_SEAM, trouserClothBottom } from './CustomSeams';
 
 const urls = import.meta.glob<string>('../assets/custom/*.png', { eager: true, query: '?url', import: 'default' });
 const prefix = 'wardrobe:';
@@ -37,9 +38,15 @@ function footwearParts(image: HTMLCanvasElement) {
     }
     const w=Math.max(1,x1-x0+1),h=Math.max(1,y1-y0+1);
     // The toe makes the silhouette asymmetric; attach at the boot shaft instead.
-    let shaftSum=0,shaftCount=0;
-    for(let y=y0;y<y0+h*.2;y++)for(let x=x0;x<=x1;x++)if(pixels[(y*image.width+x)*4+3]>128){shaftSum+=x-x0;shaftCount++;}
-    return {x:x0,y:y0,w,h,ankle:shaftCount?shaftSum/shaftCount:w/2};
+    let shaftLeft=0,shaftRight=0,shaftRows=0;
+    // Measure below the curved rim, where the boot shaft reaches its full width.
+    for(let y=Math.ceil(y0+h*.08);y<y0+h*.18;y++) {
+      let left=x1,right=x0;
+      for(let x=x0;x<=x1;x++)if(pixels[(y*image.width+x)*4+3]>128){left=Math.min(left,x);right=Math.max(right,x);}
+      if(right>left){shaftLeft+=left-x0;shaftRight+=right-x0+1;shaftRows++;}
+    }
+    const left=shaftRows?shaftLeft/shaftRows:0,right=shaftRows?shaftRight/shaftRows:w;
+    return {x:x0,y:y0,w,h,ankle:(left+right)/2,shaftWidth:right-left};
   });
 }
 
@@ -103,7 +110,23 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   canvas.height = CUSTOM_FRAME.height * CUSTOM_FRAME.rows * resolution;
   const ctx = canvas.getContext('2d')!;
   ctx.scale(resolution,resolution);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  const torso = tint(scene, 'torso-' + (data.part_torso || 'goku'), { primary: data.color_torso_1 ?? data.gi1, secondary: data.color_torso_2 ?? data.gi2, skin: data.skin });
+  const torsoId=data.part_torso || 'goku';
+  const torsoSource = tint(scene, 'torso-' + torsoId, { primary: data.color_torso_1 ?? data.gi1, secondary: data.color_torso_2 ?? data.gi2, skin: data.skin });
+  const torso=document.createElement('canvas');torso.width=torsoSource.width;torso.height=torsoSource.height;
+  const torsoContext=torso.getContext('2d')!;torsoContext.drawImage(torsoSource,0,0);
+  if(torsoId==='goku') {
+    // The gi drawing contains a separate skirt below its belt. Remove only that
+    // central piece, not the arms: the equipped trousers supply the lower gi.
+    const pixels=torsoContext.getImageData(0,0,torso.width,torso.height);
+    for(let y=GI_SEAM.torsoBeltBottom;y<torso.height;y++) {
+      const centre=Math.round(torso.width*.55);
+      if(pixels.data[(y*torso.width+centre)*4+3]<8)continue;
+      let left=centre,right=centre;
+      while(left>0&&pixels.data[(y*torso.width+left-1)*4+3]>4)left--;
+      while(right<torso.width-1&&pixels.data[(y*torso.width+right+1)*4+3]>4)right++;
+      torsoContext.clearRect(left,y,right-left+1,1);
+    }
+  }
   const raisedTorso = tint(scene, 'torso-genki-' + (data.part_torso || 'goku'), { primary: data.color_torso_1 ?? data.gi1, secondary: data.color_torso_2 ?? data.gi2, skin: data.skin });
   const legSource = tint(scene, 'legs-' + (data.part_legs || 'goku'), { primary: data.color_legs_1 ?? data.gi1, secondary: data.color_legs_2 ?? data.gi2, skin: data.skin });
   // Some atlas cells contain a few pixels of the next row. Those must not extend
@@ -121,15 +144,42 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   const feet = tint(scene, 'feet-' + (data.part_feet || 'goku'), { primary: data.color_feet_1 ?? data.gi2, secondary: data.color_feet_2 ?? data.gi1, skin: data.skin });
   const boots = footwearParts(feet);
   const bootH=(data.part_feet==='luffy'||data.part_feet==='jotaro')?7:11;
-  const hipY=93, legLength=126-hipY;
+  const giTrousers=(data.part_legs || 'goku')==='goku';
+  // Source landmarks exclude the trousers' duplicate belt and the bare skin
+  // below their cuffs. Both are hidden when the gi is worn with boots.
+  const trouserTop=giTrousers&&torsoId==='goku'?GI_SEAM.trouserBeltBottom:0;
+  let trouserBottom=legs.height;
+  if(data.part_legs!=='luffy') {
+    // Inspect the untinted source: orange fabric must not be mistaken for skin.
+    const sourceKey=prefix+'legs-'+(data.part_legs || 'goku');
+    const original=scene.textures.get(scene.textures.exists(sourceKey)?sourceKey:prefix+'legs-goku').getSourceImage() as HTMLImageElement;
+    const mask=document.createElement('canvas');mask.width=original.width;mask.height=original.height;
+    const maskContext=mask.getContext('2d')!;maskContext.drawImage(original,0,0);
+    const pixels=maskContext.getImageData(0,0,mask.width,mask.height).data;
+    trouserBottom=trouserClothBottom(pixels,legs.width,legTop,legs.height);
+  }
+  const hipY=torsoId==='goku'?GI_SEAM.worldY-1:93, legLength=126-hipY;
   const bootTop=legLength-bootH;
   const legPixels=legs.getContext('2d')!.getImageData(0,0,legs.width,legs.height).data;
   const ankles=[0,1].map(side=>{
-    let sum=0,count=0;
-    for(let y=Math.floor(legs.height*.90);y<legs.height;y++)for(let x=Math.floor(side*legs.width/2);x<Math.floor((side+1)*legs.width/2);x++){
-      if(legPixels[(y*legs.width+x)*4+3]>128){sum+=x-side*legs.width/2;count++;}
+    // Each calf may end on a different source row. Measuring at the pair's
+    // lowest row would attach the shorter calf to transparent padding.
+    let bottom=trouserBottom;
+    for(let y=trouserBottom-1;y>=Math.floor(legs.height*.6);y--) {
+      let opaque=0;
+      for(let x=Math.floor(side*legs.width/2);x<Math.floor((side+1)*legs.width/2);x++)if(legPixels[(y*legs.width+x)*4+3]>128)opaque++;
+      if(opaque>2){bottom=y+1;break;}
     }
-    return count?sum/count/(legs.width/2):.5;
+    let leftSum=0,rightSum=0,count=0;
+    for(let y=bottom-6;y<bottom;y++){
+      let left=legs.width,right=-1;
+      for(let x=Math.floor(side*legs.width/2);x<Math.floor((side+1)*legs.width/2);x++){
+        if(legPixels[(y*legs.width+x)*4+3]>128){left=Math.min(left,x);right=Math.max(right,x);}
+      }
+      if(right>=left){leftSum+=left-side*legs.width/2;rightSum+=right-side*legs.width/2+1;count++;}
+    }
+    const left=count?leftSum/count:legs.width*.2,right=count?rightSum/count:legs.width*.3;
+    return {centre:(left+right)/legs.width,width:(right-left)/(legs.width/2),bottom};
   });
   const accessoryId = data.part_accessory || 'none';
   const accessory = accessoryId === 'none' ? null : tint(scene, 'accessory-' + accessoryId,
@@ -165,17 +215,19 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     for (let side = 0; side < 2; side++) {
       ctx.save();
       const pivotX = side === 0 ? 91 : 102;
-      ctx.translate(pivotX+lean*.5, hipY+bob);
+      const waistShift=torsoId==='goku'?1.5:0;
+      ctx.translate(pivotX+waistShift+lean, hipY+bob);
       ctx.rotate(side === 1 && kick ? -1.2 : phase * (side ? -0.14 : 0.14));
       const sx = side * legs.width / 2;
       // Keep the full trouser width, but tuck its hem inside the boot shaft.
-      const legW=17,legX=80+side*17;
+      const legW=giTrousers&&torsoId==='goku'?18:17,legX=97+(side-1)*legW;
       const legH=bootTop+2;
-      ctx.drawImage(legs, sx, 0, legs.width / 2, legs.height, legX - pivotX, 0, legW, legH);
       const boot=boots[side];
-      const bootW=Math.min(side?10:8,boot.w/boot.h*bootH);
-      const ankleX=legX+ankles[side]*legW;
+      const bootW=boot.w/boot.shaftWidth*(ankles[side].width*legW+.5);
+      const ankleX=legX+ankles[side].centre*legW;
       ctx.drawImage(feet,boot.x,boot.y,boot.w,boot.h,ankleX-pivotX-boot.ankle/boot.w*bootW,bootTop,bootW,bootH);
+      // The cuff covers the open boot rim, just as fabric enters a real boot.
+      ctx.drawImage(legs, sx, trouserTop, legs.width / 2, ankles[side].bottom-trouserTop, legX - pivotX, 0, legW, legH);
       ctx.restore();
     }
     // One continuous neck behind both layers, including their antialiased edges.
@@ -189,7 +241,9 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       // A continuous drawing keeps the shoulders, chest, sleeves and hands
       // joined. Rotating cropped arms left old shoulder caps and open seams.
       const rect=genkiTorsoRect(data.part_torso || 'goku',neckX);
-      draw(raisedTorso,rect.x+lean,rect.y+bob,rect.width,rect.height);
+      const sourceBottom=torsoId==='goku'?GI_SEAM.raisedBeltBottom:raisedTorso.height;
+      ctx.drawImage(raisedTorso,0,0,raisedTorso.width,sourceBottom,
+        rect.x+lean,rect.y+bob,rect.width,rect.height*sourceBottom/raisedTorso.height);
       draw(portrait,lean,headBob,192,128);
     } else if(!punch && !defend && !charge) {
       // Keep shoulders, arms and belt joined in relaxed poses; preserve source proportions.
