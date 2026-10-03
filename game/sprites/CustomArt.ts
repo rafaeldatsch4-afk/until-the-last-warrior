@@ -71,7 +71,7 @@ function tint(scene: Phaser.Scene, name: string, palette: Palette): HTMLCanvasEl
       color=palette.secondary;light=r/230;
     } else if(name==='portrait-jotaro' && py<canvas.height*.43 && r>100 && g>70 && b<g*.65) {
       color=palette.secondary;light=r/230;
-    } else if(name==='portrait-jotaro' && py<canvas.height*.43 && Math.max(r,g,b)-Math.min(r,g,b)<35 && Math.max(r,g,b)>15) {
+    } else if(name==='portrait-jotaro' && px>canvas.width*.40 && py<canvas.height*.43 && Math.max(r,g,b)-Math.min(r,g,b)<35 && Math.max(r,g,b)>15) {
       color=palette.primary;light=Math.min(1,.25+Math.max(r,g,b)/120);
     } else if (g > r * 1.28 && b > r * 1.28 && g > 55) {
       color = palette.secondary; light = Math.max(g, b) / 205;
@@ -121,11 +121,12 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   const feet = tint(scene, 'feet-' + (data.part_feet || 'goku'), { primary: data.color_feet_1 ?? data.gi2, secondary: data.color_feet_2 ?? data.gi1, skin: data.skin });
   const boots = footwearParts(feet);
   const bootH=(data.part_feet==='luffy'||data.part_feet==='jotaro')?7:11;
-  const bootTop=37-bootH;
+  const hipY=93, legLength=126-hipY;
+  const bootTop=legLength-bootH;
   const legPixels=legs.getContext('2d')!.getImageData(0,0,legs.width,legs.height).data;
   const ankles=[0,1].map(side=>{
     let sum=0,count=0;
-    for(let y=Math.floor(legs.height*bootTop/34);y<Math.min(legs.height,Math.ceil(legs.height*(bootTop+2)/34));y++)for(let x=Math.floor(side*legs.width/2);x<Math.floor((side+1)*legs.width/2);x++){
+    for(let y=Math.floor(legs.height*.90);y<legs.height;y++)for(let x=Math.floor(side*legs.width/2);x<Math.floor((side+1)*legs.width/2);x++){
       if(legPixels[(y*legs.width+x)*4+3]>128){sum+=x-side*legs.width/2;count++;}
     }
     return count?sum/count/(legs.width/2):.5;
@@ -156,22 +157,25 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     const headBob = f < 4 ? 0 : bob;
     const lean = punch ? 3 : kick ? -2 : defend ? -2 : 0;
     if (accessory && accessoryId === 'cape') draw(accessory, 74 - phase, 70 + bob, 43 + Math.abs(phase)*2, 53);
-    if (accessory && accessoryId === 'scarf') draw(accessory, 70 - phase, 70 + bob, 30, 26);
+    // The collar lives in the upper-right of this source; attach that collar
+    // to the neck, then let the tails fall behind the shoulder.
+    const scarfX=neckX+lean-13.5, scarfY=68+bob, scarfW=18, scarfH=15;
+    if (accessory && accessoryId === 'scarf') ctx.drawImage(accessory,scarfX,scarfY,scarfW,scarfH);
     // Legs and footwear share hip pivots, so walking and kicking cannot leave detached boots.
     for (let side = 0; side < 2; side++) {
       ctx.save();
       const pivotX = side === 0 ? 91 : 102;
-      ctx.translate(pivotX, 89);
+      ctx.translate(pivotX+lean*.5, hipY+bob);
       ctx.rotate(side === 1 && kick ? -1.2 : phase * (side ? -0.14 : 0.14));
       const sx = side * legs.width / 2;
       // Keep the full trouser width, but tuck its hem inside the boot shaft.
       const legW=17,legX=80+side*17;
-      const legH=Math.min(34,bootTop+2);
-      ctx.drawImage(legs, sx, 0, legs.width / 2, legs.height*legH/34, legX - pivotX, 0, legW, legH);
+      const legH=bootTop+2;
+      ctx.drawImage(legs, sx, 0, legs.width / 2, legs.height, legX - pivotX, 0, legW, legH);
       const boot=boots[side];
       const bootW=Math.min(side?10:8,boot.w/boot.h*bootH);
       const ankleX=legX+ankles[side]*legW;
-      ctx.drawImage(feet,boot.x,boot.y,boot.w,boot.h,ankleX-pivotX-boot.ankle/boot.w*bootW,37-bootH,bootW,bootH);
+      ctx.drawImage(feet,boot.x,boot.y,boot.w,boot.h,ankleX-pivotX-boot.ankle/boot.w*bootW,bootTop,bootW,bootH);
       ctx.restore();
     }
     // One continuous neck behind both layers, including their antialiased edges.
@@ -212,6 +216,12 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     }
     }
     if (accessory) {
+      if (accessoryId === 'scarf') {
+        // Repaint only the collar in front of the neck. The hanging tails
+        // remain behind the arms rather than covering the face or floating.
+        ctx.drawImage(accessory,accessory.width*.5,0,accessory.width*.5,accessory.height*.45,
+          scarfX+scarfW*.5,scarfY,scarfW*.5,scarfH*.45);
+      }
       if (accessoryId === 'sword' && !genki) {
         // Follow the same right-arm pivot and rotation as the hand.
         const armAngle=charge?-.18:defend?2.25:punch?-1.55:0;
