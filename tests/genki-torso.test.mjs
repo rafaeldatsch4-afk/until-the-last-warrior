@@ -3,6 +3,7 @@ import {test} from 'node:test';
 import sharp from 'sharp';
 import {GENKI_TORSOS,genkiTorsoRect} from '../game/sprites/GenkiTorsoLayout.ts';
 import {partOptions} from '../game/creator/CreatorPartOptions.ts';
+import {GI_SEAM} from '../game/sprites/CustomSeams.ts';
 
 test('every existing garment has a continuous raised-arm drawing with stable neck and waist anchors',async()=>{
   assert.deepEqual(Object.keys(GENKI_TORSOS).sort(),[...partOptions.torso].sort());
@@ -10,7 +11,9 @@ test('every existing garment has a continuous raised-arm drawing with stable nec
     const pose=GENKI_TORSOS[key],rect=genkiTorsoRect(key,98),scale=rect.width/512;
     assert.ok(Math.abs(rect.x+pose.neck[0]*scale-98)<1e-9,key);
     assert.ok(Math.abs(rect.y+pose.neck[1]*scale-64)<1e-9,key);
-    assert.ok(Math.abs(rect.y+pose.hem*scale-102)<1e-9,key);
+    const waistSource=key==='goku'?GI_SEAM.raisedBeltBottom:pose.hem;
+    const waistTarget=key==='goku'?GI_SEAM.worldY:102;
+    assert.ok(Math.abs(rect.y+waistSource*scale-waistTarget)<1e-9,key);
     assert.ok(rect.x>0&&rect.x+rect.width<192&&rect.y>0&&rect.y+rect.height<128,key);
     const {data,info}=await sharp(`game/assets/custom/torso-genki-${key}.png`).ensureAlpha().raw().toBuffer({resolveWithObject:true});
     assert.equal(info.width,512);assert.equal(info.height,512);

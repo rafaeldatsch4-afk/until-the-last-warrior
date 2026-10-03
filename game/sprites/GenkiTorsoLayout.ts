@@ -1,5 +1,6 @@
 // Reviewed source anchors in each 512px cell: neck centre/top and garment hem.
 // The complete torso (including shoulders and arms) is transformed as one piece.
+import { GI_SEAM } from './CustomSeams';
 export const GENKI_TORSOS: Record<string, { sheet: 'a' | 'b'; cell: number; neck: readonly [number, number]; hem: number }> = {
   goku: { sheet: 'a', cell: 0, neck: [267, 199], hem: 507 },
   spiderman: { sheet: 'a', cell: 1, neck: [254, 198], hem: 502 },
@@ -15,7 +16,9 @@ export const GENKI_TORSOS: Record<string, { sheet: 'a' | 'b'; cell: number; neck
 
 export function genkiTorsoRect(key: string, neckX: number) {
   const pose = GENKI_TORSOS[key] ?? GENKI_TORSOS.goku;
-  const scale = 38 / (pose.hem - pose.neck[1]);
+  const scale = key==='goku'
+    ? (GI_SEAM.worldY-64)/(GI_SEAM.raisedBeltBottom-pose.neck[1])
+    : 38 / (pose.hem - pose.neck[1]);
   return { x: neckX - pose.neck[0] * scale, y: 64 - pose.neck[1] * scale,
     width: 512 * scale, height: 512 * scale };
 }
