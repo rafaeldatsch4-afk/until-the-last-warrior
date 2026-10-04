@@ -260,6 +260,8 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     // Keep the neck/collar and shoulder bridge intact while the lower arms rotate.
     ctx.drawImage(torso, 0, 0, tw, th*.30, 79+lean,66+bob,36,11);
     ctx.drawImage(torso, tw*.25, th*.30, tw*.5, th*.70, 88+lean,77+bob,18,25);
+    drawScarf();
+    draw(portrait,lean,headBob,192,128);
     for (let side=0;side<2;side++) {
       const x = side ? 106 : 87;
       ctx.save(); ctx.translate(x + lean, 76 + bob);
@@ -274,8 +276,6 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.drawImage(torso, side ? tw*.75 : 0, th*.25, tw*.25, th*.75, side ? 0 : -9, -1, 9, 27);
       ctx.restore();
     }
-    drawScarf();
-    draw(portrait,lean,headBob,192,128);
     }
     if (accessory) {
       if (accessoryId === 'sword' && !genki) {
