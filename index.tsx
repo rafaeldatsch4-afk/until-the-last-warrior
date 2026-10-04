@@ -2,8 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { registerGameUpdates } from './game/registerGameUpdates';
+import { wakeMultiplayerServerOnVisit } from './game/systems/ServerWakeup';
 
 registerGameUpdates();
+wakeMultiplayerServerOnVisit();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
