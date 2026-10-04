@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import { io, Socket } from "socket.io-client";
 import Phaser from "phaser";
+import { getMultiplayerServerUrl } from "./ServerWakeup";
 
 export interface MatchStartData {
   roomCode: string;
@@ -80,16 +81,7 @@ export class MultiplayerManager {
       return;
     }
 
-    const railwayUrl = "https://until-the-last-warrior-production.up.railway.app";
-    const envUrl = import.meta.env.VITE_MULTIPLAYER_URL;
-    let url = envUrl || railwayUrl;
-
-    if (
-      window.location.hostname.includes("run.app") ||
-      window.location.hostname === "localhost"
-    ) {
-      url = "";
-    }
+    const url = getMultiplayerServerUrl();
 
     console.log(`Connecting to Multiplayer server at ${url || "default host"}...`);
 
