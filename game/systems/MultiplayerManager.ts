@@ -2,6 +2,7 @@
 import { io, Socket } from "socket.io-client";
 import Phaser from "phaser";
 import { getMultiplayerServerUrl } from "./ServerWakeup";
+import { packState, unpackState } from "./NetProtocol";
 
 export interface MatchStartData {
   roomCode: string;
@@ -54,6 +55,8 @@ export class MultiplayerManager {
   private readonly INTERPOLATION_DELAY_MS: number = 80; // Render delay to ensure smooth lerp between packets
   private currentInterpolated: InterpolatedTransform = { x: 0, y: 0, rotation: 0, flipX: false };
   private hasInitialSnapshot: boolean = false;
+  /** Local clock minus the sender's clock (plus the fastest observed latency). */
+  private clockOffset: number | null = null;
 
   // Listeners
   public onWaitingCallback?: (roomCode: string, isPrivate?: boolean) => void;
@@ -202,7 +205,9 @@ export class MultiplayerManager {
       }
     });
 
-    this.socket.on("remotePlayerState", (state: NetworkPlayerState) => {
+    this.socket.on("remotePlayerState", (raw: unknown) => {
+      const state = unpackState(raw) as NetworkPlayerState | null;
+      if (!state) return;
       this.pushRemoteState(state);
       if (this.onRemoteStateCallback) {
         this.onRemoteStateCallback(state);
@@ -254,12 +259,20 @@ export class MultiplayerManager {
   public resetInterpolation() {
     this.stateBuffer = [];
     this.hasInitialSnapshot = false;
+    this.clockOffset = null;
     this.currentInterpolated = { x: 0, y: 0, rotation: 0, flipX: false };
   }
 
   private pushRemoteState(state: NetworkPlayerState) {
     const now = Date.now();
-    const snap = { state, timestamp: state.timestamp || now };
+    // Timestamps come from the other device's clock, which rarely matches ours (phones and
+    // PCs are often seconds apart). Map them onto our clock using the smallest observed
+    // offset, which keeps the real spacing between snapshots without the clock skew.
+    const sentAt = state.timestamp || now;
+    const offset = now - sentAt;
+    if (this.clockOffset === null || offset < this.clockOffset) this.clockOffset = offset;
+    else this.clockOffset += (offset - this.clockOffset) * 0.002; // follow slow drift
+    const snap = { state, timestamp: sentAt + this.clockOffset };
 
     if (!this.hasInitialSnapshot) {
       this.currentInterpolated.x = state.x;
@@ -388,12 +401,12 @@ export class MultiplayerManager {
     }
   }
 
-  public emitState(state: NetworkPlayerState | any) {
+  public emitState(state: NetworkPlayerState) {
     if (this.socket && this.isConnected) {
-      if (!state.timestamp) {
-        state.timestamp = Date.now();
-      }
-      this.socket.emit("playerState", state);
+      // Volatile: a position that can't go out right now is dropped, not queued. The next
+      // tick replaces it anyway, and a queue of stale positions is what builds up lag on
+      // congested mobile connections. Actions (attacks, hits) stay reliable.
+      this.socket.volatile.emit("playerState", packState(state));
     }
   }
 

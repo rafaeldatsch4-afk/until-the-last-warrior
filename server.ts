@@ -273,7 +273,8 @@ async function startServer() {
       if (isRateLimited(socket.id, "playerState", 35, 1000)) return;
       const roomId = socketToRoom.get(socket.id);
       if (roomId) {
-        socket.to(roomId).emit("remotePlayerState", state);
+        // Positions are superseded 30x/s: drop instead of queueing when the receiver lags
+        socket.volatile.to(roomId).emit("remotePlayerState", state);
       }
     });
 

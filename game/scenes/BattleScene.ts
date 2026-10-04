@@ -20,6 +20,7 @@ import { getFighter } from "../characters/FighterRegistry";
 import { DailyChallenges } from "../systems/DailyChallenges";
 import { auth } from "../../firebase/init";
 import { MultiplayerManager } from "../systems/MultiplayerManager";
+import { stateChangeKey } from "../systems/NetProtocol";
 import { animKeyToId, animIdToSuffix } from "../systems/AnimKeyMap";
 import { AuraManager } from "../systems/AuraManager";
 
@@ -637,7 +638,7 @@ export default class BattleScene extends Phaser.Scene {
 
     // Movement is tuned for 60 fps; scale it by the real frame time so fighters move at
     // the same speed on slow machines and high-refresh screens (capped to avoid jumps).
-    const frameScale = Math.min(delta, 50) / (1000 / 60);
+    const frameScale = Math.min(delta, 1000 / 15) / (1000 / 60);
 
     // Record when each fighter starts defending, whatever set the flag (keyboard, CPU,
     // network). Without this P2's start time stayed 0 and any block was an instant guard break.
@@ -744,7 +745,9 @@ export default class BattleScene extends Phaser.Scene {
               ((localIdx === 1 ? this.isP1Jumping : this.isP2Jumping) ? 4 : 0) |
               ((localIdx === 1 ? this.p1SuperActive : this.p2SuperActive) ? 8 : 0),
           };
-          const stateKey = `${stateData.x},${stateData.y},${stateData.a},${stateData.flags}`;
+          // Turning around, HP, Ki and transforms must go out on the next tick too,
+          // not wait for the heartbeat
+          const stateKey = stateChangeKey(stateData);
           const now = Date.now();
           const forceHeartbeat = now - this.lastSentTime > 500;
 
