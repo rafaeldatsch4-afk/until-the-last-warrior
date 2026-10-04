@@ -67,7 +67,9 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   },
   fps: {
     target: 60,
-    min: 30,
+    // Below this rate Phaser stops using the real frame time and the whole game runs in
+    // slow motion. At 30 a phone at 20-25 fps played at ~70% speed (seen as lag online).
+    min: 15,
     forceSetTimeOut: false,
   },
   input: {
