@@ -2,6 +2,7 @@
 import { io, Socket } from "socket.io-client";
 import Phaser from "phaser";
 import { getMultiplayerServerUrl } from "./ServerWakeup";
+import { packState, unpackState } from "./NetProtocol";
 
 export interface MatchStartData {
   roomCode: string;
@@ -204,7 +205,9 @@ export class MultiplayerManager {
       }
     });
 
-    this.socket.on("remotePlayerState", (state: NetworkPlayerState) => {
+    this.socket.on("remotePlayerState", (raw: unknown) => {
+      const state = unpackState(raw) as NetworkPlayerState | null;
+      if (!state) return;
       this.pushRemoteState(state);
       if (this.onRemoteStateCallback) {
         this.onRemoteStateCallback(state);
@@ -398,12 +401,12 @@ export class MultiplayerManager {
     }
   }
 
-  public emitState(state: NetworkPlayerState | any) {
+  public emitState(state: NetworkPlayerState) {
     if (this.socket && this.isConnected) {
-      if (!state.timestamp) {
-        state.timestamp = Date.now();
-      }
-      this.socket.emit("playerState", state);
+      // Volatile: a position that can't go out right now is dropped, not queued. The next
+      // tick replaces it anyway, and a queue of stale positions is what builds up lag on
+      // congested mobile connections. Actions (attacks, hits) stay reliable.
+      this.socket.volatile.emit("playerState", packState(state));
     }
   }
 
