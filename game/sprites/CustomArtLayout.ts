@@ -18,5 +18,13 @@ export function displayedHead(head: string, accessory: string) {
 
 export const HEAD_ANCHORS = {
   neck: [98, 70], eyes: [103, 61],
-  hat: [85, 42, 29, 16], band: [83, 51, 27, 10], visor: [94, 58, 12, 7],
+  hat: [86.5, 44.5, 24, 14.8], band: [84.6, 53, 22, 7], visor: [94, 58, 12, 7],
 } as const;
+
+/** The painted wrap begins 43% into the image; its tails are not head width. */
+export function headbandRect(head: string): readonly [number, number, number, number] {
+  if (head === 'saitama') return [82.2, 52, 24.3, 7];
+  if (head === 'jotaro') return [84.3, 51, 22, 7];
+  if (head === 'spiderman') return [83.5, 47, 26, 7];
+  return HEAD_ANCHORS.band;
+}

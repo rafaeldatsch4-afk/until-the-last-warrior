@@ -1,841 +1,433 @@
-import { transitionTo } from "../utils/sceneTransition";
 import Phaser from "phaser";
-import { GameState } from "../types";
 import { auth } from "../../firebase/init";
-import { MultiplayerManager } from "../systems/MultiplayerManager";
+import { CharacterData, GameState } from "../types";
+import { MultiplayerManager, MatchStartData } from "../systems/MultiplayerManager";
 import { ResponsiveUtils } from "../utils/ResponsiveUtils";
+import { transitionTo } from "../utils/sceneTransition";
+
+const C = { bg: 0x080f21, panel: 0x101c32, line: 0x30425e, gold: 0xe3b663, cyan: 0x71d5e6, ink: 0x111b2c };
+const FONT = "'Plus Jakarta Sans', sans-serif";
+type Mode = "menu" | "typing" | "waiting" | "matched" | "error";
+type Request = "quick" | "create" | "join";
+interface Button { bg: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text; action: () => void; primary: boolean; enabled: boolean }
 
 export default class MultiplayerLobbyScene extends Phaser.Scene {
   private gameState!: GameState;
-  private statusText!: Phaser.GameObjects.Text;
-  private roomCodeText!: Phaser.GameObjects.Text;
-  private lobbyCard!: Phaser.GameObjects.Container;
-  private currentMode: "menu" | "waiting" | "typing" = "menu";
-
-  // Interactive room code typing state
-  private typedCode: string = "";
+  private playerName = "";
+  private localCharacterId = 0;
+  private currentMode: Mode = "menu";
+  private root?: Phaser.GameObjects.Container;
+  private buttons: Button[] = [];
+  private focused = -1;
+  private handledKeys = new WeakSet<KeyboardEvent>();
+  private typedCode = "";
   private typingTextObj?: Phaser.GameObjects.Text;
-  private errorBox?: Phaser.GameObjects.Container;
+  private typingHint?: Phaser.GameObjects.Text;
+  private joinButton?: Button;
+  private request?: Request;
+  private waitingTitle = "";
+  private waitingDetail = "";
+  private privateCode = "";
+  private errorMessage = "";
+  private opponentName = "";
+  private opponentCharacterId = 0;
+  private connected = false;
+  private reconnecting = false;
+  private requestTimeout?: Phaser.Time.TimerEvent;
+  private matchTimer?: Phaser.Time.TimerEvent;
+  private resizeTimer?: Phaser.Time.TimerEvent;
+  private enteringBattle = false;
+  private layout = { x: 0, y: 0, w: 0, h: 0 };
 
-  constructor() {
-    super("MultiplayerLobbyScene");
-  }
+  constructor() { super("MultiplayerLobbyScene"); }
 
   create() {
-    this.cameras.main.fadeIn(300, 0, 0, 0);
     this.gameState = this.registry.get("gameState") as GameState;
+    this.localCharacterId = this.gameState.p1CharacterId;
+    this.playerName = auth.currentUser?.displayName || auth.currentUser?.email?.split("@")[0] || `Guerreiro ${Phaser.Math.Between(100, 999)}`;
     this.currentMode = "menu";
     this.typedCode = "";
-    this.errorBox = undefined;
-
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      const mm = MultiplayerManager.getInstance();
-      mm.onWaitingCallback = undefined;
-      mm.onMatchStartCallback = undefined;
-      mm.onErrorCallback = undefined;
-      this.input.keyboard?.off("keydown");
-    });
-
-    // Stop and play menus BGM
-    if (this.cache.audio.exists("bgm_battle")) {
-      this.sound.stopByKey("bgm_battle");
+    this.request = undefined;
+    this.privateCode = "";
+    this.errorMessage = "";
+    this.handledKeys = new WeakSet<KeyboardEvent>();
+    this.enteringBattle = false;
+    this.root = undefined;
+    const mm = MultiplayerManager.getInstance();
+    this.connected = mm.isConnected;
+    this.reconnecting = mm.isReconnecting;
+    this.setupMultiplayerCallbacks();
+    this.scale.on("resize", this.handleResize, this);
+    this.input.keyboard?.on("keydown", this.handleKey, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
+    this.cameras.main.fadeIn(220);
+    if (this.cache.audio.exists("bgm_battle")) this.sound.stopByKey("bgm_battle");
+    if (this.cache.audio.exists("bgm_menu") && !this.sound.getAll("bgm_menu").some(s => s.isPlaying)) {
+      this.sound.play("bgm_menu", { loop: true, volume: this.registry.get("bgmEnabled") === false ? 0 : (this.registry.get("bgmVolume") ?? 0.5) });
     }
-    if (this.cache.audio.exists("bgm_menu")) {
-      let isPlaying = false;
-      this.sound.getAll("bgm_menu").forEach((s) => {
-        if (s.isPlaying) isPlaying = true;
-      });
-      if (!isPlaying) {
-        const bgmEnabled = this.registry.get("bgmEnabled") !== false; const bgmVol = this.registry.get("bgmVolume") ?? 0.5; this.sound.play("bgm_menu", { loop: true, volume: bgmEnabled ? bgmVol : 0 });
-      }
-    }
+    this.render();
+    mm.connect();
+  }
 
-    const { width, height } = this.cameras.main;
+  private text(x: number, y: number, content: string, size = 16, color = "#edf1f8", bold = false, width?: number) {
+    const t = this.add.text(x, y, content, { fontFamily: FONT, fontSize: `${size}px`, color, fontStyle: bold ? "bold" : "normal", resolution: 3, ...(width ? { wordWrap: { width, useAdvancedWrap: true } } : {}) });
+    this.root!.add(t);
+    return t;
+  }
 
-    // Background Gradient (Cyberpunk Cosmic Style)
+  private handleResize() {
+    // The parent and canvas bounds finish updating after Phaser emits resize.
+    this.resizeTimer?.remove();
+    this.resizeTimer = this.time.delayedCall(0, () => this.render());
+  }
+
+  private line(x: number, y: number, w: number, color = C.line, alpha = 1) {
+    const rect = this.add.rectangle(x, y, w, 1, color, alpha).setOrigin(0, 0);
+    this.root!.add(rect);
+  }
+
+  private button(x: number, y: number, w: number, h: number, label: string, action: () => void, primary = false, size = 14) {
+    const bg = this.add.rectangle(x, y, w, h, primary ? C.gold : C.panel).setStrokeStyle(1, primary ? C.gold : C.line).setInteractive({ useHandCursor: true });
+    const text = this.text(x, y, label, size, primary ? "#10192a" : "#e5eaf3", true).setOrigin(0.5);
+    this.root!.addAt(bg, this.root!.length - 1);
+    const b: Button = { bg, text, action, primary, enabled: true };
+    this.buttons.push(b);
+    bg.on("pointerover", () => { if (b.enabled) { bg.setStrokeStyle(2, C.gold); bg.setFillStyle(primary ? 0xf2ca82 : 0x1b2e49); } });
+    bg.on("pointerout", () => this.paintButton(b, this.buttons[this.focused] === b));
+    bg.on("pointerdown", () => { if (b.enabled) { this.selectSound(); action(); } });
+    return b;
+  }
+
+  private paintButton(b: Button, focus = false) {
+    b.bg.setFillStyle(b.primary ? C.gold : C.panel).setStrokeStyle(focus ? 3 : 1, focus ? C.cyan : b.primary ? C.gold : C.line);
+    b.bg.setAlpha(b.enabled ? 1 : 0.4);
+    b.text.setAlpha(b.enabled ? 1 : 0.5);
+  }
+
+  private render() {
+    if (!this.scene.isActive()) return;
+    this.tweens.killAll();
+    this.root?.destroy(true);
+    this.root = this.add.container(0, 0);
+    this.buttons = [];
+    this.focused = -1;
+    this.typingTextObj = undefined;
+    this.typingHint = undefined;
+    this.joinButton = undefined;
+    const b = ResponsiveUtils.getSafeBounds(this);
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x0e081c, 0x1f0f3d, 0x05030a, 0x120a24, 1);
-    bg.fillRect(0, 0, width, height);
-
-    // Dynamic particle nodes
-    for (let i = 0; i < 15; i++) {
-      const circle = this.add.circle(
-        Phaser.Math.Between(50, width - 50),
-        Phaser.Math.Between(50, height - 50),
-        Phaser.Math.FloatBetween(2, 4),
-        0x9b59b6,
-        Phaser.Math.FloatBetween(0.1, 0.4),
-      );
-      this.tweens.add({
-        targets: circle,
-        scaleY: circle.scaleY * 2,
-        alpha: 0,
-        duration: Phaser.Math.Between(3000, 6000),
-        repeat: -1,
-        yoyo: true,
-        ease: "Sine.easeInOut",
-      });
+    bg.fillGradientStyle(C.bg, C.panel, C.bg, 0x0a1224, 1).fillRect(0, 0, 960, 540);
+    bg.lineStyle(1, 0x293c56, 0.22);
+    for (let x = 0; x < 960; x += 48) bg.lineBetween(x, 0, x, 540);
+    for (let y = 0; y < 540; y += 48) bg.lineBetween(0, y, 960, y);
+    this.root.add(bg);
+    this.button(b.left + 55, b.top + 23, 110, 46, "← VOLTAR", () => this.back(), false, 13);
+    this.text(b.left + 137, b.top + 1, "PVP ONLINE", 29, "#e3b663", true);
+    this.text(b.left + 139, b.top + 38, this.gameState.gameMode === "ranked_pvp" ? "ARENA RANQUEADA · 1 CONTRA 1" : "A PRÓXIMA BATALHA COMEÇA AQUI", 10, "#aab9ce", true);
+    const status = this.connected ? "CONECTADO" : this.reconnecting ? "RECONECTANDO" : this.errorMessage ? "SEM CONEXÃO" : "CONECTANDO";
+    const color = this.connected ? "#71d5e6" : "#c3cbd8";
+    this.text(b.right, b.top + 15, status, 11, color, true).setOrigin(1, 0);
+    this.line(b.left, b.top + 65, b.width, C.gold, 0.5);
+    this.layout = { x: b.left, y: b.top + 82, w: b.width, h: b.height - 105 };
+    if (this.currentMode === "typing") this.renderTyping();
+    else if (this.currentMode === "matched") this.renderMatched();
+    else {
+      this.renderIdentity();
+      if (this.currentMode === "menu") this.renderMenu();
+      else if (this.currentMode === "waiting") this.renderWaiting();
+      else this.renderError();
     }
-
-    // Modern Header Title
-    const title = this.add
-      .text(width / 2, 70, "ARENA ONLINE", {
-        fontSize: "46px",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#ffd54a",
-        stroke: "#000000",
-        strokeThickness: 8,
-        shadow: { color: "#e74c3c", blur: 10, fill: true },
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    this.tweens.add({
-      targets: title,
-      y: 65,
-      duration: 1500,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
-
-    // Main UI container cards
-    this.lobbyCard = this.add.container(width / 2, height / 2 + 20);
-    this.drawMainMenu();
-
-    // Back / Exit Button
-    const bounds = ResponsiveUtils.getSafeBounds(this);
-    const headerY = Math.max(26, bounds.top + 20);
-    const backBtnX = Math.max(68, bounds.left + 54);
-    this.createBackBtn(backBtnX, headerY, "VOLTAR", () => {
-      MultiplayerManager.getInstance().leaveLobby();
-      MultiplayerManager.getInstance().disconnect();
-      transitionTo(this, "CharacterSelectScene");
-    });
+    this.text(b.left, b.bottom - 8, "ATÉ O ÚLTIMO GUERREIRO", 9, "#a7b6ca", true);
+    this.text(b.right, b.bottom - 8, "ESC  VOLTAR    ·    TAB  NAVEGAR    ·    ENTER  SELECIONAR", 9, "#a7b6ca").setOrigin(1, 0);
   }
 
-  // Get nickname based on login displayName or default template
-  private getPlayerName(): string {
-    const authUser = auth.currentUser;
-    if (authUser?.displayName) {
-      return authUser.displayName;
-    }
-    if (authUser?.email) {
-      return authUser.email.split("@")[0];
-    }
-    // Random default warrior name
-    return "Saiya_" + Phaser.Math.Between(100, 999);
+  private renderIdentity() {
+    const { x, y, w, h } = this.layout;
+    const width = w * 0.34;
+    const g = this.add.graphics();
+    g.fillStyle(0x13233b, 0.74).fillPoints([{ x, y }, { x: x + width, y }, { x: x + width - 26, y: y + h }, { x, y: y + h }], true);
+    g.lineStyle(1, C.gold, 0.35).lineBetween(x, y + h, x + width - 26, y + h);
+    this.root!.add(g);
+    this.text(x + 22, y + 18, "SEU LUTADOR", 10, "#b5c3d7", true);
+    const char = this.character(this.localCharacterId);
+    this.text(x + 22, y + 36, char?.name.toUpperCase() || "GUERREIRO", 23, "#f2d39a", true, width - 40);
+    this.fighter(char, x + width / 2, y + h - 56, h - 126);
+    this.text(x + 22, y + h - 39, this.shortName(this.playerName), 14, "#edf1f8", true, width - 44);
+    this.text(x + 22, y + h - 18, this.gameState.gameMode === "ranked_pvp" ? `${this.gameState.elo || 1000} PONTOS · RANQUEADO` : "PRONTO PARA LUTAR", 9, "#aab9ce", true);
   }
 
-  // Lobby Menu Layout
-  private drawMainMenu() {
-    this.lobbyCard.removeAll(true);
-    this.currentMode = "menu";
-
-    const cardBg = this.add
-      .rectangle(0, 0, 560, 320, 0x111625, 0.8)
-      .setStrokeStyle(3, 0x3498db)
-      .setOrigin(0.5);
-
-    const banner = this.add
-      .rectangle(0, -125, 560, 40, 0x1a2238)
-      .setOrigin(0.5);
-
-    const bannerTxt = this.add
-      .text(0, -125, `GUERREIRO: ${this.getPlayerName().toUpperCase()}`, {
-        fontSize: "14px",
-        fontFamily: "monospace",
-        color: "#2ecc71",
-        fontStyle: "bold",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    this.lobbyCard.add([cardBg, banner, bannerTxt]);
-
-    const selectChar = this.gameState.characters.find(
-      (c) => c.id === this.gameState.p1CharacterId,
-    );
-    const fighterName = selectChar ? selectChar.name : "Desconhecido";
-
-    const characterText = this.add
-      .text(0, -80, `Lutador Escolhido: ${fighterName.toUpperCase()}`, {
-        fontSize: "18px",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#ffffff",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-    this.lobbyCard.add(characterText);
-
-    // BUTTON 1: QUICK MATCHMAKING
-    const btnQuick = this.createInteractiveButton(
-      0,
-      -25,
-      420,
-      46,
-      "PROCURAR OPONENTE",
-      0x27ae60,
-      () => {
-        this.startQuickMatchmaking();
-      },
-    );
-
-    // BUTTON 2: CREATE PRIVATE ROOM
-    const btnCreate = this.createInteractiveButton(
-      0,
-      35,
-      420,
-      46,
-      "CRIAR SALA PRIVADA",
-      0x2980b9,
-      () => {
-        this.startCreatePrivate();
-      },
-    );
-
-    // BUTTON 3: JOIN PRIVATE ROOM
-    const btnJoin = this.createInteractiveButton(
-      0,
-      95,
-      420,
-      46,
-      "ENTRAR EM SALA PRIVADA",
-      0x8e44ad,
-      () => {
-        this.drawTypingMenu();
-      },
-    );
-
-    this.lobbyCard.add([btnQuick, btnCreate, btnJoin]);
+  private fighter(char: CharacterData | undefined, x: number, floor: number, height: number, flip = false) {
+    const shadow = this.add.ellipse(x, floor, height * 0.73, 16, C.cyan, 0.08).setStrokeStyle(1, C.cyan, 0.25);
+    this.root!.add(shadow);
+    if (!char || !this.textures.exists(char.key)) return;
+    const sprite = this.add.sprite(x, floor, char.key, 0).setOrigin(0.5, 0.96).setFlipX(flip);
+    // Every fighter frame uses a bottom-aligned pose; scale the existing artwork without changing it.
+    sprite.setScale(height / 100);
+    if (this.anims.exists(`${char.key}_idle`)) sprite.play(`${char.key}_idle`);
+    this.root!.add(sprite);
   }
 
-  // Draw typing menu for Entering passcode on screen or physically
-  private drawTypingMenu() {
-    this.lobbyCard.removeAll(true);
-    this.currentMode = "typing";
-    this.typedCode = "";
+  private actionArea() {
+    const { x, y, w, h } = this.layout;
+    return { x: x + w * 0.39, y, w: w * 0.61 - 18, h };
+  }
 
-    const cardBg = this.add
-      .rectangle(0, 0, 560, 480, 0x111625, 0.8)
-      .setStrokeStyle(3, 0x8e44ad)
-      .setOrigin(0.5);
+  private renderMenu() {
+    const { x, y, w, h } = this.actionArea();
+    this.text(x, y + 13, "ENTRE NA ARENA", 26, "#f2f4f9", true);
+    this.text(x, y + 54, "Encontre um adversário e leve seu guerreiro ao combate.", 14, "#b6c4d9", false, w);
+    this.button(x + w / 2, y + 118, w, 58, "ENCONTRAR PARTIDA   →", () => this.startRequest("quick"), true, 17);
+    const privateY = y + Math.max(178, h * 0.51);
+    this.line(x, privateY, w);
+    this.text(x, privateY + 17, "DESAFIE UM AMIGO", 11, "#e3b663", true);
+    this.text(x, privateY + 40, "Crie uma sala privada ou use o código de quem convidou.", 12, "#b6c4d9", false, w);
+    const gap = 12;
+    const bw = (w - gap) / 2;
+    this.button(x + bw / 2, privateY + 99, bw, 52, "CRIAR SALA", () => this.startRequest("create"));
+    this.button(x + bw + gap + bw / 2, privateY + 99, bw, 52, "ENTRAR COM CÓDIGO", () => this.showTyping(), false, 12);
+  }
 
-    const titleText = this.add
-      .text(0, -210, "ENTRAR EM SALA PRIVADA", {
-        fontSize: "20px",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#f1c40f",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
+  private showTyping() { this.currentMode = "typing"; this.render(); }
 
-    const promptText = this.add
-      .text(0, -170, "Digite um código de 6 caracteres:", {
-        fontSize: "14px",
-        color: "#aaaaaa",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    // Virtual passcode box display
-    const inputBoxImg = this.add
-      .rectangle(0, -120, 260, 50, 0x070911)
-      .setStrokeStyle(2, 0xffffff, 0.5)
-      .setOrigin(0.5);
-
-    this.typingTextObj = this.add
-      .text(0, -120, "_ _ _ _ _ _", {
-        fontSize: "26px",
-        fontFamily: "monospace",
-        color: "#2ecc71",
-        fontStyle: "bold",
-        letterSpacing: 8,
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    // Keypad layout
-    const keys = [
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "0",
-      "Q",
-      "W",
-      "E",
-      "R",
-      "T",
-      "Y",
-      "U",
-      "I",
-      "O",
-      "P",
-      "A",
-      "S",
-      "D",
-      "F",
-      "G",
-      "H",
-      "J",
-      "K",
-      "L",
-      "<",
-      "Z",
-      "X",
-      "C",
-      "V",
-      "B",
-      "N",
-      "M",
-    ];
-
-    let startX = -195;
-    let startY = -60;
-
-    const keyWidth = 35;
-    const keyHeight = 35;
-    const spacing = 8;
-
-    let kx = startX;
-    let ky = startY;
-    let col = 0;
-
-    const keyboardBtns: Phaser.GameObjects.Container[] = [];
-
-    keys.forEach((k) => {
-      const isBksp = k === "<";
-      const bw = isBksp ? keyWidth * 1.5 : keyWidth;
-      const bColor = isBksp ? 0xc0392b : 0x34495e;
-
-      const btn = this.createInteractiveButton(
-        kx + bw / 2 - keyWidth / 2,
-        ky,
-        bw,
-        keyHeight,
-        k,
-        bColor,
-        () => {
-          this.sound.play("sfx_select", { volume: 0.5 });
-          if (isBksp) {
-            this.typedCode = this.typedCode.slice(0, -1);
-          } else {
-            if (this.typedCode.length < 6) {
-              this.typedCode += k;
-            }
-          }
-          this.updateTypedCodeDisplay();
-        },
-      );
-
-      keyboardBtns.push(btn);
-
-      col++;
-      kx += (isBksp ? bw : keyWidth) + spacing;
-
-      if (col === 10 || col === 20 || col === 30) {
-        ky += keyHeight + spacing;
-        kx = startX + (col === 20 ? 15 : col === 30 ? 30 : 0);
-      }
+  private renderTyping() {
+    const { x, y, w, h } = this.layout;
+    const lw = w * 0.34;
+    this.text(x + 10, y + 11, "SALA PRIVADA", 25, "#f2d39a", true);
+    this.text(x + 10, y + 54, "Digite o código recebido.\nUse o teclado ou toque nas letras.", 13, "#b6c4d9", false, lw - 20);
+    const codeY = y + 136;
+    const codeBg = this.add.rectangle(x + lw / 2, codeY, lw - 20, 64, 0x080f21).setStrokeStyle(2, C.cyan);
+    this.root!.add(codeBg);
+    this.typingTextObj = this.text(x + lw / 2, codeY, "", 28, "#f7dca9", true).setOrigin(0.5);
+    this.typingTextObj.setFontFamily("monospace");
+    this.typingHint = this.text(x + 10, codeY + 43, "Até 6 letras ou números", 11, "#aab9ce");
+    this.joinButton = this.button(x + lw / 2, y + h - 86, lw - 20, 48, "ENTRAR NA SALA   →", () => this.confirmCode(), true, 14);
+    this.button(x + lw / 2, y + h - 28, lw - 20, 46, "CANCELAR", () => this.returnToMenu());
+    const kx = x + lw + 35;
+    const kw = w - lw - 35;
+    this.text(kx, y + 11, "CÓDIGO DO CONVITE", 11, "#b6c4d9", true);
+    const rows = ["1234567890", "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+    const gap = 6;
+    const keyW = (kw - gap * 9) / 10;
+    const keyH = Math.min(54, (h - 56 - gap * 3) / 4);
+    rows.forEach((row, r) => {
+      const total = row.length + (r === 3 ? 2 : 0);
+      const start = kx + (kw - (total * keyW + (total - 1) * gap)) / 2;
+      [...row].forEach((key, c) => this.button(start + c * (keyW + gap) + keyW / 2, y + 51 + r * (keyH + gap) + keyH / 2, keyW, keyH, key, () => this.typeCharacter(key), false, 18));
+      if (r === 3) this.button(start + 7 * (keyW + gap) + keyW + gap / 2, y + 51 + r * (keyH + gap) + keyH / 2, keyW * 2 + gap, keyH, "APAGAR", () => this.typeCharacter("Backspace"), false, 11);
     });
+    this.updateTypedCodeDisplay();
+  }
 
-    const btnConfirm = this.createInteractiveButton(
-      0,
-      130,
-      260,
-      40,
-      "CONFIRMAR ENTRADA",
-      0x27ae60,
-      () => {
-        if (this.typedCode.length < 3) {
-          promptText.setText("O código deve ter pelo menos 3 dígitos.");
-          promptText.setColor("#e74c3c");
-          return;
-        }
-        this.startJoinPrivate(this.typedCode);
-      },
-    );
-
-    const btnBack = this.createInteractiveButton(
-      0,
-      185,
-      260,
-      40,
-      "CANCELAR",
-      0xc0392b,
-      () => {
-        this.drawMainMenu();
-      },
-    );
-
-    this.lobbyCard.add([
-      cardBg,
-      titleText,
-      promptText,
-      inputBoxImg,
-      this.typingTextObj,
-      btnConfirm,
-      btnBack,
-      ...keyboardBtns,
-    ]);
-
-    // Setup input keyboard keybind listener for physical typing codes
-    this.input.keyboard?.off("keydown");
-    this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (this.currentMode !== "typing") return;
-
-      if (event.key === "Backspace") {
-        this.typedCode = this.typedCode.slice(0, -1);
-      } else if (event.key === "Enter") {
-        if (this.typedCode.length >= 3) {
-          this.startJoinPrivate(this.typedCode);
-        }
-      } else if (event.key.length === 1 && /^[a-zA-Z0-9]$/.test(event.key)) {
-        if (this.typedCode.length < 6) {
-          this.typedCode += event.key.toUpperCase();
-        }
-      }
-
-      this.updateTypedCodeDisplay();
-    });
+  private typeCharacter(key: string) {
+    if (key === "Backspace") this.typedCode = this.typedCode.slice(0, -1);
+    else if (this.typedCode.length < 6 && /^[a-z0-9]$/i.test(key)) this.typedCode += key.toUpperCase();
+    this.updateTypedCodeDisplay();
   }
 
   private updateTypedCodeDisplay() {
-    if (!this.typingTextObj) return;
+    this.typingTextObj?.setText(this.typedCode.padEnd(6, "_").split("").join(" "));
+    if (this.joinButton) { this.joinButton.enabled = this.typedCode.length >= 3; this.paintButton(this.joinButton, this.buttons[this.focused] === this.joinButton); }
+    this.typingHint?.setText(this.typedCode.length < 3 ? "Digite o código para continuar" : "Código pronto. Confirme para entrar.");
+  }
 
-    if (this.typedCode === "") {
-      this.typingTextObj.setText("_ _ _ _ _ _");
+  private confirmCode() { if (this.currentMode === "typing" && this.typedCode.length >= 3) this.startRequest("join"); }
+
+  private renderWaiting() {
+    const { x, y, w, h } = this.actionArea();
+    this.text(x, y + 15, this.waitingTitle, 25, "#f2d39a", true, w);
+    this.text(x, y + 60, this.waitingDetail, 14, "#c1cee0", false, w);
+    if (this.privateCode) {
+      this.text(x, y + 122, "CÓDIGO DA SALA", 10, "#aab9ce", true);
+      this.text(x, y + 145, this.privateCode.split("").join(" "), 39, "#f5d295", true).setFontFamily("monospace");
+      if (navigator.clipboard?.writeText) this.button(x + w - 54, y + 168, 108, 44, "COPIAR", () => this.copyCode(), false, 12);
     } else {
-      let disp = "";
-      for (let i = 0; i < 6; i++) {
-        if (i < this.typedCode.length) {
-          disp += this.typedCode[i] + " ";
-        } else {
-          disp += "_ ";
-        }
-      }
-      this.typingTextObj.setText(disp.trim());
+      this.text(x, y + 126, this.request === "quick" ? "VOCÊ  /  ?" : "PREPARANDO A SALA", 30, "#dce6f4", true);
+      this.text(x, y + 177, this.request === "quick" ? "A partida começa quando um adversário entrar." : "Aguarde a confirmação do servidor.", 12, "#aab9ce", false, w);
+    }
+    const progressY = y + h - 95;
+    const track = this.add.rectangle(x, progressY, w, 2, C.line).setOrigin(0, 0.5);
+    const pulse = this.add.rectangle(x, progressY, 62, 2, C.cyan).setOrigin(0, 0.5);
+    this.root!.add([track, pulse]);
+    this.tweens.add({ targets: pulse, x: x + w - 62, duration: 1600, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    this.button(x + w / 2, y + h - 39, w, 50, this.request === "quick" ? "CANCELAR BUSCA" : "SAIR DA SALA", () => this.returnToMenu());
+  }
+
+  private async copyCode() {
+    const code = this.privateCode;
+    try {
+      await navigator.clipboard.writeText(code);
+      if (this.currentMode === "waiting" && this.privateCode === code) { this.waitingDetail = "Código copiado. Envie para quem vai jogar com você."; this.render(); }
+    } catch {
+      if (this.currentMode === "waiting" && this.privateCode === code) { this.waitingDetail = "Copie o código abaixo e envie ao seu amigo."; this.render(); }
     }
   }
 
-  // Draw matchmaking and matchmaking queue cards
-  private drawWaitingScreen(
-    mainHeading: string,
-    subHeading: string,
-    showRoomCode?: string,
-  ) {
-    this.lobbyCard.removeAll(true);
-    this.currentMode = "waiting";
-
-    const cardBg = this.add
-      .rectangle(0, 0, 560, 320, 0x111625, 0.8)
-      .setStrokeStyle(3, 0xf1c40f) // Waiting glow yellow
-      .setOrigin(0.5);
-
-    const heading = this.add
-      .text(0, -80, mainHeading, {
-        fontSize: "24px",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#f1c40f",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    this.statusText = this.add
-      .text(0, -30, subHeading, {
-        fontSize: "16px",
-        color: "#ffffff",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    this.roomCodeText = this.add
-      .text(0, 30, "", {
-        fontSize: "32px",
-        fontFamily: "monospace",
-        color: "#2ecc71",
-        fontStyle: "bold",
-        shadow: { offsetY: 2, color: "#000", blur: 4, fill: true },
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    if (showRoomCode) {
-      this.roomCodeText.setText(`CÓDIGO: ${showRoomCode}`);
-    }
-
-    // Interactive animated loading dots
-    const loadingDot = this.add.circle(0, 80, 8, 0x3498db);
-    this.tweens.add({
-      targets: loadingDot,
-      x: { from: -60, to: 60 },
-      duration: 1200,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
-
-    const btnBack = this.createInteractiveButton(
-      0,
-      125,
-      260,
-      42,
-      "CANCELLAR BUSCA",
-      0xc0392b,
-      () => {
-        MultiplayerManager.getInstance().leaveLobby();
-        this.drawMainMenu();
-      },
-    );
-
-    this.lobbyCard.add([
-      cardBg,
-      heading,
-      this.statusText,
-      this.roomCodeText,
-      loadingDot,
-      btnBack,
-    ]);
+  private renderError() {
+    const { x, y, w, h } = this.actionArea();
+    this.text(x, y + 20, "NÃO FOI POSSÍVEL ENTRAR", 24, "#f2d39a", true, w);
+    this.text(x, y + 93, this.errorMessage, 16, "#e0e6f0", false, w);
+    this.text(x, y + h - 157, "Você pode tentar de novo ou escolher outra partida.", 12, "#b6c4d9", false, w);
+    this.button(x + w / 2, y + h - 91, w, 50, this.request === "join" ? "REVISAR CÓDIGO" : "TENTAR NOVAMENTE", () => this.request === "join" ? this.showTyping() : this.startRequest(this.request || "quick"), true);
+    this.button(x + w / 2, y + h - 30, w, 46, "VOLTAR À ARENA", () => this.returnToMenu());
   }
 
-  // Hookups networking callbacks
+  private renderMatched() {
+    const { x, y, w, h } = this.layout;
+    this.text(x + w / 2, y + 8, "ADVERSÁRIO ENCONTRADO", 25, "#f2d39a", true).setOrigin(0.5, 0);
+    const left = x + w * 0.25, right = x + w * 0.75;
+    this.fighter(this.character(this.localCharacterId), left, y + h - 62, h - 136);
+    this.fighter(this.character(this.opponentCharacterId), right, y + h - 62, h - 136, true);
+    this.text(x + w / 2, y + h * 0.48, "VS", 53, "#e3b663", true).setOrigin(0.5);
+    this.text(left, y + h - 48, this.shortName(this.playerName), 17, "#edf1f8", true).setOrigin(0.5, 0);
+    this.text(right, y + h - 48, this.shortName(this.opponentName), 17, "#edf1f8", true).setOrigin(0.5, 0);
+    this.text(x + w / 2, y + h - 13, "PREPARE-SE · ENTRANDO NO COMBATE", 11, "#71d5e6", true).setOrigin(0.5, 0);
+  }
+
   private setupMultiplayerCallbacks() {
     const mm = MultiplayerManager.getInstance();
-
-    mm.onWaitingCallback = (code, isPrivate) => {
-      if (isPrivate) {
-        this.drawWaitingScreen(
-          "AGUARDANDO OPONENTE",
-          "Passe o código abaixo para o seu amigo entrar:",
-          code,
-        );
-      } else {
-        this.drawWaitingScreen(
-          "OPONENTE ESTÁ LONGE...",
-          "Em fila de espera pública por um guerreiro...",
-          code,
-        );
-      }
-    };
-
-    mm.onMatchStartCallback = (data) => {
-      this.tweens.killTweensOf(this);
-
-      this.sound.play("sfx_select");
-
-      // Set matched player characters and details
-      const localCharId = this.gameState.p1CharacterId;
-      if (mm.localPlayerIndex === 1) {
-        this.gameState.p1CharacterId = localCharId;
-        this.gameState.p2CharacterId = data.opponentCharacterId;
-      } else {
-        this.gameState.p1CharacterId = data.opponentCharacterId; // Host character is P1
-        this.gameState.p2CharacterId = localCharId; // Guest character is P2
-      }
-
-      this.registry.set("p2Name", data.opponentName);
-      this.registry.set("localPlayerIndex", mm.localPlayerIndex);
-      this.registry.set("gameState", this.gameState);
-
-      // Play matchup alert and delay start
-      this.drawMatchMatchedScreen(data.opponentName);
-
-      this.time.delayedCall(2200, () => {
-        transitionTo(this, "BattleScene");
-      });
-    };
-
-    mm.onErrorCallback = (err) => {
+    mm.onConnectionStatusCallback = status => {
       if (!this.scene.isActive()) return;
-      // In-game error instead of window.alert() which is blocked in iframes
-      this.errorBox?.destroy();
-      const errBox = this.add
-        .container(this.cameras.main.width / 2, this.cameras.main.height / 2)
-        .setDepth(100);
-      this.errorBox = errBox;
-      const errBg = this.add
-        .rectangle(0, 0, 400, 150, 0x000000, 0.9)
-        .setStrokeStyle(2, 0xe74c3c);
-      const errTitle = this.add
-        .text(0, -40, "ERRO NO SERVIDOR", {
-          fontSize: "20px",
-          color: "#e74c3c",
-          fontStyle: "bold",
-        })
-        .setOrigin(0.5);
-      const errMsg = this.add
-        .text(0, 0, err, {
-          fontSize: "16px",
-          color: "#ffffff",
-          wordWrap: { width: 360, useAdvancedWrap: true },
-        })
-        .setOrigin(0.5);
-
-      const btnOk = this.add
-        .rectangle(0, 50, 100, 30, 0x333333)
-        .setStrokeStyle(1, 0xffffff)
-        .setInteractive({ useHandCursor: true });
-      const btnOkTxt = this.add
-        .text(0, 50, "OK", {
-          fontSize: "16px",
-          color: "#ffffff",
-          fontStyle: "bold",
-        })
-        .setOrigin(0.5);
-
-      errBox.add([errBg, errTitle, errMsg, btnOk, btnOkTxt]);
-
-      btnOk.on("pointerdown", () => {
-        errBox.destroy();
-        this.errorBox = undefined;
-        if (this.currentMode !== "typing") {
-          this.drawMainMenu();
-        }
-      });
-
-      if (this.currentMode === "typing") {
-        this.roomCodeText?.setText("");
-        // Shake lobby box
-        this.tweens.add({
-          targets: this.lobbyCard,
-          x: this.lobbyCard.x + 10,
-          duration: 50,
-          yoyo: true,
-          repeat: 3,
-        });
-      } else {
-        // Switch out of waiting state
-        this.lobbyCard.removeAll(true);
-      }
+      this.connected = status === "connected";
+      this.reconnecting = status === "reconnecting";
+      this.render();
+    };
+    mm.onWaitingCallback = (code, isPrivate) => {
+      if (!this.scene.isActive() || this.currentMode !== "waiting") return;
+      this.requestTimeout?.remove();
+      this.privateCode = isPrivate ? code : "";
+      this.waitingTitle = isPrivate ? "SUA SALA ESTÁ PRONTA" : "BUSCANDO ADVERSÁRIO";
+      this.waitingDetail = isPrivate ? "Envie o código abaixo para seu amigo entrar." : "Você está na fila. Seu próximo duelo está a caminho.";
+      this.render();
+    };
+    mm.onMatchStartCallback = data => this.matchStarted(data);
+    mm.onOpponentLeftCallback = () => {
+      if (this.scene.isActive() && this.currentMode === "matched") this.showError("O adversário saiu antes do combate. Escolha outra partida.");
+    };
+    mm.onErrorCallback = message => {
+      if (!this.scene.isActive()) return;
+      this.connected = mm.isConnected;
+      this.reconnecting = false;
+      this.errorMessage = message;
+      if (this.currentMode === "waiting" || this.currentMode === "matched") this.showError(message);
+      else this.render();
     };
   }
 
-  // Draw clean, elegant matching complete screen
-  private drawMatchMatchedScreen(opponent: string) {
-    this.lobbyCard.removeAll(true);
-
-    const cardBg = this.add
-      .rectangle(0, 0, 560, 320, 0x0a1c12, 0.95)
-      .setStrokeStyle(3, 0x2ecc71) // success green glow
-      .setOrigin(0.5);
-
-    const txtMatched = this.add
-      .text(0, -70, "PARTIDA ENCONTRADA! ⚔️", {
-        fontSize: "30px",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#2ecc71",
-        shadow: { color: "#000", blur: 4, fill: true },
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    const txtOpp = this.add
-      .text(0, -10, `Inimigo: ${opponent.toUpperCase()}`, {
-        fontSize: "22px",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#ffffff",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    const txtStarting = this.add
-      .text(0, 50, "Entrando no combate agora...", {
-        fontSize: "15px",
-        fontStyle: "italic",
-        color: "#aaaaaa",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    // Glowing impact rings
-    const ring = this.add.circle(0, 0, 10).setStrokeStyle(2, 0x2ecc71);
-    this.tweens.add({
-      targets: ring,
-      scaleX: 25,
-      scaleY: 25,
-      alpha: 0,
-      duration: 1500,
-      repeat: -1,
-    });
-
-    this.lobbyCard.add([cardBg, txtMatched, txtOpp, txtStarting, ring]);
+  private startRequest(request: Request) {
+    if (this.currentMode === "waiting" || this.currentMode === "matched") return;
+    this.request = request;
+    this.privateCode = "";
+    this.currentMode = "waiting";
+    this.errorMessage = "";
+    this.waitingTitle = request === "quick" ? "PROCURANDO PARTIDA" : request === "create" ? "CRIANDO SUA SALA" : "ENTRANDO NA SALA";
+    this.waitingDetail = this.connected ? "Aguardando a confirmação do servidor." : "Conectando à arena. Isso pode levar alguns segundos.";
+    this.render();
+    this.requestTimeout?.remove();
+    this.requestTimeout = this.time.delayedCall(45000, () => this.showError("O servidor não respondeu a tempo. Tente novamente em instantes."));
+    const mm = MultiplayerManager.getInstance();
+    if (request === "quick") mm.joinMatchmaking(this.playerName, this.localCharacterId, this.gameState.gameMode === "ranked_pvp", this.gameState.elo || 1000);
+    else if (request === "create") mm.createPrivateRoom(this.playerName, this.localCharacterId, Phaser.Math.Between(100000, 999999).toString());
+    else mm.joinPrivateRoom(this.playerName, this.localCharacterId, this.typedCode);
   }
 
-  // Quick Matchmaking Join Trigger
-  private startQuickMatchmaking() {
-    this.sound.play("sfx_select");
-    this.setupMultiplayerCallbacks();
-    this.drawWaitingScreen(
-      "CONECTANDO",
-      "Estabelecendo comunicação segura com salas de batalha...",
-    );
-
-    // Send state request
-    MultiplayerManager.getInstance().joinMatchmaking(
-      this.getPlayerName(),
-      this.gameState.p1CharacterId,
-      this.gameState.gameMode === "ranked_pvp",
-      this.gameState.elo || 1000
-    );
+  private matchStarted(data: MatchStartData) {
+    if (!this.scene.isActive() || this.currentMode !== "waiting") return;
+    this.requestTimeout?.remove();
+    this.currentMode = "matched";
+    this.opponentName = data.opponentName;
+    this.opponentCharacterId = data.opponentCharacterId;
+    const mm = MultiplayerManager.getInstance();
+    this.gameState.p1CharacterId = mm.localPlayerIndex === 1 ? this.localCharacterId : data.opponentCharacterId;
+    this.gameState.p2CharacterId = mm.localPlayerIndex === 1 ? data.opponentCharacterId : this.localCharacterId;
+    this.registry.set("p2Name", data.opponentName);
+    this.registry.set("localPlayerIndex", mm.localPlayerIndex);
+    this.registry.set("gameState", this.gameState);
+    this.selectSound();
+    this.render();
+    this.matchTimer = this.time.delayedCall(2200, () => {
+      this.enteringBattle = true;
+      transitionTo(this, "BattleScene");
+    });
   }
 
-  // Create Private Room Code
-  private startCreatePrivate() {
-    this.sound.play("sfx_select");
-    this.setupMultiplayerCallbacks();
-    this.drawWaitingScreen(
-      "CRIANDO SESSÃO",
-      "Gerando novos portais de combate privado...",
-    );
-
-    // Generate random room ID (digit-hex)
-    const code = Phaser.Math.Between(100000, 999999).toString();
-    MultiplayerManager.getInstance().createPrivateRoom(
-      this.getPlayerName(),
-      this.gameState.p1CharacterId,
-      code,
-    );
+  private showError(message: string) {
+    this.requestTimeout?.remove();
+    this.matchTimer?.remove();
+    this.currentMode = "error";
+    this.errorMessage = message;
+    // Discard buffered room requests as well as an active room so a retry is a new request.
+    const mm = MultiplayerManager.getInstance();
+    mm.leaveLobby();
+    mm.disconnect();
+    this.connected = false;
+    this.reconnecting = false;
+    this.restoreLocalSelection();
+    this.render();
   }
 
-  // Join Private Room Code
-  private startJoinPrivate(code: string) {
-    this.sound.play("sfx_select");
-    this.setupMultiplayerCallbacks();
-    this.drawWaitingScreen(
-      "ENTRANDO NA SALA",
-      `Buscando portal de combate fechado: ${code.toUpperCase()}...`,
-    );
-
-    MultiplayerManager.getInstance().joinPrivateRoom(
-      this.getPlayerName(),
-      this.gameState.p1CharacterId,
-      code,
-    );
+  private returnToMenu() {
+    this.requestTimeout?.remove();
+    this.matchTimer?.remove();
+    const mm = MultiplayerManager.getInstance();
+    mm.leaveLobby();
+    mm.disconnect();
+    this.currentMode = "menu";
+    this.privateCode = "";
+    this.errorMessage = "";
+    this.connected = false;
+    this.reconnecting = false;
+    this.restoreLocalSelection();
+    this.render();
+    mm.connect();
   }
 
-  // Helper inside lobby to create nice-looking interactive buttons
-  private createInteractiveButton(
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    label: string,
-    color: number,
-    action: () => void,
-  ): Phaser.GameObjects.Container {
-    const container = this.add.container(x, y);
-
-    const shadow = this.add.rectangle(4, 4, w, h, 0x000000, 0.4).setOrigin(0.5);
-    const bg = this.add.rectangle(0, 0, w, h, color).setOrigin(0.5);
-    const inner = this.add
-      .rectangle(0, 0, w - 8, h - 8, 0x000000, 0.25)
-      .setOrigin(0.5);
-    const txt = this.add
-      .text(0, 0, label, {
-        fontSize: "16px",
-        fontStyle: "bold",
-        fontFamily:
-          "system-ui, -apple-system, 'Roboto', 'Arial Black', sans-serif",
-        color: "#ffffff",
-        resolution: 2,
-      })
-      .setOrigin(0.5);
-
-    container.add([shadow, bg, inner, txt]);
-
-    const hitArea = this.add
-      .rectangle(0, 0, w, h, 0, 0)
-      .setInteractive({ useHandCursor: true });
-    container.add(hitArea);
-
-    hitArea.on("pointerover", () => {
-      // Glow background slightly lighter
-      const r = (color >> 16) & 255;
-      const g = (color >> 8) & 255;
-      const b = color & 255;
-      const lightColor =
-        (Math.min(255, r + 40) << 16) |
-        (Math.min(255, g + 40) << 8) |
-        Math.min(255, b + 40);
-      bg.setFillStyle(lightColor);
-      this.tweens.add({ targets: container, scale: 1.03, duration: 100 });
-    });
-
-    hitArea.on("pointerout", () => {
-      bg.setFillStyle(color);
-      this.tweens.add({ targets: container, scale: 1, duration: 100 });
-    });
-
-    hitArea.on("pointerdown", () => {
-      action();
-    });
-
-    return container;
+  private back() {
+    if (this.currentMode === "matched") return;
+    if (this.currentMode !== "menu") { this.returnToMenu(); return; }
+    MultiplayerManager.getInstance().leaveLobby();
+    MultiplayerManager.getInstance().disconnect();
+    transitionTo(this, "CharacterSelectScene");
   }
 
-  private createBackBtn(
-    x: number,
-    y: number,
-    text: string,
-    onClick: () => void,
-  ) {
-    const container = this.add.container(x, y).setDepth(200);
-    const bg = this.add
-      .rectangle(0, 0, 120, 38, 0x1e293b)
-      .setStrokeStyle(1.5, 0x64748b);
-    const txt = this.add
-      .text(0, 0, text.startsWith("←") ? text : `← ${text}`, {
-        fontSize: "14px",
-        color: "#ffffff",
-        fontStyle: "bold",
-        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
-        resolution: 3,
-      })
-      .setOrigin(0.5);
+  private handleKey(event: KeyboardEvent) {
+    // Phaser can replay its pending queue while several DOM events arrive in one frame.
+    // Consume each physical event once; intentional key repeats still have distinct events.
+    if (this.handledKeys.has(event)) return;
+    this.handledKeys.add(event);
+    if (event.key === "Escape") { event.preventDefault(); this.back(); return; }
+    if (event.key === "Tab") {
+      event.preventDefault();
+      const available = this.buttons.map((b, i) => b.enabled ? i : -1).filter(i => i >= 0);
+      if (!available.length) return;
+      const pos = available.indexOf(this.focused);
+      this.focused = available[(pos + (event.shiftKey ? -1 : 1) + available.length) % available.length];
+      this.buttons.forEach((b, i) => this.paintButton(b, i === this.focused));
+      return;
+    }
+    if (event.key === "Enter" && this.focused >= 0) { event.preventDefault(); const b = this.buttons[this.focused]; if (b?.enabled) { this.selectSound(); b.action(); } return; }
+    if (this.currentMode !== "typing") return;
+    if (event.key === "Enter") { event.preventDefault(); this.confirmCode(); }
+    else if (event.key === "Backspace" || /^[a-z0-9]$/i.test(event.key)) { event.preventDefault(); this.typeCharacter(event.key); }
+  }
 
-    container.add([bg, txt]);
+  private restoreLocalSelection() { this.gameState.p1CharacterId = this.localCharacterId; this.registry.set("gameState", this.gameState); }
+  private character(id: number) { return this.gameState.characters.find(c => c.id === id); }
+  private shortName(name: string) { return name.length > 24 ? `${name.slice(0, 23)}…` : name; }
+  private selectSound() { if (this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select", { volume: 0.5 }); }
 
-    const hitArea = this.add
-      .rectangle(0, 0, 140, 50, 0, 0)
-      .setInteractive({ useHandCursor: true });
-    container.add(hitArea);
-
-    hitArea.on("pointerover", () => {
-      bg.setFillStyle(0x334155);
-      bg.setStrokeStyle(1.5, 0x38bdf8);
-      this.tweens.add({ targets: container, scale: 1.06, duration: 100 });
-    });
-    hitArea.on("pointerout", () => {
-      bg.setFillStyle(0x1e293b);
-      bg.setStrokeStyle(1.5, 0x64748b);
-      this.tweens.add({ targets: container, scale: 1, duration: 100 });
-    });
-    hitArea.on("pointerdown", () => {
-      if (this.sound && this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-      this.tweens.add({
-        targets: container,
-        scale: 0.93,
-        duration: 70,
-        yoyo: true,
-        onComplete: onClick,
-      });
-    });
-
-    this.input.keyboard?.on("keydown-ESC", () => {
-      if (this.sound && this.cache.audio.exists("sfx_select")) this.sound.play("sfx_select");
-      onClick();
-    });
+  private shutdown() {
+    this.scale.off("resize", this.handleResize, this);
+    this.resizeTimer?.remove();
+    this.input.keyboard?.off("keydown", this.handleKey, this);
+    this.requestTimeout?.remove();
+    this.matchTimer?.remove();
+    const mm = MultiplayerManager.getInstance();
+    mm.onWaitingCallback = undefined;
+    mm.onMatchStartCallback = undefined;
+    mm.onOpponentLeftCallback = undefined;
+    mm.onErrorCallback = undefined;
+    mm.onConnectionStatusCallback = undefined;
+    if (!this.enteringBattle) { mm.leaveLobby(); mm.disconnect(); }
+    this.root = undefined;
   }
 }

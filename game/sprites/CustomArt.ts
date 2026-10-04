@@ -4,7 +4,7 @@ import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
 import { CUSTOM_FRAME } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
-import { GI_SEAM, trouserClothBottom } from './CustomSeams';
+import { GI_SEAM, trouserClothBottom, fittedFootwear } from './CustomSeams';
 
 const urls = import.meta.glob<string>('../assets/custom/*.png', { eager: true, query: '?url', import: 'default' });
 const prefix = 'wardrobe:';
@@ -143,11 +143,11 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   legs.getContext('2d')!.drawImage(legSource,0,legTop,legs.width,legs.height,0,0,legs.width,legs.height);
   const feet = tint(scene, 'feet-' + (data.part_feet || 'goku'), { primary: data.color_feet_1 ?? data.gi2, secondary: data.color_feet_2 ?? data.gi1, skin: data.skin });
   const boots = footwearParts(feet);
-  const bootH=(data.part_feet==='luffy'||data.part_feet==='jotaro')?7:11;
   const giTrousers=(data.part_legs || 'goku')==='goku';
   // Source landmarks exclude the trousers' duplicate belt and the bare skin
   // below their cuffs. Both are hidden when the gi is worn with boots.
-  const trouserTop=giTrousers&&torsoId==='goku'?GI_SEAM.trouserBeltBottom:0;
+  const trouserTop=torsoId!=='goku'?0:giTrousers?GI_SEAM.trouserBeltBottom:
+    data.part_legs==='vegeta'?GI_SEAM.spandexBeltBottom:0;
   let trouserBottom=legs.height;
   if(data.part_legs!=='luffy') {
     // Inspect the untinted source: orange fabric must not be mistaken for skin.
@@ -159,7 +159,6 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     trouserBottom=trouserClothBottom(pixels,legs.width,legTop,legs.height);
   }
   const hipY=torsoId==='goku'?GI_SEAM.worldY-1:93, legLength=126-hipY;
-  const bootTop=legLength-bootH;
   const legPixels=legs.getContext('2d')!.getImageData(0,0,legs.width,legs.height).data;
   const ankles=[0,1].map(side=>{
     // Each calf may end on a different source row. Measuring at the pair's
@@ -207,10 +206,14 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     const headBob = f < 4 ? 0 : bob;
     const lean = punch ? 3 : kick ? -2 : defend ? -2 : 0;
     if (accessory && accessoryId === 'cape') draw(accessory, 74 - phase, 70 + bob, 43 + Math.abs(phase)*2, 53);
-    // The collar lives in the upper-right of this source; attach that collar
-    // to the neck, then let the tails fall behind the shoulder.
-    const scarfX=neckX+lean-13.5, scarfY=68+bob, scarfW=18, scarfH=15;
-    if (accessory && accessoryId === 'scarf') ctx.drawImage(accessory,scarfX,scarfY,scarfW,scarfH);
+    // Draw the complete cloth between body and portrait. Its curved collar
+    // wraps the neck, while the jaw hides the rear edge naturally.
+    const drawScarf=()=>{
+      if(accessory && accessoryId==='scarf') {
+        const scarfW=15;
+        ctx.drawImage(accessory,neckX+lean-11,66.5+bob,scarfW,scarfW*accessory.height/accessory.width);
+      }
+    };
     // Legs and footwear share hip pivots, so walking and kicking cannot leave detached boots.
     for (let side = 0; side < 2; side++) {
       ctx.save();
@@ -221,9 +224,11 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       const sx = side * legs.width / 2;
       // Keep the full trouser width, but tuck its hem inside the boot shaft.
       const legW=giTrousers&&torsoId==='goku'?18:17,legX=97+(side-1)*legW;
-      const legH=bootTop+2;
       const boot=boots[side];
-      const bootW=boot.w/boot.shaftWidth*(ankles[side].width*legW+.5);
+      // Fit the shaft with ONE scale. Independent width/height scaling made
+      // the ninja sandals' side-view foot look flattened and oversized.
+      const {width:bootW,height:bootH}=fittedFootwear(boot.w,boot.h,boot.shaftWidth,ankles[side].width*legW,legLength);
+      const bootTop=legLength-bootH,legH=bootTop+2;
       const ankleX=legX+ankles[side].centre*legW;
       ctx.drawImage(feet,boot.x,boot.y,boot.w,boot.h,ankleX-pivotX-boot.ankle/boot.w*bootW,bootTop,bootW,bootH);
       // The cuff covers the open boot rim, just as fabric enters a real boot.
@@ -244,15 +249,18 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       const sourceBottom=torsoId==='goku'?GI_SEAM.raisedBeltBottom:raisedTorso.height;
       ctx.drawImage(raisedTorso,0,0,raisedTorso.width,sourceBottom,
         rect.x+lean,rect.y+bob,rect.width,rect.height*sourceBottom/raisedTorso.height);
+      drawScarf();
       draw(portrait,lean,headBob,192,128);
     } else if(!punch && !defend && !charge) {
       // Keep shoulders, arms and belt joined in relaxed poses; preserve source proportions.
       draw(torso,79+lean,66+bob,36,36);
+      drawScarf();
       draw(portrait,lean,headBob,192,128);
     } else {
     // Keep the neck/collar and shoulder bridge intact while the lower arms rotate.
     ctx.drawImage(torso, 0, 0, tw, th*.30, 79+lean,66+bob,36,11);
     ctx.drawImage(torso, tw*.25, th*.30, tw*.5, th*.70, 88+lean,77+bob,18,25);
+    drawScarf();
     draw(portrait,lean,headBob,192,128);
     for (let side=0;side<2;side++) {
       const x = side ? 106 : 87;
@@ -270,12 +278,6 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     }
     }
     if (accessory) {
-      if (accessoryId === 'scarf') {
-        // Repaint only the collar in front of the neck. The hanging tails
-        // remain behind the arms rather than covering the face or floating.
-        ctx.drawImage(accessory,accessory.width*.5,0,accessory.width*.5,accessory.height*.45,
-          scarfX+scarfW*.5,scarfY,scarfW*.5,scarfH*.45);
-      }
       if (accessoryId === 'sword' && !genki) {
         // Follow the same right-arm pivot and rotation as the hand.
         const armAngle=charge?-.18:defend?2.25:punch?-1.55:0;

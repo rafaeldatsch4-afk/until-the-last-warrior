@@ -3,9 +3,16 @@ export const GI_SEAM = {
   torsoBeltBottom: 184,
   torsoHeight: 252,
   trouserBeltBottom: 28,
+  spandexBeltBottom: 20,
   raisedBeltBottom: 448,
   worldY: 66 + 184 / 252 * 36,
 } as const;
+
+/** Preserve the source aspect ratio when fitting a shoe to a trouser cuff. */
+export function fittedFootwear(width: number, height: number, shaftWidth: number, cuffWidth: number, legLength: number) {
+  const scale=Math.min((cuffWidth+.5)/shaftWidth,legLength*.58/height);
+  return {width:width*scale,height:height*scale};
+}
 
 /** Find where the cloth ends, excluding the source's bare ankle below it. */
 export function trouserClothBottom(pixels: ArrayLike<number>, width: number, top: number, height: number) {

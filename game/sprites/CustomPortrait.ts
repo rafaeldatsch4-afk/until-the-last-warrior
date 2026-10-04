@@ -1,5 +1,5 @@
 import type { CharacterData } from '../types';
-import { displayedHead, HEAD_ANCHORS } from './CustomArtLayout';
+import { displayedHead, HEAD_ANCHORS, headbandRect } from './CustomArtLayout';
 
 type Palette = { primary?: number; secondary?: number; skin?: number };
 type Layer = (name: string, palette: Palette) => HTMLCanvasElement;
@@ -61,7 +61,7 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   if (accessory === 'straw_hat') {
     ctx.drawImage(layer('accessory-straw_hat', {}), ...HEAD_ANCHORS.hat);
   } else if (accessory === 'headband') {
-    ctx.drawImage(layer('accessory-headband', { secondary: data.color_acc_1 ?? data.gi2 }), ...HEAD_ANCHORS.band);
+    ctx.drawImage(layer('accessory-headband', { secondary: data.color_acc_1 ?? data.gi2 }), ...headbandRect(id));
   } else if (accessory === 'scouter') {
     const [vx,vy,vw,vh] = HEAD_ANCHORS.visor;
     ctx.save();ctx.translate(vx+vw,vy);ctx.scale(-1,1);
