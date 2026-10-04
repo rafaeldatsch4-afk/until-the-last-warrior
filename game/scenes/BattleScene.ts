@@ -637,7 +637,7 @@ export default class BattleScene extends Phaser.Scene {
 
     // Movement is tuned for 60 fps; scale it by the real frame time so fighters move at
     // the same speed on slow machines and high-refresh screens (capped to avoid jumps).
-    const frameScale = Math.min(delta, 50) / (1000 / 60);
+    const frameScale = Math.min(delta, 1000 / 15) / (1000 / 60);
 
     // Record when each fighter starts defending, whatever set the flag (keyboard, CPU,
     // network). Without this P2's start time stayed 0 and any block was an instant guard break.
