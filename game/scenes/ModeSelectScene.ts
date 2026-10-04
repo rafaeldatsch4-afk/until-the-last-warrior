@@ -166,6 +166,14 @@ export default class ModeSelectScene extends Phaser.Scene {
         desc: "Jogue contra um amigo no mesmo teclado",
       },
       {
+        text: "1 VS 1 (ONLINE)",
+        icon: "🌐",
+        mode: "online_pvp",
+        color: 0x0e7490,
+        accentColor: 0x22d3ee,
+        desc: "Enfrente outro jogador pela internet",
+      },
+      {
         text: "TREINAMENTO",
         icon: "🥋",
         mode: "training",
@@ -331,7 +339,7 @@ export default class ModeSelectScene extends Phaser.Scene {
 
     // Title Text - Ultra Crisp Montserrat / Rajdhani typography
     const txt = this.add
-      .text(0, -9, `${icon}  ${text}`, {
+      .text(0, -9, text, {
         fontSize: "15px",
         color: "#ffffff",
         fontStyle: "800",
@@ -342,6 +350,15 @@ export default class ModeSelectScene extends Phaser.Scene {
         resolution: 3,
       })
       .setOrigin(0.5);
+
+    // Separate object: letterSpacing draws glyph by glyph and splits emoji into "��"
+    const iconTxt = this.add
+      .text(-txt.width / 2 - 10, -9, icon, {
+        fontSize: "15px",
+        fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif",
+        resolution: 3,
+      })
+      .setOrigin(1, 0.5);
 
     // Description Text - Clean, modern Plus Jakarta Sans typography
     const descTxt = this.add
@@ -356,7 +373,7 @@ export default class ModeSelectScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    container.add([graphics, txt, descTxt]);
+    container.add([graphics, iconTxt, txt, descTxt]);
 
     // Hit area
     const hitArea = this.add

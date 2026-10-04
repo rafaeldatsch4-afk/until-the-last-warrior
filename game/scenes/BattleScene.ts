@@ -699,7 +699,9 @@ export default class BattleScene extends Phaser.Scene {
 
       this.time.delayedCall(105, () => {
         this.time.timeScale = 1;
-        this.cleanupAndShowVictory(this.playerHp > 0);
+        // Online guests control P2, so their result is P2's
+        const localIsP2 = isOnlineMode(this.gameState.gameMode) && this.localPlayerIndex === 2;
+        this.cleanupAndShowVictory(localIsP2 ? this.enemyHp > 0 : this.playerHp > 0);
       });
       return;
     }
