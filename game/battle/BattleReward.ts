@@ -4,6 +4,7 @@ import Phaser from "phaser";
 import { DailyChallenges } from "../systems/DailyChallenges";
 import { AchievementSystem } from "../systems/Achievements";
 import { StoryStatsMath } from "../systems/StoryStatsMath";
+import { isOnlineMode } from "../types";
 
 export class BattleReward {
   scene: any; // Type as BattleScene
@@ -70,6 +71,10 @@ export class BattleReward {
 
   endBattle(win: boolean) {
     const s = this.scene;
+    // Online guests play as P2: name the winner from the local player's side
+    const localIsP2 = isOnlineMode(s.gameState.gameMode) && s.localPlayerIndex === 2;
+    const localFighter = localIsP2 ? s.enemyData : s.playerData;
+    const opponentFighter = localIsP2 ? s.playerData : s.enemyData;
     // We remove the s.isBattleOver check because BattleScene.ts sets it to true before the delay to prevent double firing.
     if (s.turnTimer) s.turnTimer.remove();
     if (s.regenTimer) s.regenTimer.remove();
@@ -146,7 +151,7 @@ export class BattleReward {
         } else {
           coinsEarned = 100;
         }
-        subtitleMessage = `${s.playerData.name.toUpperCase()} WINS!`;
+        subtitleMessage = `${localFighter.name.toUpperCase()} WINS!`;
         color = "#f1c40f"; // Gold
         s.gameState.coins += coinsEarned;
         if (s.gameState.gameMode !== "training") {
@@ -155,7 +160,7 @@ export class BattleReward {
         (window as any).UTLW.save();
       } else {
         titleMessage = "DEFEAT...";
-        subtitleMessage = `${s.enemyData.name.toUpperCase()} WINS!`;
+        subtitleMessage = `${opponentFighter.name.toUpperCase()} WINS!`;
         color = "#e74c3c"; // Red
         coinsEarned = 25; // Small consolation prize
         s.gameState.coins += coinsEarned;

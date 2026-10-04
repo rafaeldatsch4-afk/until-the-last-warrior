@@ -293,9 +293,11 @@ async function startServer() {
     });
 
     // Disconnect handling
-    socket.on("disconnect", () => {
-      console.log(`Socket disconnected: ${socket.id}`);
-      handleDisconnect(socket.id);
+    socket.on("disconnect", (reason) => {
+      console.log(`Socket disconnected: ${socket.id} (${reason})`);
+      cleanupRateLimit(socket.id);
+      // "client namespace disconnect" = the player quit on purpose; anything else may come back
+      handleDisconnect(socket.id, reason === "client namespace disconnect");
     });
 
     
@@ -336,8 +338,8 @@ async function startServer() {
           return;
         }
       }
-      // Room expired or session unknown: let the client leave the match cleanly.
-      socket.emit("opponentLeft");
+      // Room expired or session unknown: this player is the one who dropped, not the winner.
+      socket.emit("matchExpired");
     });
     
     function closeRoom(roomId: string, room: Room) {
@@ -352,7 +354,6 @@ async function startServer() {
 
     // `explicitLeave`: the player chose to leave (cancel search / quit), so no grace period.
     function handleDisconnect(sId: string, explicitLeave = false) {
-      cleanupRateLimit(sId);
       const roomId = socketToRoom.get(sId);
       if (!roomId) return;
 

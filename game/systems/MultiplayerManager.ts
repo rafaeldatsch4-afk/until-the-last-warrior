@@ -37,6 +37,8 @@ export class MultiplayerManager {
   public isConnected: boolean = false;
   public isReconnecting: boolean = false;
   private hasNotifiedConnectionError: boolean = false;
+  /** True between matchStart and leaving; roomCode alone is also set while waiting in a queue. */
+  private inMatch: boolean = false;
   public roomCode: string = "";
   public localPlayerIndex: 1 | 2 = 1; // 1 = Host/P1, 2 = Guest/P2
   public opponentName: string = "Inimigo";
@@ -113,7 +115,7 @@ export class MultiplayerManager {
 
     // All reconnection attempts failed: stop for good and tell the UI once
     this.socket.io.on("reconnect_failed", () => {
-      const wasInMatch = !!this.roomCode;
+      const wasInMatch = this.inMatch;
       this.isReconnecting = false;
       this.isConnected = false;
       if (this.pingInterval) {
@@ -144,11 +146,15 @@ export class MultiplayerManager {
       }
 
       // Reconnect to active room if reconnecting mid-game
-      if (this.roomCode) {
+      if (this.roomCode && this.inMatch) {
         this.socket?.emit("reconnectMatch", {
           sessionId: this.sessionId,
           roomCode: this.roomCode,
         });
+      } else if (this.roomCode) {
+        // The server drops a waiting room as soon as its socket disconnects
+        this.roomCode = "";
+        this.onErrorCallback?.("A conexão caiu durante a busca. Tente novamente.");
       }
 
       if (this.pingInterval) clearInterval(this.pingInterval);
@@ -186,6 +192,7 @@ export class MultiplayerManager {
       this.localPlayerIndex = data.localPlayerIndex;
       this.opponentName = data.opponentName;
       this.opponentCharacterId = data.opponentCharacterId;
+      this.inMatch = true;
       this.resetInterpolation();
       // Be more patient with reconnections once a match is running
       this.socket?.io.reconnectionAttempts(10);
@@ -206,6 +213,13 @@ export class MultiplayerManager {
       if (this.onRemoteActionCallback) {
         this.onRemoteActionCallback(action);
       }
+    });
+
+    // We dropped for too long and the server closed the room
+    this.socket.on("matchExpired", () => {
+      this.inMatch = false;
+      this.roomCode = "";
+      this.onConnectionStatusCallback?.("disconnected");
     });
 
     this.socket.on("opponentLeft", () => {
@@ -394,6 +408,7 @@ export class MultiplayerManager {
       this.socket.emit("leaveLobby");
     }
     this.roomCode = "";
+    this.inMatch = false;
     this.resetInterpolation();
   }
 
@@ -417,6 +432,7 @@ export class MultiplayerManager {
     this.isReconnecting = false;
     this.hasNotifiedConnectionError = false;
     this.roomCode = "";
+    this.inMatch = false;
     this.resetInterpolation();
   }
 
