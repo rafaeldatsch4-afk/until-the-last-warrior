@@ -5,6 +5,9 @@
  * (no field names), which matters on mobile uplinks. Order is fixed; append new fields
  * at the end so older clients keep decoding the ones they know.
  */
+/** Sent on join so the server knows this client reads packed state arrays. */
+export const NET_PROTOCOL_VERSION = 2;
+
 export interface WirePlayerState {
   x: number;
   y: number;

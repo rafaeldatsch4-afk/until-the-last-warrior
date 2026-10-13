@@ -613,6 +613,9 @@ export default class BattleScene extends Phaser.Scene {
     if (this.battleEnvironment) this.battleEnvironment.update(time, delta);
     if (this.battleInput) this.battleInput.update();
 
+    // Impact freeze: controls keep tracking above, the fight resumes in a few ms
+    if (this.isHitStopped) return;
+
     if (this.isBattleOver || !this.keys || !this.scene.isActive()) return;
 
     const playerIsLeft = this.player.x <= this.enemy.x;
@@ -4615,36 +4618,47 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   private hitStopTimeout: any = null;
+  private isHitStopped = false;
 
+  /**
+   * Impact freeze. It must not use scene.pause(): pausing the scene fires the "pause"
+   * event, which releases every held touch control (joystick, DEF, CHG) while the finger
+   * is still down, and its timed resume could also unpause the real pause menu.
+   * Freeze tweens, timers, animations and the update loop instead; input keeps flowing.
+   */
   triggerHitStop(duration: number) {
     if (!this.scene.isActive() || this.isBattleOver) return;
     const isPotato = this.gameState.settings?.lowPerformanceMode;
     const finalDuration = isPotato ? Math.min(duration, 35) : Math.min(duration, 70);
-    
+
+    if (this.hitStopTimeout) {
+      clearTimeout(this.hitStopTimeout);
+    } else {
+      this.tweens.pauseAll();
+      this.time.paused = true;
+      this.anims.pauseAll();
+      this.isHitStopped = true;
+    }
+
+    // Native setTimeout: the scene clock is frozen
+    this.hitStopTimeout = setTimeout(() => this.endHitStop(), finalDuration);
+  }
+
+  private endHitStop() {
     if (this.hitStopTimeout) {
       clearTimeout(this.hitStopTimeout);
       this.hitStopTimeout = null;
     }
-
+    if (!this.isHitStopped) return;
+    this.isHitStopped = false;
     try {
-      if (this.scene && !this.scene.isPaused()) {
-        this.scene.pause();
-      }
+      this.tweens.resumeAll();
+      this.time.paused = false;
     } catch (e) {
-      return;
+      console.warn("Hitstop resume error:", e);
     }
-    
-    // Resume using native setTimeout since Phaser's internal clock is paused
-    this.hitStopTimeout = setTimeout(() => {
-      this.hitStopTimeout = null;
-      try {
-        if (this.scene && this.scene.isPaused()) {
-          this.scene.resume();
-        }
-      } catch (e) {
-        console.warn("Hitstop resume error:", e);
-      }
-    }, finalDuration);
+    // The animation manager is global: always resume it, even if the scene is gone
+    this.anims.resumeAll();
   }
 
   takeDamage(isP: boolean, baseDmg: number, fromNetwork = false) {
@@ -5579,11 +5593,8 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   public handleShutdown() {
-    // 0. HitStop Timeout
-    if (this.hitStopTimeout) {
-      clearTimeout(this.hitStopTimeout);
-      this.hitStopTimeout = null;
-    }
+    // 0. HitStop (also resumes the game-wide animation manager)
+    this.endHitStop();
 
     // 1. Timers & Tweens
     if (this.turnTimer) {
