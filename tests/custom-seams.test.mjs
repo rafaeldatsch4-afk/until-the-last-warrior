@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import sharp from 'sharp';
-import {GI_SEAM,trouserClothBottom} from '../game/sprites/CustomSeams.ts';
+import {GI_SEAM,trouserClothBottom,fittedFootwear} from '../game/sprites/CustomSeams.ts';
 import {genkiTorsoRect,GENKI_TORSOS} from '../game/sprites/GenkiTorsoLayout.ts';
 
 test('trouser attachment ends at cloth rather than the exposed ankle in the source drawings',async()=>{
@@ -29,4 +29,12 @@ test('raising the arms keeps the gi belt on the same trouser attachment',()=>{
   const relaxedWaist=66+GI_SEAM.torsoBeltBottom/GI_SEAM.torsoHeight*36;
   assert.ok(Math.abs(raisedWaist-relaxedWaist)<1e-9);
   assert.ok(Math.abs(rect.y+GENKI_TORSOS.goku.neck[1]*scale-64)<1e-9);
+});
+
+test('side-facing ninja footwear keeps its proportions even for a wider trouser cuff',()=>{
+  for(const cuff of [3,4.5,6,9]){
+    const shoe=fittedFootwear(145,190,65,cuff,35);
+    assert.ok(Math.abs(shoe.width/shoe.height-145/190)<1e-9);
+    assert.ok(shoe.height<=35*.58);
+  }
 });
