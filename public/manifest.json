@@ -1,15 +1,25 @@
 {
-  "name": "Até o ultimo guerreiro",
+  "name": "Até o Último Guerreiro",
   "short_name": "UTLW",
-  "description": "fã game, que está em desenvolvimento",
+  "description": "Jogo de luta 2D inspirado em animes: modo história, arcade, torneio, 1x1 local e PvP online, com criação de personagem.",
+  "lang": "pt-BR",
+  "categories": [
+    "games",
+    "entertainment"
+  ],
   "start_url": "./",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
-  "orientation": "any",
+  "display": "fullscreen",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "background_color": "#071026",
+  "theme_color": "#071026",
+  "orientation": "landscape",
   "dir": "ltr",
   "scope": "/",
   "id": "UTLW",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192-any.png",
@@ -34,6 +44,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/menu.webp",
+      "sizes": "1280x720",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Menu principal"
+    },
+    {
+      "src": "/screenshots/batalha.webp",
+      "sizes": "1280x720",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Batalha em Namek"
     }
   ]
 }
