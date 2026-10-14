@@ -3,9 +3,11 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { registerGameUpdates } from './game/registerGameUpdates';
 import { wakeMultiplayerServerOnVisit } from './game/systems/ServerWakeup';
+import { installBackButton } from './game/systems/BackButton';
 
 registerGameUpdates();
 wakeMultiplayerServerOnVisit();
+installBackButton();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
