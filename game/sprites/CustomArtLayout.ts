@@ -29,8 +29,11 @@ export function scouterRect(head: string): readonly [number, number, number, num
 
 /** The painted wrap begins 43% into the image; its tails are not head width. */
 export function headbandRect(head: string): readonly [number, number, number, number] {
-  if (head === 'saitama') return [82.2, 52, 24.3, 7];
-  if (head === 'jotaro') return [84.3, 51, 22, 7];
-  if (head === 'spiderman') return [83.5, 47, 26, 7];
-  return HEAD_ANCHORS.band;
+  // This rectangle is for the forehead plate and wrap only. The source image
+  // also has long tails on its left edge, which must not be stretched across
+  // the face or left floating beside the hairstyle.
+  if (head === 'saitama') return [87.5, 52, 20, 7];
+  if (head === 'jotaro') return [88, 51, 19, 7];
+  if (head === 'spiderman') return [85.5, 47, 24, 7];
+  return [88, 53, 19, 7];
 }

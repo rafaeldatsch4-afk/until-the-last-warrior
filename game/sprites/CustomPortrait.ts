@@ -61,7 +61,12 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   if (accessory === 'straw_hat') {
     ctx.drawImage(layer('accessory-straw_hat', {}), ...HEAD_ANCHORS.hat);
   } else if (accessory === 'headband') {
-    ctx.drawImage(layer('accessory-headband', { secondary: data.color_acc_1 ?? data.gi2 }), ...headbandRect(id));
+    const band = layer('accessory-headband', { secondary: data.color_acc_1 ?? data.gi2 });
+    const [x,y,width,height] = headbandRect(id);
+    // Keep the plate and forehead wrap; the full source includes long loose
+    // tails that were being stretched past the back of the character's head.
+    ctx.drawImage(band, band.width * .43, band.height * .16,
+      band.width * .57, band.height * .72, x, y, width, height);
   } else if (accessory === 'scouter') {
     const [vx,vy,vw,vh] = scouterRect(id);
     ctx.save();ctx.translate(vx+vw,vy);ctx.scale(-1,1);

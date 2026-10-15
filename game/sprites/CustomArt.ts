@@ -219,13 +219,33 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.drawImage(accessory, -width / 2, 0, width, height);
       ctx.restore();
     }
-    // Draw the complete cloth between body and portrait. Its curved collar
-    // wraps the neck, while the jaw hides the rear edge naturally.
+    // Draw the scarf over the neck and upper chest, after the portrait. Its
+    // collar sits below the jaw and the existing tails drape over the gi.
     const drawScarf=()=>{
       if(accessory && accessoryId==='scarf') {
-        const scarfW=15;
-        ctx.drawImage(accessory,neckX+lean-11,66.5+bob,scarfW,scarfW*accessory.height/accessory.width);
+        const scarfW=20;
+        ctx.drawImage(accessory,neckX+lean-15,69+bob,scarfW,scarfW*accessory.height/accessory.width);
       }
+    };
+    const drawSword=()=>{
+      if(!accessory || accessoryId!=='sword' || genki)return;
+      const armAngle=charge?-.18:defend?2.25:punch?-1.55:0;
+      const handX=106+lean+Math.cos(armAngle)*6-Math.sin(armAngle)*22;
+      const handY=76+bob+Math.sin(armAngle)*6+Math.cos(armAngle)*22;
+      const swordWidth=43;
+      const swordHeight=swordWidth*accessory.height/accessory.width;
+      const gripX=swordWidth*.15,gripY=swordHeight*.5;
+      ctx.save();ctx.translate(handX,handY);ctx.rotate(armAngle);
+      ctx.drawImage(accessory,-gripX,-gripY,swordWidth,swordHeight);
+      ctx.restore();
+    };
+    const drawSwordHand=()=>{
+      if(!accessory || accessoryId!=='sword' || genki)return;
+      // Idle frames use the full painted torso, so restore the wrist and palm
+      // over the katana to make the grip read as part of the hand.
+      const sx=torso.width*.78,sy=torso.height*.82;
+      const sw=torso.width-sx,sh=torso.height-sy;
+      ctx.drawImage(torso,sx,sy,sw,sh,79+sx/tw*36,66+sy/th*36,sw/tw*36,sh/th*36);
     };
     // Legs and footwear share hip pivots, so walking and kicking cannot leave detached boots.
     for (let side = 0; side < 2; side++) {
@@ -262,19 +282,22 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       const sourceBottom=torsoId==='goku'?GI_SEAM.raisedBeltBottom:raisedTorso.height;
       ctx.drawImage(raisedTorso,0,0,raisedTorso.width,sourceBottom,
         rect.x+lean,rect.y+bob,rect.width,rect.height*sourceBottom/raisedTorso.height);
-      drawScarf();
       draw(portrait,lean,headBob,192,128);
+      drawScarf();
     } else if(!punch && !defend && !charge) {
       // Keep shoulders, arms and belt joined in relaxed poses; preserve source proportions.
       draw(torso,79+lean,66+bob,36,36);
-      drawScarf();
+      drawSword();
       draw(portrait,lean,headBob,192,128);
+      drawScarf();
+      drawSwordHand();
     } else {
     // Keep the neck/collar and shoulder bridge intact while the lower arms rotate.
     ctx.drawImage(torso, 0, 0, tw, th*.30, 79+lean,66+bob,36,11);
     ctx.drawImage(torso, tw*.25, th*.30, tw*.5, th*.70, 88+lean,77+bob,18,25);
-    drawScarf();
     draw(portrait,lean,headBob,192,128);
+    drawScarf();
+    drawSword();
     for (let side=0;side<2;side++) {
       const x = side ? 106 : 87;
       ctx.save(); ctx.translate(x + lean, 76 + bob);
@@ -289,22 +312,6 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.drawImage(torso, side ? tw*.75 : 0, th*.25, tw*.25, th*.75, side ? 0 : -9, -1, 9, 27);
       ctx.restore();
     }
-    }
-    if (accessory) {
-      if (accessoryId === 'sword' && !genki) {
-        // The hand sits a little farther right and above the arm pivot in the
-        // painted torso. Use that wrist landmark, then pin the sword's grip to it.
-        const armAngle=charge?-.18:defend?2.25:punch?-1.55:0;
-        const handX=106+lean+Math.cos(armAngle)*6-Math.sin(armAngle)*22;
-        const handY=76+bob+Math.sin(armAngle)*6+Math.cos(armAngle)*22;
-        const swordWidth=43;
-        const swordHeight=swordWidth*accessory.height/accessory.width;
-        const gripX=swordWidth*.15,gripY=swordHeight*.5;
-        ctx.save(); ctx.translate(handX,handY);
-        ctx.rotate(armAngle);
-        ctx.drawImage(accessory,-gripX,-gripY,swordWidth,swordHeight);
-        ctx.restore();
-      }
     }
     ctx.restore();
   }
