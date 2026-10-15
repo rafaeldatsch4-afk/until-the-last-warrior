@@ -104,7 +104,9 @@ function tint(scene: Phaser.Scene, name: string, palette: Palette): HTMLCanvasEl
 
 /** Preserve the original 12 poses; the extra frame is reserved for Genki Dama. */
 export function composeCustomArt(scene: Phaser.Scene, texture: string, data: NonNullable<CharacterData['customData']>) {
-  const resolution = scene.sys.game.renderer.type === 2 ? 3 : 1;
+  // Keep source detail through composition on both renderers. A 1x canvas
+  // atlas discarded most of the high-resolution garment and portrait artwork.
+  const resolution = scene.sys.game.renderer.type === 2 ? 4 : 2;
   const canvas = document.createElement('canvas');
   canvas.width = CUSTOM_FRAME.width * CUSTOM_FRAME.columns * resolution;
   canvas.height = CUSTOM_FRAME.height * CUSTOM_FRAME.rows * resolution;
@@ -205,7 +207,18 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     const bob = walk ? Math.abs(phase) : 0;
     const headBob = f < 4 ? 0 : bob;
     const lean = punch ? 3 : kick ? -2 : defend ? -2 : 0;
-    if (accessory && accessoryId === 'cape') draw(accessory, 74 - phase, 70 + bob, 43 + Math.abs(phase)*2, 53);
+    if (accessory && accessoryId === 'cape') {
+      // Anchor the cape at the shoulders, keep its painted ratio and let the hem
+      // sway with each pose instead of stretching it into a skirt over the legs.
+      const width = 44;
+      const height = width * accessory.height / accessory.width;
+      const capeSwing = walk ? phase * 0.10 : punch ? -0.08 : kick ? 0.10 : defend ? -0.12 : charge ? 0.14 : genki ? 0.08 : 0;
+      ctx.save();
+      ctx.translate(97 + lean, 68 + bob);
+      ctx.rotate(capeSwing);
+      ctx.drawImage(accessory, -width / 2, 0, width, height);
+      ctx.restore();
+    }
     // Draw the complete cloth between body and portrait. Its curved collar
     // wraps the neck, while the jaw hides the rear edge naturally.
     const drawScarf=()=>{

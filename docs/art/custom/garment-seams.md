@@ -9,3 +9,7 @@ Validação de 3 de outubro de 2026: revisão visual do conjunto marcado pelo us
 Testes de regressão: `node --import tsx --test tests/custom-seams.test.mjs tests/genki-torso.test.mjs`. Os testes usam os arquivos reais das roupas para conferir que o encaixe conserva tecido e exclui a ponta de pele.
 
 Revisão das marcações seguintes: a Spandex Saiyajin também cede sua faixa à do quimono. Os calçados usam uma única escala para largura e altura, preservando o desenho das sandálias ninja. O cachecol completo fica entre o corpo e o retrato, com a gola atrás da mandíbula e as pontas visíveis sobre o ombro. Bandana e chapéu têm medidas menores; a bandana acompanha a testa das diferentes cabeças, e o chapéu mantém a apresentação careca sem alterar a escolha salva. Revisão ampliada das cinco combinações marcadas e de 27 combinações de cabeça/acessório, além da checagem de 720 quadros.
+
+Na capa, a âncora parte dos ombros, mantém a proporção do PNG e inclina conforme cada pose sem chegar aos tornozelos. O visor usa uma posição própria sobre a linha dos olhos da máscara do Spider-Man.
+
+A composição das sprites mantém os detalhes em um atlas 4× no WebGL e 2× no Canvas, com suavização de alta qualidade nos retratos e acessórios.

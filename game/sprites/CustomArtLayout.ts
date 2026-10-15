@@ -21,6 +21,12 @@ export const HEAD_ANCHORS = {
   hat: [86.5, 44.5, 24, 14.8], band: [84.6, 53, 22, 7], visor: [94, 58, 12, 7],
 } as const;
 
+/** Keep the scouter lens over the actual eye line of the custom Spider mask. */
+export function scouterRect(head: string): readonly [number, number, number, number] {
+  const [x, y, width, height] = HEAD_ANCHORS.visor;
+  return [x, head === 'spiderman' ? y - 3 : y, width, height];
+}
+
 /** The painted wrap begins 43% into the image; its tails are not head width. */
 export function headbandRect(head: string): readonly [number, number, number, number] {
   if (head === 'saitama') return [82.2, 52, 24.3, 7];
