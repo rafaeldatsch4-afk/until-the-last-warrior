@@ -2,7 +2,7 @@
 import { io, Socket } from "socket.io-client";
 import Phaser from "phaser";
 import { getMultiplayerServerUrl } from "./ServerWakeup";
-import { packState, unpackState } from "./NetProtocol";
+import { NET_PROTOCOL_VERSION, packState, unpackState } from "./NetProtocol";
 
 export interface MatchStartData {
   roomCode: string;
@@ -365,6 +365,7 @@ export class MultiplayerManager {
         sessionId: this.sessionId,
         isRanked,
         rating,
+        proto: NET_PROTOCOL_VERSION,
       });
     }
   }
@@ -381,6 +382,7 @@ export class MultiplayerManager {
         characterId,
         roomCode,
         sessionId: this.sessionId,
+        proto: NET_PROTOCOL_VERSION,
       });
     }
   }
@@ -397,6 +399,7 @@ export class MultiplayerManager {
         characterId,
         roomCode,
         sessionId: this.sessionId,
+        proto: NET_PROTOCOL_VERSION,
       });
     }
   }

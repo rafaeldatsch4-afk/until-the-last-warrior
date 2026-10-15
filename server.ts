@@ -3,9 +3,12 @@ import http from "http";
 import path, { join } from "path";
 import { Server as SocketServer } from "socket.io";
 import { createServer as createViteServer } from "vite";
+import { unpackState } from "./game/systems/NetProtocol";
 
 interface Player {
   ping?: number;
+  /** Wire protocol the client speaks (absent = legacy client that expects keyed objects). */
+  proto?: number;
   id: string;
   name: string;
   characterId: number;
@@ -119,7 +122,7 @@ async function startServer() {
     });
 
     // Join random public matchmaking
-    socket.on("joinMatchmaking", (data: { name: string; characterId: number; sessionId?: string; ping?: number; isRanked?: boolean; rating?: number }) => {
+    socket.on("joinMatchmaking", (data: { name: string; characterId: number; sessionId?: string; ping?: number; isRanked?: boolean; rating?: number; proto?: number }) => {
       if (isRateLimited(socket.id, "joinMatchmaking", 3, 5000)) return;
       // First, make sure they are not already in a room
       if (socketToRoom.has(socket.id)) {
@@ -133,7 +136,7 @@ async function startServer() {
 
       if (waitingRoom) {
         // Match found!
-        const player2: Player = { id: socket.id, name: pName, characterId: charId, ping: data.ping || 0 };
+        const player2: Player = { id: socket.id, name: pName, characterId: charId, ping: data.ping || 0, proto: data.proto };
         if (!waitingRoom.playerSessions) waitingRoom.playerSessions = new Map();
         waitingRoom.playerSessions.set(socket.id, data.sessionId || "guest");
         waitingRoom.players.push(player2);
@@ -164,7 +167,7 @@ async function startServer() {
         const roomId = "ROOM_" + Math.random().toString(36).substring(2, 8).toUpperCase();
         const newRoom: Room = {
           id: roomId,
-          players: [{ id: socket.id, name: pName, characterId: charId, ping: data.ping || 0 }],
+          players: [{ id: socket.id, name: pName, characterId: charId, ping: data.ping || 0, proto: data.proto }],
           isPrivate: false,
           isRanked: !!data.isRanked,
           rating: data.rating || 1000,
@@ -182,7 +185,7 @@ async function startServer() {
     });
 
     // Create a private room
-    socket.on("createPrivateRoom", (data: { name: string; characterId: number; roomCode: string; sessionId?: string }) => {
+    socket.on("createPrivateRoom", (data: { name: string; characterId: number; roomCode: string; sessionId?: string; proto?: number }) => {
       if (isRateLimited(socket.id, "createPrivateRoom", 3, 5000)) return;
       if (socketToRoom.has(socket.id)) {
         return;
@@ -204,7 +207,7 @@ async function startServer() {
 
       const newRoom: Room = {
         id: roomId,
-        players: [{ id: socket.id, name: pName, characterId: charId }],
+        players: [{ id: socket.id, name: pName, characterId: charId, proto: data.proto }],
         isPrivate: true,
         createdAt: Date.now(),
         playerSessions: new Map([[socket.id, data.sessionId || "guest"]])
@@ -219,7 +222,7 @@ async function startServer() {
     });
 
     // Join a private room
-    socket.on("joinPrivateRoom", (data: { name: string; characterId: number; roomCode: string; sessionId?: string }) => {
+    socket.on("joinPrivateRoom", (data: { name: string; characterId: number; roomCode: string; sessionId?: string; proto?: number }) => {
       if (isRateLimited(socket.id, "joinPrivateRoom", 3, 5000)) return;
       if (socketToRoom.has(socket.id)) {
         return;
@@ -241,7 +244,7 @@ async function startServer() {
         return;
       }
 
-      const player2: Player = { id: socket.id, name: pName, characterId: charId };
+      const player2: Player = { id: socket.id, name: pName, characterId: charId, proto: data.proto };
       if (!existingRoom.playerSessions) existingRoom.playerSessions = new Map();
       existingRoom.playerSessions.set(socket.id, data.sessionId || "guest");
       existingRoom.players.push(player2);
@@ -273,8 +276,17 @@ async function startServer() {
       if (isRateLimited(socket.id, "playerState", 35, 1000)) return;
       const roomId = socketToRoom.get(socket.id);
       if (roomId) {
+        // A client that hasn't updated yet (the PWA updates on demand) can't read packed
+        // arrays: it turns them into NaN positions and the battle renders as a blank screen.
+        // Translate for it instead.
+        const opponent = rooms.get(roomId)?.players.find((p) => p.id !== socket.id);
+        let out = state;
+        if (opponent && !opponent.proto && Array.isArray(state)) {
+          out = unpackState(state);
+          if (!out) return;
+        }
         // Positions are superseded 30x/s: drop instead of queueing when the receiver lags
-        socket.volatile.to(roomId).emit("remotePlayerState", state);
+        socket.volatile.to(roomId).emit("remotePlayerState", out);
       }
     });
 

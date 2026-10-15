@@ -14,6 +14,8 @@ export default defineConfig({
       manifest: false, // já temos public/manifest.json próprio, não deixe o plugin gerar outro
       workbox: {
         globPatterns: ["**/*.{js,css,html,png,webp,jpg,jpeg,svg,mp3,ogg,wav}"],
+        // Store/install screenshots are only read by the browser's install UI
+        globIgnores: ["screenshots/**"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
     }),

@@ -9,6 +9,7 @@ import {
   updatePassword,
 } from 'firebase/auth';
 import { loadFromCloud, mergeCloudSaveIntoLocal, syncCloudSaveImmediate } from '../game/systems/CloudSave';
+import { BACK_EVENT } from '../game/systems/BackButton';
 import { ACHIEVEMENTS, Achievement, AchievementSystem, normalizeAchievements } from '../game/systems/Achievements';
 import { doc, setDoc, serverTimestamp, getDoc, deleteDoc, increment, arrayUnion, runTransaction } from 'firebase/firestore';
 
@@ -68,6 +69,14 @@ export const AuthButton: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+
+  // Android back button / gesture closes the open modal instead of leaving the game
+  useEffect(() => {
+    if (!showModal) return;
+    const onBack = (e: Event) => { e.preventDefault(); setShowModal(false); };
+    window.addEventListener(BACK_EVENT, onBack);
+    return () => window.removeEventListener(BACK_EVENT, onBack);
+  }, [showModal]);
   const [dbUsername, setDbUsername] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('🥷');
   const [stats, setStats] = useState({ 
