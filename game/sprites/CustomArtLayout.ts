@@ -29,11 +29,11 @@ export function scouterRect(head: string): readonly [number, number, number, num
 
 /** The painted wrap begins 43% into the image; its tails are not head width. */
 export function headbandRect(head: string): readonly [number, number, number, number] {
-  // This rectangle is for the forehead plate and wrap only. The source image
-  // also has long tails on its left edge, which must not be stretched across
-  // the face or left floating beside the hairstyle.
-  if (head === 'saitama') return [87.5, 52, 20, 7];
-  if (head === 'jotaro') return [88, 51, 19, 7];
-  if (head === 'spiderman') return [85.5, 47, 24, 7];
-  return [88, 53, 19, 7];
+  // The creator preview adds a small portrait translation around these
+  // coordinates. Keep the band centered on the forehead after that transform,
+  // instead of centering the source image (whose loose tails were cropped).
+  if (head === 'saitama') return [97, 54.5, 14, 6];
+  if (head === 'jotaro') return [97, 54, 14, 6];
+  if (head === 'spiderman') return [93, 49, 17, 6];
+  return [97.5, 55, 14, 6];
 }

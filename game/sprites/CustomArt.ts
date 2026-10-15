@@ -231,10 +231,12 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       if(!accessory || accessoryId!=='sword' || genki)return;
       const armAngle=charge?-.18:defend?2.25:punch?-1.55:0;
       const handX=106+lean+Math.cos(armAngle)*6-Math.sin(armAngle)*22;
-      const handY=76+bob+Math.sin(armAngle)*6+Math.cos(armAngle)*22;
+      const handY=77+bob+Math.sin(armAngle)*6+Math.cos(armAngle)*22;
       const swordWidth=43;
       const swordHeight=swordWidth*accessory.height/accessory.width;
-      const gripX=swordWidth*.15,gripY=swordHeight*.5;
+      // Anchor the image at the part of the handle the palm actually covers;
+      // the old 15% point left the guard and blade visibly past the fist.
+      const gripX=swordWidth*(70/accessory.width),gripY=swordHeight*.5;
       ctx.save();ctx.translate(handX,handY);ctx.rotate(armAngle);
       ctx.drawImage(accessory,-gripX,-gripY,swordWidth,swordHeight);
       ctx.restore();
