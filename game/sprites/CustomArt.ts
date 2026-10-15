@@ -292,13 +292,18 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     }
     if (accessory) {
       if (accessoryId === 'sword' && !genki) {
-        // Follow the same right-arm pivot and rotation as the hand.
+        // The hand sits a little farther right and above the arm pivot in the
+        // painted torso. Use that wrist landmark, then pin the sword's grip to it.
         const armAngle=charge?-.18:defend?2.25:punch?-1.55:0;
-        const handX=106+lean+Math.cos(armAngle)*4-Math.sin(armAngle)*24;
-        const handY=76+bob+Math.sin(armAngle)*4+Math.cos(armAngle)*24;
+        const handX=106+lean+Math.cos(armAngle)*6-Math.sin(armAngle)*22;
+        const handY=76+bob+Math.sin(armAngle)*6+Math.cos(armAngle)*22;
+        const swordWidth=43;
+        const swordHeight=swordWidth*accessory.height/accessory.width;
+        const gripX=swordWidth*.15,gripY=swordHeight*.5;
         ctx.save(); ctx.translate(handX,handY);
-        ctx.rotate(defend ? -0.9 : 0);
-        draw(accessory, -8, -3, 43, 9); ctx.restore();
+        ctx.rotate(armAngle);
+        ctx.drawImage(accessory,-gripX,-gripY,swordWidth,swordHeight);
+        ctx.restore();
       }
     }
     ctx.restore();

@@ -13,3 +13,5 @@ Revisão das marcações seguintes: a Spandex Saiyajin também cede sua faixa à
 Na capa, a âncora parte dos ombros, mantém a proporção do PNG e inclina conforme cada pose sem chegar aos tornozelos. O visor usa uma posição própria sobre a linha dos olhos da máscara do Spider-Man.
 
 A composição das sprites mantém os detalhes em um atlas 4× no WebGL e 2× no Canvas, com suavização de alta qualidade nos retratos e acessórios.
+
+A espada usa a posição medida da mão direita no torso e mantém o punho da lâmina preso a esse ponto, acompanhando a rotação do braço e preservando a proporção original.
