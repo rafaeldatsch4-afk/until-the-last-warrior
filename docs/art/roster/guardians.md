@@ -1,6 +1,11 @@
-# Novas sprites: Sentinela Noturna, Bastião, Vetor e Linha de Fuga
+# Novas sprites: Batman, Batman Dark Knight, Vetor e Linha de Fuga
 
-Artes originais aprovadas em 29/09/2026. As chaves `batman`, `batman_ssj`,
+Vetor e Linha de Fuga são artes originais aprovadas em 29/09/2026. **Batman e
+Batman Dark Knight** (armadura escura, forma transformada) são arte de fã, em pixel art
+de anime no estilo do elenco, gerada em duas folhas de 28 poses no Figma e recortada
+com este mesmo empacotador (fundo verde removido antes; `batman-source.png` e
+`batman_ssj-source.png` guardam as folhas já com transparência). Substituem o antigo
+"Sentinela Noturna" e "Bastião". As chaves `batman`, `batman_ssj`,
 `spiderman` e `spiderman_ssj` permanecem para preservar saves, catálogo e rede.
 Esta entrega substitui as quatro formas procedurais por 28 poses ilustradas
 cada, sem alterar dano, alcance, custo de Ki, controles ou tempos de combate.
@@ -25,11 +30,11 @@ herdam intervalos indisponíveis. As poses especiais do Goku e o modo
 personalizado atual foram preservados.
 
 Os sockets de disparo foram medidos nas mãos e armas das novas poses. O
-Sentinela usa um corte junto à tonfa no ataque corpo a corpo. Seu especial
+O Batman ataca corpo a corpo com um soco em avanço. Seu especial
 resolve o socket em cada lançamento. O cabo do Vetor fica preso ao punho
 durante a aproximação do alvo e não redimensiona o inimigo.
 
-Para reproduzir: `node scripts/pack-guardian-art.mjs`. Os PNGs de origem
+Para reproduzir: `node scripts/pack-guardian-art.mjs [chave ...]` (sem chaves, empacota as quatro folhas). Os PNGs de origem
 permanecem em `docs/art/roster/`; somente os atlases finais entram no build.
 O script separa a aura que encosta no especial do Vetor em y=667 sem alterar
 a folha de origem. O tamanho do corpo é calculado pelas poses paradas, sem
