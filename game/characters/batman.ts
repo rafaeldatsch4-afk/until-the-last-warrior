@@ -26,19 +26,17 @@ export class BatmanFighter extends Fighter {
     const transLevel = transformLevel;
 
     if (attackType === "melee") {
-      // Sentinela: tonfa strike
+      // Batman melee: lunging punch
       attacker.play(bs.getAnimKey("batman", transLevel, "punch"));
       bs.tweens.add({
         targets: attacker,
         x: target.x + (attacker.x < target.x ? -40 : 40),
         y: target.y + 20,
-        rotation: 0,
+        rotation: 0, // the punch pose is drawn upright; tilting would distort it
         duration: 150,
         onComplete: () => {
           if (!bs.scene.isActive()) return;
-          if (bs.soundManager) bs.soundManager.playSwordSlash(true);
-          const weapon = bs.getHandPosition(isPlayer);
-          bs.effects?.createSwordSweepSlash(weapon.x, weapon.y, !attacker.flipX, 0xffa500, 1.0);
+          if (bs.soundManager) bs.soundManager.playPunchImpact(true);
           bs.createImpactEffect(target.x, target.y + 120, 0xffffff);
           bs.takeDamage(
             !isPlayer,

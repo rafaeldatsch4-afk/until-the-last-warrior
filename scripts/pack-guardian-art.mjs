@@ -1,11 +1,14 @@
-// Pack the four approved 28-pose sheets without changing the legacy 12-frame contract.
+// Pack the approved 28-pose sheets without changing the legacy 12-frame contract.
+// Usage: node scripts/pack-guardian-art.mjs [key ...]   (no keys = all four)
 // The 12-column layout stays within the existing roster's mobile texture width.
 import sharp from 'sharp';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 const manifestPath='docs/art/roster/manifest.json';
 const manifest=JSON.parse(await readFile(manifestPath,'utf8'));
-const names={batman:'Sentinela Noturna',batman_ssj:'Bastião',spiderman:'Vetor',spiderman_ssj:'Linha de Fuga'};
+const names={batman:'Batman',batman_ssj:'Batman Dark Knight',spiderman:'Vetor',spiderman_ssj:'Linha de Fuga'};
+const only=process.argv.slice(2);
 for(const [key,name] of Object.entries(names)) {
+ if(only.length&&!only.includes(key))continue;
  const source=`docs/art/roster/${key}-source.png`,asset=`game/assets/roster/${key}-v1.png`;
  const {data,info}=await sharp(source).ensureAlpha().raw().toBuffer({resolveWithObject:true});
  // Reviewed separator: Vetor's transformation aura touches the preceding cast pose.
@@ -44,7 +47,7 @@ for(const [key,name] of Object.entries(names)) {
  await mkdir('game/assets/roster',{recursive:true});
  await sharp({create:{width:2304,height:384,channels:4,background:{r:0,g:0,b:0,alpha:0}}}).composite(layers).png().toFile(asset);
  const entry=manifest.entries.find(e=>e.key===key);
- Object.assign(entry,{name,description:`${name}: arte original aprovada em 29/09/2026`,source,asset,status:'packed',frameCount:28,frames,animations:{transform:[12,15],charge:[16,19],defend:[20,23],dash:[24,27]}});
+ Object.assign(entry,{name,description:key.startsWith('batman')?`${name}: arte de fã (pixel art de anime)`:`${name}: arte original aprovada em 29/09/2026`,source,asset,status:'packed',frameCount:28,frames,animations:{transform:[12,15],charge:[16,19],defend:[20,23],dash:[24,27]}});
  delete entry.reason;
  console.log(`${key}: 28 isolated frames`);
 }
