@@ -5,15 +5,12 @@ import sharp from 'sharp';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 const manifestPath='docs/art/roster/manifest.json';
 const manifest=JSON.parse(await readFile(manifestPath,'utf8'));
-const names={batman:'Batman',batman_ssj:'Batman Dark Knight',spiderman:'Vetor',spiderman_ssj:'Linha de Fuga'};
+const names={batman:'Batman',batman_ssj:'Batman Dark Knight',spiderman:'Homem-Aranha',spiderman_ssj:'Homem-Aranha de Ferro'};
 const only=process.argv.slice(2);
 for(const [key,name] of Object.entries(names)) {
  if(only.length&&!only.includes(key))continue;
  const source=`docs/art/roster/${key}-source.png`,asset=`game/assets/roster/${key}-v1.png`;
  const {data,info}=await sharp(source).ensureAlpha().raw().toBuffer({resolveWithObject:true});
- // Reviewed separator: Vetor's transformation aura touches the preceding cast pose.
- // No body pixels cross this separator; retain the original source unchanged.
- if(key==='spiderman')for(let x=0;x<info.width;x++)data[(667*info.width+x)*4+3]=0;
  const seen=new Uint8Array(info.width*info.height),components=[];
  for(let p=0;p<seen.length;p++) {
   if(seen[p]||data[p*4+3]<=32)continue;
@@ -32,7 +29,9 @@ for(const [key,name] of Object.entries(names)) {
  bodies.sort((a,b)=>a.y0-b.y0);
  for(let r=0;r<7;r++)bodies.splice(r*4,4,...bodies.slice(r*4,r*4+4).sort((a,b)=>a.x0-b.x0));
  // Idle body determines scale, so auras do not shrink the body in the other poses.
- const scale=64/Math.max(...bodies.slice(0,4).map(b=>b.y1-b.y0+1)),layers=[],frames=[];
+ // Spider-Man idles in a crouch, so his standing attack poses (punch, guard, web) set the scale instead.
+ const spider=key.startsWith('spiderman'),refFrames=spider?[8,10,11]:[0,1,2,3];
+ const scale=(spider?72:64)/Math.max(...refFrames.map(i=>bodies[i].y1-bodies[i].y0+1)),layers=[],frames=[];
  for(const [f,b] of bodies.entries()) {
   const bw=b.x1-b.x0+1,bh=b.y1-b.y0+1,raw=Buffer.alloc(bw*bh*4);
   let hx=0,hn=0;
@@ -47,7 +46,7 @@ for(const [key,name] of Object.entries(names)) {
  await mkdir('game/assets/roster',{recursive:true});
  await sharp({create:{width:2304,height:384,channels:4,background:{r:0,g:0,b:0,alpha:0}}}).composite(layers).png().toFile(asset);
  const entry=manifest.entries.find(e=>e.key===key);
- Object.assign(entry,{name,description:key.startsWith('batman')?`${name}: arte de fã (pixel art de anime)`:`${name}: arte original aprovada em 29/09/2026`,source,asset,status:'packed',frameCount:28,frames,animations:{transform:[12,15],charge:[16,19],defend:[20,23],dash:[24,27]}});
+ Object.assign(entry,{name,description:`${name}: arte de fã (pixel art de anime)`,source,asset,status:'packed',frameCount:28,frames,animations:{transform:[12,15],charge:[16,19],defend:[20,23],dash:[24,27]}});
  delete entry.reason;
  console.log(`${key}: 28 isolated frames`);
 }
