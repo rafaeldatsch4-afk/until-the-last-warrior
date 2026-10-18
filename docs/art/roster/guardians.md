@@ -7,14 +7,13 @@ com este mesmo empacotador (fundo verde removido antes; `batman-source.png` e
 "Sentinela Noturna" e "Bastião". As chaves `batman`, `batman_ssj`,
 `spiderman` e `spiderman_ssj` permanecem para preservar saves, catálogo e rede.
 **Homem-Aranha** (clássico, vermelho e azul) e **Homem-Aranha de Ferro** (vermelho e dourado, com
-quatro pernas mecânicas) também são arte de fã no mesmo estilo. Como o Figma recusou folhas de 28 poses
-desse personagem (erro 422) e os créditos de IA acabaram, só 12 poses foram geradas (parado, corrida e
-ataques: soco, chute, defesa e teia, em linhas de 4). As demais foram derivadas por código a partir delas:
-transformação (aura dourada crescente) e carga (aura azul) sobre as poses paradas, defesa a partir da
-guarda, e dash a partir dos quadros de corrida com rastros. O Aranha de Ferro é a mesma base recolorida
-(azul vira dourado) com as pernas mecânicas desenhadas atrás do corpo (à frente na defesa). Quando houver
-créditos, as linhas faltantes podem ser geradas e trocadas sem mexer no jogo. Nelas, o corpo do Homem-Aranha é
-dimensionado pelas poses em pé (soco, guarda e teia), porque o idle é agachado.
+quatro pernas mecânicas) também são arte de fã no mesmo estilo. O Figma recusa a folha inteira de 28
+poses desse personagem (erro 422), então cada forma foi gerada em linhas de 4 poses e montada numa
+grade 4 × 7, com a cabeça de cada pose na linha central da célula. O empacotador recorta essas folhas
+por célula (pontas das pernas mecânicas e faíscas soltas não se perdem) e usa uma escala fixa para as
+duas formas: as poses em pé medem 347 px na folha e viram 72 px no jogo, porque o idle é agachado.
+Só o dash (24–27) é derivado: quadros de corrida com rastros e a volta à guarda, porque o gerador
+recusou essa linha.
 
 Esta entrega substitui as quatro formas procedurais por 28 poses ilustradas
 cada, sem alterar dano, alcance, custo de Ki, controles ou tempos de combate.
