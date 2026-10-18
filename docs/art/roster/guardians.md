@@ -1,12 +1,20 @@
-# Novas sprites: Batman, Batman Dark Knight, Vetor e Linha de Fuga
+# Novas sprites: Batman, Batman Dark Knight, Homem-Aranha e Homem-Aranha de Ferro
 
-Vetor e Linha de Fuga são artes originais aprovadas em 29/09/2026. **Batman e
-Batman Dark Knight** (armadura escura, forma transformada) são arte de fã, em pixel art
+**Batman e Batman Dark Knight** (armadura escura, forma transformada) são arte de fã, em pixel art
 de anime no estilo do elenco, gerada em duas folhas de 28 poses no Figma e recortada
 com este mesmo empacotador (fundo verde removido antes; `batman-source.png` e
 `batman_ssj-source.png` guardam as folhas já com transparência). Substituem o antigo
 "Sentinela Noturna" e "Bastião". As chaves `batman`, `batman_ssj`,
 `spiderman` e `spiderman_ssj` permanecem para preservar saves, catálogo e rede.
+**Homem-Aranha** (clássico, vermelho e azul) e **Homem-Aranha de Ferro** (vermelho e dourado, com
+quatro pernas mecânicas) também são arte de fã no mesmo estilo. O Figma recusa a folha inteira de 28
+poses desse personagem (erro 422), então cada forma foi gerada em linhas de 4 poses e montada numa
+grade 4 × 7, com a cabeça de cada pose na linha central da célula. O empacotador recorta essas folhas
+por célula (pontas das pernas mecânicas e faíscas soltas não se perdem) e usa uma escala fixa para as
+duas formas: as poses em pé medem 347 px na folha e viram 72 px no jogo, porque o idle é agachado.
+Só o dash (24–27) é derivado: quadros de corrida com rastros e a volta à guarda, porque o gerador
+recusou essa linha.
+
 Esta entrega substitui as quatro formas procedurais por 28 poses ilustradas
 cada, sem alterar dano, alcance, custo de Ki, controles ou tempos de combate.
 
@@ -31,13 +39,12 @@ personalizado atual foram preservados.
 
 Os sockets de disparo foram medidos nas mãos e armas das novas poses. O
 O Batman ataca corpo a corpo com um soco em avanço. Seu especial
-resolve o socket em cada lançamento. O cabo do Vetor fica preso ao punho
+resolve o socket em cada lançamento. A teia do Homem-Aranha fica presa ao punho
 durante a aproximação do alvo e não redimensiona o inimigo.
 
 Para reproduzir: `node scripts/pack-guardian-art.mjs [chave ...]` (sem chaves, empacota as quatro folhas). Os PNGs de origem
 permanecem em `docs/art/roster/`; somente os atlases finais entram no build.
-O script separa a aura que encosta no especial do Vetor em y=667 sem alterar
-a folha de origem. O tamanho do corpo é calculado pelas poses paradas, sem
+O tamanho do corpo é calculado pelas poses paradas (pelas poses em pé no Homem-Aranha), sem
 encolher o personagem por causa da aura.
 
 Validação: TypeScript, build de produção, inspeção visual dos 112 recortes e
