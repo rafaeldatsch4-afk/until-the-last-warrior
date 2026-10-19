@@ -237,7 +237,10 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       // Anchor the image at the part of the handle the palm actually covers;
       // the old 15% point left the guard and blade visibly past the fist.
       const gripX=swordWidth*(70/accessory.width),gripY=swordHeight*.5;
-      ctx.save();ctx.translate(handX,handY);ctx.rotate(armAngle);
+      // The blade follows the arm, not the forearm's rotation: a punch thrusts it
+      // forward and the guard raises it beside the head instead of across the face.
+      const bladeAngle=punch?0:defend?-1.9:armAngle;
+      ctx.save();ctx.translate(handX,handY);ctx.rotate(bladeAngle);
       ctx.drawImage(accessory,-gripX,-gripY,swordWidth,swordHeight);
       ctx.restore();
     };
