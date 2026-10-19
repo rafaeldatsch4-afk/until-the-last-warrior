@@ -1,5 +1,5 @@
 import type { CharacterData } from '../types';
-import { displayedHead, HEAD_ANCHORS, headbandRect, scouterRect } from './CustomArtLayout';
+import { HAT_HAIR_LINE, HEAD_ANCHORS, headbandRect, headbandTailsRect, scouterRect } from './CustomArtLayout';
 
 type Palette = { primary?: number; secondary?: number; skin?: number };
 type Layer = (name: string, palette: Palette) => HTMLCanvasElement;
@@ -18,7 +18,7 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   // Apply the same transform to the face, hair and every head accessory.
   ctx.translate(-.75,2);
   const accessory = data.part_accessory || 'none';
-  const id = displayedHead(data.part_head || 'goku', accessory);
+  const id = data.part_head || 'goku';
   const hair = form.endsWith('_ui') ? 0xdce3ed : form.endsWith('_ssj') ? 0xffdc35 : data.hair;
   const primary = data.color_head_1 ?? data.gi1;
   const secondary = data.color_head_2 ?? data.gi2;
@@ -42,6 +42,11 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   neckFade.addColorStop(0,'rgba(0,0,0,0)');neckFade.addColorStop(1,'rgba(0,0,0,1)');
   ctx.fillStyle=neckFade;ctx.fillRect(78,67,40,7);ctx.restore();
   ctx.translate(neckX-HEAD_ANCHORS.neck[0],0);
+  if (accessory === 'straw_hat') {
+    // Hair above the crown's base would poke through the hat; the rest frames the face.
+    ctx.save();ctx.globalCompositeOperation='destination-out';
+    ctx.fillRect(60,0,80,HAT_HAIR_LINE);ctx.restore();
+  }
 
   // Existing mask/cap styles retain their identity, now on a rounded face grid.
   // These are the existing procedural garments, independent of optional accessories.
@@ -67,6 +72,8 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
     // tails that were being stretched past the back of the character's head.
     ctx.drawImage(band, band.width * .43, band.height * .16,
       band.width * .57, band.height * .72, x, y, width, height);
+    const [tx,ty,tw,th] = headbandTailsRect(id);
+    ctx.drawImage(band, 0, 0, band.width * .45, band.height, tx, ty, tw, th);
   } else if (accessory === 'scouter') {
     const [vx,vy,vw,vh] = scouterRect(id);
     ctx.save();ctx.translate(vx+vw,vy);ctx.scale(-1,1);

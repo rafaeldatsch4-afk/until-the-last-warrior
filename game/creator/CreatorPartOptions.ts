@@ -19,7 +19,7 @@ export const partOptions = {
   accessory: ["none", "straw_hat", "sword", "headband", "cape", "scouter", "scarf"],
 };
 
-/** Hats hide the visible hair; the saved head choice stays available and unchanged. */
+/** Every head works under a hat; the saved head choice stays available and unchanged. */
 export function getAvailableHeadOptions(_accessoryId?: string): string[] {
   return partOptions.head;
 }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CUSTOM_FRAME, customFrameRegion, displayedHead, HEAD_ANCHORS } from '../game/sprites/CustomArtLayout.ts';
+import { CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, HEAD_ANCHORS, headbandRect, headbandTailsRect } from '../game/sprites/CustomArtLayout.ts';
 import { CreatorState } from '../game/creator/CreatorState.ts';
 import { partOptions } from '../game/creator/CreatorPartOptions.ts';
 
@@ -20,21 +20,23 @@ test('HD atlas frames keep combat dimensions and sample disjoint complete cells'
   }
 });
 
-test('hats use a bald presentation without destroying any saved head selection', () => {
+test('hats keep the saved head selection and only trim hair above the crown', () => {
   for(const head of partOptions.head) {
     const state=new CreatorState();
     state.loadCustomData({gi1:0,gi2:0,skin:0,hair:0,part_head:head,part_accessory:'none'});
     state.nextPart('accessory',partOptions.accessory);
     assert.equal(state.getEquippedHead(),head);
-    assert.equal(displayedHead(head,state.getEquippedAccessory()),'saitama');
     const reopened=new CreatorState();
     reopened.loadCustomData(state.toCustomData('goku','goku'));
     reopened.prevPart('accessory',partOptions.accessory);
     assert.equal(reopened.getEquippedHead(),head);
-    assert.equal(displayedHead(head,'none'),head);
-    assert.equal(displayedHead(head,'headband'),head);
-    assert.equal(displayedHead(head,'scouter'),head);
   }
+});
+
+test('the hat hides only hair above its crown, never the face', () => {
+  const [, hatY, , hatH] = HEAD_ANCHORS.hat;
+  assert.ok(HAT_HAIR_LINE > hatY && HAT_HAIR_LINE < hatY + hatH);
+  assert.ok(HAT_HAIR_LINE < HEAD_ANCHORS.eyes[1] - 5);
 });
 
 test('headwear stays above eyes while the visor remains at eye height', () => {
@@ -42,4 +44,13 @@ test('headwear stays above eyes while the visor remains at eye height', () => {
   assert.ok(HEAD_ANCHORS.hat[1]+HEAD_ANCHORS.hat[3]<HEAD_ANCHORS.eyes[1]);
   assert.ok(HEAD_ANCHORS.visor[1]<HEAD_ANCHORS.eyes[1]);
   assert.ok(HEAD_ANCHORS.visor[1]+HEAD_ANCHORS.visor[3]>HEAD_ANCHORS.eyes[1]);
+});
+
+test('the headband plate sits on the forehead and its tails hang behind the head', () => {
+  for (const head of partOptions.head) {
+    const [x, y, , height] = headbandRect(head);
+    assert.ok(y + height <= HEAD_ANCHORS.eyes[1] - 4, head);
+    const [tx, , tw] = headbandTailsRect(head);
+    assert.ok(tx + tw <= x, head);
+  }
 });
