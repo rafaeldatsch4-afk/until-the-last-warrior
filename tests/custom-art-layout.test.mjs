@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, HEAD_ANCHORS } from '../game/sprites/CustomArtLayout.ts';
+import { CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, HEAD_ANCHORS, headbandRect, headbandTailsRect } from '../game/sprites/CustomArtLayout.ts';
 import { CreatorState } from '../game/creator/CreatorState.ts';
 import { partOptions } from '../game/creator/CreatorPartOptions.ts';
 
@@ -44,4 +44,13 @@ test('headwear stays above eyes while the visor remains at eye height', () => {
   assert.ok(HEAD_ANCHORS.hat[1]+HEAD_ANCHORS.hat[3]<HEAD_ANCHORS.eyes[1]);
   assert.ok(HEAD_ANCHORS.visor[1]<HEAD_ANCHORS.eyes[1]);
   assert.ok(HEAD_ANCHORS.visor[1]+HEAD_ANCHORS.visor[3]>HEAD_ANCHORS.eyes[1]);
+});
+
+test('the headband plate sits on the forehead and its tails hang behind the head', () => {
+  for (const head of partOptions.head) {
+    const [x, y, , height] = headbandRect(head);
+    assert.ok(y + height <= HEAD_ANCHORS.eyes[1] - 4, head);
+    const [tx, , tw] = headbandTailsRect(head);
+    assert.ok(tx + tw <= x, head);
+  }
 });

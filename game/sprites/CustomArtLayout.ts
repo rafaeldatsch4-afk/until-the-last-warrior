@@ -28,10 +28,15 @@ export function scouterRect(head: string): readonly [number, number, number, num
 /** The painted wrap begins 43% into the image; its tails are not head width. */
 export function headbandRect(head: string): readonly [number, number, number, number] {
   // The creator preview adds a small portrait translation around these
-  // coordinates. Keep the band centered on the forehead after that transform,
-  // instead of centering the source image (whose loose tails were cropped).
-  if (head === 'saitama') return [97, 54.5, 14, 6];
-  if (head === 'jotaro') return [97, 54, 14, 6];
-  if (head === 'spiderman') return [93, 49, 17, 6];
-  return [97.5, 55, 14, 6];
+  // coordinates. Keep the plate on the forehead, between the hairline and
+  // the eyes, instead of over the eyes like goggles.
+  if (head === 'spiderman') return [93.5, 47.5, 15.5, 5.5];
+  if (head === 'saitama' || head === 'jotaro') return [96.5, 50, 13.5, 5.5];
+  return [97, 50.5, 13.5, 5.5];
+}
+
+/** The loose knot tails, tied at the back of the head and hanging behind it. */
+export function headbandTailsRect(head: string): readonly [number, number, number, number] {
+  const [x, y] = headbandRect(head);
+  return [x - 13, y - 1, 9, 11];
 }

@@ -1,5 +1,5 @@
 import type { CharacterData } from '../types';
-import { HAT_HAIR_LINE, HEAD_ANCHORS, headbandRect, scouterRect } from './CustomArtLayout';
+import { HAT_HAIR_LINE, HEAD_ANCHORS, headbandRect, headbandTailsRect, scouterRect } from './CustomArtLayout';
 
 type Palette = { primary?: number; secondary?: number; skin?: number };
 type Layer = (name: string, palette: Palette) => HTMLCanvasElement;
@@ -72,6 +72,8 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
     // tails that were being stretched past the back of the character's head.
     ctx.drawImage(band, band.width * .43, band.height * .16,
       band.width * .57, band.height * .72, x, y, width, height);
+    const [tx,ty,tw,th] = headbandTailsRect(id);
+    ctx.drawImage(band, 0, 0, band.width * .45, band.height, tx, ty, tw, th);
   } else if (accessory === 'scouter') {
     const [vx,vy,vw,vh] = scouterRect(id);
     ctx.save();ctx.translate(vx+vw,vy);ctx.scale(-1,1);

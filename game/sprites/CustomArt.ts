@@ -219,13 +219,23 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.drawImage(accessory, -width / 2, 0, width, height);
       ctx.restore();
     }
-    // Draw the scarf over the neck and upper chest, after the portrait. Its
-    // collar sits below the jaw and the existing tails drape over the gi.
+    // The scarf is split in two: its tails hang behind the body from the nape and
+    // swing back with the pose, and only the wrapped collar is drawn over the neck.
+    const scarfTailSwing=walk?.2+Math.abs(phase)*.15:punch?.75:kick?.45:defend?.1:charge?.9:genki?.3:.12;
+    const drawScarfTails=()=>{
+      if(!accessory || accessoryId!=='scarf')return;
+      const sx=0,sy=accessory.height*.2,sw=accessory.width*.62,sh=accessory.height-sy;
+      const w=12,h=w*sh/sw;
+      ctx.save();ctx.translate(neckX-2+lean,71+bob);ctx.rotate(scarfTailSwing);
+      ctx.drawImage(accessory,sx,sy,sw,sh,-w,0,w,h);
+      ctx.restore();
+    };
     const drawScarf=()=>{
-      if(accessory && accessoryId==='scarf') {
-        const scarfW=20;
-        ctx.drawImage(accessory,neckX+lean-15,69+bob,scarfW,scarfW*accessory.height/accessory.width);
-      }
+      if(!accessory || accessoryId!=='scarf')return;
+      const sx=accessory.width*.4,sw=accessory.width-sx,sh=accessory.height*.45;
+      const w=12.5,h=w*sh/sw;
+      // Wrapped at the base of the neck, below the jaw.
+      ctx.drawImage(accessory,sx,0,sw,sh,neckX+lean-w/2+1.5,70.5+bob,w,h);
     };
     const drawSword=()=>{
       if(!accessory || accessoryId!=='sword' || genki)return;
@@ -239,7 +249,9 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       const gripX=swordWidth*(70/accessory.width),gripY=swordHeight*.5;
       // The blade follows the arm, not the forearm's rotation: a punch thrusts it
       // forward and the guard raises it beside the head instead of across the face.
-      const bladeAngle=punch?0:defend?-1.9:armAngle;
+      // At rest the katana is held in a ready guard, pointing up and forward
+      // instead of lying flat across the legs.
+      const bladeAngle=punch?0:defend?-1.9:-.6;
       ctx.save();ctx.translate(handX,handY);ctx.rotate(bladeAngle);
       ctx.drawImage(accessory,-gripX,-gripY,swordWidth,swordHeight);
       ctx.restore();
@@ -273,6 +285,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.drawImage(legs, sx, trouserTop, legs.width / 2, ankles[side].bottom-trouserTop, legX - pivotX, 0, legW, legH);
       ctx.restore();
     }
+    drawScarfTails();
     // One continuous neck behind both layers, including their antialiased edges.
     // Idle uses the same pose for head and torso; moving just the torso opens the seam.
     const neckColor=rgb(data.skin).map(c=>Math.round(c*.88));
