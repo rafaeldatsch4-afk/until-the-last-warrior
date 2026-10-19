@@ -15,7 +15,7 @@ export function customFrameRegion(index: number, resolution: number) {
 
 export const HEAD_ANCHORS = {
   neck: [98, 70], eyes: [103, 61],
-  hat: [86.5, 44.5, 24, 14.8], band: [84.6, 53, 22, 7], visor: [94, 58, 12, 7],
+  hat: [86.5, 44.5, 24, 14.8], band: [84.6, 53, 22, 7], visor: [96, 57.5, 9.5, 5.6],
 } as const;
 
 /** Under a hat the chosen hairstyle stays; only hair above the crown's base is hidden. */
@@ -32,8 +32,8 @@ export function scouterRect(head: string): readonly [number, number, number, num
 export function headbandRect(head: string): readonly [number, number, number, number] {
   // Flattened from the painted top-down view so it reads as a band around the
   // head, its near edge just above the brows.
-  const width = 20, height = width * 177 / 349 * .62;
-  const [right, bottom] = head === 'spiderman' ? [109, 54] : head === 'saitama' || head === 'jotaro' ? [110, 56.5] : [110.5, 57];
+  const width = 18, height = width * 177 / 349 * .5;
+  const [right, bottom] = head === 'saitama' || head === 'jotaro' || head === 'spiderman' ? [108, 56.5] : [108.5, 57];
   return [right - width, bottom - height, width, height];
 }
 
@@ -52,7 +52,7 @@ export function scarfCollarRect(neckX: number): readonly [number, number, number
 /** Tail strips hold 4 states (hanging, swaying, in the wind, streaming back);
  * every cell has its knot on `anchor`, and `length` is the drawn cell height. */
 export const ACCESSORY_TAILS = {
-  scarf: { anchor: [.845, .023], length: 22 },
+  scarf: { anchor: [.845, .023], length: 19 },
   headband: { anchor: [.873, .088], length: 11 },
 } as const;
 
@@ -60,7 +60,7 @@ export const ACCESSORY_TAILS = {
  * or striking, and stream straight back during the dash. */
 /** Extra swing (radians, positive = toward the back) so the scarf's ends show
  * behind the shoulder instead of disappearing behind the torso. */
-export const SCARF_TAIL_SWING = [.75, .55, .15, 0] as const;
+export const SCARF_TAIL_SWING = [.65, .5, .15, 0] as const;
 
 export function tailState(frame: number): 0 | 1 | 2 | 3 {
   if (frame < 4) return frame % 2 ? 1 : 0;
@@ -69,3 +69,6 @@ export function tailState(frame: number): 0 | 1 | 2 | 3 {
   if (frame >= CUSTOM_DASH_FRAMES[0]) return 3;
   return 2;
 }
+
+/** Where the guard sits along accessory-sword_sheathed.png (scabbard left, hilt right). */
+export const SHEATH_GUARD = .707;

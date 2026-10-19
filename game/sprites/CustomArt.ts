@@ -2,8 +2,9 @@
 import type Phaser from 'phaser';
 import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
-import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, headbandRect, RING, SCARF_TAIL_SWING, scarfCollarRect, tailState } from './CustomArtLayout';
+import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, headbandRect, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
+import { BACK_ARM, BODY, FRONT_ARM, splitArms } from './CustomArms';
 import { GI_SEAM, trouserClothBottom, fittedFootwear } from './CustomSeams';
 
 const urls = import.meta.glob<string>('../assets/custom/*.png', { eager: true, query: '?url', import: 'default' });
@@ -72,7 +73,7 @@ function tint(scene: Phaser.Scene, name: string, palette: Palette): HTMLCanvasEl
     const r = pixels.data[i], g = pixels.data[i + 1], b = pixels.data[i + 2];
     const px=i/4%canvas.width,py=Math.floor(i/4/canvas.width);
     let color: number | undefined, light = 1;
-    if(name==='portrait-chapolim' && r>g*1.8 && r>b*1.8) {
+    if((name==='portrait-chapolim' || name==='portrait-spiderman') && r>g*1.8 && r>b*1.8) {
       color=palette.primary;light=r/230;
     } else if(name==='portrait-chapolim' && py<canvas.height*.3 && r>100 && g>70 && b<g*.65) {
       color=palette.secondary;light=r/230;
@@ -87,7 +88,7 @@ function tint(scene: Phaser.Scene, name: string, palette: Palette): HTMLCanvasEl
     } else if (Math.max(r,g,b) - Math.min(r,g,b) < 65 && Math.max(r,g,b) > 65) {
       const portrait = name.startsWith('portrait-');
       const lowerRow=['portrait-sasuke','portrait-luffy','portrait-saitama'].includes(name);
-      const hairRegion=!['portrait-saitama','portrait-jotaro','portrait-chapolim'].includes(name) && (py < canvas.height*(lowerRow ? .50 : .58) || px < canvas.width*.35);
+      const hairRegion=!['portrait-saitama','portrait-jotaro','portrait-chapolim','portrait-spiderman'].includes(name) && (py < canvas.height*(lowerRow ? .50 : .58) || px < canvas.width*.35);
       color = !portrait || hairRegion ? palette.primary : undefined;
       light = (r + g + b) / (3 * 230);
     }
@@ -186,6 +187,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   const accessory = accessoryId === 'none' ? null : tint(scene, 'accessory-' + accessoryId,
     accessoryId === 'cape' || accessoryId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } :
     accessoryId === 'headband' ? { secondary: data.color_acc_1 ?? data.gi2 } : {});
+  const sheath = accessoryId === 'sword' ? tint(scene, 'accessory-sword_sheathed', {}) : null;
   const tailsId = accessoryId === 'scarf' || accessoryId === 'headband' ? accessoryId : null;
   const tails = tailsId ? tint(scene, 'accessory-' + tailsId + '_tails',
     tailsId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } : { secondary: data.color_acc_1 ?? data.gi2 }) : null;
@@ -219,6 +221,19 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   const neckX=79+(neckWeight?neckSum/neckWeight:torso.width/2)/torso.width*36;
   const portrait = buildCustomPortrait(data,texture,(name,palette)=>tint(scene,name,palette),resolution,neckX);
   const draw = (img: HTMLCanvasElement, x: number, y: number, w: number, h: number) => ctx.drawImage(img, Math.round(x), Math.round(y), w, h);
+  // Posable arms cut along the armpit (null: keep the rectangular fallback).
+  const rig = (() => {
+    const data = torso.getContext('2d')!.getImageData(0, 0, torso.width, torso.height);
+    const split = splitArms(data.data, torso.width, torso.height);
+    if (!split) return null;
+    const layer = (mask: number) => {
+      const c = document.createElement('canvas'); c.width = torso.width; c.height = torso.height;
+      const out = new ImageData(torso.width, torso.height);
+      for (let i = 0; i < split.owner.length; i++) if (split.owner[i] & mask) for (let k = 0; k < 4; k++) out.data[i * 4 + k] = data.data[i * 4 + k];
+      c.getContext('2d')!.putImageData(out, 0, 0); return c;
+    };
+    return { ...split, body: layer(BODY), arms: [layer(BACK_ARM), layer(FRONT_ARM)] };
+  })();
   for (let f = 0; f < CUSTOM_FRAME.count; f++) {
     ctx.save(); ctx.translate(f % 4 * 192, Math.floor(f / 4) * 128);
     const walk = f >= 4 && f <= 7;
@@ -226,8 +241,11 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     const phase = walk ? [0,1,0,-1][f-4] : dash ? [1,-1,1][f-CUSTOM_DASH_FRAMES[0]] : 0;
     const punch = f === 8, kick = f === 9, defend = f === 10, charge = f === 11;
     const genki=f===12;
-    const bob = walk ? Math.abs(phase) : 0;
-    const headBob = f < 4 ? 0 : bob;
+    // Idle breathes: chest and head rise together, the feet stay planted.
+    const breath = f < 4 ? [0,.5,1,.5][f] : 0;
+    const legBob = walk ? Math.abs(phase) : 0;
+    const bob = legBob + breath;
+    const headBob = f < 4 ? breath : bob;
     const lean = punch ? 3 : kick ? -2 : defend ? -2 : dash ? 4 : 0;
     // The dash leans the whole body forward over the feet.
     if (dash) { ctx.translate(97, 126); ctx.rotate(.12); ctx.translate(-97, -126); }
@@ -268,40 +286,35 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
         ctx.restore();
       }
     };
-    const drawSword=()=>{
-      if(!accessory || accessoryId!=='sword' || genki)return;
-      const armAngle=charge?-.18:defend?2.25:punch?-1.55:0;
-      const handX=106+lean+Math.cos(armAngle)*6-Math.sin(armAngle)*22;
-      const handY=77+bob+Math.sin(armAngle)*6+Math.cos(armAngle)*22;
+    // Katana: sheathed at the hip; drawn only to strike and to guard. The scabbard
+    // is worn behind the body, the hilt rests forward over the belt.
+    const swordDrawn = punch || defend;
+    const drawSheath=(part:'scabbard'|'hilt')=>{
+      if(!sheath || genki || (part==='hilt' && swordDrawn))return;
+      const w=46,h=w*sheath.height/sheath.width,gx=w*SHEATH_GUARD;
+      ctx.save();ctx.translate(101+lean,93+bob);ctx.rotate(-.4);
+      ctx.beginPath();
+      if(part==='scabbard')ctx.rect(-gx-1,-h,gx+1,h*2);else ctx.rect(-1.5,-h,w-gx+2,h*2);
+      ctx.clip();ctx.drawImage(sheath,-gx,-h/2,w,h);ctx.restore();
+    };
+    const drawSword=(fist:readonly [number,number],angle:number)=>{
+      if(!accessory || accessoryId!=='sword' || !swordDrawn)return;
       const swordWidth=43;
       const swordHeight=swordWidth*accessory.height/accessory.width;
-      // Anchor the image at the part of the handle the palm actually covers;
-      // the old 15% point left the guard and blade visibly past the fist.
+      // Anchor the image at the part of the handle the palm actually covers.
       const gripX=swordWidth*(70/accessory.width),gripY=swordHeight*.5;
-      // The blade follows the arm, not the forearm's rotation: a punch thrusts it
-      // forward and the guard raises it beside the head instead of across the face.
-      // At rest the katana is held in a ready guard, pointing up and forward
-      // instead of lying flat across the legs.
-      const bladeAngle=punch?0:defend?-1.9:-.6;
-      ctx.save();ctx.translate(handX,handY);ctx.rotate(bladeAngle);
+      ctx.save();ctx.translate(fist[0],fist[1]);ctx.rotate(angle);
       ctx.drawImage(accessory,-gripX,-gripY,swordWidth,swordHeight);
       ctx.restore();
     };
-    const drawSwordHand=()=>{
-      if(!accessory || accessoryId!=='sword' || genki)return;
-      // Idle frames use the full painted torso, so restore the wrist and palm
-      // over the katana to make the grip read as part of the hand.
-      const sx=torso.width*.78,sy=torso.height*.82;
-      const sw=torso.width-sx,sh=torso.height-sy;
-      ctx.drawImage(torso,sx,sy,sw,sh,79+sx/tw*36,66+sy/th*36,sw/tw*36,sh/th*36);
-    };
+    drawSheath('scabbard');
     // Legs and footwear share hip pivots, so walking and kicking cannot leave detached boots.
     for (let side = 0; side < 2; side++) {
       ctx.save();
       const pivotX = side === 0 ? 91 : 102;
       const waistShift=torsoId==='goku'?1.5:0;
-      ctx.translate(pivotX+waistShift+lean, hipY+bob);
-      ctx.rotate(side === 1 && kick ? -1.2 : phase * (side ? -0.14 : 0.14));
+      ctx.translate(pivotX+waistShift+lean, hipY+legBob);
+      ctx.rotate(side === 1 && kick ? -1.2 : phase * (dash ? .42 : .3) * (side ? -1 : 1));
       const sx = side * legs.width / 2;
       // Keep the full trouser width, but tuck its hem inside the boot shaft.
       const legW=giTrousers&&torsoId==='goku'?18:17,legX=97+(side-1)*legW;
@@ -333,34 +346,70 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
         rect.x+lean,rect.y+bob,rect.width,rect.height*sourceBottom/raisedTorso.height);
       drawHead();
       drawScarf();
-    } else if(!punch && !defend && !charge) {
+    } else if(!punch && !defend && !charge && !walk && !dash) {
       // Keep shoulders, arms and belt joined in relaxed poses; preserve source proportions.
       draw(torso,79+lean,66+bob,36,36);
-      drawSword();
+      drawSheath('hilt');
       drawHead();
       drawScarf();
-      drawSwordHand();
     } else {
-    // Keep the neck/collar and shoulder bridge intact while the lower arms rotate.
+    // Two-segment arms (shoulder and elbow). Angles turn each segment from its
+    // painted rest pose: 0 hangs down, negative swings forward.
+    // [front upper, front forearm, back upper, back forearm]
+    const arms = punch ? [-1.5,-1.58,.35,-1.0] : defend ? [-.8,-2.75,-.6,-2.6]
+      : charge ? [-.25,-.1,.25,.1] : dash ? [.45,.75,.6,.9]
+      : [-.35*phase,-.35*phase-.25,.35*phase,.35*phase-.25];
+    let fist:readonly [number,number]=[0,0];
+    if (rig) {
+      const kx=36/tw, ky=36/th, ox=79+lean, oy=66+bob;
+      const at=(p:readonly number[])=>[ox+p[0]*kx, oy+p[1]*ky] as const;
+      const turn=(p:readonly number[],c:readonly number[],a:number)=>[c[0]+(p[0]-c[0])*Math.cos(a)-(p[1]-c[1])*Math.sin(a), c[1]+(p[0]-c[0])*Math.sin(a)+(p[1]-c[1])*Math.cos(a)] as const;
+      const drawArm=(side:number)=>{
+        const upper=arms[side?0:2], fore=arms[side?1:3], img=rig.arms[side];
+        const S=at(rig.shoulder[side]), E0=at(rig.elbow[side]), H0=at(rig.hand[side]), E1=turn(E0,S,upper);
+        const row=rig.elbowRow[side];
+        // Upper arm: rows above the elbow, turned about the shoulder.
+        ctx.save();ctx.translate(S[0],S[1]);ctx.rotate(upper);ctx.translate(-S[0],-S[1]);
+        ctx.drawImage(img,0,0,tw,row+2,ox,oy,36,(row+2)*ky);ctx.restore();
+        // Forearm: rows below it, turned about the moved elbow.
+        ctx.save();ctx.translate(E1[0],E1[1]);ctx.rotate(fore);ctx.translate(-E0[0],-E0[1]);
+        ctx.drawImage(img,0,row-2,tw,th-row+2,ox,oy+(row-2)*ky,36,(th-row+2)*ky);ctx.restore();
+        if(side){const H=turn(H0,E0,fore);fist=[H[0]+E1[0]-E0[0],H[1]+E1[1]-E0[1]];}
+      };
+      // The back arm passes behind the body unless it is raised to strike or guard.
+      const backInFront = punch || defend;
+      if(!backInFront)drawArm(0);
+      draw(rig.body,ox,oy,36,36);
+      drawSheath('hilt');
+      drawHead();
+      drawScarf();
+      if(backInFront)drawArm(0);
+      drawArm(1);
+    } else {
+    // Fallback for torsos whose arms cannot be separated: rectangular arm crops.
     ctx.drawImage(torso, 0, 0, tw, th*.30, 79+lean,66+bob,36,11);
     ctx.drawImage(torso, tw*.25, th*.30, tw*.5, th*.70, 88+lean,77+bob,18,25);
+    drawSheath('hilt');
     drawHead();
     drawScarf();
-    drawSword();
-    for (let side=0;side<2;side++) {
-      const x = side ? 106 : 87;
-      ctx.save(); ctx.translate(x + lean, 76 + bob);
-      ctx.rotate(charge ? (side ? -.18 : .18) : defend ? (side ? 2.25 : -2.25) : punch && side ? -1.55 : phase*(side ? 0.1 : -0.1));
-      // Discard the inner coat hem caught by the rectangular arm crop.
-      ctx.beginPath();
-      const armLeft=side?0:-9,armHeight=27;
-      const armPoint=(x:number,y:number)=>[armLeft+(side?x:9-x),y] as const;
-      ctx.moveTo(...armPoint(0,-1));
-      for(const point of [[9,-1],[9,armHeight],[0,armHeight],[0,armHeight-3],[2.5,armHeight-7],[2.5,12],[0,6]])ctx.lineTo(...armPoint(point[0],point[1]));
-      ctx.closePath();ctx.clip();
-      ctx.drawImage(torso, side ? tw*.75 : 0, th*.25, tw*.25, th*.75, side ? 0 : -9, -1, 9, 27);
-      ctx.restore();
+    const ELBOW=13, ARM_W=9, ARM_H=27;
+    for (const side of [0,1]) {
+      const upper=arms[side?0:2], fore=arms[side?1:3];
+      const sx=(side ? 106 : 87)+lean, sy=76+bob, left=side?0:-ARM_W, cx=left+ARM_W/2;
+      const ex=sx+Math.cos(upper)*cx-Math.sin(upper)*ELBOW, ey=sy+Math.sin(upper)*cx+Math.cos(upper)*ELBOW;
+      const segment=(x:number,y:number,angle:number,pivotX:number,from:number,to:number)=>{
+        ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+        ctx.beginPath();ctx.rect(left-pivotX-1,from?-1.5:-1,ARM_W+2,to-from+1.5);ctx.clip();
+        ctx.drawImage(torso, side ? tw*.75 : 0, th*.25, tw*.25, th*.75, left-pivotX, -1-from, ARM_W, ARM_H);
+        ctx.restore();
+      };
+      segment(sx,sy,upper,0,0,ELBOW+1.5);
+      segment(ex,ey,fore,cx,ELBOW-1.5,ARM_H);
+      if(side){const r=ARM_H-ELBOW-3;fist=[ex-Math.sin(fore)*r,ey+Math.cos(fore)*r];}
     }
+    }
+    // A thrust follows the forearm; the guard raises the blade beside the head.
+    drawSword(fist, punch ? arms[1]+Math.PI/2 : -1.75);
     }
     ctx.restore();
   }
