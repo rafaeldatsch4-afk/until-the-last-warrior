@@ -30,7 +30,7 @@ export class CreatorState {
     feet_2: 1,
     head_1: 0,
     head_2: 1,
-    acc_1: 0,
+    acc_1: 2, // red: the default gi is orange, so the default orange made accessories vanish
   };
 
   public style_idx = {
