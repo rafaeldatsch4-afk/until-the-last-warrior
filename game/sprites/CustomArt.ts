@@ -2,7 +2,7 @@
 import type Phaser from 'phaser';
 import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
-import { CUSTOM_FRAME } from './CustomArtLayout';
+import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, headbandRect, RING, SCARF_TAIL_SWING, scarfCollarRect, tailState } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
 import { GI_SEAM, trouserClothBottom, fittedFootwear } from './CustomSeams';
 
@@ -186,6 +186,27 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   const accessory = accessoryId === 'none' ? null : tint(scene, 'accessory-' + accessoryId,
     accessoryId === 'cape' || accessoryId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } :
     accessoryId === 'headband' ? { secondary: data.color_acc_1 ?? data.gi2 } : {});
+  const tailsId = accessoryId === 'scarf' || accessoryId === 'headband' ? accessoryId : null;
+  const tails = tailsId ? tint(scene, 'accessory-' + tailsId + '_tails',
+    tailsId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } : { secondary: data.color_acc_1 ?? data.gi2 }) : null;
+  // A ring (headband, scarf collar) is split: its far half sits behind the head
+  // or neck, its near half and knot in front.
+  const drawRing = (img: HTMLCanvasElement, rect: readonly number[], ring: { split: number }, half: 'back' | 'front') => {
+    const [x, y, w, h] = rect, splitY = y + h * ring.split, knotX = x + w * .15;
+    ctx.save(); ctx.beginPath();
+    if (half === 'back') ctx.rect(knotX, y - 1, x + w - knotX + 1, splitY - y + 1);
+    else { ctx.rect(x - 1, splitY, w + 2, h + 1); ctx.rect(x - 1, y - 1, knotX - x + 1, splitY - y + 1); }
+    ctx.clip(); ctx.drawImage(img, x, y, w, h); ctx.restore();
+  };
+  // Draw one state of a tail strip with its knot on (kx, ky).
+  const drawTails = (id: 'scarf' | 'headband', state: number, kx: number, ky: number, swing = 0) => {
+    if (!tails) return;
+    const { anchor, length } = ACCESSORY_TAILS[id];
+    const cw = tails.width / 4, h = length, w = h * cw / tails.height;
+    ctx.save(); ctx.translate(kx, ky); ctx.rotate(swing);
+    ctx.drawImage(tails, state * cw, 0, cw, tails.height, -anchor[0] * w, -anchor[1] * h, w, h);
+    ctx.restore();
+  };
   // Generated garments have different neck positions. Measure their attachment
   // instead of centering a head on the outer shoulder/arm bounds.
   const torsoPixels=torso.getContext('2d')!.getImageData(0,0,torso.width,torso.height).data;
@@ -201,41 +222,51 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
   for (let f = 0; f < CUSTOM_FRAME.count; f++) {
     ctx.save(); ctx.translate(f % 4 * 192, Math.floor(f / 4) * 128);
     const walk = f >= 4 && f <= 7;
-    const phase = walk ? [0,1,0,-1][f-4] : 0;
+    const dash = f >= CUSTOM_DASH_FRAMES[0];
+    const phase = walk ? [0,1,0,-1][f-4] : dash ? [1,-1,1][f-CUSTOM_DASH_FRAMES[0]] : 0;
     const punch = f === 8, kick = f === 9, defend = f === 10, charge = f === 11;
     const genki=f===12;
     const bob = walk ? Math.abs(phase) : 0;
     const headBob = f < 4 ? 0 : bob;
-    const lean = punch ? 3 : kick ? -2 : defend ? -2 : 0;
+    const lean = punch ? 3 : kick ? -2 : defend ? -2 : dash ? 4 : 0;
+    // The dash leans the whole body forward over the feet.
+    if (dash) { ctx.translate(97, 126); ctx.rotate(.12); ctx.translate(-97, -126); }
+    const state = tailState(f);
     if (accessory && accessoryId === 'cape') {
       // Anchor the cape at the shoulders, keep its painted ratio and let the hem
       // sway with each pose instead of stretching it into a skirt over the legs.
       const width = 44;
       const height = width * accessory.height / accessory.width;
-      const capeSwing = walk ? phase * 0.10 : punch ? -0.08 : kick ? 0.10 : defend ? -0.12 : charge ? 0.14 : genki ? 0.08 : 0;
+      const capeSwing = dash ? 0.3 : walk ? phase * 0.10 : punch ? -0.08 : kick ? 0.10 : defend ? -0.12 : charge ? 0.14 : genki ? 0.08 : 0;
       ctx.save();
       ctx.translate(97 + lean, 68 + bob);
       ctx.rotate(capeSwing);
       ctx.drawImage(accessory, -width / 2, 0, width, height);
       ctx.restore();
     }
-    // The scarf is split in two: its tails hang behind the body from the nape and
-    // swing back with the pose, and only the wrapped collar is drawn over the neck.
-    const scarfTailSwing=walk?.2+Math.abs(phase)*.15:punch?.75:kick?.45:defend?.1:charge?.9:genki?.3:.12;
-    const drawScarfTails=()=>{
+    // Scarf: the tails hang from the collar's knot behind the body, then the
+    // collar's far half, the neck and torso, and the near half over the neck.
+    const collar = scarfCollarRect(neckX).map((v, i) => v + (i === 0 ? lean : i === 1 ? bob : 0));
+    const drawScarfBack=()=>{
       if(!accessory || accessoryId!=='scarf')return;
-      const sx=0,sy=accessory.height*.2,sw=accessory.width*.62,sh=accessory.height-sy;
-      const w=12,h=w*sh/sw;
-      ctx.save();ctx.translate(neckX-2+lean,71+bob);ctx.rotate(scarfTailSwing);
-      ctx.drawImage(accessory,sx,sy,sw,sh,-w,0,w,h);
-      ctx.restore();
+      drawTails('scarf', state, collar[0] + collar[2] * RING.scarf.knot[0], collar[1] + collar[3] * RING.scarf.knot[1], SCARF_TAIL_SWING[state]);
+      drawRing(accessory, collar, RING.scarf, 'back');
     };
     const drawScarf=()=>{
-      if(!accessory || accessoryId!=='scarf')return;
-      const sx=accessory.width*.4,sw=accessory.width-sx,sh=accessory.height*.45;
-      const w=12.5,h=w*sh/sw;
-      // Wrapped at the base of the neck, below the jaw.
-      ctx.drawImage(accessory,sx,0,sw,sh,neckX+lean-w/2+1.5,70.5+bob,w,h);
+      if(accessory && accessoryId==='scarf') drawRing(accessory, collar, RING.scarf, 'front');
+    };
+    // Headband: portrait coordinates, moved exactly like the portrait itself.
+    const drawHead=()=>{
+      const band = accessory && accessoryId === 'headband' ? headbandRect(data.part_head || 'goku') : null;
+      const toPortrait = () => ctx.translate(lean - .75 + neckX - 98, headBob + 2);
+      if (band) { ctx.save(); toPortrait(); drawRing(accessory!, band, RING.headband, 'back'); ctx.restore(); }
+      draw(portrait,lean,headBob,192,128);
+      if (band) {
+        ctx.save(); toPortrait();
+        drawRing(accessory!, band, RING.headband, 'front');
+        drawTails('headband', state, band[0] + band[2] * RING.headband.knot[0], band[1] + band[3] * RING.headband.knot[1]);
+        ctx.restore();
+      }
     };
     const drawSword=()=>{
       if(!accessory || accessoryId!=='sword' || genki)return;
@@ -285,7 +316,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.drawImage(legs, sx, trouserTop, legs.width / 2, ankles[side].bottom-trouserTop, legX - pivotX, 0, legW, legH);
       ctx.restore();
     }
-    drawScarfTails();
+    drawScarfBack();
     // One continuous neck behind both layers, including their antialiased edges.
     // Idle uses the same pose for head and torso; moving just the torso opens the seam.
     const neckColor=rgb(data.skin).map(c=>Math.round(c*.88));
@@ -300,20 +331,20 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       const sourceBottom=torsoId==='goku'?GI_SEAM.raisedBeltBottom:raisedTorso.height;
       ctx.drawImage(raisedTorso,0,0,raisedTorso.width,sourceBottom,
         rect.x+lean,rect.y+bob,rect.width,rect.height*sourceBottom/raisedTorso.height);
-      draw(portrait,lean,headBob,192,128);
+      drawHead();
       drawScarf();
     } else if(!punch && !defend && !charge) {
       // Keep shoulders, arms and belt joined in relaxed poses; preserve source proportions.
       draw(torso,79+lean,66+bob,36,36);
       drawSword();
-      draw(portrait,lean,headBob,192,128);
+      drawHead();
       drawScarf();
       drawSwordHand();
     } else {
     // Keep the neck/collar and shoulder bridge intact while the lower arms rotate.
     ctx.drawImage(torso, 0, 0, tw, th*.30, 79+lean,66+bob,36,11);
     ctx.drawImage(torso, tw*.25, th*.30, tw*.5, th*.70, 88+lean,77+bob,18,25);
-    draw(portrait,lean,headBob,192,128);
+    drawHead();
     drawScarf();
     drawSword();
     for (let side=0;side<2;side++) {

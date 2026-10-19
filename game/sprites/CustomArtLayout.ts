@@ -1,6 +1,8 @@
 // Logical coordinates stay identical to combat physics and effect sockets.
 // Extra texture pixels improve drawing detail without changing fighter size.
-export const CUSTOM_FRAME = { width: 192, height: 128, columns: 4, rows: 4, count: 13 };
+// 0-3 idle, 4-7 walk, 8 punch, 9 kick, 10 guard, 11 charge, 12 Genki Dama, 13-15 dash.
+export const CUSTOM_FRAME = { width: 192, height: 128, columns: 4, rows: 4, count: 16 };
+export const CUSTOM_DASH_FRAMES = [13, 15] as const;
 
 export function customFrameRegion(index: number, resolution: number) {
   const { width, height, columns, rows } = CUSTOM_FRAME;
@@ -25,18 +27,45 @@ export function scouterRect(head: string): readonly [number, number, number, num
   return [x, head === 'spiderman' ? y - 3 : y, width, height];
 }
 
-/** The painted wrap begins 43% into the image; its tails are not head width. */
+/** The headband ring (accessory-headband.png) in portrait coordinates: its
+ * steel plate on the forehead, its far half hidden behind the head. */
 export function headbandRect(head: string): readonly [number, number, number, number] {
-  // The creator preview adds a small portrait translation around these
-  // coordinates. Keep the plate on the forehead, between the hairline and
-  // the eyes, instead of over the eyes like goggles.
-  if (head === 'spiderman') return [93.5, 47.5, 15.5, 5.5];
-  if (head === 'saitama' || head === 'jotaro') return [96.5, 50, 13.5, 5.5];
-  return [97, 50.5, 13.5, 5.5];
+  // Flattened from the painted top-down view so it reads as a band around the
+  // head, its near edge just above the brows.
+  const width = 20, height = width * 177 / 349 * .62;
+  const [right, bottom] = head === 'spiderman' ? [109, 54] : head === 'saitama' || head === 'jotaro' ? [110, 56.5] : [110.5, 57];
+  return [right - width, bottom - height, width, height];
 }
 
-/** The loose knot tails, tied at the back of the head and hanging behind it. */
-export function headbandTailsRect(head: string): readonly [number, number, number, number] {
-  const [x, y] = headbandRect(head);
-  return [x - 13, y - 1, 9, 11];
+/** Where the rings are split and knotted, as fractions of the ring image. */
+export const RING = {
+  headband: { split: .45, knot: [.06, .42] },
+  scarf: { split: .45, knot: [.06, .45] },
+} as const;
+
+/** The scarf collar around the base of the neck, centred on the neck. */
+export function scarfCollarRect(neckX: number): readonly [number, number, number, number] {
+  const width = 14, height = width * 126 / 221;
+  return [neckX + 1 - width / 2, 68.5, width, height];
+}
+
+/** Tail strips hold 4 states (hanging, swaying, in the wind, streaming back);
+ * every cell has its knot on `anchor`, and `length` is the drawn cell height. */
+export const ACCESSORY_TAILS = {
+  scarf: { anchor: [.845, .023], length: 22 },
+  headband: { anchor: [.873, .088], length: 11 },
+} as const;
+
+/** Loose ends follow the action: they hang and sway at rest, flow while moving
+ * or striking, and stream straight back during the dash. */
+/** Extra swing (radians, positive = toward the back) so the scarf's ends show
+ * behind the shoulder instead of disappearing behind the torso. */
+export const SCARF_TAIL_SWING = [.75, .55, .15, 0] as const;
+
+export function tailState(frame: number): 0 | 1 | 2 | 3 {
+  if (frame < 4) return frame % 2 ? 1 : 0;
+  if (frame < 8) return frame % 2 ? 2 : 1;
+  if (frame === 10 || frame === 12) return 1;
+  if (frame >= CUSTOM_DASH_FRAMES[0]) return 3;
+  return 2;
 }

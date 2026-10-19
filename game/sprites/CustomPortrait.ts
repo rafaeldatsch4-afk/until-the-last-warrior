@@ -1,5 +1,5 @@
 import type { CharacterData } from '../types';
-import { HAT_HAIR_LINE, HEAD_ANCHORS, headbandRect, headbandTailsRect, scouterRect } from './CustomArtLayout';
+import { HAT_HAIR_LINE, HEAD_ANCHORS, scouterRect } from './CustomArtLayout';
 
 type Palette = { primary?: number; secondary?: number; skin?: number };
 type Layer = (name: string, palette: Palette) => HTMLCanvasElement;
@@ -63,17 +63,10 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
     ctx.beginPath();ctx.moveTo(102,57);ctx.lineTo(109,53);ctx.lineTo(107,59);ctx.quadraticCurveTo(104,62,102,57);ctx.fill();ctx.stroke();
   }
 
+  // The headband is drawn per frame (CustomArt): its ring wraps behind the head
+  // and its knot tails move with each pose.
   if (accessory === 'straw_hat') {
     ctx.drawImage(layer('accessory-straw_hat', {}), ...HEAD_ANCHORS.hat);
-  } else if (accessory === 'headband') {
-    const band = layer('accessory-headband', { secondary: data.color_acc_1 ?? data.gi2 });
-    const [x,y,width,height] = headbandRect(id);
-    // Keep the plate and forehead wrap; the full source includes long loose
-    // tails that were being stretched past the back of the character's head.
-    ctx.drawImage(band, band.width * .43, band.height * .16,
-      band.width * .57, band.height * .72, x, y, width, height);
-    const [tx,ty,tw,th] = headbandTailsRect(id);
-    ctx.drawImage(band, 0, 0, band.width * .45, band.height, tx, ty, tw, th);
   } else if (accessory === 'scouter') {
     const [vx,vy,vw,vh] = scouterRect(id);
     ctx.save();ctx.translate(vx+vw,vy);ctx.scale(-1,1);

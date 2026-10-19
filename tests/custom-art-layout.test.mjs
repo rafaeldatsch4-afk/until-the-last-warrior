@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, HEAD_ANCHORS, headbandRect, headbandTailsRect } from '../game/sprites/CustomArtLayout.ts';
+import { CUSTOM_DASH_FRAMES, CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, HEAD_ANCHORS, headbandRect, tailState } from '../game/sprites/CustomArtLayout.ts';
 import { CreatorState } from '../game/creator/CreatorState.ts';
 import { partOptions } from '../game/creator/CreatorPartOptions.ts';
 
@@ -16,7 +16,7 @@ test('HD atlas frames keep combat dimensions and sample disjoint complete cells'
       assert.equal(r.y,r.v0*128*CUSTOM_FRAME.rows*resolution);
       cells.add(r.x+','+r.y);
     }
-    assert.equal(cells.size,13);
+    assert.equal(cells.size,CUSTOM_FRAME.count);
   }
 });
 
@@ -46,11 +46,17 @@ test('headwear stays above eyes while the visor remains at eye height', () => {
   assert.ok(HEAD_ANCHORS.visor[1]+HEAD_ANCHORS.visor[3]>HEAD_ANCHORS.eyes[1]);
 });
 
-test('the headband plate sits on the forehead and its tails hang behind the head', () => {
+test('the headband ring sits above the eyes for every head', () => {
   for (const head of partOptions.head) {
-    const [x, y, , height] = headbandRect(head);
+    const [, y, , height] = headbandRect(head);
     assert.ok(y + height <= HEAD_ANCHORS.eyes[1] - 4, head);
-    const [tx, , tw] = headbandTailsRect(head);
-    assert.ok(tx + tw <= x, head);
   }
+});
+
+test('loose scarf and headband ends hang at rest, flow in action and stream back in the dash', () => {
+  for (let frame = 0; frame < CUSTOM_FRAME.count; frame++) assert.ok([0,1,2,3].includes(tailState(frame)));
+  assert.deepEqual([0,1,2,3].map(tailState), [0,1,0,1]);
+  assert.equal(tailState(8), 2);
+  for (let frame = CUSTOM_DASH_FRAMES[0]; frame <= CUSTOM_DASH_FRAMES[1]; frame++) assert.equal(tailState(frame), 3);
+  assert.equal(CUSTOM_DASH_FRAMES[1], CUSTOM_FRAME.count - 1);
 });
