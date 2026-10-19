@@ -33,7 +33,7 @@ export function headbandRect(head: string): readonly [number, number, number, nu
   // Flattened from the painted top-down view so it reads as a band around the
   // head, its near edge just above the brows.
   const width = 18, height = width * 177 / 349 * .5;
-  const [right, bottom] = head === 'spiderman' ? [107, 54] : head === 'saitama' || head === 'jotaro' ? [108, 56.5] : [108.5, 57];
+  const [right, bottom] = head === 'saitama' || head === 'jotaro' || head === 'spiderman' ? [108, 56.5] : [108.5, 57];
   return [right - width, bottom - height, width, height];
 }
 

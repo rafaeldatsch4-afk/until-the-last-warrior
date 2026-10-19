@@ -73,7 +73,7 @@ function tint(scene: Phaser.Scene, name: string, palette: Palette): HTMLCanvasEl
     const r = pixels.data[i], g = pixels.data[i + 1], b = pixels.data[i + 2];
     const px=i/4%canvas.width,py=Math.floor(i/4/canvas.width);
     let color: number | undefined, light = 1;
-    if(name==='portrait-chapolim' && r>g*1.8 && r>b*1.8) {
+    if((name==='portrait-chapolim' || name==='portrait-spiderman') && r>g*1.8 && r>b*1.8) {
       color=palette.primary;light=r/230;
     } else if(name==='portrait-chapolim' && py<canvas.height*.3 && r>100 && g>70 && b<g*.65) {
       color=palette.secondary;light=r/230;
@@ -88,7 +88,7 @@ function tint(scene: Phaser.Scene, name: string, palette: Palette): HTMLCanvasEl
     } else if (Math.max(r,g,b) - Math.min(r,g,b) < 65 && Math.max(r,g,b) > 65) {
       const portrait = name.startsWith('portrait-');
       const lowerRow=['portrait-sasuke','portrait-luffy','portrait-saitama'].includes(name);
-      const hairRegion=!['portrait-saitama','portrait-jotaro','portrait-chapolim'].includes(name) && (py < canvas.height*(lowerRow ? .50 : .58) || px < canvas.width*.35);
+      const hairRegion=!['portrait-saitama','portrait-jotaro','portrait-chapolim','portrait-spiderman'].includes(name) && (py < canvas.height*(lowerRow ? .50 : .58) || px < canvas.width*.35);
       color = !portrait || hairRegion ? palette.primary : undefined;
       light = (r + g + b) / (3 * 230);
     }
