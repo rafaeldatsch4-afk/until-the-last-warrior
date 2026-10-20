@@ -4,14 +4,19 @@ import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
 import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, headbandRect, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
+import POSED_ANCHORS from '../assets/custom-v2/anchors.json';
 import { BACK_ARM, BODY, FRONT_ARM, splitArms } from './CustomArms';
 import { GI_SEAM, trouserClothBottom, fittedFootwear } from './CustomSeams';
 
 const urls = import.meta.glob<string>('../assets/custom/*.png', { eager: true, query: '?url', import: 'default' });
 const prefix = 'wardrobe:';
+// Posed wardrobe: one base body and every outfit drawn on it in the 16 poses
+// (scripts/pack-custom-wardrobe.mjs). Used whenever the chosen pieces all exist.
+const posedUrls = import.meta.glob<string>('../assets/custom-v2/*.png', { eager: true, query: '?url', import: 'default' });
+const POSED = 'wardrobe2:';
 export function preloadCustomArt(scene: Phaser.Scene) {
-  for (const [path, url] of Object.entries(urls)) {
-    const key = prefix + path.split('/').pop()!.replace('.png', '');
+  for (const [list, keyPrefix] of [[urls, prefix], [posedUrls, POSED]] as const) for (const [path, url] of Object.entries(list)) {
+    const key = keyPrefix + path.split('/').pop()!.replace('.png', '');
     if (!scene.textures.exists(key)) scene.load.image(key, url);
   }
 }
@@ -52,17 +57,17 @@ function footwearParts(image: HTMLCanvasElement) {
 }
 
 /** The source's white, cyan and peach are independent material masks. */
-function tint(scene: Phaser.Scene, name: string, palette: Palette): HTMLCanvasElement {
-  if (!scene.textures.exists(prefix + name)) {
+function tint(scene: Phaser.Scene, name: string, palette: Palette, keyPrefix = prefix): HTMLCanvasElement {
+  if (keyPrefix === prefix && !scene.textures.exists(prefix + name)) {
     const category = name.split('-')[0];
     name = category === 'accessory' ? 'accessory-scarf' : category + '-goku';
   }
   let cache = caches.get(scene.textures);
   if (!cache) { cache = new Map(); caches.set(scene.textures, cache); }
-  const key = name + JSON.stringify(palette);
+  const key = keyPrefix + name + JSON.stringify(palette);
   const previous = cache.get(key);
   if (previous) return previous;
-  const source = scene.textures.get(prefix + name).getSourceImage() as HTMLImageElement;
+  const source = scene.textures.get(keyPrefix + name).getSourceImage() as HTMLImageElement;
   const canvas = document.createElement('canvas');
   canvas.width = source.width; canvas.height = source.height;
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
@@ -103,8 +108,122 @@ function tint(scene: Phaser.Scene, name: string, palette: Palette): HTMLCanvasEl
   return canvas;
 }
 
+/** A ring (headband, scarf collar) is split: its far half sits behind the head
+ * or neck, its near half and knot in front. */
+function drawRing(ctx: CanvasRenderingContext2D, img: HTMLCanvasElement, rect: readonly number[], ring: { split: number }, half: 'back' | 'front') {
+  const [x, y, w, h] = rect, splitY = y + h * ring.split, knotX = x + w * .15;
+  ctx.save(); ctx.beginPath();
+  if (half === 'back') ctx.rect(knotX, y - 1, x + w - knotX + 1, splitY - y + 1);
+  else { ctx.rect(x - 1, splitY, w + 2, h + 1); ctx.rect(x - 1, y - 1, knotX - x + 1, splitY - y + 1); }
+  ctx.clip(); ctx.drawImage(img, x, y, w, h); ctx.restore();
+}
+
+/** Draw one state of a tail strip with its knot on (kx, ky). */
+function drawTails(ctx: CanvasRenderingContext2D, tails: HTMLCanvasElement | null, id: 'scarf' | 'headband', state: number, kx: number, ky: number, swing = 0, scale = 1) {
+  if (!tails) return;
+  const { anchor, length } = ACCESSORY_TAILS[id];
+  const cw = tails.width / 4, h = length * scale, w = h * cw / tails.height;
+  ctx.save(); ctx.translate(kx, ky); ctx.rotate(swing);
+  ctx.drawImage(tails, state * cw, 0, cw, tails.height, -anchor[0] * w, -anchor[1] * h, w, h);
+  ctx.restore();
+}
+
+type PosedAnchor = { neck: number[]; headTop: number; headWidth: number; waist: number[]; hand: number[] };
+const posedAnchors = POSED_ANCHORS as PosedAnchor[];
+/** Width of the bald portrait head at scale 1 (portrait coordinates) and its neck point. */
+const PORTRAIT_HEAD_WIDTH = 14.5, PORTRAIT_NECK = [97.25, 72] as const;
+
+/** The posed wardrobe is used when the body and every chosen piece have been drawn. */
+export function hasPosedWardrobe(scene: Phaser.Scene, data: NonNullable<CharacterData['customData']>) {
+  const torso = data.part_torso || 'goku';
+  return ['body', ...(torso === 'muscle' ? [] : ['torso-' + torso]), 'legs-' + (data.part_legs || 'goku'), 'feet-' + (data.part_feet || 'goku')]
+    .every(name => scene.textures.exists(POSED + name));
+}
+
+/** Body, trousers, footwear and top drawn in each pose; head, hair and accessories on its anchors. */
+function composePosedWardrobe(scene: Phaser.Scene, texture: string, data: NonNullable<CharacterData['customData']>) {
+  const resolution = scene.sys.game.renderer.type === 2 ? 4 : 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = CUSTOM_FRAME.width * CUSTOM_FRAME.columns * resolution;
+  canvas.height = CUSTOM_FRAME.height * CUSTOM_FRAME.rows * resolution;
+  const ctx = canvas.getContext('2d')!;
+  ctx.scale(resolution, resolution); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  const torsoId = data.part_torso || 'goku';
+  const layers = [
+    // The base's shorts take the trousers' colour, so a short top never shows them.
+    tint(scene, 'body', { skin: data.skin, primary: data.color_legs_1 ?? data.gi1 }, POSED),
+    tint(scene, 'legs-' + (data.part_legs || 'goku'), { primary: data.color_legs_1 ?? data.gi1, secondary: data.color_legs_2 ?? data.gi2, skin: data.skin }, POSED),
+    tint(scene, 'feet-' + (data.part_feet || 'goku'), { primary: data.color_feet_1 ?? data.gi2, secondary: data.color_feet_2 ?? data.gi1, skin: data.skin }, POSED),
+    ...(torsoId === 'muscle' ? [] : [tint(scene, 'torso-' + torsoId, { primary: data.color_torso_1 ?? data.gi1, secondary: data.color_torso_2 ?? data.gi2, skin: data.skin }, POSED)]),
+  ];
+  const accessoryId = data.part_accessory || 'none';
+  const accessory = accessoryId === 'none' ? null : tint(scene, 'accessory-' + accessoryId,
+    accessoryId === 'cape' || accessoryId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } :
+    accessoryId === 'headband' ? { secondary: data.color_acc_1 ?? data.gi2 } : {});
+  const sheath = accessoryId === 'sword' ? tint(scene, 'accessory-sword_sheathed', {}) : null;
+  const tailsId = accessoryId === 'scarf' || accessoryId === 'headband' ? accessoryId : null;
+  const tails = tailsId ? tint(scene, 'accessory-' + tailsId + '_tails',
+    tailsId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } : { secondary: data.color_acc_1 ?? data.gi2 }) : null;
+  const portrait = buildCustomPortrait(data, texture, (name, palette) => tint(scene, name, palette), resolution, 98);
+  const cellW = layers[0].width / 4, cellH = layers[0].height / 4;
+  for (let f = 0; f < CUSTOM_FRAME.count; f++) {
+    const A = posedAnchors[f], state = tailState(f), dash = f >= CUSTOM_DASH_FRAMES[0];
+    const punch = f === 8, defend = f === 10, charge = f === 11, kick = f === 9, walk = f >= 4 && f <= 7;
+    // The portrait head is scaled to this pose's head and seated on its neck.
+    const k = A.headWidth / PORTRAIT_HEAD_WIDTH;
+    const toHead = () => { ctx.translate(A.neck[0], A.neck[1]); ctx.scale(k, k); ctx.translate(-PORTRAIT_NECK[0], -PORTRAIT_NECK[1]); };
+    ctx.save(); ctx.translate(f % 4 * 192, Math.floor(f / 4) * 128);
+    if (accessory && accessoryId === 'cape') {
+      const width = 40, height = width * accessory.height / accessory.width;
+      ctx.save(); ctx.translate(A.neck[0] - 1, A.neck[1] + 3);
+      ctx.rotate(dash ? .3 : walk ? .05 : punch ? -.08 : kick ? .1 : defend ? -.12 : charge ? .14 : 0);
+      ctx.drawImage(accessory, -width / 2, 0, width, height); ctx.restore();
+    }
+    const collar = [A.neck[0] + 1 - 6.5, A.neck[1] + .5, 13, 13 * 126 / 221] as const;
+    if (accessory && accessoryId === 'scarf') {
+      drawTails(ctx, tails, 'scarf', state, collar[0] + collar[2] * RING.scarf.knot[0], collar[1] + collar[3] * RING.scarf.knot[1], SCARF_TAIL_SWING[state], .9);
+      drawRing(ctx, accessory, collar, RING.scarf, 'back');
+    }
+    // Katana: scabbard behind the body at the waist, drawn only to strike and to guard.
+    const drawn = punch || defend;
+    const sheathAt = (part: 'scabbard' | 'hilt') => {
+      if (!sheath || f === 12 || (part === 'hilt' && drawn)) return;
+      const w = 44, h = w * sheath.height / sheath.width, gx = w * SHEATH_GUARD;
+      ctx.save(); ctx.translate(A.waist[0] + 3, A.waist[1] + 2); ctx.rotate(-.4); ctx.beginPath();
+      if (part === 'scabbard') ctx.rect(-gx - 1, -h, gx + 1, h * 2); else ctx.rect(-1.5, -h, w - gx + 2, h * 2);
+      ctx.clip(); ctx.drawImage(sheath, -gx, -h / 2, w, h); ctx.restore();
+    };
+    sheathAt('scabbard');
+    for (const layer of layers) ctx.drawImage(layer, f % 4 * cellW, Math.floor(f / 4) * cellH, cellW, cellH, 0, 0, 192, 128);
+    sheathAt('hilt');
+    const band = accessory && accessoryId === 'headband' ? headbandRect(data.part_head || 'goku') : null;
+    ctx.save(); toHead(); ctx.translate(-.75, 2);
+    if (band) drawRing(ctx, accessory!, band, RING.headband, 'back');
+    ctx.restore();
+    ctx.save(); toHead(); ctx.drawImage(portrait, 0, 0, 192, 128); ctx.restore();
+    if (band) {
+      ctx.save(); toHead(); ctx.translate(-.75, 2);
+      drawRing(ctx, accessory!, band, RING.headband, 'front');
+      drawTails(ctx, tails, 'headband', state, band[0] + band[2] * RING.headband.knot[0], band[1] + band[3] * RING.headband.knot[1]);
+      ctx.restore();
+    }
+    if (accessory && accessoryId === 'scarf') drawRing(ctx, accessory, collar, RING.scarf, 'front');
+    if (accessory && accessoryId === 'sword' && drawn) {
+      const w = 40, h = w * accessory.height / accessory.width, grip = w * (70 / accessory.width);
+      ctx.save(); ctx.translate(A.hand[0] - 2, A.hand[1]); ctx.rotate(punch ? 0 : -1.75);
+      ctx.drawImage(accessory, -grip, -h / 2, w, h); ctx.restore();
+    }
+    ctx.restore();
+  }
+  if (scene.textures.exists(texture)) scene.textures.remove(texture);
+  const result = scene.textures.addCanvas(texture, canvas);
+  if (result) Object.assign(result, { customWardrobeArt: true, customArtResolution: resolution,
+    customSockets: { hand: posedAnchors[8].hand, cast: posedAnchors[11].hand } });
+}
+
 /** Preserve the original 12 poses; the extra frame is reserved for Genki Dama. */
 export function composeCustomArt(scene: Phaser.Scene, texture: string, data: NonNullable<CharacterData['customData']>) {
+  if (hasPosedWardrobe(scene, data)) { composePosedWardrobe(scene, texture, data); return; }
   // Keep source detail through composition on both renderers. A 1x canvas
   // atlas discarded most of the high-resolution garment and portrait artwork.
   const resolution = scene.sys.game.renderer.type === 2 ? 4 : 2;
@@ -193,22 +312,6 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     tailsId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } : { secondary: data.color_acc_1 ?? data.gi2 }) : null;
   // A ring (headband, scarf collar) is split: its far half sits behind the head
   // or neck, its near half and knot in front.
-  const drawRing = (img: HTMLCanvasElement, rect: readonly number[], ring: { split: number }, half: 'back' | 'front') => {
-    const [x, y, w, h] = rect, splitY = y + h * ring.split, knotX = x + w * .15;
-    ctx.save(); ctx.beginPath();
-    if (half === 'back') ctx.rect(knotX, y - 1, x + w - knotX + 1, splitY - y + 1);
-    else { ctx.rect(x - 1, splitY, w + 2, h + 1); ctx.rect(x - 1, y - 1, knotX - x + 1, splitY - y + 1); }
-    ctx.clip(); ctx.drawImage(img, x, y, w, h); ctx.restore();
-  };
-  // Draw one state of a tail strip with its knot on (kx, ky).
-  const drawTails = (id: 'scarf' | 'headband', state: number, kx: number, ky: number, swing = 0) => {
-    if (!tails) return;
-    const { anchor, length } = ACCESSORY_TAILS[id];
-    const cw = tails.width / 4, h = length, w = h * cw / tails.height;
-    ctx.save(); ctx.translate(kx, ky); ctx.rotate(swing);
-    ctx.drawImage(tails, state * cw, 0, cw, tails.height, -anchor[0] * w, -anchor[1] * h, w, h);
-    ctx.restore();
-  };
   // Generated garments have different neck positions. Measure their attachment
   // instead of centering a head on the outer shoulder/arm bounds.
   const torsoPixels=torso.getContext('2d')!.getImageData(0,0,torso.width,torso.height).data;
@@ -267,22 +370,22 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     const collar = scarfCollarRect(neckX).map((v, i) => v + (i === 0 ? lean : i === 1 ? bob : 0));
     const drawScarfBack=()=>{
       if(!accessory || accessoryId!=='scarf')return;
-      drawTails('scarf', state, collar[0] + collar[2] * RING.scarf.knot[0], collar[1] + collar[3] * RING.scarf.knot[1], SCARF_TAIL_SWING[state]);
-      drawRing(accessory, collar, RING.scarf, 'back');
+      drawTails(ctx, tails, 'scarf', state, collar[0] + collar[2] * RING.scarf.knot[0], collar[1] + collar[3] * RING.scarf.knot[1], SCARF_TAIL_SWING[state]);
+      drawRing(ctx, accessory, collar, RING.scarf, 'back');
     };
     const drawScarf=()=>{
-      if(accessory && accessoryId==='scarf') drawRing(accessory, collar, RING.scarf, 'front');
+      if(accessory && accessoryId==='scarf') drawRing(ctx, accessory, collar, RING.scarf, 'front');
     };
     // Headband: portrait coordinates, moved exactly like the portrait itself.
     const drawHead=()=>{
       const band = accessory && accessoryId === 'headband' ? headbandRect(data.part_head || 'goku') : null;
       const toPortrait = () => ctx.translate(lean - .75 + neckX - 98, headBob + 2);
-      if (band) { ctx.save(); toPortrait(); drawRing(accessory!, band, RING.headband, 'back'); ctx.restore(); }
+      if (band) { ctx.save(); toPortrait(); drawRing(ctx, accessory!, band, RING.headband, 'back'); ctx.restore(); }
       draw(portrait,lean,headBob,192,128);
       if (band) {
         ctx.save(); toPortrait();
-        drawRing(accessory!, band, RING.headband, 'front');
-        drawTails('headband', state, band[0] + band[2] * RING.headband.knot[0], band[1] + band[3] * RING.headband.knot[1]);
+        drawRing(ctx, accessory!, band, RING.headband, 'front');
+        drawTails(ctx, tails, 'headband', state, band[0] + band[2] * RING.headband.knot[0], band[1] + band[3] * RING.headband.knot[1]);
         ctx.restore();
       }
     };
