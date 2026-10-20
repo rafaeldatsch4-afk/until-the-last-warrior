@@ -89,15 +89,15 @@ function measure(img, cell, frame) {
     return best;
   };
   let headTop = fixed ? fixed.top : top; while (!fixed && headTop < feet && !central(headTop)) headTop++;
-  let widest = 0, neck = fixed ? fixed.neck : headTop, neckW = Infinity;
+  let widest = 0, headX = cx, neck = fixed ? fixed.neck : headTop, neckW = Infinity;
   for (let y = headTop; y < headTop + height * .24; y++) {
     const run = central(y); if (!run) continue;
     const w = run.e - run.s;
-    if (y < headTop + height * .1) widest = Math.max(widest, w);
+    if (y < headTop + height * .1) { if (w > widest) { widest = w; headX = (run.s + run.e) / 2; } }
     else if (!fixed && w < neckW) { neckW = w; neck = y; }
   }
   const run = central(neck);
-  return { top, feet, x0, x1, height, headTop, neck, neckX: run ? (run.s + run.e) / 2 : waistX, headWidth: widest, central, waistX, waistY };
+  return { top, feet, x0, x1, height, headTop, neck, neckX: run ? (run.s + run.e) / 2 : waistX, headWidth: widest, headX, central, waistX, waistY };
 }
 
 const colourClass = (r, g, b) => {
@@ -133,7 +133,25 @@ async function paste(dst, src, cell, frame, t) {
     }
   }
 }
-const save = (buf, name) => sharp(buf, { raw: { width: FW * 4, height: FH * 4, channels: 4 } }).png({ compressionLevel: 9, palette: false }).toFile(`${OUT}/${name}.png`);
+// Drop specks left by keying and head removal: tiny islands of opaque pixels.
+function despeckle(buf, min = 24, w = FW * 4, h = FH * 4) {
+  const seen = new Uint8Array(w * h);
+  for (let start = 0; start < w * h; start++) {
+    if (seen[start] || !buf[start * 4 + 3]) continue;
+    const stack = [start], comp = []; seen[start] = 1;
+    while (stack.length) {
+      const p = stack.pop(); comp.push(p);
+      const x = p % w, y = (p / w) | 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy, q = ny * w + nx;
+        if (nx >= 0 && nx < w && ny >= 0 && ny < h && !seen[q] && buf[q * 4 + 3]) { seen[q] = 1; stack.push(q); }
+      }
+    }
+    if (comp.length < min) for (const p of comp) buf[p * 4 + 3] = 0;
+  }
+  return buf;
+}
+const save = (buf, name) => sharp(despeckle(buf), { raw: { width: FW * 4, height: FH * 4, channels: 4 } }).png({ compressionLevel: 9, palette: false }).toFile(`${OUT}/${name}.png`);
 
 await mkdir(OUT, { recursive: true });
 const base = await keyed(`${SRC}/base-source.jpg`);
@@ -148,11 +166,15 @@ const transforms = poses.map((p, f) => {
 });
 const toFrame = (f, x, y) => { const t = transforms[f]; return [+(NECK_X + (x - t.ax) * t.s / RES).toFixed(1), +(FEET_Y + (y - t.ay) * t.s / RES).toFixed(1)]; };
 
-// Body: the base without its head above the neck (the portrait supplies hair and face).
+// Body: the base without its head (the portrait supplies hair and face). The top of
+// the neck stays, so it runs up under the portrait's jaw without a gap.
+const NECK_KEEP = 1;
 const body = { ...base, data: Buffer.from(base.data) };
-for (const [f, p] of poses.entries()) for (let y = p.headTop - 4; y < p.neck; y++) {
+for (const [f, p] of poses.entries()) for (let y = p.headTop - 4; y < p.neck - NECK_KEEP * RES / transforms[f].s; y++) {
   const run = p.central(Math.max(y, p.headTop)); if (!run) continue;
-  for (let x = run.s - 4; x <= run.e + 4; x++) if (baseCells[f].mask[y * base.w + x]) body.data[(y * base.w + x) * 4 + 3] = 0;
+  // A raised arm touching the head joins its run; never erase beyond the head's width.
+  const half = p.headWidth * .65, s = Math.max(run.s - 4, Math.round(p.headX - half)), e = Math.min(run.e + 4, Math.round(p.headX + half));
+  for (let x = s; x <= e; x++) if (baseCells[f].mask[y * base.w + x]) body.data[(y * base.w + x) * 4 + 3] = 0;
 }
 const bodySheet = sheet();
 for (let f = 0; f < 16; f++) await paste(bodySheet, body, baseCells[f], f, transforms[f]);
@@ -204,6 +226,8 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
       const rgb = c.endsWith(':detail') ? [0, Math.round(v * .85), v] : c.endsWith(':main') ? [v, v, v] : [r, g, b];
       img.data[i * 4] = rgb[0]; img.data[i * 4 + 1] = rgb[1]; img.data[i * 4 + 2] = rgb[2]; img.data[i * 4 + 3] = set.data[i * 4 + 3];
     }
+    // Stray shades of a piece's colour scattered over the body are not part of it.
+    despeckle(img.data, 50, set.w, set.h);
     const out = sheet(), setCells = cells(set);
     for (let f = 0; f < 16; f++) {
       const t = transforms[f];

@@ -131,7 +131,7 @@ function drawTails(ctx: CanvasRenderingContext2D, tails: HTMLCanvasElement | nul
 type PosedAnchor = { neck: number[]; headTop: number; headWidth: number; waist: number[]; hand: number[] };
 const posedAnchors = POSED_ANCHORS as PosedAnchor[];
 /** Width of the bald portrait head at scale 1 (portrait coordinates) and its neck point. */
-const PORTRAIT_HEAD_WIDTH = 14.5, PORTRAIT_NECK = [97.25, 72] as const;
+const PORTRAIT_HEAD_WIDTH = 14.5, PORTRAIT_NECK = [97.25, 70.5] as const;
 
 /** The posed wardrobe is used when the body and every chosen piece have been drawn. */
 export function hasPosedWardrobe(scene: Phaser.Scene, data: NonNullable<CharacterData['customData']>) {
