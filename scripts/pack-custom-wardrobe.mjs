@@ -112,7 +112,8 @@ function measure(img, cell, frame) {
 const colourClass = (r, g, b) => {
   const mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = mx ? (mx - mn) / mx : 0;
   if (mx < 70) return 'dark';
-  if (g > r * 1.3 && b > r * 1.3 && b > 90) return 'top:detail';
+  // Cyan keeps green close to blue; a pure blue (a boot's toe cap) does not.
+  if (g > r * 1.3 && b > r * 1.3 && b > 90 && g > b * .6) return 'top:detail';
   if (b > r * 1.4 && b > g * 1.25) return 'feet:detail';
   if (r > g * 1.6 && b > g * 1.3) return 'legs:detail';
   if (r > 140 && g > 120 && b < g * .55) return 'legs:main';
@@ -240,6 +241,21 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
     }
     const top = Object.entries(votes).sort((a, b) => b[1] - a[1])[0];
     if (top && top[1] >= skin * .6) layer[i] = top[0];
+  }
+  // Yellow above the waist that never reaches the trousers (armour straps drawn in the
+  // trousers' colour) belongs to the top.
+  const cellsOfSet = cells(set);
+  for (const [f, cell] of cellsOfSet.entries()) {
+    const waist = poses[f].waistY * k, seen = new Uint8Array(kind.length);
+    for (let start = 0; start < kind.length; start++) {
+      if (seen[start] || layer[start] !== 'legs' || !cell.mask[start]) continue;
+      const stack = [start], comp = []; seen[start] = 1; let low = 0;
+      while (stack.length) {
+        const i = stack.pop(); comp.push(i); low = Math.max(low, (i / set.w) | 0);
+        for (const j of [i - 1, i + 1, i - set.w, i + set.w]) if (j >= 0 && j < kind.length && !seen[j] && layer[j] === 'legs' && cell.mask[j]) { seen[j] = 1; stack.push(j); }
+      }
+      if (low < waist) for (const i of comp) { layer[i] = 'top'; if (kind[i] === 'legs:main' || kind[i] === 'legs:detail') kind[i] = 'top:main'; }
+    }
   }
   // Trousers hidden under a long top are continued straight up to the waist, at
   // their own width and shade, so a shorter top worn with them shows no thigh.
