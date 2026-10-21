@@ -505,16 +505,38 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       const kx=36/tw, ky=36/th, ox=79+lean, oy=66+bob;
       const at=(p:readonly number[])=>[ox+p[0]*kx, oy+p[1]*ky] as const;
       const turn=(p:readonly number[],c:readonly number[],a:number)=>[c[0]+(p[0]-c[0])*Math.cos(a)-(p[1]-c[1])*Math.sin(a), c[1]+(p[0]-c[0])*Math.sin(a)+(p[1]-c[1])*Math.cos(a)] as const;
+      // Each arm is cut across itself at the elbow (not along a pixel row, whose
+      // slanted ends turn into flaps once rotated), and the joint is rounded off.
+      const elbowRadius=[0,1].map(side=>{
+        const row=rig.elbowRow[side];let n=0;
+        for(let x=0;x<tw;x++)if(rig.owner[row*tw+x]&(side?FRONT_ARM:BACK_ARM))n++;
+        return Math.max(1.5,n*kx/2);
+      });
+      const halfPlane=(c:readonly number[],n:readonly number[],sign:number)=>{
+        // The side of the line through c (normal n) that sign points to.
+        const t=[-n[1],n[0]],far=200;
+        ctx.beginPath();
+        ctx.moveTo(c[0]+t[0]*far,c[1]+t[1]*far);ctx.lineTo(c[0]-t[0]*far,c[1]-t[1]*far);
+        ctx.lineTo(c[0]-t[0]*far+n[0]*sign*far,c[1]-t[1]*far+n[1]*sign*far);
+        ctx.lineTo(c[0]+t[0]*far+n[0]*sign*far,c[1]+t[1]*far+n[1]*sign*far);ctx.closePath();ctx.clip();
+      };
       const drawArm=(side:number)=>{
+        if(!rig.posable[side])return;
         const upper=arms[side?0:2], fore=arms[side?1:3], img=rig.arms[side];
         const S=at(rig.shoulder[side]), E0=at(rig.elbow[side]), H0=at(rig.hand[side]), E1=turn(E0,S,upper);
-        const row=rig.elbowRow[side];
-        // Upper arm: rows above the elbow, turned about the shoulder.
-        ctx.save();ctx.translate(S[0],S[1]);ctx.rotate(upper);ctx.translate(-S[0],-S[1]);
-        ctx.drawImage(img,0,0,tw,row+2,ox,oy,36,(row+2)*ky);ctx.restore();
-        // Forearm: rows below it, turned about the moved elbow.
+        const unit=(a:readonly number[],b:readonly number[])=>{const d=Math.hypot(b[0]-a[0],b[1]-a[1])||1;return [(b[0]-a[0])/d,(b[1]-a[1])/d];};
+        const u=unit(S,E0),v=unit(E0,H0),n=unit([0,0],[u[0]+v[0],u[1]+v[1]]),overlap=.6;
+        const atElbow=(e:number)=>[E0[0]+n[0]*e,E0[1]+n[1]*e];
+        // Forearm, turned about the moved elbow.
         ctx.save();ctx.translate(E1[0],E1[1]);ctx.rotate(fore);ctx.translate(-E0[0],-E0[1]);
-        ctx.drawImage(img,0,row-2,tw,th-row+2,ox,oy+(row-2)*ky,36,(th-row+2)*ky);ctx.restore();
+        halfPlane(atElbow(-overlap),n,1);ctx.drawImage(img,ox,oy,36,36);ctx.restore();
+        // A round elbow covers the wedge a bend opens on its outer side.
+        ctx.save();ctx.translate(E1[0],E1[1]);ctx.rotate((upper+fore)/2);ctx.translate(-E0[0],-E0[1]);
+        ctx.beginPath();ctx.arc(E0[0],E0[1],elbowRadius[side],0,Math.PI*2);ctx.clip();
+        ctx.drawImage(img,ox,oy,36,36);ctx.restore();
+        // Upper arm, turned about the shoulder.
+        ctx.save();ctx.translate(S[0],S[1]);ctx.rotate(upper);ctx.translate(-S[0],-S[1]);
+        halfPlane(atElbow(overlap),n,-1);ctx.drawImage(img,ox,oy,36,36);ctx.restore();
         if(side){const H=turn(H0,E0,fore);fist=[H[0]+E1[0]-E0[0],H[1]+E1[1]-E0[1]];}
       };
       // The back arm passes behind the body unless it is raised to strike or guard.

@@ -14,6 +14,8 @@ export interface ArmRig {
   shoulder: [number, number][]; elbow: [number, number][]; hand: [number, number][];
   /** First row (in torso pixels) that belongs to each forearm. */
   elbowRow: number[];
+  /** Whether each arm can be posed; one hidden by a cape stays painted in the body. */
+  posable: boolean[];
 }
 
 export function splitArms(pixels: Uint8ClampedArray, width: number, height: number, alphaMin = 100): ArmRig | null {
@@ -36,11 +38,11 @@ export function splitArms(pixels: Uint8ClampedArray, width: number, height: numb
   }
   const owner = new Uint8Array(width * height);
   for (let i = 0; i < owner.length; i++) if (pixels[i * 4 + 3] > alphaMin) owner[i] = BODY;
-  const rig: ArmRig = { owner, shoulder: [], elbow: [], hand: [], elbowRow: [] };
+  const rig: ArmRig = { owner, shoulder: [], elbow: [], hand: [], elbowRow: [], posable: [false, false] };
   for (const side of [0, 1]) {
     const c = cut[side], rows: number[] = [];
     for (let y = 0; y < height; y++) if (!Number.isNaN(c[y])) rows.push(y);
-    if (rows.length < height * .15) return null;
+    if (rows.length < height * .15) continue;
     const first = rows[0], last = rows[rows.length - 1];
     // Fill short interruptions (fist touching the hip, sleeve folds) linearly.
     let prev = first;
@@ -80,12 +82,13 @@ export function splitArms(pixels: Uint8ClampedArray, width: number, height: numb
     rig.elbow[side] = [centre(elbowRow - 2, elbowRow + 2)[0], elbowRow];
     rig.hand[side] = centre(bottom - Math.round(span * .12), bottom);
     rig.elbowRow[side] = elbowRow;
-    // A cape or a coat hiding the arm leaves only a hand: not a usable arm.
-    if (span < height * .45) return null;
+    // A cape or a coat hiding the arm leaves only a hand, or a strip of cape beside
+    // the body (Saitama's back arm): not a usable arm, it stays painted in the body.
+    const mask = side ? FRONT_ARM : BACK_ARM;
+    let elbowWidth = 0;
+    for (let x = 0; x < width; x++) if (owner[elbowRow * width + x] & mask) elbowWidth++;
+    rig.posable[side] = span >= height * .45 && elbowWidth >= width * .1;
+    if (!rig.posable[side]) for (let i = 0; i < owner.length; i++) if (owner[i] & mask) owner[i] = BODY;
   }
-  // A cape hiding one arm (Saitama) leaves a sliver: keep the painted pose then.
-  const count = [0, 0];
-  for (const o of owner) { if (o & BACK_ARM) count[0]++; if (o & FRONT_ARM) count[1]++; }
-  if (Math.min(...count) < Math.max(...count) * .5) return null;
-  return rig;
+  return rig.posable.some(Boolean) ? rig : null;
 }
