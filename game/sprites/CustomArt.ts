@@ -497,7 +497,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     // Two-segment arms (shoulder and elbow). Angles turn each segment from its
     // painted rest pose: 0 hangs down, negative swings forward.
     // [front upper, front forearm, back upper, back forearm]
-    const arms = punch ? [-1.5,-1.58,.35,-1.0] : defend ? [-.8,-2.75,-.6,-2.6]
+    const arms = punch ? [-1.5,-1.58,.35,-1.0] : defend ? [-.9,-2.75,-1.25,-2.85]
       : charge ? [-.25,-.1,.25,.1] : dash ? [.45,.75,.6,.9]
       : [-.35*phase,-.35*phase-.25,.35*phase,.35*phase-.25];
     let fist:readonly [number,number]=[0,0];
@@ -527,16 +527,16 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
         const unit=(a:readonly number[],b:readonly number[])=>{const d=Math.hypot(b[0]-a[0],b[1]-a[1])||1;return [(b[0]-a[0])/d,(b[1]-a[1])/d];};
         const u=unit(S,E0),v=unit(E0,H0),n=unit([0,0],[u[0]+v[0],u[1]+v[1]]),overlap=.6;
         const atElbow=(e:number)=>[E0[0]+n[0]*e,E0[1]+n[1]*e];
-        // Forearm, turned about the moved elbow.
-        ctx.save();ctx.translate(E1[0],E1[1]);ctx.rotate(fore);ctx.translate(-E0[0],-E0[1]);
-        halfPlane(atElbow(-overlap),n,1);ctx.drawImage(img,ox,oy,36,36);ctx.restore();
+        // Upper arm, turned about the shoulder.
+        ctx.save();ctx.translate(S[0],S[1]);ctx.rotate(upper);ctx.translate(-S[0],-S[1]);
+        halfPlane(atElbow(overlap),n,-1);ctx.drawImage(img,ox,oy,36,36);ctx.restore();
         // A round elbow covers the wedge a bend opens on its outer side.
         ctx.save();ctx.translate(E1[0],E1[1]);ctx.rotate((upper+fore)/2);ctx.translate(-E0[0],-E0[1]);
         ctx.beginPath();ctx.arc(E0[0],E0[1],elbowRadius[side],0,Math.PI*2);ctx.clip();
         ctx.drawImage(img,ox,oy,36,36);ctx.restore();
-        // Upper arm, turned about the shoulder.
-        ctx.save();ctx.translate(S[0],S[1]);ctx.rotate(upper);ctx.translate(-S[0],-S[1]);
-        halfPlane(atElbow(overlap),n,-1);ctx.drawImage(img,ox,oy,36,36);ctx.restore();
+        // Forearm, turned about the moved elbow; in front, as a raised guard folds it over the upper arm.
+        ctx.save();ctx.translate(E1[0],E1[1]);ctx.rotate(fore);ctx.translate(-E0[0],-E0[1]);
+        halfPlane(atElbow(-overlap),n,1);ctx.drawImage(img,ox,oy,36,36);ctx.restore();
         if(side){const H=turn(H0,E0,fore);fist=[H[0]+E1[0]-E0[0],H[1]+E1[1]-E0[1]];}
       };
       // The back arm passes behind the body unless it is raised to strike or guard.
