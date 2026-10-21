@@ -133,6 +133,18 @@ const posedAnchors = POSED_ANCHORS as PosedAnchor[];
 /** Width of the bald portrait head at scale 1 (portrait coordinates) and its chin. */
 const PORTRAIT_HEAD_WIDTH = 14.5, PORTRAIT_CHIN = [97.25, 70] as const;
 
+/** Clear the outermost texels of every frame. Frames sit edge to edge in one texture, and
+ * filtering would otherwise pull the feet of one row onto the top of the frame below. */
+function isolateFrames(canvas: HTMLCanvasElement, resolution: number) {
+  const ctx = canvas.getContext('2d')!, w = CUSTOM_FRAME.width * resolution, h = CUSTOM_FRAME.height * resolution;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  for (let r = 0; r < CUSTOM_FRAME.rows; r++) for (let c = 0; c < CUSTOM_FRAME.columns; c++) {
+    const x = c * w, y = r * h;
+    ctx.clearRect(x, y, w, 1); ctx.clearRect(x, y + h - 1, w, 1);
+    ctx.clearRect(x, y, 1, h); ctx.clearRect(x + w - 1, y, 1, h);
+  }
+}
+
 /** The posed wardrobe is used when the body and every chosen piece have been drawn. */
 export function hasPosedWardrobe(scene: Phaser.Scene, data: NonNullable<CharacterData['customData']>) {
   const torso = data.part_torso || 'goku';
@@ -173,6 +185,8 @@ function composePosedWardrobe(scene: Phaser.Scene, texture: string, data: NonNul
     const k = A.headWidth / PORTRAIT_HEAD_WIDTH;
     const toHead = () => { ctx.translate(A.neck[0], A.neck[1]); ctx.scale(k, k); ctx.translate(-PORTRAIT_CHIN[0], -PORTRAIT_CHIN[1]); };
     ctx.save(); ctx.translate(f % 4 * 192, Math.floor(f / 4) * 128);
+    // Nothing of a pose may spill into its neighbours.
+    ctx.beginPath(); ctx.rect(0, 0, 192, 128); ctx.clip();
     if (accessory && accessoryId === 'cape') {
       const width = 40, height = width * accessory.height / accessory.width;
       ctx.save(); ctx.translate(A.neck[0] - 1, A.neck[1] + 3);
@@ -215,6 +229,7 @@ function composePosedWardrobe(scene: Phaser.Scene, texture: string, data: NonNul
     }
     ctx.restore();
   }
+  isolateFrames(canvas, resolution);
   if (scene.textures.exists(texture)) scene.textures.remove(texture);
   const result = scene.textures.addCanvas(texture, canvas);
   if (result) Object.assign(result, { customWardrobeArt: true, customArtResolution: resolution,
@@ -337,6 +352,19 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     };
     return { ...split, body: layer(BODY), arms: [layer(BACK_ARM), layer(FRONT_ARM)] };
   })();
+  // The top's hem (its body, not the sleeves), in frame units as the relaxed torso is drawn.
+  const hem = (() => {
+    const pixels = torso.getContext('2d')!.getImageData(0, 0, torso.width, torso.height).data;
+    const inBody = (i: number) => pixels[i * 4 + 3] > 100 && (!rig || (rig.owner[i] & BODY && !(rig.owner[i] & (BACK_ARM | FRONT_ARM))));
+    let bottom = -1;
+    for (let y = torso.height - 1; y >= 0 && bottom < 0; y--) for (let x = 0; x < torso.width; x++) if (inBody(y * torso.width + x)) { bottom = y; break; }
+    let left = torso.width, right = -1;
+    for (let y = Math.max(0, bottom - Math.round(torso.height * .1)); y <= bottom; y++)
+      for (let x = 0; x < torso.width; x++) if (inBody(y * torso.width + x)) { left = Math.min(left, x); right = Math.max(right, x); }
+    if (right < left) return null;
+    const k = 36 / torso.width;
+    return { left: 79 + left * k, right: 79 + (right + 1) * k, y: 66 + (bottom + 1) * 36 / torso.height };
+  })();
   for (let f = 0; f < CUSTOM_FRAME.count; f++) {
     ctx.save(); ctx.translate(f % 4 * 192, Math.floor(f / 4) * 128);
     const walk = f >= 4 && f <= 7;
@@ -411,6 +439,15 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.restore();
     };
     drawSheath('scabbard');
+    // Trousers wider than the top's hem would stick out under it: taper their top into
+    // the hem, widening to full width just below it (not for the raised kick leg).
+    const taper = hem && !kick && !genki;
+    if (taper) {
+      const l = hem.left + lean - .5, r = hem.right + lean + .5, y = hem.y + bob, full = y + 7;
+      ctx.save(); ctx.beginPath();
+      ctx.moveTo(l, 0); ctx.lineTo(r, 0); ctx.lineTo(r, y); ctx.lineTo(r + 6, full); ctx.lineTo(192, full); ctx.lineTo(192, 128);
+      ctx.lineTo(0, 128); ctx.lineTo(0, full); ctx.lineTo(l - 6, full); ctx.lineTo(l, y); ctx.closePath(); ctx.clip();
+    }
     // Legs and footwear share hip pivots, so walking and kicking cannot leave detached boots.
     for (let side = 0; side < 2; side++) {
       ctx.save();
@@ -432,6 +469,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.drawImage(legs, sx, trouserTop, legs.width / 2, ankles[side].bottom-trouserTop, legX - pivotX, 0, legW, legH);
       ctx.restore();
     }
+    if (taper) ctx.restore();
     drawScarfBack();
     // One continuous neck behind both layers, including their antialiased edges.
     // Idle uses the same pose for head and torso; moving just the torso opens the seam.
@@ -516,6 +554,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     }
     ctx.restore();
   }
+  isolateFrames(canvas, resolution);
   if(scene.textures.exists(texture))scene.textures.remove(texture);
   const result = scene.textures.addCanvas(texture, canvas);
   if (result) Object.assign(result,{customWardrobeArt:true,customArtResolution:resolution});
