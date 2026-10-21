@@ -62,6 +62,7 @@ function cells(img) {
 }
 
 // Measure a base pose: feet, the head (the central run above the shoulders) and the neck.
+const CHIN = 1.29;
 const HEAD_FIXED = { 9: { x: 519, top: 1404, neck: 1515 }, 12: { x: 172, top: 2122, neck: 2232 } };
 function measure(img, cell, frame) {
   const on = (x, y) => opaque(img, x, y, cell);
@@ -97,7 +98,12 @@ function measure(img, cell, frame) {
     else if (!fixed && w < neckW) { neckW = w; neck = y; }
   }
   const run = central(neck);
-  return { top, feet, x0, x1, height, headTop, neck, neckX: run ? (run.s + run.e) / 2 : waistX, headWidth: widest, headX, central, waistX, waistY };
+  // The jaw and neck share one silhouette, so the chin comes from the head's proportions.
+  const chin = Math.round(headTop + CHIN * widest);
+  // Where arms crowd the head (fixed frames) the jaw is taken just above the chin.
+  const jaw = fixed ? chin - Math.round(widest * .2) : neck, j = central(jaw);
+  const jawRun = j && (fixed ? { s: Math.max(j.s, headX - widest * .45), e: Math.min(j.e, headX + widest * .45) } : j);
+  return { top, feet, x0, x1, height, headTop, chin, jaw, jawRun, neckX: run ? (run.s + run.e) / 2 : waistX, headWidth: widest, headX, central, waistX, waistY };
 }
 
 const colourClass = (r, g, b) => {
@@ -166,26 +172,28 @@ const transforms = poses.map((p, f) => {
 });
 const toFrame = (f, x, y) => { const t = transforms[f]; return [+(NECK_X + (x - t.ax) * t.s / RES).toFixed(1), +(FEET_Y + (y - t.ay) * t.s / RES).toFixed(1)]; };
 
-// Body: the base without its head (the portrait supplies hair and face). The top of
-// the neck stays, so it runs up under the portrait's jaw without a gap.
+// Body: the base without its head down to the chin (the portrait supplies hair and
+// face). A sliver above the chin stays, so the neck runs up under the portrait's jaw.
 const NECK_KEEP = 1;
 const body = { ...base, data: Buffer.from(base.data) };
-for (const [f, p] of poses.entries()) for (let y = p.headTop - 4; y < p.neck - NECK_KEEP * RES / transforms[f].s; y++) {
+for (const [f, p] of poses.entries()) for (let y = p.headTop - 4; y < p.chin - NECK_KEEP * RES / transforms[f].s; y++) {
   const run = p.central(Math.max(y, p.headTop)); if (!run) continue;
   // A raised arm touching the head joins its run; never erase beyond the head's width.
-  const half = p.headWidth * .65, s = Math.max(run.s - 4, Math.round(p.headX - half)), e = Math.min(run.e + 4, Math.round(p.headX + half));
+  // Below the narrowest point the jaw meets the shoulders: keep to the jaw's width there.
+  const half = p.headWidth * .65, jaw = y >= p.jaw && p.jawRun;
+  const s = Math.max(run.s - 4, Math.round(p.headX - half), jaw ? p.jawRun.s - 3 : 0), e = Math.min(run.e + 4, Math.round(p.headX + half), jaw ? p.jawRun.e + 3 : Infinity);
   for (let x = s; x <= e; x++) if (baseCells[f].mask[y * base.w + x]) body.data[(y * base.w + x) * 4 + 3] = 0;
 }
 const bodySheet = sheet();
 for (let f = 0; f < 16; f++) await paste(bodySheet, body, baseCells[f], f, transforms[f]);
 await save(bodySheet, 'body');
 
-// Anchors in frame coordinates for the head, neck, waist and front hand.
+// Anchors in frame coordinates: the chin (where the portrait seats), head, waist and front hand.
 const anchors = poses.map((p, f) => {
   let hx = 0, hy = 0, best = -1;
   for (let y = p.top; y < p.top + p.height * .6; y++) for (let x = p.x0; x <= p.x1; x++) if (opaque(base, x, y, baseCells[f]) && x > best) { best = x; hx = x; hy = y; }
   const wx = p.waistX, wy = p.waistY;
-  return { neck: toFrame(f, p.neckX, p.neck), headTop: toFrame(f, p.neckX, p.headTop)[1], headWidth: +(p.headWidth * transforms[f].s / RES).toFixed(2), waist: toFrame(f, wx, wy), hand: toFrame(f, hx, hy) };
+  return { neck: toFrame(f, p.neckX, p.chin), headTop: toFrame(f, p.neckX, p.headTop)[1], headWidth: +(p.headWidth * transforms[f].s / RES).toFixed(2), waist: toFrame(f, wx, wy), hand: toFrame(f, hx, hy) };
 });
 await writeFile(`${OUT}/anchors.json`, JSON.stringify(anchors) + '\n');
 

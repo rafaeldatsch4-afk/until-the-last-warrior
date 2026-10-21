@@ -130,8 +130,8 @@ function drawTails(ctx: CanvasRenderingContext2D, tails: HTMLCanvasElement | nul
 
 type PosedAnchor = { neck: number[]; headTop: number; headWidth: number; waist: number[]; hand: number[] };
 const posedAnchors = POSED_ANCHORS as PosedAnchor[];
-/** Width of the bald portrait head at scale 1 (portrait coordinates) and its neck point. */
-const PORTRAIT_HEAD_WIDTH = 14.5, PORTRAIT_NECK = [97.25, 70.5] as const;
+/** Width of the bald portrait head at scale 1 (portrait coordinates) and its chin. */
+const PORTRAIT_HEAD_WIDTH = 14.5, PORTRAIT_CHIN = [97.25, 70] as const;
 
 /** The posed wardrobe is used when the body and every chosen piece have been drawn. */
 export function hasPosedWardrobe(scene: Phaser.Scene, data: NonNullable<CharacterData['customData']>) {
@@ -169,9 +169,9 @@ function composePosedWardrobe(scene: Phaser.Scene, texture: string, data: NonNul
   for (let f = 0; f < CUSTOM_FRAME.count; f++) {
     const A = posedAnchors[f], state = tailState(f), dash = f >= CUSTOM_DASH_FRAMES[0];
     const punch = f === 8, defend = f === 10, charge = f === 11, kick = f === 9, walk = f >= 4 && f <= 7;
-    // The portrait head is scaled to this pose's head and seated on its neck.
+    // The portrait head is scaled to this pose's head and its chin seated on the body's.
     const k = A.headWidth / PORTRAIT_HEAD_WIDTH;
-    const toHead = () => { ctx.translate(A.neck[0], A.neck[1]); ctx.scale(k, k); ctx.translate(-PORTRAIT_NECK[0], -PORTRAIT_NECK[1]); };
+    const toHead = () => { ctx.translate(A.neck[0], A.neck[1]); ctx.scale(k, k); ctx.translate(-PORTRAIT_CHIN[0], -PORTRAIT_CHIN[1]); };
     ctx.save(); ctx.translate(f % 4 * 192, Math.floor(f / 4) * 128);
     if (accessory && accessoryId === 'cape') {
       const width = 40, height = width * accessory.height / accessory.width;
