@@ -97,7 +97,10 @@ function measure(img, cell, frame) {
     if (y < headTop + height * .1) { if (w > widest) { widest = w; headX = (run.s + run.e) / 2; } }
     else if (!fixed && w < neckW) { neckW = w; neck = y; }
   }
-  const run = central(neck);
+  // Horizontal anchor: the middle of the head at mouth height (fixed frames: the
+  // given neck row is below the chin, among the shoulders, so the mouth row is derived).
+  const mouth = fixed ? headTop + Math.round(widest * .87) : neck, m = central(mouth);
+  const run = m && { s: Math.max(m.s, headX - widest * .65), e: Math.min(m.e, headX + widest * .65) };
   // The jaw and neck share one silhouette, so the chin comes from the head's proportions.
   const chin = Math.round(headTop + CHIN * widest);
   // Where arms crowd the head (fixed frames) the jaw is taken just above the chin.
@@ -210,6 +213,18 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
     const d = Math.abs(r - ref.data[i * 4]) + Math.abs(g - ref.data[i * 4 + 1]) + Math.abs(b - ref.data[i * 4 + 2]);
     kind[i] = c === 'top:main' && ref.data[i * 4 + 3] > 128 && d < 60 ? 'skin' : c;
   }
+  // A lone detail pixel inside a piece's main colour is shading noise, not a stripe.
+  const noisy = [];
+  for (let i = 0; i < kind.length; i++) {
+    if (!kind[i] || !kind[i].endsWith(':detail')) continue;
+    const [name] = kind[i].split(':'), x = i % set.w, y = (i / set.w) | 0; let detail = 0, main = 0;
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= set.w || Y >= set.h) continue;
+      const c = kind[Y * set.w + X]; if (c === name + ':detail') detail++; else if (c === name + ':main') main++;
+    }
+    if (detail < 7 && main > detail) noisy.push(i);
+  }
+  for (const i of noisy) kind[i] = kind[i].replace(':detail', ':main');
   // Outlines and in-between shades join the piece that surrounds them.
   const piece = i => { const c = kind[i]; return c && c.includes(':') ? c.split(':')[0] : null; };
   const layer = new Array(kind.length).fill(null);
@@ -226,17 +241,36 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
     const top = Object.entries(votes).sort((a, b) => b[1] - a[1])[0];
     if (top && top[1] >= skin * .6) layer[i] = top[0];
   }
+  // Trousers hidden under a long top are completed from the base body's shape, so a
+  // shorter top worn with them never shows bare thigh.
+  const setCells = cells(set), hidden = new Uint8Array(kind.length);
+  for (const [f, cell] of setCells.entries()) {
+    // Grow each column upwards from the visible trousers to the waist, so hands
+    // and wristbands hanging beside the legs are left alone.
+    const waist = Math.ceil(poses[f].waistY * k);
+    const under = i => cell.mask[i] && layer[i] === 'top' && ref.data[i * 4 + 3] > 128;
+    for (let x = cell.x0; x < cell.x1; x++) {
+      let y = waist; while (y < cell.y1 && layer[y * set.w + x] !== 'legs') y++;
+      for (y--; y >= waist && under(y * set.w + x); y--) hidden[y * set.w + x] = 1;
+    }
+  }
   for (const name of ['top', 'legs', 'feet']) {
     const img = { w: set.w, h: set.h, data: Buffer.alloc(set.data.length) };
     for (let i = 0; i < layer.length; i++) {
       if (layer[i] !== name) continue;
       const r = set.data[i * 4], g = set.data[i * 4 + 1], b = set.data[i * 4 + 2], v = Math.max(r, g, b), c = kind[i];
-      const rgb = c.endsWith(':detail') ? [0, Math.round(v * .85), v] : c.endsWith(':main') ? [v, v, v] : [r, g, b];
+      // Outlines keep only their darkness, so they take the piece's colour too.
+      const l = Math.round(r * .3 + g * .59 + b * .11);
+      const rgb = c.endsWith(':detail') ? [0, Math.round(v * .85), v] : c.endsWith(':main') ? [v, v, v] : [l, l, l];
       img.data[i * 4] = rgb[0]; img.data[i * 4 + 1] = rgb[1]; img.data[i * 4 + 2] = rgb[2]; img.data[i * 4 + 3] = set.data[i * 4 + 3];
+    }
+    if (name === 'legs') for (let i = 0; i < hidden.length; i++) if (hidden[i]) {
+      const l = Math.round(ref.data[i * 4] * .3 + ref.data[i * 4 + 1] * .59 + ref.data[i * 4 + 2] * .11);
+      img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = l; img.data[i * 4 + 3] = ref.data[i * 4 + 3];
     }
     // Stray shades of a piece's colour scattered over the body are not part of it.
     despeckle(img.data, 50, set.w, set.h);
-    const out = sheet(), setCells = cells(set);
+    const out = sheet();
     for (let f = 0; f < 16; f++) {
       const t = transforms[f];
       await paste(out, img, setCells[f], f, { s: t.s / k, ax: t.ax * k, ay: t.ay * k, x: t.x, y: t.y });
