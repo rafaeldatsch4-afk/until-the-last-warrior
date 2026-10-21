@@ -2,8 +2,8 @@
  *
  * Each arm is split from the body along the transparent gap under the armpit,
  * row by row, instead of a fixed rectangle: rectangles cut through the chest
- * and sleeves. Above the armpit the shoulder stays in BOTH layers, so a raised
- * or swung arm never leaves a hole or a square shoulder in the body.
+ * and sleeves. The shoulder's cap stays in BOTH layers, so a raised or swung arm
+ * never leaves a hole or a square shoulder in the body.
  */
 export const BODY = 4, BACK_ARM = 1, FRONT_ARM = 2;
 
@@ -14,6 +14,8 @@ export interface ArmRig {
   shoulder: [number, number][]; elbow: [number, number][]; hand: [number, number][];
   /** First row (in torso pixels) that belongs to each forearm. */
   elbowRow: number[];
+  /** Whether each arm can be posed; one hidden by a cape stays painted in the body. */
+  posable: boolean[];
 }
 
 export function splitArms(pixels: Uint8ClampedArray, width: number, height: number, alphaMin = 100): ArmRig | null {
@@ -36,23 +38,26 @@ export function splitArms(pixels: Uint8ClampedArray, width: number, height: numb
   }
   const owner = new Uint8Array(width * height);
   for (let i = 0; i < owner.length; i++) if (pixels[i * 4 + 3] > alphaMin) owner[i] = BODY;
-  const rig: ArmRig = { owner, shoulder: [], elbow: [], hand: [], elbowRow: [] };
+  const rig: ArmRig = { owner, shoulder: [], elbow: [], hand: [], elbowRow: [], posable: [false, false] };
   for (const side of [0, 1]) {
     const c = cut[side], rows: number[] = [];
     for (let y = 0; y < height; y++) if (!Number.isNaN(c[y])) rows.push(y);
-    if (rows.length < height * .15) return null;
+    if (rows.length < height * .15) continue;
     const first = rows[0], last = rows[rows.length - 1];
     // Fill short interruptions (fist touching the hip, sleeve folds) linearly.
     let prev = first;
     for (const y of rows) { for (let k = prev + 1; k < y; k++) c[k] = c[prev] + (c[y] - c[prev]) * (k - prev) / (y - prev); prev = y; }
     // The shoulder joint sits a little above the armpit, never at the collar.
     const top = Math.round(Math.min(Math.max(first - height * .22, height * .12), height * .3));
+    // Only the shoulder's cap stays in the body too; the sleeve below it moves with
+    // the arm, or a raised arm would leave its sleeve hanging at the side.
+    const cap = Math.min(first, top + Math.round(height * .08));
     for (let y = top; y < height; y++) {
       const edge = y < first ? c[first] : y > last ? c[last] : c[y];
       for (let x = 0; x < width; x++) {
         if (!opaque(x, y) || (side ? x <= edge : x >= edge)) continue;
         const i = y * width + x;
-        owner[i] = (y < first ? BODY : 0) | (side ? FRONT_ARM : BACK_ARM);
+        owner[i] = (y < cap ? BODY : 0) | (side ? FRONT_ARM : BACK_ARM);
       }
     }
     // Joints from the arm's own pixels.
@@ -77,12 +82,13 @@ export function splitArms(pixels: Uint8ClampedArray, width: number, height: numb
     rig.elbow[side] = [centre(elbowRow - 2, elbowRow + 2)[0], elbowRow];
     rig.hand[side] = centre(bottom - Math.round(span * .12), bottom);
     rig.elbowRow[side] = elbowRow;
-    // A cape or a coat hiding the arm leaves only a hand: not a usable arm.
-    if (span < height * .45) return null;
+    // A cape or a coat hiding the arm leaves only a hand, or a strip of cape beside
+    // the body (Saitama's back arm): not a usable arm, it stays painted in the body.
+    const mask = side ? FRONT_ARM : BACK_ARM;
+    let elbowWidth = 0;
+    for (let x = 0; x < width; x++) if (owner[elbowRow * width + x] & mask) elbowWidth++;
+    rig.posable[side] = span >= height * .45 && elbowWidth >= width * .1;
+    if (!rig.posable[side]) for (let i = 0; i < owner.length; i++) if (owner[i] & mask) owner[i] = BODY;
   }
-  // A cape hiding one arm (Saitama) leaves a sliver: keep the painted pose then.
-  const count = [0, 0];
-  for (const o of owner) { if (o & BACK_ARM) count[0]++; if (o & FRONT_ARM) count[1]++; }
-  if (Math.min(...count) < Math.max(...count) * .5) return null;
-  return rig;
+  return rig.posable.some(Boolean) ? rig : null;
 }
