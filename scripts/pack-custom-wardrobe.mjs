@@ -241,17 +241,45 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
     const top = Object.entries(votes).sort((a, b) => b[1] - a[1])[0];
     if (top && top[1] >= skin * .6) layer[i] = top[0];
   }
-  // Trousers hidden under a long top are completed from the base body's shape, so a
-  // shorter top worn with them never shows bare thigh.
-  const setCells = cells(set), hidden = new Uint8Array(kind.length);
+  // Trousers hidden under a long top are continued straight up to the waist, at
+  // their own width and shade, so a shorter top worn with them shows no thigh.
+  const setCells = cells(set), hidden = new Uint8Array(kind.length), fill = new Uint8Array(kind.length);
+  const legMain = i => layer[i] === 'legs' && kind[i] === 'legs:main';
   for (const [f, cell] of setCells.entries()) {
-    // Grow each column upwards from the visible trousers to the waist, so hands
-    // and wristbands hanging beside the legs are left alone.
     const waist = Math.ceil(poses[f].waistY * k);
-    const under = i => cell.mask[i] && layer[i] === 'top' && ref.data[i * 4 + 3] > 128;
     for (let x = cell.x0; x < cell.x1; x++) {
-      let y = waist; while (y < cell.y1 && layer[y * set.w + x] !== 'legs') y++;
-      for (y--; y >= waist && under(y * set.w + x); y--) hidden[y * set.w + x] = 1;
+      let y = waist; while (y < cell.y1 && !legMain(y * set.w + x)) y++;
+      if (y >= cell.y1) continue;
+      const o = (y * set.w + x) * 4, shade = Math.max(set.data[o], set.data[o + 1], set.data[o + 2]);
+      // Climb through the top (and the hem's outline); a few other pixels in a row are
+      // specks, a longer run is a hand or arm in front, where the trousers stop.
+      for (y--; y >= waist; y--) {
+        const i = y * set.w + x;
+        if (!cell.mask[i]) break;
+        if (layer[i] === 'top' || (layer[i] === 'legs' && !legMain(i))) { hidden[i] = 1; fill[i] = shade; continue; }
+        let n = 0; while (n < 5 && y - n >= waist && cell.mask[(y - n) * set.w + x] && layer[(y - n) * set.w + x] !== 'top') n++;
+        if (n >= 5 || y - n < waist || !cell.mask[(y - n) * set.w + x]) break;
+        for (let j = 0; j < n; j++) { hidden[(y - j) * set.w + x] = 1; fill[(y - j) * set.w + x] = shade; }
+        y -= n - 1;
+      }
+    }
+    // Close each row into whole spans, shaded from the base body underneath (its folds
+    // read as cloth) and outlined at the ends, so ragged columns don't read as stripes.
+    const lum = i => Math.round(ref.data[i * 4] * .3 + ref.data[i * 4 + 1] * .59 + ref.data[i * 4 + 2] * .11);
+    for (let y = waist; y < cell.y1; y++) {
+      const xs = []; for (let x = cell.x0; x < cell.x1; x++) if (hidden[y * set.w + x]) xs.push(x);
+      for (let a = 0; a < xs.length;) {
+        let b = a; while (b + 1 < xs.length && xs[b + 1] - xs[b] <= 8) b++;
+        let sum = 0, n = 0;
+        for (let x = xs[a]; x <= xs[b]; x++) { const i = y * set.w + x; if (ref.data[i * 4 + 3] > 128 && lum(i) > 140) { sum += lum(i); n++; } }
+        const flat = n ? Math.round(sum / n) : 205;
+        for (let x = xs[a]; x <= xs[b]; x++) {
+          const i = y * set.w + x; if (!cell.mask[i]) continue;
+          hidden[i] = 1;
+          fill[i] = x - xs[a] < 2 || xs[b] - x < 2 ? 50 : ref.data[i * 4 + 3] > 128 ? Math.max(lum(i), 90) : flat;
+        }
+        a = b + 1;
+      }
     }
   }
   for (const name of ['top', 'legs', 'feet']) {
@@ -265,8 +293,8 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
       img.data[i * 4] = rgb[0]; img.data[i * 4 + 1] = rgb[1]; img.data[i * 4 + 2] = rgb[2]; img.data[i * 4 + 3] = set.data[i * 4 + 3];
     }
     if (name === 'legs') for (let i = 0; i < hidden.length; i++) if (hidden[i]) {
-      const l = Math.round(ref.data[i * 4] * .3 + ref.data[i * 4 + 1] * .59 + ref.data[i * 4 + 2] * .11);
-      img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = l; img.data[i * 4 + 3] = ref.data[i * 4 + 3];
+      const l = fill[i];
+      img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = l; img.data[i * 4 + 3] = 255;
     }
     // Stray shades of a piece's colour scattered over the body are not part of it.
     despeckle(img.data, 50, set.w, set.h);
