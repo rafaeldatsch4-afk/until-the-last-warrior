@@ -46,16 +46,17 @@ test('headwear stays above eyes while the visor remains at eye height', () => {
   assert.ok(HEAD_ANCHORS.visor[1]+HEAD_ANCHORS.visor[3]>HEAD_ANCHORS.eyes[1]);
 });
 
-test('the headband crosses the forehead with its plate centred on the head', () => {
+test('the headband crosses the forehead with its plate on the front, between the eyes', () => {
   for (const head of partOptions.head.filter(h => !COVERED_HEADS.includes(h))) {
-    const { cx, y, half, thickness, sag, plate } = headbandFront(head);
-    // Above the eyes (its lowest point is the plate, at the centre)...
+    const { left, right, front, y, thickness, sag, plate } = headbandFront(head);
+    // Above the eyes (its lowest point is the plate, at the front)...
     assert.ok(y + sag + plate[1] / 2 <= HEAD_ANCHORS.eyes[1], head);
-    // ...below the hairline, and wrapping the whole head.
+    // ...below the hairline, and from the back of the head round to the face.
     assert.ok(y - thickness / 2 >= HAT_HAIR_LINE, head);
-    assert.ok(half * 2 >= 14, head);
-    // The plate sits on the head's centre line, not off to one side.
-    assert.ok(Math.abs(cx - 98.5) < .5, head);
+    assert.ok(right - left >= 14, head);
+    // The plate is on the face's centre line, not the middle of the skull's side.
+    assert.ok(Math.abs(front - HEAD_ANCHORS.eyes[0]) < 1, head);
+    assert.ok(front - plate[0] / 2 > (left + right) / 2 && front + plate[0] / 2 < right, head);
   }
 });
 

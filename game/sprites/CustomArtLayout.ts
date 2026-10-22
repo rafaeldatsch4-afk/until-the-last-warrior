@@ -31,11 +31,13 @@ export function scouterRect(head: string): readonly [number, number, number, num
  * Chapolim's hood, Spider-Man's mask) leave no forehead for a headband. */
 export const COVERED_HEADS = ['jotaro', 'chapolim', 'spiderman'] as const;
 
-/** The headband in portrait coordinates, seen from the front: a band across the
- * forehead just above the brows, its plate (and symbol) centred on the head, and
- * the knot at the back of the head. `sag` bows the band down at the centre. */
+/** The headband in portrait coordinates, on the three-quarter head: a band across the
+ * forehead just above the brows, from the back of the head (`left`, where it's knotted)
+ * round to the face's edge (`right`), with its plate and symbol on the front of the
+ * forehead (`front`, the face's centre line, between the eyes). The band bows down
+ * by `sag` at the front, as a band round a head does seen from eye level. */
 export function headbandFront(_head: string) {
-  return { cx: 98.5, y: 57.6, half: 7.8, thickness: 2.5, sag: .9, plate: [5.4, 3.4] as const };
+  return { left: 91.6, right: 106.9, front: 102.6, y: 56.9, thickness: 2.5, sag: .9, plate: [5, 3.4] as const };
 }
 
 /** Where the rings are split and knotted, as fractions of the ring image. */

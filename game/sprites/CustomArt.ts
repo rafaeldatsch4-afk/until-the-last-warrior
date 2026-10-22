@@ -121,35 +121,36 @@ function drawRing(ctx: CanvasRenderingContext2D, img: HTMLCanvasElement, rect: r
 /** Where the leaf symbol sits on accessory-headband.png's plate (source pixels). */
 const HEADBAND_SYMBOL = [287, 94, 38, 36] as const;
 
-/** The headband from the front, in portrait coordinates: a band across the forehead
- * in the ring's (tinted) colour, the steel plate with its symbol centred on the head,
- * and the loose ends knotted at the back. */
+/** The headband in portrait coordinates: a band across the forehead in the ring's
+ * (tinted) colour, the steel plate with its symbol on the front of the forehead, and
+ * the loose ends knotted at the back of the head. */
 function drawHeadband(ctx: CanvasRenderingContext2D, ring: HTMLCanvasElement, tails: HTMLCanvasElement | null, head: string, state: number) {
   // Older saves may pair a headband with a covered head (cap, hood, mask): it wins.
   if ((COVERED_HEADS as readonly string[]).includes(head)) return;
-  const { cx, y, half, thickness, sag, plate } = headbandFront(head);
+  const { left: l, right: r, front, y, thickness, sag, plate } = headbandFront(head);
   const sx = ring.width / 349, sy = ring.height / 177;
   const fabric = ring.getContext('2d')!.getImageData(Math.round(174 * sx), Math.round(151 * sy), 1, 1).data;
   const colour = (k: number) => `rgb(${Math.round(fabric[0] * k)},${Math.round(fabric[1] * k)},${Math.round(fabric[2] * k)})`;
-  const l = cx - half, r = cx + half, t = thickness / 2;
-  tails && drawTails(ctx, tails, 'headband', state, l + .4, y);
-  // The band: upper and lower edges bow down together toward the front of the head.
+  const t = thickness / 2;
+  // Quadratic edges whose lowest point is the front of the forehead.
+  const ctrl = (dy: number) => [2 * front - (l + r) / 2, y + dy + sag * 2] as const;
+  if (tails) drawTails(ctx, tails, 'headband', state, l + .4, y);
   ctx.save();
-  ctx.beginPath(); ctx.moveTo(l, y - t); ctx.quadraticCurveTo(cx, y - t + sag * 2, r, y - t); ctx.lineTo(r, y + t);
-  ctx.quadraticCurveTo(cx, y + t + sag * 2, l, y + t); ctx.closePath();
+  ctx.beginPath(); ctx.moveTo(l, y - t); ctx.quadraticCurveTo(...ctrl(-t), r, y - t); ctx.lineTo(r, y + t);
+  ctx.quadraticCurveTo(...ctrl(t), l, y + t); ctx.closePath();
   ctx.fillStyle = colour(1); ctx.fill();
   ctx.lineWidth = .45; ctx.strokeStyle = '#141420'; ctx.stroke();
   // A soft fold along the lower half gives the cloth some volume.
-  ctx.beginPath(); ctx.moveTo(l + .8, y + t * .45); ctx.quadraticCurveTo(cx, y + t * .45 + sag * 2, r - .8, y + t * .45);
+  ctx.beginPath(); ctx.moveTo(l + .8, y + t * .45); ctx.quadraticCurveTo(...ctrl(t * .45), r - .5, y + t * .45);
   ctx.lineWidth = .5; ctx.strokeStyle = colour(.72); ctx.stroke();
-  // Steel plate, centred on the head, with the symbol in its middle.
-  const [pw, ph] = plate, px = cx - pw / 2, py = y + sag - ph / 2;
+  // Steel plate on the front of the forehead, with the symbol in its middle.
+  const [pw, ph] = plate, px = front - pw / 2, py = y + sag - ph / 2;
   ctx.beginPath(); ctx.roundRect(px, py, pw, ph, .7);
   ctx.fillStyle = '#b0afb3'; ctx.fill();
   ctx.lineWidth = .4; ctx.strokeStyle = '#25292f'; ctx.stroke();
   ctx.fillStyle = '#e4e4e8'; ctx.fillRect(px + .5, py + .45, pw - 1, .35);
   const [gx, gy, gw, gh] = HEADBAND_SYMBOL, symH = ph * .66, symW = symH * gw / gh;
-  ctx.drawImage(ring, gx * sx, gy * sy, gw * sx, gh * sy, cx - symW / 2, py + (ph - symH) / 2 + .1, symW, symH);
+  ctx.drawImage(ring, gx * sx, gy * sy, gw * sx, gh * sy, front - symW / 2, py + (ph - symH) / 2 + .1, symW, symH);
   ctx.restore();
 }
 
