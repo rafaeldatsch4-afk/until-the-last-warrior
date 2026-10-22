@@ -27,8 +27,9 @@ export function scouterRect(head: string): readonly [number, number, number, num
   return [x, head === 'spiderman' ? y - 3 : y, width, height];
 }
 
-/** Heads painted with a hat (Jotaro's cap) leave no forehead for a headband. */
-export const HATTED_HEADS = ['jotaro'] as const;
+/** Heads painted with something other than hair or a bald scalp (Jotaro's cap,
+ * Chapolim's hood, Spider-Man's mask) leave no forehead for a headband. */
+export const COVERED_HEADS = ['jotaro', 'chapolim', 'spiderman'] as const;
 
 /** The headband in portrait coordinates, seen from the front: a band across the
  * forehead just above the brows, its plate (and symbol) centred on the head, and

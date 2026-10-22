@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CUSTOM_DASH_FRAMES, CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, HATTED_HEADS, HEAD_ANCHORS, headbandFront, tailState } from '../game/sprites/CustomArtLayout.ts';
+import { CUSTOM_DASH_FRAMES, CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, COVERED_HEADS, HEAD_ANCHORS, headbandFront, tailState } from '../game/sprites/CustomArtLayout.ts';
 import { CreatorState } from '../game/creator/CreatorState.ts';
 import { partOptions } from '../game/creator/CreatorPartOptions.ts';
 
@@ -47,7 +47,7 @@ test('headwear stays above eyes while the visor remains at eye height', () => {
 });
 
 test('the headband crosses the forehead with its plate centred on the head', () => {
-  for (const head of partOptions.head.filter(h => !HATTED_HEADS.includes(h))) {
+  for (const head of partOptions.head.filter(h => !COVERED_HEADS.includes(h))) {
     const { cx, y, half, thickness, sag, plate } = headbandFront(head);
     // Above the eyes (its lowest point is the plate, at the centre)...
     assert.ok(y + sag + plate[1] / 2 <= HEAD_ANCHORS.eyes[1], head);
@@ -67,8 +67,29 @@ test('loose scarf and headband ends hang at rest, flow in action and stream back
   assert.equal(CUSTOM_DASH_FRAMES[1], CUSTOM_FRAME.count - 1);
 });
 
-test('a head painted with a hat never wears a headband', async () => {
+test('only hair or a bald head wears a headband, never a cap, hood or mask', async () => {
   const { accessoryFitsHead } = await import('../game/creator/CreatorPartOptions.ts');
-  for (const head of partOptions.head) assert.equal(accessoryFitsHead('headband', head), !HATTED_HEADS.includes(head), head);
-  for (const head of HATTED_HEADS) for (const acc of partOptions.accessory.filter(a => a !== 'headband')) assert.ok(accessoryFitsHead(acc, head));
+  for (const head of partOptions.head) assert.equal(accessoryFitsHead('headband', head), !COVERED_HEADS.includes(head), head);
+  for (const head of COVERED_HEADS) for (const acc of partOptions.accessory.filter(a => a !== 'headband')) assert.ok(accessoryFitsHead(acc, head));
+});
+
+test('the headband is for heads of hair and bald heads only', () => {
+  assert.deepEqual([...COVERED_HEADS].sort(), ['chapolim', 'jotaro', 'spiderman']);
+});
+
+test('a covered head takes the headband off and a head of hair puts it back', () => {
+  const state = new CreatorState();
+  const pick = head => { while (state.getEquippedHead() !== head) state.nextPart('head', state.getAvailableHeads()); };
+  pick('goku');
+  while (state.getEquippedAccessory() !== 'headband') state.nextPart('accessory', partOptions.accessory);
+  pick('spiderman');
+  assert.equal(state.getEquippedAccessory(), 'none');
+  pick('naruto');
+  assert.equal(state.getEquippedAccessory(), 'headband');
+  // With a covered head, cycling accessories skips the headband.
+  pick('chapolim');
+  for (let i = 0; i < partOptions.accessory.length * 2; i++) {
+    state.nextPart('accessory', partOptions.accessory);
+    assert.notEqual(state.getEquippedAccessory(), 'headband');
+  }
 });

@@ -2,7 +2,7 @@
 import type Phaser from 'phaser';
 import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
-import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, HATTED_HEADS, headbandFront, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState } from './CustomArtLayout';
+import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, COVERED_HEADS, headbandFront, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
 import POSED_ANCHORS from '../assets/custom-v2/anchors.json';
 import { BACK_ARM, BODY, FRONT_ARM, splitArms } from './CustomArms';
@@ -125,8 +125,8 @@ const HEADBAND_SYMBOL = [287, 94, 38, 36] as const;
  * in the ring's (tinted) colour, the steel plate with its symbol centred on the head,
  * and the loose ends knotted at the back. */
 function drawHeadband(ctx: CanvasRenderingContext2D, ring: HTMLCanvasElement, tails: HTMLCanvasElement | null, head: string, state: number) {
-  // Older saves may pair a headband with a hat-wearing head: the hat wins.
-  if ((HATTED_HEADS as readonly string[]).includes(head)) return;
+  // Older saves may pair a headband with a covered head (cap, hood, mask): it wins.
+  if ((COVERED_HEADS as readonly string[]).includes(head)) return;
   const { cx, y, half, thickness, sag, plate } = headbandFront(head);
   const sx = ring.width / 349, sy = ring.height / 177;
   const fabric = ring.getContext('2d')!.getImageData(Math.round(174 * sx), Math.round(151 * sy), 1, 1).data;
