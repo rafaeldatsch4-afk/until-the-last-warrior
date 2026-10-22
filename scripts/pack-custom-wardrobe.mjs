@@ -205,6 +205,26 @@ await writeFile(`${OUT}/anchors.json`, JSON.stringify(anchors) + '\n');
 for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f)).sort()) {
   const id = file.replace(/^set-|\.(jpg|png)$/g, '');
   const set = await keyed(`${SRC}/${file}`), ref = await keyed(`${SRC}/base-source.jpg`, set.w, set.h), k = set.w / base.w;
+  // Image editors drift a pose by a few pixels: slide each frame until its skull sits on
+  // the base's (every set draws the same bald head, so the skull is the one fixed thing).
+  // The first three sets were checked by eye to sit on the base and are left as drawn.
+  const shifts = cells(set).map((cell, f) => {
+    if (['goku', 'naruto', 'vegeta'].includes(id)) return [0, 0];
+    const p = poses[f], half = p.headWidth * .7 * k, cx = p.headX * k;
+    const x0 = Math.round(cx - half), x1 = Math.round(cx + half), y0 = Math.round(p.headTop * k), y1 = Math.round((p.headTop + p.headWidth * .6) * k);
+    const on = (img, x, y) => x >= 0 && y >= 0 && x < img.w && y < img.h && img.data[(y * img.w + x) * 4 + 3] > 128;
+    const inCell = (x, y) => on(set, x, y) && cell.mask[y * set.w + x] === 1;
+    const costAt = (dx, dy) => { let c = 0; for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) if (on(ref, x, y) !== inCell(x + dx, y + dy)) c++; return c; };
+    const rest = costAt(0, 0);
+    let best = [0, 0], bestCost = rest;
+    for (let dy = -24; dy <= 24; dy++) for (let dx = -24; dx <= 24; dx++) {
+      const cost = costAt(dx, dy);
+      if (cost < bestCost || (cost === bestCost && Math.abs(dx) + Math.abs(dy) < Math.abs(best[0]) + Math.abs(best[1]))) { bestCost = cost; best = [dx, dy]; }
+    }
+    // Only a clear gain counts: a set that already sits on the base is left alone.
+    return rest > bestCost * 3 + 12 ? best : [0, 0];
+  });
+  console.log(`${id} shifts`, shifts.map(([x, y]) => `${x},${y}`).join(' '));
   const kind = new Array(set.w * set.h).fill(null);
   for (let i = 0; i < kind.length; i++) {
     if (set.data[i * 4 + 3] < 40) continue;
@@ -312,12 +332,17 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
       const l = fill[i];
       img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = l; img.data[i * 4 + 3] = 255;
     }
+    // Footwear is never above the top of the head: whatever the sorter found there is a speck.
+    if (name === 'feet') for (const [f, cell] of setCells.entries()) {
+      const limit = Math.floor(poses[f].headTop * k + shifts[f][1]);
+      for (let y = Math.max(0, cell.y0 | 0); y < Math.min(limit, set.h); y++) for (let x = cell.x0; x < cell.x1; x++) img.data[(y * set.w + x) * 4 + 3] = 0;
+    }
     // Stray shades of a piece's colour scattered over the body are not part of it.
     despeckle(img.data, 50, set.w, set.h);
     const out = sheet();
     for (let f = 0; f < 16; f++) {
       const t = transforms[f];
-      await paste(out, img, setCells[f], f, { s: t.s / k, ax: t.ax * k, ay: t.ay * k, x: t.x, y: t.y });
+      await paste(out, img, setCells[f], f, { s: t.s / k, ax: t.ax * k + shifts[f][0], ay: t.ay * k + shifts[f][1], x: t.x, y: t.y });
     }
     await save(out, `${name === 'top' ? 'torso' : name}-${id}`);
   }
