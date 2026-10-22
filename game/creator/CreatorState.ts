@@ -1,4 +1,4 @@
-import { partOptions, getAvailableHeadOptions, skinColors, hairColors, giColors } from "./CreatorPartOptions";
+import { partOptions, getAvailableHeadOptions, accessoryFitsHead, skinColors, hairColors, giColors } from "./CreatorPartOptions";
 import type { CharacterData } from "../types";
 
 type CustomData = NonNullable<CharacterData["customData"]>;
@@ -62,23 +62,29 @@ export class CreatorState {
     if (this.style_idx.head >= heads.length) {
       this.style_idx.head = 0;
     }
+    // A hat-wearing head takes the hat's place: its headband comes off.
+    if (!accessoryFitsHead(this.getEquippedAccessory(), this.getEquippedHead())) {
+      this.style_idx.accessory = partOptions.accessory.indexOf("none");
+    }
+  }
+
+  private stepPart(part: keyof typeof this.style_idx, options: string[], step: 1 | -1) {
+    if (!options.length) return;
+    const head = this.getEquippedHead();
+    do {
+      this.style_idx[part] = (this.style_idx[part] + step + options.length) % options.length;
+      // Accessories that don't fit the head (a headband on a cap) are skipped.
+    } while (part === "accessory" && !accessoryFitsHead(options[this.style_idx[part]], head));
+    if (part === "accessory") this.style_idx.head = Math.max(0, this.getAvailableHeads().indexOf(head));
+    this.validateConstraints();
   }
 
   public nextPart(part: keyof typeof this.style_idx, options: string[]) {
-    if (!options.length) return;
-    const head = this.getEquippedHead();
-    this.style_idx[part] = (this.style_idx[part] + 1) % options.length;
-    if (part === "accessory") this.style_idx.head = Math.max(0, this.getAvailableHeads().indexOf(head));
-    this.validateConstraints();
+    this.stepPart(part, options, 1);
   }
 
   public prevPart(part: keyof typeof this.style_idx, options: string[]) {
-    if (!options.length) return;
-    const head = this.getEquippedHead();
-    this.style_idx[part] =
-      (this.style_idx[part] - 1 + options.length) % options.length;
-    if (part === "accessory") this.style_idx.head = Math.max(0, this.getAvailableHeads().indexOf(head));
-    this.validateConstraints();
+    this.stepPart(part, options, -1);
   }
 
   public nextColor(part: keyof typeof this.p_idx, options: number[]) {
@@ -105,6 +111,7 @@ export class CreatorState {
       this.style_idx[part] = Math.max(0, partOptions[part].indexOf(id ?? ""));
     }
     this.style_idx.head = Math.max(0, this.getAvailableHeads().indexOf(data.part_head ?? "goku"));
+    this.validateConstraints();
     for (const part of Object.keys(colorFields) as ColorPart[]) {
       const legacyField = legacyColors[part];
       const value = data[colorFields[part]] ?? (legacyField ? data[legacyField] : undefined);

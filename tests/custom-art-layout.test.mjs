@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CUSTOM_DASH_FRAMES, CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, HEAD_ANCHORS, headbandRect, tailState } from '../game/sprites/CustomArtLayout.ts';
+import { CUSTOM_DASH_FRAMES, CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, HATTED_HEADS, HEAD_ANCHORS, headbandFront, tailState } from '../game/sprites/CustomArtLayout.ts';
 import { CreatorState } from '../game/creator/CreatorState.ts';
 import { partOptions } from '../game/creator/CreatorPartOptions.ts';
 
@@ -46,13 +46,16 @@ test('headwear stays above eyes while the visor remains at eye height', () => {
   assert.ok(HEAD_ANCHORS.visor[1]+HEAD_ANCHORS.visor[3]>HEAD_ANCHORS.eyes[1]);
 });
 
-test('the headband ring sits on the forehead, above the eyes, for every head', () => {
-  for (const head of partOptions.head) {
-    const [, y, , height] = headbandRect(head);
-    // Its visible front half rests just above the brows, never across the eyes...
-    assert.ok(y + height <= HEAD_ANCHORS.eyes[1] - 1, head);
-    // ...and not up in the hair (Jotaro's goes round his cap).
-    if (head !== 'jotaro') assert.ok(y >= HAT_HAIR_LINE, head);
+test('the headband crosses the forehead with its plate centred on the head', () => {
+  for (const head of partOptions.head.filter(h => !HATTED_HEADS.includes(h))) {
+    const { cx, y, half, thickness, sag, plate } = headbandFront(head);
+    // Above the eyes (its lowest point is the plate, at the centre)...
+    assert.ok(y + sag + plate[1] / 2 <= HEAD_ANCHORS.eyes[1], head);
+    // ...below the hairline, and wrapping the whole head.
+    assert.ok(y - thickness / 2 >= HAT_HAIR_LINE, head);
+    assert.ok(half * 2 >= 14, head);
+    // The plate sits on the head's centre line, not off to one side.
+    assert.ok(Math.abs(cx - 98.5) < .5, head);
   }
 });
 
@@ -62,4 +65,10 @@ test('loose scarf and headband ends hang at rest, flow in action and stream back
   assert.equal(tailState(8), 2);
   for (let frame = CUSTOM_DASH_FRAMES[0]; frame <= CUSTOM_DASH_FRAMES[1]; frame++) assert.equal(tailState(frame), 3);
   assert.equal(CUSTOM_DASH_FRAMES[1], CUSTOM_FRAME.count - 1);
+});
+
+test('a head painted with a hat never wears a headband', async () => {
+  const { accessoryFitsHead } = await import('../game/creator/CreatorPartOptions.ts');
+  for (const head of partOptions.head) assert.equal(accessoryFitsHead('headband', head), !HATTED_HEADS.includes(head), head);
+  for (const head of HATTED_HEADS) for (const acc of partOptions.accessory.filter(a => a !== 'headband')) assert.ok(accessoryFitsHead(acc, head));
 });

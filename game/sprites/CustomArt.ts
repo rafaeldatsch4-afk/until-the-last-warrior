@@ -2,7 +2,7 @@
 import type Phaser from 'phaser';
 import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
-import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, headbandRect, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState } from './CustomArtLayout';
+import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, HATTED_HEADS, headbandFront, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
 import POSED_ANCHORS from '../assets/custom-v2/anchors.json';
 import { BACK_ARM, BODY, FRONT_ARM, splitArms } from './CustomArms';
@@ -118,6 +118,41 @@ function drawRing(ctx: CanvasRenderingContext2D, img: HTMLCanvasElement, rect: r
   ctx.clip(); ctx.drawImage(img, x, y, w, h); ctx.restore();
 }
 
+/** Where the leaf symbol sits on accessory-headband.png's plate (source pixels). */
+const HEADBAND_SYMBOL = [287, 94, 38, 36] as const;
+
+/** The headband from the front, in portrait coordinates: a band across the forehead
+ * in the ring's (tinted) colour, the steel plate with its symbol centred on the head,
+ * and the loose ends knotted at the back. */
+function drawHeadband(ctx: CanvasRenderingContext2D, ring: HTMLCanvasElement, tails: HTMLCanvasElement | null, head: string, state: number) {
+  // Older saves may pair a headband with a hat-wearing head: the hat wins.
+  if ((HATTED_HEADS as readonly string[]).includes(head)) return;
+  const { cx, y, half, thickness, sag, plate } = headbandFront(head);
+  const sx = ring.width / 349, sy = ring.height / 177;
+  const fabric = ring.getContext('2d')!.getImageData(Math.round(174 * sx), Math.round(151 * sy), 1, 1).data;
+  const colour = (k: number) => `rgb(${Math.round(fabric[0] * k)},${Math.round(fabric[1] * k)},${Math.round(fabric[2] * k)})`;
+  const l = cx - half, r = cx + half, t = thickness / 2;
+  tails && drawTails(ctx, tails, 'headband', state, l + .4, y);
+  // The band: upper and lower edges bow down together toward the front of the head.
+  ctx.save();
+  ctx.beginPath(); ctx.moveTo(l, y - t); ctx.quadraticCurveTo(cx, y - t + sag * 2, r, y - t); ctx.lineTo(r, y + t);
+  ctx.quadraticCurveTo(cx, y + t + sag * 2, l, y + t); ctx.closePath();
+  ctx.fillStyle = colour(1); ctx.fill();
+  ctx.lineWidth = .45; ctx.strokeStyle = '#141420'; ctx.stroke();
+  // A soft fold along the lower half gives the cloth some volume.
+  ctx.beginPath(); ctx.moveTo(l + .8, y + t * .45); ctx.quadraticCurveTo(cx, y + t * .45 + sag * 2, r - .8, y + t * .45);
+  ctx.lineWidth = .5; ctx.strokeStyle = colour(.72); ctx.stroke();
+  // Steel plate, centred on the head, with the symbol in its middle.
+  const [pw, ph] = plate, px = cx - pw / 2, py = y + sag - ph / 2;
+  ctx.beginPath(); ctx.roundRect(px, py, pw, ph, .7);
+  ctx.fillStyle = '#b0afb3'; ctx.fill();
+  ctx.lineWidth = .4; ctx.strokeStyle = '#25292f'; ctx.stroke();
+  ctx.fillStyle = '#e4e4e8'; ctx.fillRect(px + .5, py + .45, pw - 1, .35);
+  const [gx, gy, gw, gh] = HEADBAND_SYMBOL, symH = ph * .66, symW = symH * gw / gh;
+  ctx.drawImage(ring, gx * sx, gy * sy, gw * sx, gh * sy, cx - symW / 2, py + (ph - symH) / 2 + .1, symW, symH);
+  ctx.restore();
+}
+
 /** Draw one state of a tail strip with its knot on (kx, ky). */
 function drawTails(ctx: CanvasRenderingContext2D, tails: HTMLCanvasElement | null, id: 'scarf' | 'headband', state: number, kx: number, ky: number, swing = 0, scale = 1) {
   if (!tails) return;
@@ -211,15 +246,10 @@ function composePosedWardrobe(scene: Phaser.Scene, texture: string, data: NonNul
     sheathAt('scabbard');
     for (const layer of layers) ctx.drawImage(layer, f % 4 * cellW, Math.floor(f / 4) * cellH, cellW, cellH, 0, 0, 192, 128);
     sheathAt('hilt');
-    const band = accessory && accessoryId === 'headband' ? headbandRect(data.part_head || 'goku') : null;
-    ctx.save(); toHead(); ctx.translate(-.75, 2);
-    if (band) drawRing(ctx, accessory!, band, RING.headband, 'back');
-    ctx.restore();
     ctx.save(); toHead(); ctx.drawImage(portrait, 0, 0, 192, 128); ctx.restore();
-    if (band) {
+    if (accessory && accessoryId === 'headband') {
       ctx.save(); toHead(); ctx.translate(-.75, 2);
-      drawRing(ctx, accessory!, band, RING.headband, 'front');
-      drawTails(ctx, tails, 'headband', state, band[0] + band[2] * RING.headband.knot[0], band[1] + band[3] * RING.headband.knot[1]);
+      drawHeadband(ctx, accessory, tails, data.part_head || 'goku', state);
       ctx.restore();
     }
     if (accessory && accessoryId === 'scarf') drawRing(ctx, accessory, collar, RING.scarf, 'front');
@@ -407,14 +437,11 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     };
     // Headband: portrait coordinates, moved exactly like the portrait itself.
     const drawHead=()=>{
-      const band = accessory && accessoryId === 'headband' ? headbandRect(data.part_head || 'goku') : null;
       const toPortrait = () => ctx.translate(lean - .75 + neckX - 98, headBob + 2);
-      if (band) { ctx.save(); toPortrait(); drawRing(ctx, accessory!, band, RING.headband, 'back'); ctx.restore(); }
       draw(portrait,lean,headBob,192,128);
-      if (band) {
+      if (accessory && accessoryId === 'headband') {
         ctx.save(); toPortrait();
-        drawRing(ctx, accessory!, band, RING.headband, 'front');
-        drawTails(ctx, tails, 'headband', state, band[0] + band[2] * RING.headband.knot[0], band[1] + band[3] * RING.headband.knot[1]);
+        drawHeadband(ctx, accessory, tails, data.part_head || 'goku', state);
         ctx.restore();
       }
     };

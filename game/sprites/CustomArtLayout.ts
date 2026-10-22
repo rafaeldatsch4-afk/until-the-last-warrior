@@ -27,20 +27,18 @@ export function scouterRect(head: string): readonly [number, number, number, num
   return [x, head === 'spiderman' ? y - 3 : y, width, height];
 }
 
-/** The headband ring (accessory-headband.png) in portrait coordinates: its
- * steel plate on the forehead, its far half hidden behind the head. */
-export function headbandRect(head: string): readonly [number, number, number, number] {
-  // Flattened from the painted top-down view so it reads as a band around the
-  // head; its visible front half rests on the forehead just above the brows.
-  const width = 18, height = width * 177 / 349 * .5;
-  // Jotaro's cap hides his forehead: there the band goes round the cap instead.
-  const [right, bottom] = head === 'jotaro' ? [108, 56.5] : head === 'saitama' || head === 'spiderman' ? [108, 59] : [108.5, 59.5];
-  return [right - width, bottom - height, width, height];
+/** Heads painted with a hat (Jotaro's cap) leave no forehead for a headband. */
+export const HATTED_HEADS = ['jotaro'] as const;
+
+/** The headband in portrait coordinates, seen from the front: a band across the
+ * forehead just above the brows, its plate (and symbol) centred on the head, and
+ * the knot at the back of the head. `sag` bows the band down at the centre. */
+export function headbandFront(_head: string) {
+  return { cx: 98.5, y: 57.6, half: 7.8, thickness: 2.5, sag: .9, plate: [5.4, 3.4] as const };
 }
 
 /** Where the rings are split and knotted, as fractions of the ring image. */
 export const RING = {
-  headband: { split: .45, knot: [.06, .42] },
   scarf: { split: .45, knot: [.06, .45] },
 } as const;
 
