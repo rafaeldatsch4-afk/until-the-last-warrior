@@ -193,7 +193,8 @@ function composePosedWardrobe(scene: Phaser.Scene, texture: string, data: NonNul
       ctx.rotate(dash ? .3 : walk ? .05 : punch ? -.08 : kick ? .1 : defend ? -.12 : charge ? .14 : 0);
       ctx.drawImage(accessory, -width / 2, 0, width, height); ctx.restore();
     }
-    const collar = [A.neck[0] + 1 - 6.5, A.neck[1] + .5, 13, 13 * 126 / 221] as const;
+    // The scarf wraps the neck just under the chin (the anchor), not the chest below it.
+    const collar = [A.neck[0] + 1 - 6.5, A.neck[1] - 3, 13, 13 * 126 / 221] as const;
     if (accessory && accessoryId === 'scarf') {
       drawTails(ctx, tails, 'scarf', state, collar[0] + collar[2] * RING.scarf.knot[0], collar[1] + collar[3] * RING.scarf.knot[1], SCARF_TAIL_SWING[state], .9);
       drawRing(ctx, accessory, collar, RING.scarf, 'back');

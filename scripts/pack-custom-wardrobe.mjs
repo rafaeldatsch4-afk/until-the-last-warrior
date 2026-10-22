@@ -207,9 +207,7 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
   const set = await keyed(`${SRC}/${file}`), ref = await keyed(`${SRC}/base-source.jpg`, set.w, set.h), k = set.w / base.w;
   // Image editors drift a pose by a few pixels: slide each frame until its skull sits on
   // the base's (every set draws the same bald head, so the skull is the one fixed thing).
-  // The first three sets were checked by eye to sit on the base and are left as drawn.
   const shifts = cells(set).map((cell, f) => {
-    if (['goku', 'naruto', 'vegeta'].includes(id)) return [0, 0];
     const p = poses[f], half = p.headWidth * .7 * k, cx = p.headX * k;
     const x0 = Math.round(cx - half), x1 = Math.round(cx + half), y0 = Math.round(p.headTop * k), y1 = Math.round((p.headTop + p.headWidth * .6) * k);
     const on = (img, x, y) => x >= 0 && y >= 0 && x < img.w && y < img.h && img.data[(y * img.w + x) * 4 + 3] > 128;
@@ -318,6 +316,30 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
       }
     }
   }
+  // The generated trousers can be a touch slimmer than the base's leg, which then shows as
+  // a thin skin strip along the inner edge. Where the base has a leg, the outfit image has
+  // background, and the strip is thin and hugs the trousers, the trousers are extended.
+  const leakShade = new Uint8Array(kind.length);
+  for (const [f, cell] of setCells.entries()) {
+    const [dx, dy] = shifts[f], waist = Math.ceil(poses[f].waistY * k + dy);
+    const body = (x, y) => { const X = x - dx, Y = y - dy; return X >= 0 && Y >= 0 && X < ref.w && Y < ref.h && ref.data[(Y * ref.w + X) * 4 + 3] > 200; };
+    const legAt = (x, y) => x >= 0 && y >= 0 && x < set.w && y < set.h && layer[y * set.w + x] === 'legs' && cell.mask[y * set.w + x];
+    const near = (x, y) => { for (let oy = -3; oy <= 3; oy++) for (let ox = -3; ox <= 3; ox++) if (legAt(x + ox, y + oy)) return true; return false; };
+    for (let y = waist; y < cell.y1; y++) {
+      const gap = x => body(x, y) && set.data[(y * set.w + x) * 4 + 3] < 40;
+      for (let x = cell.x0 - 10; x < cell.x1 + 10;) {
+        if (!gap(x)) { x++; continue; }
+        let e = x; while (gap(e + 1)) e++;
+        if (e - x < 14 && (near(x, y) || near(e, y))) {
+          // Take the shade from the trouser pixel the strip leans on.
+          let shade = 0;
+          for (let ox = -4; ox <= 4 && !shade; ox++) for (const px of [x - 1 - ox, e + 1 + ox]) if (legAt(px, y) && kind[y * set.w + px] === 'legs:main') shade = Math.max(set.data[(y * set.w + px) * 4], set.data[(y * set.w + px) * 4 + 1], set.data[(y * set.w + px) * 4 + 2]);
+          for (let X = x; X <= e; X++) { const i = y * set.w + X; leakShade[i] = X === x || X === e ? 50 : shade || 120; cell.mask[i] = 1; }
+        }
+        x = e + 1;
+      }
+    }
+  }
   for (const name of ['top', 'legs', 'feet']) {
     const img = { w: set.w, h: set.h, data: Buffer.alloc(set.data.length) };
     for (let i = 0; i < layer.length; i++) {
@@ -328,12 +350,17 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
       const rgb = c.endsWith(':detail') ? [0, Math.round(v * .85), v] : c.endsWith(':main') ? [v, v, v] : [l, l, l];
       img.data[i * 4] = rgb[0]; img.data[i * 4 + 1] = rgb[1]; img.data[i * 4 + 2] = rgb[2]; img.data[i * 4 + 3] = set.data[i * 4 + 3];
     }
+    if (name === 'legs') for (let i = 0; i < leakShade.length; i++) if (leakShade[i]) {
+      img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = leakShade[i]; img.data[i * 4 + 3] = 255;
+    }
     if (name === 'legs') for (let i = 0; i < hidden.length; i++) if (hidden[i]) {
       const l = fill[i];
       img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = l; img.data[i * 4 + 3] = 255;
     }
-    // Footwear is never above the top of the head: whatever the sorter found there is a speck.
-    if (name === 'feet') for (const [f, cell] of setCells.entries()) {
+    // Footwear is never above the top of the head (nor is anything but raised arms, in the
+    // Genki Dama pose): whatever the sorter found there is a speck.
+    for (const [f, cell] of setCells.entries()) {
+      if (name !== 'feet' && f === 12) continue;
       const limit = Math.floor(poses[f].headTop * k + shifts[f][1]);
       for (let y = Math.max(0, cell.y0 | 0); y < Math.min(limit, set.h); y++) for (let x = cell.x0; x < cell.x1; x++) img.data[(y * set.w + x) * 4 + 3] = 0;
     }
