@@ -46,10 +46,13 @@ test('headwear stays above eyes while the visor remains at eye height', () => {
   assert.ok(HEAD_ANCHORS.visor[1]+HEAD_ANCHORS.visor[3]>HEAD_ANCHORS.eyes[1]);
 });
 
-test('the headband ring sits above the eyes for every head', () => {
+test('the headband ring sits on the forehead, above the eyes, for every head', () => {
   for (const head of partOptions.head) {
     const [, y, , height] = headbandRect(head);
-    assert.ok(y + height <= HEAD_ANCHORS.eyes[1] - 4, head);
+    // Its visible front half rests just above the brows, never across the eyes...
+    assert.ok(y + height <= HEAD_ANCHORS.eyes[1] - 1, head);
+    // ...and not up in the hair (Jotaro's goes round his cap).
+    if (head !== 'jotaro') assert.ok(y >= HAT_HAIR_LINE, head);
   }
 });
 
