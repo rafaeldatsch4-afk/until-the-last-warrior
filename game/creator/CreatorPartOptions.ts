@@ -1,4 +1,5 @@
 import { ColorPalette } from "../utils/ColorPalette";
+import { COVERED_HEADS } from "../sprites/CustomArtLayout";
 
 export const partOptions = {
   head: ["goku", "spiderman", "saitama", "chapolim", "vegeta", "jotaro", "naruto", "sasuke", "luffy"],
@@ -22,6 +23,11 @@ export const partOptions = {
 /** Every head works under a hat; the saved head choice stays available and unchanged. */
 export function getAvailableHeadOptions(_accessoryId?: string): string[] {
   return partOptions.head;
+}
+
+/** Only a head of hair or a bald head wears a headband: not a cap, hood or mask. */
+export function accessoryFitsHead(accessoryId: string, head: string): boolean {
+  return accessoryId !== "headband" || !(COVERED_HEADS as readonly string[]).includes(head);
 }
 
 export const auraColors = ColorPalette.aura;

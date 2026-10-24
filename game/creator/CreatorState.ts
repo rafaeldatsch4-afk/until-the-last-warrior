@@ -1,4 +1,4 @@
-import { partOptions, getAvailableHeadOptions, skinColors, hairColors, giColors } from "./CreatorPartOptions";
+import { partOptions, getAvailableHeadOptions, accessoryFitsHead, skinColors, hairColors, giColors } from "./CreatorPartOptions";
 import type { CharacterData } from "../types";
 
 type CustomData = NonNullable<CharacterData["customData"]>;
@@ -62,23 +62,40 @@ export class CreatorState {
     if (this.style_idx.head >= heads.length) {
       this.style_idx.head = 0;
     }
+    // A covered head (cap, hood, mask) takes the headband's place: it comes off, and
+    // goes back on when a head of hair or a bald head is picked again.
+    const head = this.getEquippedHead();
+    if (!accessoryFitsHead(this.getEquippedAccessory(), head)) {
+      this.removedAccessory = this.getEquippedAccessory();
+      this.style_idx.accessory = partOptions.accessory.indexOf("none");
+    } else if (this.removedAccessory && this.getEquippedAccessory() === "none" && accessoryFitsHead(this.removedAccessory, head)) {
+      this.style_idx.accessory = partOptions.accessory.indexOf(this.removedAccessory);
+      this.removedAccessory = null;
+    }
+  }
+
+  /** An accessory a covered head took off, restored when the head allows it again. */
+  private removedAccessory: string | null = null;
+
+  private stepPart(part: keyof typeof this.style_idx, options: string[], step: 1 | -1) {
+    if (!options.length) return;
+    // Choosing an accessory yourself replaces the one a head took off.
+    if (part === "accessory") this.removedAccessory = null;
+    const head = this.getEquippedHead();
+    do {
+      this.style_idx[part] = (this.style_idx[part] + step + options.length) % options.length;
+      // Accessories that don't fit the head (a headband on a cap, hood or mask) are skipped.
+    } while (part === "accessory" && !accessoryFitsHead(options[this.style_idx[part]], head));
+    if (part === "accessory") this.style_idx.head = Math.max(0, this.getAvailableHeads().indexOf(head));
+    this.validateConstraints();
   }
 
   public nextPart(part: keyof typeof this.style_idx, options: string[]) {
-    if (!options.length) return;
-    const head = this.getEquippedHead();
-    this.style_idx[part] = (this.style_idx[part] + 1) % options.length;
-    if (part === "accessory") this.style_idx.head = Math.max(0, this.getAvailableHeads().indexOf(head));
-    this.validateConstraints();
+    this.stepPart(part, options, 1);
   }
 
   public prevPart(part: keyof typeof this.style_idx, options: string[]) {
-    if (!options.length) return;
-    const head = this.getEquippedHead();
-    this.style_idx[part] =
-      (this.style_idx[part] - 1 + options.length) % options.length;
-    if (part === "accessory") this.style_idx.head = Math.max(0, this.getAvailableHeads().indexOf(head));
-    this.validateConstraints();
+    this.stepPart(part, options, -1);
   }
 
   public nextColor(part: keyof typeof this.p_idx, options: number[]) {
@@ -105,6 +122,9 @@ export class CreatorState {
       this.style_idx[part] = Math.max(0, partOptions[part].indexOf(id ?? ""));
     }
     this.style_idx.head = Math.max(0, this.getAvailableHeads().indexOf(data.part_head ?? "goku"));
+    this.removedAccessory = null;
+    this.validateConstraints();
+    this.removedAccessory = null;
     for (const part of Object.keys(colorFields) as ColorPart[]) {
       const legacyField = legacyColors[part];
       const value = data[colorFields[part]] ?? (legacyField ? data[legacyField] : undefined);

@@ -27,19 +27,21 @@ export function scouterRect(head: string): readonly [number, number, number, num
   return [x, head === 'spiderman' ? y - 3 : y, width, height];
 }
 
-/** The headband ring (accessory-headband.png) in portrait coordinates: its
- * steel plate on the forehead, its far half hidden behind the head. */
-export function headbandRect(head: string): readonly [number, number, number, number] {
-  // Flattened from the painted top-down view so it reads as a band around the
-  // head, its near edge just above the brows.
-  const width = 18, height = width * 177 / 349 * .5;
-  const [right, bottom] = head === 'saitama' || head === 'jotaro' || head === 'spiderman' ? [108, 56.5] : [108.5, 57];
-  return [right - width, bottom - height, width, height];
+/** Heads painted with something other than hair or a bald scalp (Jotaro's cap,
+ * Chapolim's hood, Spider-Man's mask) leave no forehead for a headband. */
+export const COVERED_HEADS = ['jotaro', 'chapolim', 'spiderman'] as const;
+
+/** The headband in portrait coordinates, on the three-quarter head: a band across the
+ * forehead just above the brows, from the back of the head (`left`, where it's knotted)
+ * round to the face's edge (`right`), with its plate and symbol on the front of the
+ * forehead (`front`, the face's centre line, between the eyes). The band bows down
+ * by `sag` at the front, as a band round a head does seen from eye level. */
+export function headbandFront(_head: string) {
+  return { left: 91.6, right: 106.9, front: 102.6, y: 56.9, thickness: 2.5, sag: .9, plate: [5, 3.4] as const };
 }
 
 /** Where the rings are split and knotted, as fractions of the ring image. */
 export const RING = {
-  headband: { split: .45, knot: [.06, .42] },
   scarf: { split: .45, knot: [.06, .45] },
 } as const;
 
