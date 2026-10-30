@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CUSTOM_DASH_FRAMES, CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, COVERED_HEADS, HEAD_ANCHORS, headbandFront, tailState } from '../game/sprites/CustomArtLayout.ts';
+import { CUSTOM_DASH_FRAMES, CUSTOM_FRAME, customFrameRegion, HAT_HAIR_LINE, COVERED_HEADS, HEAD_ANCHORS, headbandFront, plausibleHem, tailState, taperIntoHem } from '../game/sprites/CustomArtLayout.ts';
 import { CreatorState } from '../game/creator/CreatorState.ts';
 import { partOptions } from '../game/creator/CreatorPartOptions.ts';
 
@@ -93,4 +93,22 @@ test('a covered head takes the headband off and a head of hair puts it back', ()
     state.nextPart('accessory', partOptions.accessory);
     assert.notEqual(state.getEquippedAccessory(), 'headband');
   }
+});
+
+test('tight leggings are never clipped to a top\'s hem; baggy trousers wider than it are', () => {
+  const hem = { left: 89.5, right: 107.5 };
+  // Leggings fit inside the hem at the waist (their thighs only spread lower down).
+  assert.equal(taperIntoHem(hem, 17), false);
+  assert.equal(taperIntoHem(hem, 19), false);
+  // Baggy trousers are wider than the hem and get tapered into it.
+  assert.equal(taperIntoHem(hem, 26), true);
+  // No usable hem, nothing to taper into.
+  assert.equal(taperIntoHem(null, 30), false);
+});
+
+test('a sash or a cape edge is not taken for a hem', () => {
+  // Measured widths of the torso art's bottom rows: Saitama 6.7, Chapolim 3.1, Sasuke 9.3.
+  for (const width of [3.1, 6.7, 9.3]) assert.equal(plausibleHem(width), false, String(width));
+  // Real jackets: Goku 18, Naruto 16.6, Vegeta 15.2, Spider-Man 15.3, Jotaro's coat 27.5.
+  for (const width of [18, 16.6, 15.2, 15.3, 27.5]) assert.equal(plausibleHem(width), true, String(width));
 });
