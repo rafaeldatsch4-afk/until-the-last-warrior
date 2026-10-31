@@ -2,7 +2,7 @@
 import type Phaser from 'phaser';
 import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
-import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, COVERED_HEADS, headbandFront, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState } from './CustomArtLayout';
+import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, COVERED_HEADS, headbandFront, plausibleHem, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState, taperIntoHem } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
 import POSED_ANCHORS from '../assets/custom-v2/anchors.json';
 import { BACK_ARM, BODY, FRONT_ARM, splitArms } from './CustomArms';
@@ -395,7 +395,17 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       for (let x = 0; x < torso.width; x++) if (inBody(y * torso.width + x)) { left = Math.min(left, x); right = Math.max(right, x); }
     if (right < left) return null;
     const k = 36 / torso.width;
+    const width = (right + 1 - left) * k;
+    if (!plausibleHem(width)) return null;
     return { left: 79 + left * k, right: 79 + (right + 1) * k, y: 66 + (bottom + 1) * 36 / torso.height };
+  })();
+  // How wide the trousers are at the waist, as drawn. Tight leggings that only spread
+  // lower down fit inside any hem and must never be clipped to it.
+  const waistWidth = (() => {
+    let lo = legs.width, hi = -1;
+    for (let y = trouserTop; y < Math.min(legs.height, trouserTop + 8); y++)
+      for (let x = 0; x < legs.width; x++) if (legPixels[(y * legs.width + x) * 4 + 3] > 128) { lo = Math.min(lo, x); hi = Math.max(hi, x); }
+    return hi < lo ? 0 : (hi - lo + 1) * 2 * (giTrousers && torsoId === 'goku' ? 18 : 17) / legs.width;
   })();
   for (let f = 0; f < CUSTOM_FRAME.count; f++) {
     ctx.save(); ctx.translate(f % 4 * 192, Math.floor(f / 4) * 128);
@@ -470,7 +480,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     drawSheath('scabbard');
     // Trousers wider than the top's hem would stick out under it: taper their top into
     // the hem, widening to full width just below it (not for the raised kick leg).
-    const taper = hem && !kick && !genki;
+    const taper = taperIntoHem(hem, waistWidth) && !kick && !genki;
     if (taper) {
       const l = hem.left + lean - .5, r = hem.right + lean + .5, y = hem.y + bob, full = y + 7;
       ctx.save(); ctx.beginPath();

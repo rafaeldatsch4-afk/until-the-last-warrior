@@ -40,6 +40,19 @@ export function headbandFront(_head: string) {
   return { left: 91.6, right: 106.9, front: 102.6, y: 56.9, thickness: 2.5, sag: .9, plate: [5, 3.4] as const };
 }
 
+/** A top's hem is a jacket's width: a sash or a cape's edge measured at its bottom
+ * (a few units wide) or a long coat's skirts is not one. */
+export function plausibleHem(width: number) {
+  return width >= 12 && width <= 32;
+}
+
+/** Trousers are tapered into a top's hem only when they are wider than it at the waist.
+ * Tight leggings that merely spread lower down fit inside any hem, and clipping them
+ * to it would make their thighs vanish. */
+export function taperIntoHem(hem: { left: number; right: number } | null, waistWidth: number) {
+  return !!hem && waistWidth > hem.right - hem.left + 1.5;
+}
+
 /** Where the rings are split and knotted, as fractions of the ring image. */
 export const RING = {
   scarf: { split: .45, knot: [.06, .45] },
