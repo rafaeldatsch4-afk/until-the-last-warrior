@@ -2,7 +2,7 @@
 import type Phaser from 'phaser';
 import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
-import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, COVERED_HEADS, headbandFront, plausibleHem, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState, taperIntoHem } from './CustomArtLayout';
+import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, COVERED_HEADS, HEAD_ANCHORS, HEAD_SCALE, headbandFront, plausibleHem, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState, taperIntoHem } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
 import POSED_ANCHORS from '../assets/custom-v2/anchors.json';
 import { BACK_ARM, BODY, FRONT_ARM, splitArms } from './CustomArms';
@@ -212,7 +212,7 @@ function composePosedWardrobe(scene: Phaser.Scene, texture: string, data: NonNul
   const tailsId = accessoryId === 'scarf' || accessoryId === 'headband' ? accessoryId : null;
   const tails = tailsId ? tint(scene, 'accessory-' + tailsId + '_tails',
     tailsId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } : { secondary: data.color_acc_1 ?? data.gi2 }) : null;
-  const portrait = buildCustomPortrait(data, texture, (name, palette) => tint(scene, name, palette), resolution, 98);
+  const portrait = buildCustomPortrait(data, texture, (name, palette) => tint(scene, name, palette), resolution, 98, 1);
   const cellW = layers[0].width / 4, cellH = layers[0].height / 4;
   for (let f = 0; f < CUSTOM_FRAME.count; f++) {
     const A = posedAnchors[f], state = tailState(f), dash = f >= CUSTOM_DASH_FRAMES[0];
@@ -448,7 +448,8 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     };
     // Headband: portrait coordinates, moved exactly like the portrait itself.
     const drawHead=()=>{
-      const toPortrait = () => ctx.translate(lean - .75 + neckX - 98, headBob + 2);
+      // Same transform as the portrait: head scaled about the neck.
+      const toPortrait = () => { ctx.translate(lean - .75, headBob + 2); ctx.translate(neckX, HEAD_ANCHORS.neck[1]); ctx.scale(HEAD_SCALE, HEAD_SCALE); ctx.translate(-98, -HEAD_ANCHORS.neck[1]); };
       draw(portrait,lean,headBob,192,128);
       if (accessory && accessoryId === 'headband') {
         ctx.save(); toPortrait();

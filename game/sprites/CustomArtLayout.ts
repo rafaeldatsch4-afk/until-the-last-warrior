@@ -13,6 +13,11 @@ export function customFrameRegion(index: number, resolution: number) {
     u1: (index % columns + 1) / columns, v1: (Math.floor(index / columns) + 1) / rows };
 }
 
+/** The modular head (face, hair, hat, headband, scouter) is drawn at this fraction of its
+ * painted size, pivoting on the neck, so it reads as a fighter's head rather than a
+ * mascot's. Fully matched outfits keep their reviewed per-pose head sizes. */
+export const HEAD_SCALE = .85;
+
 export const HEAD_ANCHORS = {
   neck: [98, 70], eyes: [103, 61],
   hat: [86.5, 44.5, 24, 14.8], band: [84.6, 53, 22, 7], visor: [96, 57.5, 9.5, 5.6],
