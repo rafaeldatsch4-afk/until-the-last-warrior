@@ -1,7 +1,7 @@
 // Reviewed source anchors in each 512px cell: neck centre/top and garment hem.
 // The complete torso (including shoulders and arms) is transformed as one piece.
 import { GI_SEAM } from './CustomSeams';
-export const GENKI_TORSOS: Record<string, { sheet: 'a' | 'b'; cell: number; neck: readonly [number, number]; hem: number }> = {
+export const GENKI_TORSOS: Record<string, { sheet: 'a' | 'b' | 'c'; cell: number; neck: readonly [number, number]; hem: number }> = {
   goku: { sheet: 'a', cell: 0, neck: [267, 199], hem: 507 },
   spiderman: { sheet: 'a', cell: 1, neck: [254, 198], hem: 502 },
   jotaro: { sheet: 'a', cell: 2, neck: [254, 185], hem: 503 },
@@ -12,6 +12,8 @@ export const GENKI_TORSOS: Record<string, { sheet: 'a' | 'b'; cell: number; neck
   naruto: { sheet: 'b', cell: 2, neck: [254, 186], hem: 477 },
   sasuke: { sheet: 'b', cell: 3, neck: [250, 190], hem: 448 },
   luffy: { sheet: 'b', cell: 4, neck: [250, 181], hem: 452 },
+  // Sheet 'c' is the Flow-generated set (docs/art/custom/pilot-shinigami), one 512px drawing per file.
+  shinigami: { sheet: 'c', cell: 0, neck: [259, 179], hem: 505 },
 };
 
 export function genkiTorsoRect(key: string, neckX: number) {

@@ -31,7 +31,7 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   // Landmarks are in the original 512px cells, not each hairstyle's bounding box.
   // A taller hairstyle therefore never shrinks its face.
   const upperRow = ['goku','vegeta','naruto'].includes(portraitId);
-  const neckAnchors: Record<string,number> = {goku:274,vegeta:272,naruto:274,sasuke:259,luffy:258,saitama:248,spiderman:248};
+  const neckAnchors: Record<string,number> = {goku:274,vegeta:272,naruto:274,sasuke:259,luffy:258,saitama:248,spiderman:248,shinigami:278};
   const sourceNeckX = portraitId==='jotaro'?256:portraitId==='chapolim'?240:neckAnchors[portraitId] ?? 274;
   const sourceNeckY = portraitId==='jotaro'?452:portraitId==='chapolim'?482:upperRow ? 532 : 442;
   const scale = 0.050;
