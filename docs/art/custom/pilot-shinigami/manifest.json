@@ -1,0 +1,11 @@
+{
+  "id": "shinigami",
+  "generator": "Google Flow (Nano Banana 2.1)",
+  "layers": [
+    "torso-shinigami",
+    "legs-shinigami",
+    "feet-shinigami",
+    "torso-genki-shinigami",
+    "portrait-shinigami"
+  ]
+}
