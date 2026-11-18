@@ -2,7 +2,7 @@ import { ColorPalette } from "../utils/ColorPalette";
 import { COVERED_HEADS } from "../sprites/CustomArtLayout";
 
 export const partOptions = {
-  head: ["goku", "spiderman", "saitama", "chapolim", "vegeta", "jotaro", "naruto", "sasuke", "luffy"],
+  head: ["goku", "spiderman", "saitama", "chapolim", "vegeta", "jotaro", "naruto", "sasuke", "luffy", "shinigami"],
   torso: [
     "goku",
     "spiderman",
@@ -13,10 +13,11 @@ export const partOptions = {
     "muscle",
     "naruto",
     "sasuke",
-    "luffy"
+    "luffy",
+    "shinigami"
   ],
-  legs: ["goku", "spiderman", "jotaro", "saitama", "vegeta", "chapolim", "naruto", "sasuke", "luffy"],
-  feet: ["goku", "spiderman", "chapolim", "saitama", "vegeta", "jotaro", "naruto", "sasuke", "luffy"],
+  legs: ["goku", "spiderman", "jotaro", "saitama", "vegeta", "chapolim", "naruto", "sasuke", "luffy", "shinigami"],
+  feet: ["goku", "spiderman", "chapolim", "saitama", "vegeta", "jotaro", "naruto", "sasuke", "luffy", "shinigami"],
   accessory: ["none", "straw_hat", "sword", "headband", "cape", "scouter", "scarf"],
 };
 

@@ -286,6 +286,7 @@ export class CreatorUI {
         saitama: "Saitama (Careca)",
         chapolim: "Chapolim (Capuz)",
         luffy: "Luffy (Pirata)",
+        shinigami: "Espadachim (Cabelo Laranja)",
       };
       return map[id] || id;
     };
@@ -302,6 +303,7 @@ export class CreatorUI {
         naruto: "Jaqueta Shinobi",
         sasuke: "Gola Alta Uchiha",
         luffy: "Colete Pirata",
+        shinigami: "Quimono Shinigami",
       };
       return map[id] || id;
     };
@@ -317,6 +319,7 @@ export class CreatorUI {
         naruto: "Calça Shinobi",
         sasuke: "Hakama Uchiha",
         luffy: "Shorts Jeans Pirata",
+        shinigami: "Hakama Shinigami",
       };
       return map[id] || id;
     };
@@ -332,6 +335,7 @@ export class CreatorUI {
         naruto: "Sandálias Ninja",
         sasuke: "Sandálias Ninja",
         luffy: "Sandálias de Palha",
+        shinigami: "Tabi Shinigami",
       };
       return map[id] || id;
     };
