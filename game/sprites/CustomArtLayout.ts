@@ -18,13 +18,19 @@ export function customFrameRegion(index: number, resolution: number) {
  * mascot's. Fully matched outfits keep their reviewed per-pose head sizes. */
 export const HEAD_SCALE = .85;
 
-/** Per-head fit on top of HEAD_SCALE: a size factor and a drop (frame pixels) that seats
- *  the jaw in the collar. The Flow-generated heads are painted smaller than the originals. */
-const HEAD_FIT: Record<string, { scale: number; drop: number }> = {
-  shinigami: { scale: 1.15, drop: 2 },
+/** Per-head fit on top of HEAD_SCALE: a size factor, a drop and a sideways shift (frame
+ *  pixels, + is right) that seat the jaw in the collar. The Flow-generated heads are painted
+ *  smaller than the originals, and this one's neck sits left of its face. */
+const HEAD_FIT: Record<string, { scale: number; drop: number; shift: number }> = {
+  shinigami: { scale: 1.3, drop: 1, shift: 1.5 },
 };
 export const headScaleOf = (head: string, base = HEAD_SCALE) => base * (HEAD_FIT[head]?.scale ?? 1);
 export const headDropOf = (head: string) => HEAD_FIT[head]?.drop ?? 0;
+export const headShiftOf = (head: string) => HEAD_FIT[head]?.shift ?? 0;
+
+/** Tops whose collar is drawn again over the neck, so a wide painted neck tucks into it
+ *  instead of covering the lapels. */
+export const COLLAR_OVER_NECK: readonly string[] = ['shinigami'];
 
 export const HEAD_ANCHORS = {
   neck: [98, 70], eyes: [103, 61],

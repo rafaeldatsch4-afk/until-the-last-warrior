@@ -1,5 +1,5 @@
 import type { CharacterData } from '../types';
-import { HAT_HAIR_LINE, HEAD_ANCHORS, HEAD_SCALE, headDropOf, headScaleOf, scouterRect } from './CustomArtLayout';
+import { HAT_HAIR_LINE, HEAD_ANCHORS, HEAD_SCALE, headDropOf, headScaleOf, headShiftOf, scouterRect } from './CustomArtLayout';
 
 type Palette = { primary?: number; secondary?: number; skin?: number };
 type Layer = (name: string, palette: Palette) => HTMLCanvasElement;
@@ -18,7 +18,7 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   // Apply the same transform to the face, hair and every head accessory.
   const accessory = data.part_accessory || 'none';
   const id = data.part_head || 'goku';
-  ctx.translate(-.75,2+headDropOf(id));
+  ctx.translate(-.75+headShiftOf(id),2+headDropOf(id));
   // Scale the whole head about the neck so face, hair and accessories shrink together.
   const fit = headScaleOf(id, headScale);
   ctx.translate(neckX, HEAD_ANCHORS.neck[1]); ctx.scale(fit, fit); ctx.translate(-neckX, -HEAD_ANCHORS.neck[1]);

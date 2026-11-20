@@ -2,7 +2,7 @@
 import type Phaser from 'phaser';
 import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
-import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, COVERED_HEADS, HEAD_ANCHORS, headDropOf, headScaleOf, headbandFront, plausibleHem, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState, taperIntoHem } from './CustomArtLayout';
+import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, COVERED_HEADS, COLLAR_OVER_NECK, HEAD_ANCHORS, headDropOf, headScaleOf, headShiftOf, headbandFront, plausibleHem, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState, taperIntoHem } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
 import POSED_ANCHORS from '../assets/custom-v2/anchors.json';
 import { BACK_ARM, BODY, FRONT_ARM, splitArms } from './CustomArms';
@@ -297,6 +297,48 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     }
   }
   const raisedTorso = tint(scene, 'torso-genki-' + (data.part_torso || 'goku'), { primary: data.color_torso_1 ?? data.gi1, secondary: data.color_torso_2 ?? data.gi2, skin: data.skin });
+  // The lapels and shoulders around the neck opening, redrawn over the head so its neck
+  // tucks into the collar. Skin is found on the untinted drawing (peach, not fabric).
+  const collarOver = (name: string, tinted: HTMLCanvasElement) => {
+    if (!COLLAR_OVER_NECK.includes(torsoId) || !scene.textures.exists(prefix + name)) return null;
+    const source = scene.textures.get(prefix + name).getSourceImage() as HTMLImageElement;
+    const w = tinted.width, h = tinted.height;
+    const probe = document.createElement('canvas'); probe.width = w; probe.height = h;
+    const probeContext = probe.getContext('2d', { willReadFrequently: true })!;
+    probeContext.drawImage(source, 0, 0, w, h);
+    const raw = probeContext.getImageData(0, 0, w, h).data;
+    const isSkin = (p: number) => { const i = p * 4, r = raw[i], g = raw[i + 1], b = raw[i + 2];
+      return raw[i + 3] > 100 && r > 150 && r > g && g > b && r - b > 45; };
+    // The opening: the first skin row near the middle, and its width a few rows lower.
+    let top = -1;
+    for (let y = 0; y < h * .75 && top < 0; y++) for (let x = Math.round(w * .35); x < w * .65; x++) if (isSkin(y * w + x)) { top = y; break; }
+    if (top < 0) return null;
+    let left = w, right = -1;
+    const probeRow = Math.min(h - 1, top + Math.round(h * .03));
+    for (let x = Math.round(w * .3); x < w * .7; x++) if (isSkin(probeRow * w + x)) { left = Math.min(left, x); right = Math.max(right, x); }
+    if (right < left) return null;
+    const reach = Math.round((right - left) * .9), bottom = Math.min(h, top + Math.round((right - left) * 1.2));
+    const out = document.createElement('canvas'); out.width = w; out.height = h;
+    const outContext = out.getContext('2d')!;
+    const tintedPixels = tinted.getContext('2d')!.getImageData(0, 0, w, h);
+    const keep = outContext.createImageData(w, h);
+    // Only what lies in front of the neck: below the opening's skin in its own columns (the
+    // V of the lapels), and clear of the back of the collar beside it (the shoulders).
+    const x0 = Math.max(0, left - reach), x1 = Math.min(w, right + reach), gap = Math.round(h * .05);
+    for (let x = x0; x < x1; x++) {
+      let skinTop = -1;
+      for (let y = top; y < bottom && skinTop < 0; y++) if (isSkin(y * w + x)) skinTop = y;
+      for (let y = skinTop >= 0 ? skinTop + 1 : top + gap; y < bottom; y++) {
+      const p = y * w + x;
+      if (isSkin(p)) continue;
+      for (let k = 0; k < 4; k++) keep.data[p * 4 + k] = tintedPixels.data[p * 4 + k];
+      }
+    }
+    outContext.putImageData(keep, 0, 0);
+    return out;
+  };
+  const neckCollar = collarOver('torso-' + torsoId, torso);
+  const raisedCollar = collarOver('torso-genki-' + torsoId, raisedTorso);
   const legSource = tint(scene, 'legs-' + (data.part_legs || 'goku'), { primary: data.color_legs_1 ?? data.gi1, secondary: data.color_legs_2 ?? data.gi2, skin: data.skin });
   // Some atlas cells contain a few pixels of the next row. Those must not extend
   // the trousers' bounds or masquerade as an ankle attachment.
@@ -384,6 +426,13 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     };
     return { ...split, body: layer(BODY), arms: [layer(BACK_ARM), layer(FRONT_ARM)] };
   })();
+  // In posed frames the arms move: the collar over the neck may only keep body pixels.
+  const rigCollar = (() => {
+    if (!neckCollar || !rig) return neckCollar;
+    const c = document.createElement('canvas'); c.width = neckCollar.width; c.height = neckCollar.height;
+    const cc = c.getContext('2d')!; cc.drawImage(neckCollar, 0, 0);
+    cc.globalCompositeOperation = 'destination-in'; cc.drawImage(rig.body, 0, 0); return c;
+  })();
   // The top's hem (its body, not the sleeves), in frame units as the relaxed torso is drawn.
   const hem = (() => {
     const pixels = torso.getContext('2d')!.getImageData(0, 0, torso.width, torso.height).data;
@@ -450,7 +499,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     const drawHead=()=>{
       // Same transform as the portrait: head scaled about the neck.
       const head = data.part_head || 'goku', fit = headScaleOf(head);
-      const toPortrait = () => { ctx.translate(lean - .75, headBob + 2 + headDropOf(head)); ctx.translate(neckX, HEAD_ANCHORS.neck[1]); ctx.scale(fit, fit); ctx.translate(-98, -HEAD_ANCHORS.neck[1]); };
+      const toPortrait = () => { ctx.translate(lean - .75 + headShiftOf(head), headBob + 2 + headDropOf(head)); ctx.translate(neckX, HEAD_ANCHORS.neck[1]); ctx.scale(fit, fit); ctx.translate(-98, -HEAD_ANCHORS.neck[1]); };
       draw(portrait,lean,headBob,192,128);
       if (accessory && accessoryId === 'headband') {
         ctx.save(); toPortrait();
@@ -527,12 +576,15 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       ctx.drawImage(raisedTorso,0,0,raisedTorso.width,sourceBottom,
         rect.x+lean,rect.y+bob,rect.width,rect.height*sourceBottom/raisedTorso.height);
       drawHead();
+      if(raisedCollar)ctx.drawImage(raisedCollar,0,0,raisedTorso.width,sourceBottom,
+        rect.x+lean,rect.y+bob,rect.width,rect.height*sourceBottom/raisedTorso.height);
       drawScarf();
     } else if(!punch && !defend && !charge && !walk && !dash) {
       // Keep shoulders, arms and belt joined in relaxed poses; preserve source proportions.
       draw(torso,79+lean,66+bob,36,36);
       drawSheath('hilt');
       drawHead();
+      if(neckCollar)draw(neckCollar,79+lean,66+bob,36,36);
       drawScarf();
     } else {
     // Two-segment arms (shoulder and elbow). Angles turn each segment from its
@@ -586,6 +638,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       draw(rig.body,ox,oy,36,36);
       drawSheath('hilt');
       drawHead();
+      if(rigCollar)draw(rigCollar,ox,oy,36,36);
       drawScarf();
       if(backInFront)drawArm(0);
       drawArm(1);
