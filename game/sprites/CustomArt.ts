@@ -2,7 +2,7 @@
 import type Phaser from 'phaser';
 import type { CharacterData } from '../types';
 import { buildCustomPortrait } from './CustomPortrait';
-import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, COVERED_HEADS, HEAD_ANCHORS, HEAD_SCALE, headbandFront, plausibleHem, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState, taperIntoHem } from './CustomArtLayout';
+import { ACCESSORY_TAILS, CUSTOM_DASH_FRAMES, CUSTOM_FRAME, COVERED_HEADS, HEAD_ANCHORS, headDropOf, headScaleOf, headbandFront, plausibleHem, RING, SCARF_TAIL_SWING, scarfCollarRect, SHEATH_GUARD, tailState, taperIntoHem } from './CustomArtLayout';
 import { genkiTorsoRect } from './GenkiTorsoLayout';
 import POSED_ANCHORS from '../assets/custom-v2/anchors.json';
 import { BACK_ARM, BODY, FRONT_ARM, splitArms } from './CustomArms';
@@ -449,7 +449,8 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     // Headband: portrait coordinates, moved exactly like the portrait itself.
     const drawHead=()=>{
       // Same transform as the portrait: head scaled about the neck.
-      const toPortrait = () => { ctx.translate(lean - .75, headBob + 2); ctx.translate(neckX, HEAD_ANCHORS.neck[1]); ctx.scale(HEAD_SCALE, HEAD_SCALE); ctx.translate(-98, -HEAD_ANCHORS.neck[1]); };
+      const head = data.part_head || 'goku', fit = headScaleOf(head);
+      const toPortrait = () => { ctx.translate(lean - .75, headBob + 2 + headDropOf(head)); ctx.translate(neckX, HEAD_ANCHORS.neck[1]); ctx.scale(fit, fit); ctx.translate(-98, -HEAD_ANCHORS.neck[1]); };
       draw(portrait,lean,headBob,192,128);
       if (accessory && accessoryId === 'headband') {
         ctx.save(); toPortrait();

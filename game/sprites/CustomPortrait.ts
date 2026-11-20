@@ -1,5 +1,5 @@
 import type { CharacterData } from '../types';
-import { HAT_HAIR_LINE, HEAD_ANCHORS, HEAD_SCALE, scouterRect } from './CustomArtLayout';
+import { HAT_HAIR_LINE, HEAD_ANCHORS, HEAD_SCALE, headDropOf, headScaleOf, scouterRect } from './CustomArtLayout';
 
 type Palette = { primary?: number; secondary?: number; skin?: number };
 type Layer = (name: string, palette: Palette) => HTMLCanvasElement;
@@ -16,11 +16,12 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   ctx.imageSmoothingQuality = 'high';
   // Seat the jaw on the body's neck instead of stacking two complete necks.
   // Apply the same transform to the face, hair and every head accessory.
-  ctx.translate(-.75,2);
-  // Scale the whole head about the neck so face, hair and accessories shrink together.
-  ctx.translate(neckX, HEAD_ANCHORS.neck[1]); ctx.scale(headScale, headScale); ctx.translate(-neckX, -HEAD_ANCHORS.neck[1]);
   const accessory = data.part_accessory || 'none';
   const id = data.part_head || 'goku';
+  ctx.translate(-.75,2+headDropOf(id));
+  // Scale the whole head about the neck so face, hair and accessories shrink together.
+  const fit = headScaleOf(id, headScale);
+  ctx.translate(neckX, HEAD_ANCHORS.neck[1]); ctx.scale(fit, fit); ctx.translate(-neckX, -HEAD_ANCHORS.neck[1]);
   const hair = form.endsWith('_ui') ? 0xdce3ed : form.endsWith('_ssj') ? 0xffdc35 : data.hair;
   const primary = data.color_head_1 ?? data.gi1;
   const secondary = data.color_head_2 ?? data.gi2;
