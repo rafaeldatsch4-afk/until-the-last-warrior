@@ -13,7 +13,9 @@ export const GENKI_TORSOS: Record<string, { sheet: 'a' | 'b' | 'c'; cell: number
   sasuke: { sheet: 'b', cell: 3, neck: [250, 190], hem: 448 },
   luffy: { sheet: 'b', cell: 4, neck: [250, 181], hem: 452 },
   // Sheet 'c' is the Flow-generated set (docs/art/custom/pilot-shinigami), one 512px drawing per file.
-  shinigami: { sheet: 'c', cell: 0, neck: [259, 179], hem: 505 },
+  // Its raised-arm drawing has a wider, shorter body than the relaxed torso (belt at y 505):
+  // this effective hem sizes the belt to the relaxed torso's width and still meets the trousers.
+  shinigami: { sheet: 'c', cell: 0, neck: [255, 292], hem: 563 },
 };
 
 export function genkiTorsoRect(key: string, neckX: number) {
