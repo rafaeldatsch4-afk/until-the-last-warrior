@@ -64,9 +64,21 @@ async function fit256(img, key) {
   manifest.push(key);
 }
 
+/** Drop the trousers' narrow waistband: the top's hem is wider, so the band left a stepped
+ *  notch under the belt. The trousers then start at the hips, under the top, and the
+ *  compositor tapers them into its hem. */
+function dropWaistband(img) {
+  const { data, w, h } = img;
+  const width = y => { let l = -1, r = -1; for (let x = 0; x < w; x++) if (data[(y * w + x) * 4 + 3]) { if (l < 0) l = x; r = x; } return l < 0 ? 0 : r - l + 1; };
+  let widest = 0; for (let y = 0; y < h * .4; y++) widest = Math.max(widest, width(y));
+  let top = 0; while (top < h * .4 && width(top) < widest * .55) top++;
+  for (let p = 0; p < top * w; p++) data[p * 4 + 3] = 0;
+  return img;
+}
+
 // Torso, legs, feet: plain bounding-box crops, longest side 256 (as the original wardrobe).
 await fit256(cutout(await load('torso')), `torso-${ID}`);
-await fit256(cutout(await load('legs')), `legs-${ID}`);
+await fit256(dropWaistband(cutout(await load('legs'))), `legs-${ID}`);
 await fit256(cutout(await load('feet')), `feet-${ID}`);
 
 // Raised-arm torso for Genki Dama: 512x512 canvas with the landmarks the compositor needs.
