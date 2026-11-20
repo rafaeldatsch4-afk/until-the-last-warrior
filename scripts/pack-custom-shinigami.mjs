@@ -76,14 +76,45 @@ function dropWaistband(img) {
   return img;
 }
 
+/** The headless drawing paints the inside of the collar grey. Grey is the primary-colour mask,
+ *  so in game it became a fabric-coloured patch on the throat: repaint it as skin (the neck). */
+function skinNeckOpening(img, reach = .25) {
+  const { data, w, h } = img;
+  const b = bounds(img);
+  const isGrey = p => { const i = p * 4; if (!data[i + 3]) return false; const r = data[i], g = data[i + 1], bl = data[i + 2];
+    const lum = .299 * r + .587 * g + .114 * bl; return Math.max(r, g, bl) - Math.min(r, g, bl) < 40 && lum > 110 && lum < 215; };
+  // Arms can make the drawing asymmetric: look a little either side of its centre.
+  let cx = Math.round(b.x + b.w / 2), seed = -1;
+  for (const dx of [0, -15, 15, -30, 30, -45, 45]) {
+    // A run of grey rows, not a single antialiased outline pixel.
+    for (let y = b.y; y < b.y + b.h * reach && seed < 0; y++)
+      if ([0, 1, 2, 3, 4, 5].every(k => isGrey((y + k) * w + cx + dx))) seed = y * w + cx + dx;
+    if (seed >= 0) { cx += dx; break; }
+  }
+  if (seed < 0) return img;
+  // Skin tone: the bare chest just below the opening.
+  let skin = [230, 170, 130];
+  for (let y = Math.floor(seed / w); y < b.y + b.h * .5; y++) { const i = (y * w + cx) * 4; const [r, g, bl] = [data[i], data[i + 1], data[i + 2]];
+    if (data[i + 3] && r > 200 && r > g + 25 && g > bl) { skin = [r, g, bl]; break; } }
+  const seen = new Uint8Array(w * h), stack = [seed]; seen[seed] = 1;
+  while (stack.length) {
+    const p = stack.pop(), i = p * 4;
+    data[i] = skin[0]; data[i + 1] = skin[1]; data[i + 2] = skin[2];
+    const x = p % w;
+    for (const q of [p - 1, p + 1, p - w, p + w]) if (q >= 0 && q < w * h && !seen[q] && Math.abs(q % w - x) <= 1 && isGrey(q)) { seen[q] = 1; stack.push(q); }
+  }
+  return img;
+}
+
 // Torso, legs, feet: plain bounding-box crops, longest side 256 (as the original wardrobe).
-await fit256(cutout(await load('torso')), `torso-${ID}`);
+await fit256(skinNeckOpening(cutout(await load('torso'))), `torso-${ID}`);
 await fit256(dropWaistband(cutout(await load('legs'))), `legs-${ID}`);
 await fit256(cutout(await load('feet')), `feet-${ID}`);
 
 // Raised-arm torso for Genki Dama: 512x512 canvas with the landmarks the compositor needs.
 {
-  const img = cutout(await load('torso-genki'));
+  // Raised arms fill the top of this drawing; the collar sits around mid-height.
+  const img = skinNeckOpening(cutout(await load('torso-genki')), .7);
   const b = bounds(img);
   const scale = Math.min(500 / b.w, 500 / b.h);
   const tw = Math.round(b.w * scale), th = Math.round(b.h * scale);
