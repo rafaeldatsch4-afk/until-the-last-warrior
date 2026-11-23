@@ -1,5 +1,5 @@
 import type { CharacterData } from '../types';
-import { HAT_HAIR_LINE, HEAD_ANCHORS, HEAD_SCALE, headDropOf, headScaleOf, headShiftOf, scouterRect } from './CustomArtLayout';
+import { HAT_HAIR_LINE, HEAD_ANCHORS, HEAD_NECK_CUT, HEAD_SCALE, headDropOf, headScaleOf, headShiftOf, scouterRect } from './CustomArtLayout';
 
 type Palette = { primary?: number; secondary?: number; skin?: number };
 type Layer = (name: string, palette: Palette) => HTMLCanvasElement;
@@ -60,6 +60,15 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
     const [vx,vy,vw,vh] = scouterRect(id);
     ctx.save();ctx.translate(vx+vw,vy);ctx.scale(-1,1);
     ctx.drawImage(layer('accessory-scouter', {}),0,0,vw,vh);ctx.restore();
+  }
+  const cut = HEAD_NECK_CUT[id];
+  if (cut) {
+    // Frame coordinates: the line runs under the ear and drops onto the collar's edge.
+    const x = neckX + cut.dx;
+    ctx.setTransform(resolution, 0, 0, resolution, 0, 0);
+    ctx.save(); ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath(); ctx.moveTo(0, cut.y - 1); ctx.lineTo(x - 2, cut.y); ctx.lineTo(x, cut.y + 3);
+    ctx.lineTo(x, 128); ctx.lineTo(0, 128); ctx.closePath(); ctx.fill(); ctx.restore();
   }
   return canvas;
 }
