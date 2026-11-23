@@ -7,7 +7,10 @@ const css = (color: number) => '#' + color.toString(16).padStart(6, '0');
 
 /** One immutable portrait per appearance: no independently moving face/hair frames. */
 export function buildCustomPortrait(data: NonNullable<CharacterData['customData']>,
-  form: string, layer: Layer, resolution: number, neckX: number, headScale = HEAD_SCALE) {
+  form: string, layer: Layer, resolution: number, neckX: number, headScale = HEAD_SCALE,
+  /** Per-head fit (size, drop, shift, neck cut) tuned for the modular torsos only; the
+   *  posed wardrobe seats every head on its own measured anchors. */
+  modularFit = true) {
   const canvas = document.createElement('canvas');
   canvas.width = 192 * resolution; canvas.height = 128 * resolution;
   const ctx = canvas.getContext('2d')!;
@@ -18,9 +21,9 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   // Apply the same transform to the face, hair and every head accessory.
   const accessory = data.part_accessory || 'none';
   const id = data.part_head || 'goku';
-  ctx.translate(-.75+headShiftOf(id),2+headDropOf(id));
+  ctx.translate(-.75+(modularFit?headShiftOf(id):0),2+(modularFit?headDropOf(id):0));
   // Scale the whole head about the neck so face, hair and accessories shrink together.
-  const fit = headScaleOf(id, headScale);
+  const fit = modularFit ? headScaleOf(id, headScale) : headScale;
   ctx.translate(neckX, HEAD_ANCHORS.neck[1]); ctx.scale(fit, fit); ctx.translate(-neckX, -HEAD_ANCHORS.neck[1]);
   const hair = form.endsWith('_ui') ? 0xdce3ed : form.endsWith('_ssj') ? 0xffdc35 : data.hair;
   const primary = data.color_head_1 ?? data.gi1;
@@ -61,7 +64,7 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
     ctx.save();ctx.translate(vx+vw,vy);ctx.scale(-1,1);
     ctx.drawImage(layer('accessory-scouter', {}),0,0,vw,vh);ctx.restore();
   }
-  const cut = HEAD_NECK_CUT[id];
+  const cut = modularFit ? HEAD_NECK_CUT[id] : undefined;
   if (cut) {
     // Frame coordinates: the line runs under the ear and drops onto the collar's edge.
     const x = neckX + cut.dx;

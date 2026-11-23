@@ -212,7 +212,7 @@ function composePosedWardrobe(scene: Phaser.Scene, texture: string, data: NonNul
   const tailsId = accessoryId === 'scarf' || accessoryId === 'headband' ? accessoryId : null;
   const tails = tailsId ? tint(scene, 'accessory-' + tailsId + '_tails',
     tailsId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } : { secondary: data.color_acc_1 ?? data.gi2 }) : null;
-  const portrait = buildCustomPortrait(data, texture, (name, palette) => tint(scene, name, palette), resolution, 98, 1);
+  const portrait = buildCustomPortrait(data, texture, (name, palette) => tint(scene, name, palette), resolution, 98, 1, false);
   const cellW = layers[0].width / 4, cellH = layers[0].height / 4;
   for (let f = 0; f < CUSTOM_FRAME.count; f++) {
     const A = posedAnchors[f], state = tailState(f), dash = f >= CUSTOM_DASH_FRAMES[0];
