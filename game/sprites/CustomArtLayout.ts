@@ -28,6 +28,12 @@ export const headScaleOf = (head: string, base = HEAD_SCALE) => base * (HEAD_FIT
 export const headDropOf = (head: string) => HEAD_FIT[head]?.drop ?? 0;
 export const headShiftOf = (head: string) => HEAD_FIT[head]?.shift ?? 0;
 
+/** A painted neck wider than the collar spills onto the shoulder beside it. Cut the head
+ *  below this line, left of neckX + dx (frame pixels, relative to the head's own pose). */
+export const HEAD_NECK_CUT: Record<string, { dx: number; y: number }> = {
+  shinigami: { dx: -3, y: 66.5 },
+};
+
 /** Tops whose collar is drawn again over the neck, so a wide painted neck tucks into it
  *  instead of covering the lapels. */
 export const COLLAR_OVER_NECK: readonly string[] = ['shinigami'];
