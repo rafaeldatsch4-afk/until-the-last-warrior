@@ -64,7 +64,7 @@ export function registerFighterAnimations(scene: AnimationScene, key: string) {
     const chargeFrame=kiTexture!==texKey?0:modular?11:0;
     const charge=kiTexture===texKey? actionRange('charge'):undefined;
     createAnim(`${baseKey}_charge`,kiTexture,charge?.[0]??chargeFrame,charge?.[1]??(kiTexture===texKey&&!modular?3:chargeFrame),10,-1);
-    if(key==='goku'||key==='custom_999') {
+    if(key==='goku'||key==='custom_999'||key==='custom_preview') {
       const genkiTexture=scene.textures.exists(texKey+'_genki')?texKey+'_genki':texKey;
       const genkiFrame=genkiTexture!==texKey?0:tex?.has('12')?12:11;
       createAnim(`${baseKey}_genki`,genkiTexture,genkiFrame,genkiFrame,10,-1);

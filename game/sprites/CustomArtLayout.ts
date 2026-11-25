@@ -49,7 +49,7 @@ export const HAT_HAIR_LINE = 53.5;
 /** Keep the scouter lens over the actual eye line of the custom Spider mask. */
 export function scouterRect(head: string): readonly [number, number, number, number] {
   const [x, y, width, height] = HEAD_ANCHORS.visor;
-  return [x, head === 'spiderman' ? y - 3 : y, width, height];
+  return [x, head === 'spiderman' ? y + 1 : y, width, height];
 }
 
 /** Heads painted with something other than hair or a bald scalp (Jotaro's cap,

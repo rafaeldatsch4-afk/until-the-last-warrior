@@ -164,7 +164,7 @@ function drawTails(ctx: CanvasRenderingContext2D, tails: HTMLCanvasElement | nul
   ctx.restore();
 }
 
-type PosedAnchor = { neck: number[]; headTop: number; headWidth: number; waist: number[]; hand: number[] };
+type PosedAnchor = { neck: number[]; headTop: number; headWidth: number; waist: number[]; hand: number[]; ankleY: number };
 const posedAnchors = POSED_ANCHORS as PosedAnchor[];
 /** Width of the bald portrait head at scale 1 (portrait coordinates) and its chin. */
 const PORTRAIT_HEAD_WIDTH = 14.5, PORTRAIT_CHIN = [97.25, 70] as const;
@@ -184,7 +184,7 @@ function isolateFrames(canvas: HTMLCanvasElement, resolution: number) {
 /** The posed wardrobe is used when the body and every chosen piece have been drawn. */
 export function hasPosedWardrobe(scene: Phaser.Scene, data: NonNullable<CharacterData['customData']>) {
   const torso = data.part_torso || 'goku';
-  return ['body', ...(torso === 'muscle' ? [] : ['torso-' + torso]), 'legs-' + (data.part_legs || 'goku'), 'feet-' + (data.part_feet || 'goku')]
+  return ['body', 'instep-' + (data.part_feet || 'goku'), ...(torso === 'muscle' ? [] : ['torso-' + torso]), 'legs-' + (data.part_legs || 'goku'), 'feet-' + (data.part_feet || 'goku')]
     .every(name => scene.textures.exists(POSED + name));
 }
 
@@ -200,10 +200,32 @@ function composePosedWardrobe(scene: Phaser.Scene, texture: string, data: NonNul
   const layers = [
     // The base's shorts take the trousers' colour, so a short top never shows them.
     tint(scene, 'body', { skin: data.skin, primary: data.color_legs_1 ?? data.gi1 }, POSED),
+    tint(scene, 'instep-' + (data.part_feet || 'goku'), { skin: data.skin }, POSED),
     tint(scene, 'legs-' + (data.part_legs || 'goku'), { primary: data.color_legs_1 ?? data.gi1, secondary: data.color_legs_2 ?? data.gi2, skin: data.skin }, POSED),
     tint(scene, 'feet-' + (data.part_feet || 'goku'), { primary: data.color_feet_1 ?? data.gi2, secondary: data.color_feet_2 ?? data.gi1, skin: data.skin }, POSED),
     ...(torsoId === 'muscle' ? [] : [tint(scene, 'torso-' + torsoId, { primary: data.color_torso_1 ?? data.gi1, secondary: data.color_torso_2 ?? data.gi2, skin: data.skin }, POSED)]),
   ];
+  // A wrap from one outfit can trail behind a narrower boot from another.
+  // Below the ankles, keep the cuff only inside the selected foot silhouette.
+  if ((data.part_legs || 'goku') !== (data.part_feet || 'goku')) {
+    const fitted = document.createElement('canvas');
+    fitted.width = layers[2].width; fitted.height = layers[2].height;
+    const mask = fitted.getContext('2d')!;
+    const scale = fitted.width / (CUSTOM_FRAME.columns * CUSTOM_FRAME.width);
+    mask.scale(scale, scale);
+    mask.fillRect(0, 0, fitted.width / scale, fitted.height / scale);
+    for (const [f, pose] of posedAnchors.entries()) {
+      const x = f % 4 * 192, y = Math.floor(f / 4) * 128;
+      mask.clearRect(x, y + pose.ankleY, 192, 128 - pose.ankleY);
+      if (f === 9) mask.clearRect(x + 138, y, 54, 77);
+    }
+    mask.setTransform(1, 0, 0, 1, 0, 0);
+    mask.drawImage(layers[1], 0, 0); // exposed ankle
+    mask.drawImage(layers[3], 0, 0); // boot or sandal
+    mask.globalCompositeOperation = 'source-in';
+    mask.drawImage(layers[2], 0, 0);
+    layers[2] = fitted;
+  }
   const accessoryId = data.part_accessory || 'none';
   const accessory = accessoryId === 'none' ? null : tint(scene, 'accessory-' + accessoryId,
     accessoryId === 'cape' || accessoryId === 'scarf' ? { primary: data.color_acc_1 ?? data.gi2 } :
@@ -238,7 +260,7 @@ function composePosedWardrobe(scene: Phaser.Scene, texture: string, data: NonNul
     // Katana: scabbard behind the body at the waist, drawn only to strike and to guard.
     const drawn = punch || defend;
     const sheathAt = (part: 'scabbard' | 'hilt') => {
-      if (!sheath || f === 12 || (part === 'hilt' && drawn)) return;
+      if (!sheath || (part === 'hilt' && drawn)) return;
       const w = 44, h = w * sheath.height / sheath.width, gx = w * SHEATH_GUARD;
       ctx.save(); ctx.translate(A.waist[0] + 3, A.waist[1] + 2); ctx.rotate(-.4); ctx.beginPath();
       if (part === 'scabbard') ctx.rect(-gx - 1, -h, gx + 1, h * 2); else ctx.rect(-1.5, -h, w - gx + 2, h * 2);
@@ -511,7 +533,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
     // is worn behind the body, the hilt rests forward over the belt.
     const swordDrawn = punch || defend;
     const drawSheath=(part:'scabbard'|'hilt')=>{
-      if(!sheath || genki || (part==='hilt' && swordDrawn))return;
+      if(!sheath || (part==='hilt' && swordDrawn))return;
       const w=46,h=w*sheath.height/sheath.width,gx=w*SHEATH_GUARD;
       ctx.save();ctx.translate(101+lean,93+bob);ctx.rotate(-.4);
       ctx.beginPath();
@@ -575,6 +597,7 @@ export function composeCustomArt(scene: Phaser.Scene, texture: string, data: Non
       const sourceBottom=torsoId==='goku'?GI_SEAM.raisedBeltBottom:raisedTorso.height;
       ctx.drawImage(raisedTorso,0,0,raisedTorso.width,sourceBottom,
         rect.x+lean,rect.y+bob,rect.width,rect.height*sourceBottom/raisedTorso.height);
+      drawSheath('hilt');
       drawHead();
       if(raisedCollar)ctx.drawImage(raisedCollar,0,0,raisedTorso.width,sourceBottom,
         rect.x+lean,rect.y+bob,rect.width,rect.height*sourceBottom/raisedTorso.height);

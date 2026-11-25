@@ -29,5 +29,15 @@ test('every posed piece is a full sheet drawn over the base body', async () => {
   }
   // Each outfit comes as a set, so any piece can be mixed with the others.
   const ids = files.filter(f => f.startsWith('torso-')).map(f => f.slice(6, -4));
-  for (const id of ids) for (const part of ['legs', 'feet']) assert.ok(files.includes(`${part}-${id}.png`), `${part}-${id}`);
+  for (const id of ids) for (const part of ['legs', 'instep', 'feet']) assert.ok(files.includes(`${part}-${id}.png`), `${part}-${id}`);
+});
+
+test('walking boots cover the ankle without borrowing the colour of Naruto trousers', async () => {
+  const crop = { left: 104 * 2, top: (128 + 118) * 2, width: 6 * 2, height: 5 * 2 };
+  const read = name => sharp(`${DIR}/${name}.png`).extract(crop).ensureAlpha().raw().toBuffer();
+  const [body, boots] = await Promise.all([read('body'), read('feet-vegeta')]);
+  assert.equal(body.filter((n,i)=>i%4===3 && n>16).length,0,'bare foot must not protrude under a boot');
+  let bootPixels=0;
+  for(let i=0;i<boots.length;i+=4) if(boots[i+3]>128 && boots[i]>80 && Math.abs(boots[i]-boots[i+1])<20) bootPixels++;
+  assert.ok(bootPixels>10,'the Vegeta boot shaft must use its own primary material');
 });

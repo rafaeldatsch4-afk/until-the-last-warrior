@@ -109,13 +109,13 @@ function measure(img, cell, frame) {
   return { top, feet, x0, x1, height, headTop, chin, jaw, jawRun, neckX: run ? (run.s + run.e) / 2 : waistX, headWidth: widest, headX, central, waistX, waistY };
 }
 
-const colourClass = (r, g, b) => {
+const colourClass = (r, g, b, lowerLimb = false) => {
   const mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = mx ? (mx - mn) / mx : 0;
   if (mx < 70) return 'dark';
   // Cyan keeps green close to blue; a pure blue (a boot's toe cap) does not.
   if (g > r * 1.3 && b > r * 1.3 && b > 90 && g > b * .6) return 'top:detail';
   if (b > r * 1.4 && b > g * 1.25) return 'feet:detail';
-  if (r > g * 1.6 && b > g * 1.3) return 'legs:detail';
+  if (r > g * 1.6 && b > g * 1.3 && !(lowerLimb && r > b * 1.6)) return 'legs:detail';
   if (r > 140 && g > 120 && b < g * .55) return 'legs:main';
   if (r > g * 1.9 && r > b * 1.6) return 'feet:main';
   if (r > g * 1.06 && g > b * 1.06 && r > 110 && g > 65 && b > 45 && sat < .6) return 'skin';
@@ -163,6 +163,21 @@ function despeckle(buf, min = 24, w = FW * 4, h = FH * 4) {
 }
 const save = (buf, name) => sharp(despeckle(buf), { raw: { width: FW * 4, height: FH * 4, channels: 4 } }).png({ compressionLevel: 9, palette: false }).toFile(`${OUT}/${name}.png`);
 
+// The outfit source owns the entire silhouette below each ankle, including skin
+// inside sandals. Leaving the base foot there draws a second heel during a step.
+// Plane heights are measured in the 192x128 pose, independent of packing resolution.
+const ankleY = [118,118,118,118,115,115,115,115,116,118,118,118,117,115,114,117];
+function distalPixels(visit) {
+  for (let f = 0; f < 16; f++) {
+    const ox = f % 4 * FW, oy = Math.floor(f / 4) * FH;
+    for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
+      // The other foot in the kick points up and to the right.
+      if (y < ankleY[f] * RES && !(f === 9 && x >= 138 * RES && y < 77 * RES)) continue;
+      visit(((oy + y) * FW * 4 + ox + x) * 4);
+    }
+  }
+}
+
 await mkdir(OUT, { recursive: true });
 const base = await keyed(`${SRC}/base-source.jpg`);
 const baseCells = cells(base), poses = baseCells.map((c, f) => measure(base, c, f));
@@ -190,6 +205,7 @@ for (const [f, p] of poses.entries()) for (let y = p.headTop - 4; y < p.chin - N
 }
 const bodySheet = sheet();
 for (let f = 0; f < 16; f++) await paste(bodySheet, body, baseCells[f], f, transforms[f]);
+distalPixels(i => { bodySheet[i + 3] = 0; });
 await save(bodySheet, 'body');
 
 // Anchors in frame coordinates: the chin (where the portrait seats), head, waist and front hand.
@@ -197,7 +213,7 @@ const anchors = poses.map((p, f) => {
   let hx = 0, hy = 0, best = -1;
   for (let y = p.top; y < p.top + p.height * .6; y++) for (let x = p.x0; x <= p.x1; x++) if (opaque(base, x, y, baseCells[f]) && x > best) { best = x; hx = x; hy = y; }
   const wx = p.waistX, wy = p.waistY;
-  return { neck: toFrame(f, p.neckX, p.chin), headTop: toFrame(f, p.neckX, p.headTop)[1], headWidth: +(p.headWidth * transforms[f].s / RES).toFixed(2), waist: toFrame(f, wx, wy), hand: toFrame(f, hx, hy) };
+  return { neck: toFrame(f, p.neckX, p.chin), headTop: toFrame(f, p.neckX, p.headTop)[1], headWidth: +(p.headWidth * transforms[f].s / RES).toFixed(2), waist: toFrame(f, wx, wy), hand: toFrame(f, hx, hy), ankleY: ankleY[f] };
 });
 await writeFile(`${OUT}/anchors.json`, JSON.stringify(anchors) + '\n');
 
@@ -207,7 +223,8 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
   const set = await keyed(`${SRC}/${file}`), ref = await keyed(`${SRC}/base-source.jpg`, set.w, set.h), k = set.w / base.w;
   // Image editors drift a pose by a few pixels: slide each frame until its skull sits on
   // the base's (every set draws the same bald head, so the skull is the one fixed thing).
-  const shifts = cells(set).map((cell, f) => {
+  const setCells = cells(set);
+  const shifts = setCells.map((cell, f) => {
     const p = poses[f], half = p.headWidth * .7 * k, cx = p.headX * k;
     const x0 = Math.round(cx - half), x1 = Math.round(cx + half), y0 = Math.round(p.headTop * k), y1 = Math.round((p.headTop + p.headWidth * .6) * k);
     const on = (img, x, y) => x >= 0 && y >= 0 && x < img.w && y < img.h && img.data[(y * img.w + x) * 4 + 3] > 128;
@@ -223,10 +240,23 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
     return rest > bestCost * 3 + 12 ? best : [0, 0];
   });
   console.log(`${id} shifts`, shifts.map(([x, y]) => `${x},${y}`).join(' '));
+  // Magenta belongs to trousers, dark red to boots. Restrict this
+  // disambiguation to the shins so it cannot pick up warm face or jacket shading.
+  const lower = new Uint8Array(set.w * set.h);
+  for (const [f, cell] of setCells.entries()) {
+    const t = transforms[f], [dx,dy] = shifts[f];
+    for (let sy=cell.y0; sy<cell.y1; sy++) for (let sx=cell.x0; sx<cell.x1; sx++) {
+      const i=sy*set.w+sx;
+      if (!cell.mask[i]) continue;
+      const x = ((sx - dx)/k - t.ax)*t.s/RES + NECK_X;
+      const y = ((sy - dy)/k - t.ay)*t.s/RES + FEET_Y;
+      if (y >= 99 || (f === 9 && x > 129 && y < 76)) lower[i] = 1;
+    }
+  }
   const kind = new Array(set.w * set.h).fill(null);
   for (let i = 0; i < kind.length; i++) {
     if (set.data[i * 4 + 3] < 40) continue;
-    const r = set.data[i * 4], g = set.data[i * 4 + 1], b = set.data[i * 4 + 2], c = colourClass(r, g, b);
+    const r = set.data[i * 4], g = set.data[i * 4 + 1], b = set.data[i * 4 + 2], c = colourClass(r, g, b, lower[i]);
     if (c === 'skin' || c === 'other' || c === 'dark') { kind[i] = c; continue; }
     // White that the base already had there (its shorts) is not clothing.
     const d = Math.abs(r - ref.data[i * 4]) + Math.abs(g - ref.data[i * 4 + 1]) + Math.abs(b - ref.data[i * 4 + 2]);
@@ -262,7 +292,7 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
   }
   // Yellow above the waist that never reaches the trousers (armour straps drawn in the
   // trousers' colour) belongs to the top.
-  const cellsOfSet = cells(set);
+  const cellsOfSet = setCells;
   for (const [f, cell] of cellsOfSet.entries()) {
     const waist = poses[f].waistY * k, seen = new Uint8Array(kind.length);
     for (let start = 0; start < kind.length; start++) {
@@ -277,7 +307,7 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
   }
   // Trousers hidden under a long top are continued straight up to the waist, at
   // their own width and shade, so a shorter top worn with them shows no thigh.
-  const setCells = cells(set), hidden = new Uint8Array(kind.length), fill = new Uint8Array(kind.length);
+  const hidden = new Uint8Array(kind.length), fill = new Uint8Array(kind.length);
   const legMain = i => layer[i] === 'legs' && kind[i] === 'legs:main';
   for (const [f, cell] of setCells.entries()) {
     const waist = Math.ceil(poses[f].waistY * k);
@@ -340,6 +370,13 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
       }
     }
   }
+  // Keep the intact foot from the keyed source: colour-difference masks alone
+  // omit bare toes and dark outlines, especially on turned or raised feet.
+  const footSource = sheet();
+  for (let f = 0; f < 16; f++) {
+    const t = transforms[f], [dx, dy] = shifts[f];
+    await paste(footSource, set, setCells[f], f, { s: t.s/k, ax:t.ax*k+dx, ay:t.ay*k+dy, x:t.x, y:t.y });
+  }
   for (const name of ['top', 'legs', 'feet']) {
     const img = { w: set.w, h: set.h, data: Buffer.alloc(set.data.length) };
     for (let i = 0; i < layer.length; i++) {
@@ -370,6 +407,27 @@ for (const file of (await readdir(SRC)).filter(f => /^set-.*\.(jpg|png)$/.test(f
     for (let f = 0; f < 16; f++) {
       const t = transforms[f];
       await paste(out, img, setCells[f], f, { s: t.s / k, ax: t.ax * k + shifts[f][0], ay: t.ay * k + shifts[f][1], x: t.x, y: t.y });
+    }
+    if (name === 'feet') {
+      const instep = sheet();
+      distalPixels(i => {
+        const [r,g,b,a] = footSource.subarray(i,i+4);
+        // The underlying ankle is reconstructed from this pose, not from a
+        // different barefoot silhouette. Selected trousers remain a separate,
+        // uninterrupted layer over it. Only actual shoe fabric goes on top.
+        const material = colourClass(r,g,b,true);
+        if (material === 'skin' || material.startsWith('legs:') || material === 'other' || material === 'dark') {
+          const tone = Math.max(r,g,b) / 255;
+          const rgb = material === 'skin' ? [r,g,b] :
+            material.startsWith('legs:') ? [238,180,142].map(channel=>Math.round(channel*(.7+.3*tone))) : [r,g,b];
+          instep.set([...rgb,a], i);
+        }
+        if (material === 'feet:main' || material === 'feet:detail') {
+          const v = Math.max(r,g,b);
+          out.set(material === 'feet:main' ? [v,v,v,a] : [0,Math.round(v*.85),v,a],i);
+        }
+      });
+      await save(instep,'instep-'+id);
     }
     await save(out, `${name === 'top' ? 'torso' : name}-${id}`);
   }

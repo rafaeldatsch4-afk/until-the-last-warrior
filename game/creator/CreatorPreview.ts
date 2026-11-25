@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { registerFighterAnimations } from "../sprites/FighterAnimations";
 import { generateCustomSprite } from "../sprites/CustomSprite";
 import { CharacterData } from "../types";
 import { CreatorState } from "./CreatorState";
@@ -37,11 +38,23 @@ export class CreatorPreview {
     "custom_preview_ui",
   ];
 
-  private static readonly PREVIEW_ANIM_KEYS = [
-    "custom_preview_idle",
-    "custom_preview_ssj_idle",
-    "custom_preview_charge",
-  ];
+  private static readonly poses = [
+    ['idle', 'Parado'], ['walk', 'Andar'], ['punch', 'Soco'], ['kick', 'Chute'],
+    ['defend', 'Defesa'], ['charge', 'Carregar ki'], ['genki', 'Genki Dama'], ['dash', 'Dash'],
+  ] as const;
+  private pose = 0;
+  get poseLabel() { return CreatorPreview.poses[this.pose][1]; }
+
+  cyclePose() {
+    this.pose = (this.pose + 1) % CreatorPreview.poses.length;
+    this.playPose();
+  }
+  private playPose() {
+    const sprite = this.previewSprite;
+    if (!sprite) return;
+    const key = sprite.texture.key + '_' + CreatorPreview.poses[this.pose][0];
+    if (this.scene.anims.exists(key)) sprite.play({key, repeat: -1});
+  }
 
   constructor(scene: Phaser.Scene, x: number = 750, y: number = 240, availableH?: number) {
     this.scene = scene;
@@ -240,36 +253,7 @@ export class CreatorPreview {
       customData: customData,
     });
 
-    const createAnim = (
-      animKey: string,
-      texture: string,
-      start: number,
-      end: number,
-      frameRate: number,
-      repeat: number = -1
-    ) => {
-      if (this.scene.anims.exists(animKey)) {
-        this.scene.anims.remove(animKey);
-      }
-      const tex = this.scene.textures.get(texture);
-      const frames: Phaser.Types.Animations.AnimationFrame[] = [];
-      for (let i = start; i <= end; i++) {
-        if (tex && tex.has(i.toString())) {
-          frames.push({ key: texture, frame: i.toString() });
-        }
-      }
-      if (frames.length > 0) {
-        this.scene.anims.create({
-          key: animKey,
-          frames: frames,
-          frameRate: frameRate,
-          repeat: repeat,
-        });
-      }
-    };
-
-    createAnim("custom_preview_idle", "custom_preview", 0, 3, 10, -1);
-    createAnim("custom_preview_ssj_idle", "custom_preview_ssj", 0, 3, 10, -1);
+    registerFighterAnimations(this.scene, 'custom_preview');
 
     // 0. High-Tech Stage Pedestal & Ground Projection
     if (this.stagePedestal) this.stagePedestal.destroy();
@@ -370,10 +354,6 @@ export class CreatorPreview {
     }
 
     const texName = isTransformed ? "custom_preview_ssj" : "custom_preview";
-    const animName = isTransformed
-      ? "custom_preview_ssj_idle"
-      : "custom_preview_idle";
-
     this.previewSprite = this.scene.add
       .sprite(this.posX, this.posY, texName)
       .setOrigin(0.5, 0.70)
@@ -381,7 +361,7 @@ export class CreatorPreview {
       .setDepth(10);
 
     if (this.scene.textures.exists(texName)) {
-      this.previewSprite.play(animName);
+      this.playPose();
     }
 
     // Limpar guias anteriores
@@ -529,6 +509,8 @@ export class CreatorPreview {
   public triggerChargeEffect() {
     if (this.isDestroyed || !this.scene || !this.scene.sys) return;
 
+    this.pose = CreatorPreview.poses.findIndex(([key]) => key === 'charge');
+    this.playPose();
     if (this.scene.cache.audio.exists("sfx_charge")) {
       this.scene.sound.play("sfx_charge", { volume: 0.7 });
     } else if (this.scene.cache.audio.exists("sfx_transform")) {
@@ -666,7 +648,11 @@ export class CreatorPreview {
 
     // Remover animações temporárias
     if (this.scene && this.scene.anims) {
-      CreatorPreview.PREVIEW_ANIM_KEYS.forEach((animKey) => {
+      CreatorPreview.PREVIEW_TEXTURE_KEYS
+        .filter(key => this.scene.textures.exists(key))
+        .flatMap(key => this.scene.anims.getAnimsFromTexture(key))
+        .filter(key => key.startsWith("custom_preview_"))
+        .forEach((animKey) => {
         if (this.scene.anims.exists(animKey)) {
           this.scene.anims.remove(animKey);
         }

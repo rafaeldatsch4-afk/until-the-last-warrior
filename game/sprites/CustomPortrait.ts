@@ -41,7 +41,15 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   const scale = 0.050;
   const x = neckX - sourceNeckX * scale;
   const y = HEAD_ANCHORS.neck[1] - sourceNeckY * scale;
-  ctx.drawImage(portrait, x, y, 512 * scale, (garmentHead?512:upperRow ? 548 : 476) * scale);
+  const drawFace = () => ctx.drawImage(portrait, x, y, 512 * scale, (garmentHead?512:upperRow ? 548 : 476) * scale);
+  if (accessory === 'straw_hat' && id === 'jotaro') {
+    // Follow the underside of the painted peak. A horizontal hair trim
+    // alone leaves a second brim protruding in front of the straw hat.
+    ctx.save(); ctx.beginPath();
+    const outline = [[0,0],[132,0],[188,164],[256,178],[340,196],[404,214],[405,236],[420,241],[512,244],[512,512],[0,512]];
+    outline.forEach(([px,py],i) => i ? ctx.lineTo(x+px*scale,y+py*scale) : ctx.moveTo(x+px*scale,y+py*scale));
+    ctx.closePath(); ctx.clip(); drawFace(); ctx.restore();
+  } else drawFace();
 
   // Feather only the last neck pixels into the torso; never fade the jaw or eyes.
   ctx.save();ctx.globalCompositeOperation='destination-out';
@@ -58,6 +66,15 @@ export function buildCustomPortrait(data: NonNullable<CharacterData['customData'
   // The headband is drawn per frame (CustomArt): its ring wraps behind the head
   // and its knot tails move with each pose.
   if (accessory === 'straw_hat') {
+    if (id === 'chapolim') {
+      // Keep the antenna tips attached behind the new crown (the hood
+      // itself must stay under the hat). Source landmarks are in the 512px portrait.
+      ctx.save(); ctx.translate(0,-7); ctx.beginPath();
+      ctx.moveTo(x,y); ctx.lineTo(x+512*scale,y); ctx.lineTo(x+512*scale,y+179*scale);
+      ctx.lineTo(x+326*scale,y+156*scale); ctx.lineTo(x+213*scale,y+124*scale);
+      ctx.lineTo(x+184*scale,y+150*scale); ctx.lineTo(x,y+150*scale);
+      ctx.closePath(); ctx.clip(); drawFace(); ctx.restore();
+    }
     ctx.drawImage(layer('accessory-straw_hat', {}), ...HEAD_ANCHORS.hat);
   } else if (accessory === 'scouter') {
     const [vx,vy,vw,vh] = scouterRect(id);

@@ -31,6 +31,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
   private customSp2Id = "goku";
   private customSp2Name = "Spirit Bomb";
   private previewIsTransformed = false;
+  private poseButtonLabel?: Phaser.GameObjects.Text;
 
   private builderData = {
     base: INITIAL_CHARACTERS[0],
@@ -192,7 +193,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     // 4. PREVIEW INITIALIZATION (Positioned precisely within the character stage viewport above the buttons)
     const previewCenterX = rightColX + rightColW / 2;
     const stageTop = contentTopY + 50;
-    const stageBottom = contentTopY + contentH - 80;
+    const stageBottom = contentTopY + contentH - 130;
     const stageH = Math.max(140, stageBottom - stageTop);
     const previewCenterY = stageTop + Math.floor(stageH * 0.50);
 
@@ -201,6 +202,7 @@ export default class CharacterCreatorScene extends Phaser.Scene {
     this.ui.onTestCharge = () => {
       if (this.preview) {
         this.preview.triggerChargeEffect();
+        this.poseButtonLabel?.setText("POSE: " + this.preview.poseLabel + "  ›");
       }
     };
 
@@ -434,7 +436,14 @@ export default class CharacterCreatorScene extends Phaser.Scene {
       }
     );
 
-    container.add([transBtn, randBtn]);
+    const poseBtn = this.createStageActionButton(panelW / 2, btnRowY - 38, panelW - 24, 32,
+      "POSE: " + (this.preview?.poseLabel ?? "Parado") + "  ›", 0x3b82a0, () => {
+        if (!this.preview) return;
+        this.preview.cyclePose();
+        this.poseButtonLabel?.setText("POSE: " + this.preview.poseLabel + "  ›");
+      });
+    this.poseButtonLabel = poseBtn.getAt(1) as Phaser.GameObjects.Text;
+    container.add([poseBtn, transBtn, randBtn]);
 
     // 4. PRIMARY CTA: [ 💾 SALVAR E EQUIPAR ]
     const saveBtnY = panelH - 30;
